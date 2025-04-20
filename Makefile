@@ -94,5 +94,13 @@ test:
 	@go test -v ./test/server_integration_test.go
 
 # Generate Go server boilerplate from OpenAPI 3
-codegen:
+code-gen-backend:
 	oapi-codegen -generate models,gin -o internal/httpserver/httpserver.gen.go --package httpserver api/openapi.yaml
+
+code-gen-frontend:
+	openapi-generator generate \
+	-i api/openapi.yaml \
+	-g javascript \
+	-o static/js/api-client \
+	--global-property apis,models,supportingFiles=,apiTests=false,modelTests=false,apiDocs=false,modelDocs=false \
+    --additional-properties=useES6=false

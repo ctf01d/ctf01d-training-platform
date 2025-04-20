@@ -89,8 +89,19 @@ func main() {
 	httpserver.RegisterHandlersWithOptions(apiGroup, hndlr, options)
 
 	// HTML маршрутизатор для корня
-	router.GET("/", httpserver.NewHtmlRouter())
-	router.NoRoute(httpserver.NewHtmlRouter())
+	router.GET("/", httpserver.NewSSRRouter())
+	router.GET("/games", httpserver.NewSSRRouter())
+	router.GET("/games/", httpserver.NewSSRRouter())
+	router.GET("/teams", httpserver.NewSSRRouter())
+	router.GET("/teams/", httpserver.NewSSRRouter())
+	router.GET("/users", httpserver.NewSSRRouter())
+	router.GET("/users/", httpserver.NewSSRRouter())
+
+	// Для всего остального (404)
+	router.NoRoute(httpserver.NewSSRRouter())
+
+	// Для статики (если нужно)
+	router.Static("/static", "./static")
 
 	// Запуск сервера
 	addr := net.JoinHostPort(cfg.Host, cfg.Port)
