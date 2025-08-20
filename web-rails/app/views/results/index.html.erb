@@ -1,10 +1,10 @@
-<% content_for :title, "Results" %>
+<% content_for :title, "Результаты" %>
 
-<h1>Results</h1>
+<h1>Результаты</h1>
 
 <p>
-  <%= link_to 'Scoreboard', scoreboard_path %>
-</p>
+  <%= link_to 'Таблица', scoreboard_path %>
+ </p>
 
 <% if @games.any? %>
   <% @games.each do |game| %>

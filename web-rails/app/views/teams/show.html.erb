@@ -2,11 +2,11 @@
 
 <div>
   <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
-    <%= link_to "Edit this team", edit_team_path(@team) %> |
+    <%= link_to "Редактировать", edit_team_path(@team) %> |
   <% end %>
-  <%= link_to "Back to teams", teams_path %>
+  <%= link_to "Назад к командам", teams_path %>
   <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
-    | <%= button_to "Destroy this team", @team, method: :delete, form: { style: 'display:inline' } %>
+    | <%= button_to "Удалить команду", @team, method: :delete, form: { style: 'display:inline' } %>
   <% end %>
 </div>
 

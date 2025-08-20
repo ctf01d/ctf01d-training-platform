@@ -3,11 +3,11 @@
     <strong><%= game.name %></strong>
     <% st = game.status %>
     <% if st == :ongoing %>
-      <span class="badge badge--green">ongoing</span>
+      <span class="badge badge--green">идёт</span>
     <% elsif st == :upcoming %>
-      <span class="badge badge--blue">upcoming</span>
+      <span class="badge badge--blue">скоро</span>
     <% elsif st == :past %>
-      <span class="badge badge--gray">past</span>
+      <span class="badge badge--gray">прошла</span>
     <% end %>
   </div>
 

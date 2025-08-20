@@ -25,7 +25,7 @@ class UniversitiesController < ApplicationController
     @university = University.new(university_params)
 
     if @university.save
-      redirect_to @university, notice: "University was successfully created."
+      redirect_to @university, notice: "Университет создан."
     else
       render :new, status: :unprocessable_entity
     end
@@ -34,7 +34,7 @@ class UniversitiesController < ApplicationController
   # PATCH/PUT /universities/1
   def update
     if @university.update(university_params)
-      redirect_to @university, notice: "University was successfully updated.", status: :see_other
+      redirect_to @university, notice: "Университет обновлён.", status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -43,7 +43,7 @@ class UniversitiesController < ApplicationController
   # DELETE /universities/1
   def destroy
     @university.destroy!
-    redirect_to universities_path, notice: "University was successfully destroyed.", status: :see_other
+    redirect_to universities_path, notice: "Университет удалён.", status: :see_other
   end
 
   private

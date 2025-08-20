@@ -1,16 +1,16 @@
-<% content_for :title, "Universities" %>
+<% content_for :title, "Университеты" %>
 
-<h1>Universities</h1>
+<h1>Университеты</h1>
 
 <div id="universities">
   <% @universities.each do |university| %>
     <%= render university %>
     <p>
-      <%= link_to "Show this university", university %>
+      <%= link_to "Открыть", university %>
     </p>
   <% end %>
 </div>
 
 <% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "New university", new_university_path %>
+  <%= link_to "Создать университет", new_university_path %>
 <% end %>

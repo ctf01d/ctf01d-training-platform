@@ -1,6 +1,6 @@
-<% content_for :title, "New result" %>
+<% content_for :title, "Новый результат" %>
 
-<h1>New result</h1>
+<h1>Новый результат</h1>
 
 <% if @result.game_id.present? && (@available_teams && @available_teams.empty?) %>
   <p style="color:#666;">Все команды уже имеют результат для выбранной игры.</p>
@@ -11,5 +11,5 @@
 <br>
 
 <div>
-  <%= link_to "Back to results", results_path %>
+  <%= link_to "Назад к результатам", results_path %>
 </div>

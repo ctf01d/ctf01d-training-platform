@@ -2,10 +2,10 @@
 
 <div style="margin-top:8px;">
   <% if user_signed_in? && current_user.role == 'admin' %>
-    <%= link_to "Edit this game", edit_game_path(@game) %> |
+    <%= link_to "Редактировать", edit_game_path(@game) %> |
   <% end %>
-  <%= link_to "Back to games", games_path %> |
-  <%= link_to "Scoreboard", scoreboard_path %>
+  <%= link_to "Назад к играм", games_path %> |
+  <%= link_to "Таблица", scoreboard_path %>
   <% if user_signed_in? && current_user.role == 'admin' %>
     | <%= button_to "Destroy this game", @game, method: :delete, form: { style: 'display:inline' } %>
   <% end %>

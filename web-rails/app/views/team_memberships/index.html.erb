@@ -1,14 +1,14 @@
-<% content_for :title, "Team memberships" %>
+<% content_for :title, "Членства в командах" %>
 
-<h1>Team memberships</h1>
+<h1>Членства в командах</h1>
 
 <div id="team_memberships">
   <% @team_memberships.each do |team_membership| %>
     <%= render team_membership %>
     <p>
-      <%= link_to "Show this team membership", team_membership %>
+      <%= link_to "Открыть", team_membership %>
     </p>
   <% end %>
 </div>
 
-<%= link_to "New team membership", new_team_membership_path %>
+<%= link_to "Создать членство", new_team_membership_path %>

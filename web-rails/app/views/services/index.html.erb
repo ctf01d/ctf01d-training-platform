@@ -1,16 +1,16 @@
-<% content_for :title, "Services" %>
+<% content_for :title, "Сервисы" %>
 
-<h1>Services</h1>
+<h1>Сервисы</h1>
 
 <div id="services">
   <% @services.each do |service| %>
     <%= render service %>
     <p>
-      <%= link_to "Show this service", service %>
+      <%= link_to "Открыть", service %>
     </p>
   <% end %>
 </div>
 
 <% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "New service", new_service_path %>
+  <%= link_to "Создать сервис", new_service_path %>
 <% end %>

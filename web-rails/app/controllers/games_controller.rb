@@ -28,7 +28,7 @@ class GamesController < ApplicationController
     @game = Game.new(game_params)
 
     if @game.save
-      redirect_to @game, notice: "Game was successfully created."
+      redirect_to @game, notice: "Игра создана."
     else
       render :new, status: :unprocessable_entity
     end
@@ -37,7 +37,7 @@ class GamesController < ApplicationController
   # PATCH/PUT /games/1
   def update
     if @game.update(game_params)
-      redirect_to @game, notice: "Game was successfully updated.", status: :see_other
+      redirect_to @game, notice: "Игра обновлена.", status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -46,7 +46,7 @@ class GamesController < ApplicationController
   # DELETE /games/1
   def destroy
     @game.destroy!
-    redirect_to games_path, notice: "Game was successfully destroyed.", status: :see_other
+    redirect_to games_path, notice: "Игра удалена.", status: :see_other
   end
 
   private

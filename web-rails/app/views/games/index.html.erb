@@ -1,37 +1,37 @@
-<% content_for :title, "Games" %>
+<% content_for :title, "Игры" %>
 
-<h1>Games</h1>
+<h1>Игры</h1>
 
 <% if @ongoing_games.any? %>
-  <h2>Ongoing</h2>
+  <h2>Идут сейчас</h2>
   <div id="ongoing-games">
     <% @ongoing_games.each do |game| %>
       <%= render game %>
-      <p><%= link_to "Show", game %></p>
+      <p><%= link_to "Открыть", game %></p>
     <% end %>
   </div>
 <% end %>
 
 <% if @upcoming_games.any? %>
-  <h2>Upcoming</h2>
+  <h2>Скоро</h2>
   <div id="upcoming-games">
     <% @upcoming_games.each do |game| %>
       <%= render game %>
-      <p><%= link_to "Show", game %></p>
+      <p><%= link_to "Открыть", game %></p>
     <% end %>
   </div>
 <% end %>
 
 <% if @past_games.any? %>
-  <h2>Past</h2>
+  <h2>Прошедшие</h2>
   <div id="past-games">
     <% @past_games.each do |game| %>
       <%= render game %>
-      <p><%= link_to "Show", game %></p>
+      <p><%= link_to "Открыть", game %></p>
     <% end %>
   </div>
 <% end %>
 
 <% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "New game", new_game_path %>
+  <%= link_to "Создать игру", new_game_path %>
 <% end %>

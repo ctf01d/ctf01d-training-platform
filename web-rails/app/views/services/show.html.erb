@@ -2,11 +2,11 @@
 
 <div style="margin-top:8px;">
   <% if user_signed_in? && current_user.role == 'admin' %>
-    <%= link_to "Edit this service", edit_service_path(@service) %> |
-    <%= link_to "Back to services", services_path %> |
-    <%= button_to "Destroy this service", @service, method: :delete, form: { style: 'display:inline' } %>
+    <%= link_to "Редактировать", edit_service_path(@service) %> |
+    <%= link_to "Назад к сервисам", services_path %> |
+    <%= button_to "Удалить сервис", @service, method: :delete, form: { style: 'display:inline' } %>
   <% else %>
-    <%= link_to "Back to services", services_path %>
+    <%= link_to "Назад к сервисам", services_path %>
   <% end %>
   
 </div>

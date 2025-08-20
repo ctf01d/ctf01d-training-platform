@@ -1,8 +1,8 @@
 <%= render @team_membership %>
 
 <div>
-  <%= link_to "Edit this team membership", edit_team_membership_path(@team_membership) %> |
-  <%= link_to "Back to team memberships", team_memberships_path %>
+  <%= link_to "Редактировать", edit_team_membership_path(@team_membership) %> |
+  <%= link_to "Назад к членствам", team_memberships_path %>
 
   <%= button_to "Destroy this team membership", @team_membership, method: :delete %>
 </div>

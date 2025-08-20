@@ -1,0 +1,25 @@
+ru:
+  time:
+    formats:
+      short: "%d.%m %H:%M"
+  date:
+    formats:
+      default: "%d.%m.%Y"
+  activerecord:
+    models:
+      user: "Пользователь"
+      team: "Команда"
+      service: "Сервис"
+      game: "Игра"
+      result: "Результат"
+      university: "Университет"
+      team_membership: "Членство"
+    attributes:
+      user:
+        user_name: "Логин"
+        display_name: "Имя"
+        role: "Роль"
+        rating: "Рейтинг"
+        avatar_url: "Аватар (URL)"
+        password: "Пароль"
+        password_confirmation: "Подтверждение пароля"

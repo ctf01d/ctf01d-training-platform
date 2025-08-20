@@ -1,16 +1,16 @@
-<% content_for :title, "Teams" %>
+<% content_for :title, "Команды" %>
 
-<h1>Teams</h1>
+<h1>Команды</h1>
 
 <div id="teams">
   <% @teams.each do |team| %>
     <%= render team %>
     <p>
-      <%= link_to "Show this team", team %>
+      <%= link_to "Открыть", team %>
     </p>
   <% end %>
 </div>
 
 <% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "New team", new_team_path %>
+  <%= link_to "Создать команду", new_team_path %>
 <% end %>

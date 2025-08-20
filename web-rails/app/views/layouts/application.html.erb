@@ -27,7 +27,7 @@
       <%= link_to 'Команды', teams_path %> |
       <%= link_to 'Игры', games_path %> |
       <%= link_to 'Результаты', results_path %> |
-      <%= link_to 'Scoreboard', scoreboard_path %>
+      <%= link_to 'Таблица', scoreboard_path %>
       <% if user_signed_in? && current_user.role == 'admin' %>
         | <%= link_to 'Пользователи', users_path %>
         | <%= link_to 'Университеты', universities_path %>
