@@ -3607,3 +3607,336 @@ Processing by TeamsController#show as HTML
 Completed 200 OK in 10ms (Views: 6.6ms | ActiveRecord: 1.3ms (7 queries, 2 cached) | GC: 1.0ms)
 
 
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:07:20 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  Rendered profiles/show.html.erb within layouts/application (Duration: 0.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.8ms | GC: 0.0ms)
+Completed 200 OK in 10ms (Views: 5.2ms | ActiveRecord: 0.6ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/profile/edit" for 127.0.0.1 at 2025-08-21 01:07:22 +0300
+Processing by ProfilesController#edit as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='edit',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/edit.html.erb within layouts/application
+  Rendered profiles/edit.html.erb within layouts/application (Duration: 3.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.4ms | GC: 0.0ms)
+Completed 200 OK in 8ms (Views: 4.9ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.6ms)
+
+
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:07:24 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  Rendered profiles/show.html.erb within layouts/application (Duration: 1.0ms | GC: 0.8ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.7ms | GC: 0.8ms)
+Completed 200 OK in 5ms (Views: 1.9ms | ActiveRecord: 0.3ms (1 query, 0 cached) | GC: 0.8ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:07:25 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:34
+  Rendered teams/_team.html.erb (Duration: 1.2ms | GC: 0.0ms)
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 4.2ms | GC: 0.8ms)
+  Rendered layout layouts/application.html.erb (Duration: 5.0ms | GC: 0.8ms)
+Completed 200 OK in 7ms (Views: 4.9ms | ActiveRecord: 0.5ms (3 queries, 1 cached) | GC: 0.8ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:13:45 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (11.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:34
+  Rendered teams/_team.html.erb (Duration: 12.9ms | GC: 0.2ms)
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 31.3ms | GC: 0.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 38.0ms | GC: 0.5ms)
+Completed 200 OK in 48ms (Views: 24.6ms | ActiveRecord: 15.4ms (3 queries, 1 cached) | GC: 0.5ms)
+
+
+Started GET "/assets/application-57839cd3.css" for 127.0.0.1 at 2025-08-21 01:13:45 +0300
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:13:50 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.5ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 1.2ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 7.4ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 8.9ms | GC: 0.5ms)
+Completed 200 OK in 19ms (Views: 8.8ms | ActiveRecord: 3.7ms (2 queries, 0 cached) | GC: 0.5ms)
+
+
+Started POST "/services/2/toggle_public" for 127.0.0.1 at 2025-08-21 01:14:00 +0300
+Processing by ServicesController#toggle_public as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "2"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 2 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:63:in 'ServicesController#set_service'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mService Update (0.3ms)[0m  [1m[33mUPDATE "services" SET "public" = TRUE, "updated_at" = '2025-08-20 22:14:00.934092' WHERE "services"."id" = 2 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mCOMMIT /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+Redirected to http://127.0.0.1:3000/services
+Completed 302 Found in 15ms (ActiveRecord: 3.6ms (3 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:14:00 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 2.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.7ms | GC: 0.0ms)
+Completed 200 OK in 9ms (Views: 4.0ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/services/2/toggle_public" for 127.0.0.1 at 2025-08-21 01:14:02 +0300
+Processing by ServicesController#toggle_public as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "2"}
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 2 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:63:in 'ServicesController#set_service'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mService Update (1.1ms)[0m  [1m[33mUPDATE "services" SET "public" = FALSE, "updated_at" = '2025-08-20 22:14:02.164852' WHERE "services"."id" = 2 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mCOMMIT /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+Redirected to http://127.0.0.1:3000/services
+Completed 302 Found in 14ms (ActiveRecord: 2.4ms (3 queries, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:14:02 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.2ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 1.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.2ms | GC: 0.0ms)
+Completed 200 OK in 5ms (Views: 2.2ms | ActiveRecord: 0.5ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/services/2/toggle_public" for 127.0.0.1 at 2025-08-21 01:14:02 +0300
+Processing by ServicesController#toggle_public as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "2"}
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mService Load (0.4ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 2 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:63:in 'ServicesController#set_service'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mService Update (1.6ms)[0m  [1m[33mUPDATE "services" SET "public" = TRUE, "updated_at" = '2025-08-20 22:14:02.988798' WHERE "services"."id" = 2 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mCOMMIT /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+Redirected to http://127.0.0.1:3000/services
+Completed 302 Found in 11ms (ActiveRecord: 3.1ms (3 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:14:02 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 2.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.1ms | GC: 0.0ms)
+Completed 200 OK in 8ms (Views: 4.1ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/services/1/toggle_public" for 127.0.0.1 at 2025-08-21 01:14:15 +0300
+Processing by ServicesController#toggle_public as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "1"}
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:63:in 'ServicesController#set_service'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mService Update (0.9ms)[0m  [1m[33mUPDATE "services" SET "public" = FALSE, "updated_at" = '2025-08-20 22:14:15.834311' WHERE "services"."id" = 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mTRANSACTION (2.7ms)[0m  [1m[35mCOMMIT /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+Redirected to http://127.0.0.1:3000/services
+Completed 302 Found in 11ms (ActiveRecord: 4.4ms (3 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:14:15 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.5ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 2.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.0ms | GC: 0.0ms)
+Completed 200 OK in 7ms (Views: 3.0ms | ActiveRecord: 0.7ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/services/2/toggle_public" for 127.0.0.1 at 2025-08-21 01:14:18 +0300
+Processing by ServicesController#toggle_public as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "2"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mService Load (0.2ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 2 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:63:in 'ServicesController#set_service'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mService Update (1.6ms)[0m  [1m[33mUPDATE "services" SET "public" = FALSE, "updated_at" = '2025-08-20 22:14:18.766748' WHERE "services"."id" = 2 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mCOMMIT /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+Redirected to http://127.0.0.1:3000/services
+Completed 302 Found in 7ms (ActiveRecord: 2.8ms (3 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:14:18 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.4ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 2.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.9ms | GC: 0.0ms)
+Completed 200 OK in 6ms (Views: 2.9ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/services/1/toggle_public" for 127.0.0.1 at 2025-08-21 01:14:41 +0300
+Processing by ServicesController#toggle_public as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "1"}
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mService Load (0.1ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 1 LIMIT 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:63:in 'ServicesController#set_service'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mService Update (1.3ms)[0m  [1m[33mUPDATE "services" SET "public" = TRUE, "updated_at" = '2025-08-20 22:14:41.011038' WHERE "services"."id" = 1 /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+  [1m[36mTRANSACTION (2.6ms)[0m  [1m[35mCOMMIT /*action='toggle_public',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:55:in 'ServicesController#toggle_public'
+Redirected to http://127.0.0.1:3000/services
+Completed 302 Found in 8ms (ActiveRecord: 4.4ms (3 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:14:41 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.2ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.4ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 2.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.0ms | GC: 0.0ms)
+Completed 200 OK in 7ms (Views: 3.1ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:16:14 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 1.6ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.4ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 11.6ms | GC: 0.9ms)
+  Rendered layout layouts/application.html.erb (Duration: 15.2ms | GC: 0.9ms)
+Completed 200 OK in 46ms (Views: 18.4ms | ActiveRecord: 4.5ms (2 queries, 0 cached) | GC: 11.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:16:16 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 1.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.1ms | GC: 0.0ms)
+Completed 200 OK in 5ms (Views: 2.1ms | ActiveRecord: 0.7ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:16:22 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IS NULL LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.1ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."public" = TRUE ORDER BY "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 0.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.3ms | GC: 0.0ms)
+Completed 200 OK in 5ms (Views: 1.3ms | ActiveRecord: 0.4ms (2 queries, 0 cached) | GC: 0.6ms)
+
+
+Started GET "/assets/application-57839cd3.css" for 127.0.0.1 at 2025-08-21 01:16:22 +0300
+Started GET "/services/1" for 127.0.0.1 at 2025-08-21 01:16:30 +0300
+Processing by ServicesController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mService Load (0.6ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:63:in 'ServicesController#set_service'
+  Rendering layout layouts/application.html.erb
+  Rendering services/show.html.erb within layouts/application
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IS NULL LIMIT 1 /*action='show',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered services/_service.html.erb (Duration: 2.4ms | GC: 0.0ms)
+  Rendered services/show.html.erb within layouts/application (Duration: 3.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 5.3ms | GC: 0.0ms)
+Completed 200 OK in 12ms (Views: 5.6ms | ActiveRecord: 0.9ms (2 queries, 0 cached) | GC: 0.5ms)
+
+

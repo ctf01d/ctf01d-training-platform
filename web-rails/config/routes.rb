@@ -6,7 +6,11 @@ Rails.application.routes.draw do
   resources :universities
   resources :results
   resources :games
-  resources :services
+  resources :services do
+    member do
+      post :toggle_public
+    end
+  end
   resources :team_memberships
   resources :team_memberships do
     member do

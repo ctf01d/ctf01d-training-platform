@@ -1,13 +1,13 @@
 class ServicesController < ApplicationController
   before_action :require_admin, except: %i[index show]
-  before_action :set_service, only: %i[ show edit update destroy ]
+  before_action :set_service, only: %i[ show edit update destroy toggle_public ]
 
   # GET /services
   def index
     @services = if current_user&.role == 'admin'
-      Service.all
+      Service.order(public: :desc, name: :asc)
     else
-      Service.publicly_visible
+      Service.publicly_visible.order(name: :asc)
     end
   end
 
@@ -48,6 +48,13 @@ class ServicesController < ApplicationController
   def destroy
     @service.destroy!
     redirect_to services_path, notice: "Service was successfully destroyed.", status: :see_other
+  end
+
+  # POST /services/:id/toggle_public
+  def toggle_public
+    @service.update(public: !@service.public)
+    status = @service.public ? 'публичным' : 'приватным'
+    redirect_to services_path, notice: "Сервис стал #{status}."
   end
 
   private

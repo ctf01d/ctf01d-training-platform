@@ -1,37 +1,41 @@
 <div id="<%= dom_id service %>">
-  <p>
-    <strong>Name:</strong>
-    <%= service.name %>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <% url = service.avatar_url.to_s.strip %>
+    <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
+      <%= image_tag url, alt: service.name, class: 'avatar-image' %>
+    <% else %>
+      <% initial = service.name.to_s.first&.upcase || '?' %>
+      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+    <% end %>
+    <div>
+      <strong><%= service.name %></strong>
+      <% if service.public %>
+        <span class="badge badge--green">public</span>
+      <% else %>
+        <span class="badge badge--gray">private</span>
+      <% end %>
+    </div>
+  </div>
+
+  <p style="margin: 6px 0 0 0;">
+    <em><%= service.author %></em>
   </p>
 
-  <p>
-    <strong>Public description:</strong>
-    <%= service.public_description %>
-  </p>
+  <div style="margin-top:8px;">
+    <div><strong>Public description:</strong> <%= service.public_description %></div>
+    <% if user_signed_in? && current_user.role == 'admin' %>
+      <div style="margin-top:4px; color:#666;"><strong>Private:</strong> <%= service.private_description %></div>
+    <% end %>
+  </div>
 
-  <p>
-    <strong>Private description:</strong>
-    <%= service.private_description %>
-  </p>
-
-  <p>
-    <strong>Author:</strong>
-    <%= service.author %>
-  </p>
-
-  <p>
-    <strong>Copyright:</strong>
-    <%= service.copyright %>
-  </p>
-
-  <p>
-    <strong>Avatar url:</strong>
-    <%= service.avatar_url %>
-  </p>
-
-  <p>
-    <strong>Public:</strong>
-    <%= service.public %>
-  </p>
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <div style="margin-top:8px;">
+      <% if service.public %>
+        <%= button_to 'Сделать приватным', toggle_public_service_path(service), method: :post %>
+      <% else %>
+        <%= button_to 'Сделать публичным', toggle_public_service_path(service), method: :post %>
+      <% end %>
+    </div>
+  <% end %>
 
 </div>
