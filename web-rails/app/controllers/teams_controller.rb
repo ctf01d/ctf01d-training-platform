@@ -42,6 +42,24 @@ class TeamsController < ApplicationController
   # PATCH/PUT /teams/1
   def update
     if @team.update(team_params)
+      if @team.saved_change_to_captain_id?
+        old_id, new_id = @team.saved_change_to_captain_id
+
+        if old_id.present?
+          prev = TeamMembership.find_by(team_id: @team.id, user_id: old_id)
+          if prev && prev.role == 'captain'
+            # если бывший капитан был владельцем, оставляем owner, иначе делаем player
+            prev.update(role: 'player')
+          end
+        end
+
+        if new_id.present?
+          curr = TeamMembership.find_or_initialize_by(team_id: @team.id, user_id: new_id)
+          curr.status = 'approved'
+          curr.role = 'captain'
+          curr.save!
+        end
+      end
       redirect_to @team, notice: "Team was successfully updated.", status: :see_other
     else
       render :edit, status: :unprocessable_entity

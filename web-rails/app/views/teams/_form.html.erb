@@ -23,7 +23,7 @@
 
   <div>
     <%= form.label :description, style: "display: block" %>
-    <%= form.textarea :description %>
+    <%= form.text_area :description %>
   </div>
 
   <div>
@@ -36,10 +36,15 @@
     <%= form.text_field :avatar_url %>
   </div>
 
-  <div>
-    <%= form.label :captain_id, style: "display: block" %>
-    <%= form.number_field :captain_id %>
-  </div>
+  <% if team.persisted? %>
+    <div>
+      <%= form.label :captain_id, 'Captain', style: "display: block" %>
+      <% members = team.team_memberships.includes(:user).where(status: 'approved').map(&:user) %>
+      <%= form.collection_select :captain_id, members, :id, :display_name, include_blank: true %>
+    </div>
+  <% else %>
+    <p style="color:#666;">Капитаном будет назначен создатель команды.</p>
+  <% end %>
 
   <div>
     <%= form.submit %>
