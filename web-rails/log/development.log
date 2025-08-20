@@ -1365,3 +1365,19 @@ Processing by UsersController#index as HTML
 Completed 200 OK in 12ms (Views: 9.4ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.2ms)
 
 
+Started GET "/users" for 127.0.0.1 at 2025-08-21 00:43:01 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (0.6ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+Processing by UsersController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering users/index.html.erb within layouts/application
+  [1m[36mUser Load (13.5ms)[0m  [1m[34mSELECT "users".* FROM "users" /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/views/users/index.html.erb:6
+  Rendered users/_user.html.erb (Duration: 0.9ms | GC: 0.0ms)
+  Rendered users/index.html.erb within layouts/application (Duration: 43.6ms | GC: 0.0ms)
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 58.3ms | GC: 0.0ms)
+Completed 200 OK in 98ms (Views: 39.4ms | ActiveRecord: 22.5ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/assets/application-05ac9a9a.css" for 127.0.0.1 at 2025-08-21 00:43:01 +0300

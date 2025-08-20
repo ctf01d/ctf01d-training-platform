@@ -1,5 +1,14 @@
 <div id="<%= dom_id user %>">
   <p>
+    <% if user.avatar_url.present? %>
+      <%= image_tag user.avatar_url, alt: user.display_name, class: 'avatar-image' %>
+    <% else %>
+      <% initial = user.user_name.to_s.first&.upcase || '?' %>
+      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+    <% end %>
+  </p>
+
+  <p>
     <strong>User name:</strong>
     <%= user.user_name %>
   </p>
@@ -17,16 +26,6 @@
   <p>
     <strong>Rating:</strong>
     <%= user.rating %>
-  </p>
-
-  <p>
-    <strong>Avatar url:</strong>
-    <%= user.avatar_url %>
-  </p>
-
-  <p>
-    <strong>Password digest:</strong>
-    <%= user.password_digest %>
   </p>
 
 </div>
