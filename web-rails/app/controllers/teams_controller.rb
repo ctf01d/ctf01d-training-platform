@@ -93,6 +93,30 @@ class TeamsController < ApplicationController
     end
   end
 
+  # POST /teams/:id/invite
+  def invite
+    unless can_manage_team?(@team)
+      return redirect_to @team, alert: 'Недостаточно прав'
+    end
+
+    login = params[:user_name].to_s.strip
+    user = User.find_by(user_name: login)
+    return redirect_to @team, alert: 'Пользователь не найден' unless user
+
+    membership = TeamMembership.find_or_initialize_by(team_id: @team.id, user_id: user.id)
+    if membership.status == 'approved'
+      redirect_to @team, notice: 'Пользователь уже в команде.'
+    else
+      membership.role ||= 'player'
+      membership.status = 'pending'
+      if membership.save
+        redirect_to @team, notice: 'Приглашение отправлено.'
+      else
+        redirect_to @team, alert: 'Не удалось отправить приглашение.'
+      end
+    end
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_team
@@ -101,6 +125,6 @@ class TeamsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def team_params
-      params.expect(team: [ :name, :university, :description, :website, :avatar_url, :captain_id ])
+      params.expect(team: [ :name, :university_id, :description, :website, :avatar_url, :captain_id ])
     end
 end

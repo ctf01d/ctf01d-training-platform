@@ -16,11 +16,15 @@ Rails.application.routes.draw do
     member do
       post :approve
       post :reject
+      post :accept
+      post :decline
+      post :set_role
     end
   end
   resources :teams do
     member do
       post :join_request
+      post :invite
     end
   end
   resources :users

@@ -1,10 +1,13 @@
 <%= render @team %>
 
 <div>
-  <%= link_to "Edit this team", edit_team_path(@team) %> |
+  <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
+    <%= link_to "Edit this team", edit_team_path(@team) %> |
+  <% end %>
   <%= link_to "Back to teams", teams_path %>
-
-  <%= button_to "Destroy this team", @team, method: :delete %>
+  <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
+    | <%= button_to "Destroy this team", @team, method: :delete, form: { style: 'display:inline' } %>
+  <% end %>
 </div>
 
 <hr>
@@ -17,12 +20,32 @@
         <th>Пользователь</th>
         <th>Роль</th>
         <th>Статус</th>
+        <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
+          <th>Действия</th>
+        <% end %>
       </tr>
       <% memberships.each do |m| %>
         <tr>
           <td><%= link_to m.user.display_name, m.user %></td>
           <td><%= m.role %></td>
           <td><%= m.status %></td>
+          <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
+            <td>
+              <% if m.status == 'pending' %>
+                <%= button_to 'Одобрить', approve_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
+                <%= button_to 'Отклонить', reject_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
+              <% else %>
+                Установить роль:
+                <%= button_to 'owner', set_role_team_membership_path(m, role: 'owner'), method: :post, form: { style: 'display:inline' } %>
+                <%= button_to 'captain', set_role_team_membership_path(m, role: 'captain'), method: :post, form: { style: 'display:inline' } %>
+                <%= button_to 'vice_captain', set_role_team_membership_path(m, role: 'vice_captain'), method: :post, form: { style: 'display:inline' } %>
+                <%= button_to 'player', set_role_team_membership_path(m, role: 'player'), method: :post, form: { style: 'display:inline' } %>
+                <% unless m.role == 'owner' %>
+                  | <%= button_to 'Удалить', team_membership_path(m), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить участника?' } } %>
+                <% end %>
+              <% end %>
+            </td>
+          <% end %>
         </tr>
       <% end %>
     </table>
@@ -34,18 +57,6 @@
     <p><%= link_to 'Добавить участника', new_team_membership_path(team_id: @team.id) %></p>
   <% end %>
 
-  <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
-    <% @team.team_memberships.each do |m| %>
-      <% if m.status == 'pending' %>
-        <div style="margin-top: 6px;">
-          Заявка: <%= m.user.display_name %> —
-          <%= button_to 'Одобрить', approve_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
-          <%= button_to 'Отклонить', reject_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
-        </div>
-      <% end %>
-    <% end %>
-  <% end %>
-
   <% if user_signed_in? %>
     <% existing = @team.team_memberships.find { |tm| tm.user_id == current_user.id } %>
     <% if existing.nil? || existing.status == 'rejected' %>
@@ -53,7 +64,26 @@
         <%= button_to 'Подать заявку в команду', join_request_team_path(@team), method: :post %>
       </p>
     <% elsif existing.status == 'pending' %>
-      <p style="margin-top: 12px; color:#666;">Ваша заявка на рассмотрении.</p>
+      <p style="margin-top: 12px; color:#666;">Заявка в ожидании.
+        <% if existing.user_id == current_user.id %>
+          <%= button_to 'Принять', accept_team_membership_path(existing), method: :post, form: { style: 'display:inline' } %>
+          <%= button_to 'Отклонить', decline_team_membership_path(existing), method: :post, form: { style: 'display:inline' } %>
+        <% end %>
+      </p>
+    <% elsif existing.status == 'approved' %>
+      <p style="margin-top: 12px; color:#666;">
+        <%= button_to 'Покинуть команду', team_membership_path(existing), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Покинуть команду?' } } %>
+      </p>
+    <% end %>
+  <% end %>
+
+  <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
+    <hr>
+    <h3>Пригласить пользователя</h3>
+    <%= form_with url: invite_team_path(@team), method: :post, local: true do |f| %>
+      <%= label_tag :user_name, 'Логин пользователя' %>
+      <%= text_field_tag :user_name, '', placeholder: 'user_login' %>
+      <%= submit_tag 'Пригласить' %>
     <% end %>
   <% end %>
 </div>

@@ -1,6 +1,6 @@
 class TeamMembershipsController < ApplicationController
-  before_action :require_admin, except: %i[index show approve reject]
-  before_action :set_team_membership, only: %i[ show edit update destroy approve reject ]
+  before_action :require_admin, except: %i[index show approve reject accept decline set_role destroy]
+  before_action :set_team_membership, only: %i[ show edit update destroy approve reject accept decline set_role ]
 
   # GET /team_memberships
   def index
@@ -46,8 +46,24 @@ class TeamMembershipsController < ApplicationController
 
   # DELETE /team_memberships/1
   def destroy
+    team = @team_membership.team
+    # Разрешаем удалять: админу, менеджерам команды (owner/captain/vice_captain) и самому пользователю (выйти из команды)
+    unless (user_signed_in? && (current_user.role == 'admin' || can_manage_team?(team) || current_user.id == @team_membership.user_id))
+      return redirect_to team, alert: 'Недостаточно прав'
+    end
+
+    # Запрет удалять владельца не-админам
+    if @team_membership.role == 'owner' && !(user_signed_in? && current_user.role == 'admin')
+      return redirect_to team, alert: 'Нельзя удалить владельца команды'
+    end
+
+    # Если удаляем капитана — очищаем привязку у команды
+    if team.captain_id == @team_membership.user_id
+      team.update(captain_id: nil)
+    end
+
     @team_membership.destroy!
-    redirect_to team_memberships_path, notice: "Team membership was successfully destroyed.", status: :see_other
+    redirect_to team, notice: 'Участник удален.', status: :see_other
   end
 
   # POST /team_memberships/:id/approve
@@ -72,6 +88,67 @@ class TeamMembershipsController < ApplicationController
     else
       redirect_to @team_membership.team, alert: 'Не удалось отклонить заявку.'
     end
+  end
+
+  # POST /team_memberships/:id/accept
+  def accept
+    @team_membership = TeamMembership.find(params.expect(:id))
+    unless user_signed_in? && current_user.id == @team_membership.user_id
+      return redirect_to @team_membership.team, alert: 'Недостаточно прав'
+    end
+    if @team_membership.update(status: 'approved')
+      redirect_to @team_membership.team, notice: 'Вы приняли приглашение.'
+    else
+      redirect_to @team_membership.team, alert: 'Не удалось принять приглашение.'
+    end
+  end
+
+  # POST /team_memberships/:id/decline
+  def decline
+    @team_membership = TeamMembership.find(params.expect(:id))
+    unless user_signed_in? && current_user.id == @team_membership.user_id
+      return redirect_to @team_membership.team, alert: 'Недостаточно прав'
+    end
+    if @team_membership.update(status: 'rejected')
+      redirect_to @team_membership.team, notice: 'Вы отклонили приглашение.'
+    else
+      redirect_to @team_membership.team, alert: 'Не удалось отклонить приглашение.'
+    end
+  end
+
+  # POST /team_memberships/:id/set_role
+  def set_role
+    @team_membership = TeamMembership.find(params.expect(:id))
+    team = @team_membership.team
+    unless can_manage_team?(team)
+      return redirect_to team, alert: 'Недостаточно прав'
+    end
+    new_role = params[:role].to_s
+    unless TeamMembership::ROLES.include?(new_role)
+      return redirect_to team, alert: 'Недопустимая роль'
+    end
+
+    ActiveRecord::Base.transaction do
+      if new_role == 'captain'
+        # Сбрасываем предыдущего капитана
+        if team.captain_id.present? && team.captain_id != @team_membership.user_id
+          prev = TeamMembership.find_by(team_id: team.id, user_id: team.captain_id)
+          prev.update!(role: 'player') if prev&.role == 'captain'
+        end
+        team.update!(captain_id: @team_membership.user_id)
+      else
+        # Если снимаем капитана, чистим связь
+        if team.captain_id == @team_membership.user_id
+          team.update!(captain_id: nil)
+        end
+      end
+
+      @team_membership.update!(role: new_role, status: 'approved')
+    end
+
+    redirect_to team, notice: 'Роль обновлена.'
+  rescue => e
+    redirect_to team, alert: 'Не удалось обновить роль.'
   end
 
   private

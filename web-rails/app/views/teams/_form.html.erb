@@ -17,8 +17,8 @@
   </div>
 
   <div>
-    <%= form.label :university, style: "display: block" %>
-    <%= form.text_field :university %>
+    <%= form.label :university_id, 'University', style: "display: block" %>
+    <%= form.collection_select :university_id, University.order(:name), :id, :name, include_blank: true %>
   </div>
 
   <div>
