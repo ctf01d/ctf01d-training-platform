@@ -2,13 +2,34 @@
 
 <h1>Членства в командах</h1>
 
-<div id="team_memberships">
-  <% @team_memberships.each do |team_membership| %>
-    <%= render team_membership %>
-    <p>
-      <%= link_to "Открыть", team_membership %>
-    </p>
+<div class="list" id="team_memberships">
+  <% @team_memberships.includes(:team, :user).each do |tm| %>
+    <div class="card">
+      <div class="row">
+        <% # Аватар пользователя слева %>
+        <% url = tm.user&.avatar_url.to_s.strip %>
+        <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
+          <%= image_tag url, alt: tm.user&.display_name, class: 'avatar-image' %>
+        <% else %>
+          <% initial = tm.user&.user_name.to_s.first&.upcase || '?' %>
+          <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+        <% end %>
+        <div>
+          <div>
+            <strong><%= link_to (tm.user&.display_name || '—'), tm.user %></strong>
+            <span class="muted">в</span>
+            <strong><%= link_to (tm.team&.name || '—'), tm.team %></strong>
+          </div>
+          <div class="muted">Роль: <%= tm.role %> • Статус: <%= tm.status %></div>
+          <div style="margin-top:6px;">
+            <%= link_to 'Открыть', tm %>
+          </div>
+        </div>
+      </div>
+    </div>
   <% end %>
 </div>
 
-<%= link_to "Создать членство", new_team_membership_path %>
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <%= link_to "Создать членство", new_team_membership_path %>
+<% end %>

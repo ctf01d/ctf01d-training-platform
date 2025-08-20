@@ -54,6 +54,6 @@ class UniversitiesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def university_params
-      params.expect(university: [ :name, :site_url ])
+      params.expect(university: [ :name, :site_url, :avatar_url ])
     end
 end

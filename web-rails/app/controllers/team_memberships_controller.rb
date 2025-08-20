@@ -77,6 +77,9 @@ class TeamMembershipsController < ApplicationController
     unless can_manage_team?(@team_membership.team)
       return redirect_to @team_membership.team, alert: 'Недостаточно прав'
     end
+    if user_signed_in? && current_user.id == @team_membership.user_id
+      return redirect_to @team_membership.team, alert: 'Нельзя одобрить свою заявку. Используйте «Принять».'
+    end
     from = @team_membership.status
     if @team_membership.update(status: 'approved')
       TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'approved', from_status: from, to_status: 'approved')
@@ -91,6 +94,9 @@ class TeamMembershipsController < ApplicationController
     unless can_manage_team?(@team_membership.team)
       return redirect_to @team_membership.team, alert: 'Недостаточно прав'
     end
+    if user_signed_in? && current_user.id == @team_membership.user_id
+      return redirect_to @team_membership.team, alert: 'Нельзя отклонить свою заявку. Используйте «Отклонить» внизу.'
+    end
     from = @team_membership.status
     if @team_membership.update(status: 'rejected')
       TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'rejected', from_status: from, to_status: 'rejected')
@@ -103,16 +109,9 @@ class TeamMembershipsController < ApplicationController
   # POST /team_memberships/:id/accept
   def accept
     @team_membership = TeamMembership.find(params.expect(:id))
-    unless user_signed_in? && current_user.id == @team_membership.user_id
-      return redirect_to @team_membership.team, alert: 'Недостаточно прав'
-    end
-    from = @team_membership.status
-    if @team_membership.update(status: 'approved')
-      TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'accepted', from_status: from, to_status: 'approved')
-      redirect_to @team_membership.team, notice: 'Вы приняли приглашение.'
-    else
-      redirect_to @team_membership.team, alert: 'Не удалось принять приглашение.'
-    end
+    team = @team_membership.team
+    # Принятие выполняет менеджмент команды через "Одобрить"
+    return redirect_to team, alert: 'Принятие заявки выполняет менеджмент команды.'
   end
 
   # POST /team_memberships/:id/decline

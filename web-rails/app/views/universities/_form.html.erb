@@ -22,6 +22,11 @@
   </div>
 
   <div>
+    <%= form.label :avatar_url, 'Логотип (URL)', style: "display: block" %>
+    <%= form.text_field :avatar_url %>
+  </div>
+
+  <div>
     <%= form.submit %>
   </div>
 <% end %>

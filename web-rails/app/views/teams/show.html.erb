@@ -1,4 +1,25 @@
-<%= render @team %>
+<div class="card">
+  <div class="row">
+    <% url = @team.avatar_url.to_s.strip %>
+    <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
+      <%= image_tag url, alt: @team.name, class: 'avatar-image' %>
+    <% else %>
+      <% initial = @team.name.to_s.first&.upcase || '?' %>
+      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+    <% end %>
+    <div>
+      <p><strong><%= @team.name %></strong></p>
+      <p class="muted">
+        Университет: <%= @team.university ? link_to(@team.university.name, @team.university) : '—' %>
+        <% if @team.captain %> • Капитан: <%= link_to @team.captain.display_name, @team.captain %><% end %>
+        • Участников: <%= @team.team_memberships.where(status: 'approved').count %>
+      </p>
+      <% if @team.website.present? %>
+        <p class="muted"><%= link_to @team.website, @team.website, target: '_blank', rel: 'noopener' %></p>
+      <% end %>
+    </div>
+  </div>
+</div>
 
 <div>
   <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
@@ -33,8 +54,12 @@
           <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
             <td>
               <% if m.status == 'pending' %>
-                <%= button_to 'Одобрить', approve_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
-                <%= button_to 'Отклонить', reject_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
+                <% if current_user.id != m.user_id %>
+                  <%= button_to 'Одобрить', approve_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
+                  <%= button_to 'Отклонить', reject_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
+                <% else %>
+                  <span style="color:#666;">(свою заявку одобрять нельзя — используйте кнопки ниже)</span>
+                <% end %>
               <% else %>
                 Установить роль:
                 <%= button_to 'owner', set_role_team_membership_path(m, role: 'owner'), method: :post, form: { style: 'display:inline' } %>
@@ -67,8 +92,12 @@
     <% elsif existing.status == 'pending' %>
       <p style="margin-top: 12px; color:#666;">Заявка в ожидании.
         <% if existing.user_id == current_user.id %>
-          <%= button_to 'Принять', accept_team_membership_path(existing), method: :post, form: { style: 'display:inline' } %>
-          <%= button_to 'Отклонить', decline_team_membership_path(existing), method: :post, form: { style: 'display:inline' } %>
+          <% last_event = @team.membership_events.where(user_id: current_user.id).order(created_at: :desc).first %>
+          <% if last_event&.action == 'invited' %>
+            <%= button_to 'Отклонить приглашение', decline_team_membership_path(existing), method: :post, form: { style: 'display:inline' } %>
+          <% else %>
+            <%= button_to 'Отозвать заявку', team_membership_path(existing), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Отозвать заявку?' } } %>
+          <% end %>
         <% end %>
       </p>
     <% elsif existing.status == 'approved' %>

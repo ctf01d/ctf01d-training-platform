@@ -32,6 +32,21 @@
   </div>
 
   <div>
+    <%= form.label :avatar_url, 'Логотип (URL)', style: "display: block" %>
+    <%= form.text_field :avatar_url %>
+  </div>
+
+  <div>
+    <%= form.label :site_url, 'Сайт', style: "display: block" %>
+    <%= form.text_field :site_url, placeholder: 'https://example.com' %>
+  </div>
+
+  <div>
+    <%= form.label :ctftime_url, 'CTFtime', style: "display: block" %>
+    <%= form.text_field :ctftime_url, placeholder: 'https://ctftime.org/event/…' %>
+  </div>
+
+  <div>
     <%= form.submit %>
   </div>
 <% end %>

@@ -2,12 +2,23 @@
 
 <h1>Пользователи</h1>
 
-<div id="users">
+<div class="list" id="users">
   <% @users.each do |user| %>
-    <%= render user %>
-    <p>
-      <%= link_to "Открыть", user %>
-    </p>
+    <div class="card">
+      <div class="row">
+        <% url = user.avatar_url.to_s.strip %>
+        <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
+          <%= image_tag url, alt: user.display_name, class: 'avatar-image' %>
+        <% else %>
+          <% initial = user.user_name.to_s.first&.upcase || '?' %>
+          <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+        <% end %>
+        <div>
+          <div><strong><%= link_to user.display_name, user %></strong> <span class="muted">@<%= user.user_name %></span></div>
+          <div class="muted">Роль: <%= user.role %></div>
+        </div>
+      </div>
+    </div>
   <% end %>
 </div>
 

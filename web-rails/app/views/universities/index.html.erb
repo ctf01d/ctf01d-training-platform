@@ -2,12 +2,25 @@
 
 <h1>Университеты</h1>
 
-<div id="universities">
+<div class="list" id="universities">
   <% @universities.each do |university| %>
-    <%= render university %>
-    <p>
-      <%= link_to "Открыть", university %>
-    </p>
+    <div class="card">
+      <div class="row">
+        <% url = university.avatar_url.to_s.strip %>
+        <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
+          <%= image_tag url, alt: university.name, class: 'avatar-image' %>
+        <% else %>
+          <% initial = university.name.to_s.first&.upcase || '?' %>
+          <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+        <% end %>
+        <div>
+          <div><strong><%= link_to university.name, university %></strong></div>
+          <% if university.site_url.present? %>
+            <div class="muted"><%= link_to university.site_url, university.site_url, target: '_blank', rel: 'noopener' %></div>
+          <% end %>
+        </div>
+      </div>
+    </div>
   <% end %>
 </div>
 

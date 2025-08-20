@@ -1,4 +1,18 @@
-<%= render @user %>
+<div class="card">
+  <div class="row">
+    <% url = @user.avatar_url.to_s.strip %>
+    <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
+      <%= image_tag url, alt: @user.display_name, class: 'avatar-image' %>
+    <% else %>
+      <% initial = @user.user_name.to_s.first&.upcase || '?' %>
+      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+    <% end %>
+    <div>
+      <p><strong><%= @user.display_name %></strong> <span class="muted">@<%= @user.user_name %></span></p>
+      <p class="muted">Роль: <%= @user.role %> • Рейтинг: <%= @user.rating %></p>
+    </div>
+  </div>
+</div>
 
 <div>
   <%= link_to "Редактировать", edit_user_path(@user) %> |
