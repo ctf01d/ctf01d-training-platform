@@ -49,15 +49,19 @@ class TeamsController < ApplicationController
           prev = TeamMembership.find_by(team_id: @team.id, user_id: old_id)
           if prev && prev.role == 'captain'
             # если бывший капитан был владельцем, оставляем owner, иначе делаем player
+            prev_role_was = prev.role
             prev.update(role: 'player')
+            TeamMembershipEvent.create!(team: @team, user: prev.user, actor: current_user, action: 'role_changed', from_role: prev_role_was, to_role: 'player')
           end
         end
 
         if new_id.present?
           curr = TeamMembership.find_or_initialize_by(team_id: @team.id, user_id: new_id)
+          from_role = curr.role
           curr.status = 'approved'
           curr.role = 'captain'
           curr.save!
+          TeamMembershipEvent.create!(team: @team, user: curr.user, actor: current_user, action: 'role_changed', from_role: from_role, to_role: 'captain')
         end
       end
       redirect_to @team, notice: "Команда обновлена.", status: :see_other
@@ -86,6 +90,7 @@ class TeamsController < ApplicationController
       membership.role = 'player'
       membership.status = 'pending'
       if membership.save
+        TeamMembershipEvent.create!(team: @team, user: current_user, actor: current_user, action: 'join_requested', to_status: 'pending')
         redirect_to @team, notice: 'Заявка отправлена.'
       else
         redirect_to @team, alert: 'Не удалось отправить заявку.'
@@ -110,6 +115,7 @@ class TeamsController < ApplicationController
       membership.role ||= 'player'
       membership.status = 'pending'
       if membership.save
+        TeamMembershipEvent.create!(team: @team, user: user, actor: current_user, action: 'invited', to_status: 'pending')
         redirect_to @team, notice: 'Приглашение отправлено.'
       else
         redirect_to @team, alert: 'Не удалось отправить приглашение.'

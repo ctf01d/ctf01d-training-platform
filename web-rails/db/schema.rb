@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_014435) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_020750) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,6 +48,23 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_014435) do
     t.string "checker_archive_url"
     t.string "writeup_url"
     t.index ["name"], name: "index_services_on_name", unique: true
+  end
+
+  create_table "team_membership_events", force: :cascade do |t|
+    t.bigint "team_id", null: false
+    t.bigint "user_id", null: false
+    t.integer "actor_id"
+    t.string "action", null: false
+    t.string "from_role"
+    t.string "to_role"
+    t.string "from_status"
+    t.string "to_status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_team_membership_events_on_actor_id"
+    t.index ["team_id", "created_at"], name: "index_team_membership_events_on_team_id_and_created_at"
+    t.index ["team_id"], name: "index_team_membership_events_on_team_id"
+    t.index ["user_id"], name: "index_team_membership_events_on_user_id"
   end
 
   create_table "team_memberships", force: :cascade do |t|
@@ -95,6 +112,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_014435) do
 
   add_foreign_key "results", "games"
   add_foreign_key "results", "teams"
+  add_foreign_key "team_membership_events", "teams"
+  add_foreign_key "team_membership_events", "users"
   add_foreign_key "team_memberships", "teams"
   add_foreign_key "team_memberships", "users"
   add_foreign_key "teams", "universities"

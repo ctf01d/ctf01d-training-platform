@@ -1,24 +1,32 @@
-# README
+CTF01D Rails MVP
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Quick Rails prototype to demo core entities and flows before porting to Go. Uses PostgreSQL and default ERB views.
 
-Things you may want to cover:
+Features
+- Public services list (only public items for guests)
+- Admin CRUD for Users, Teams, Services, Games, Results, Universities
+- Session-based auth (login/logout), seeded admin user
 
-* Ruby version
+Prerequisites
+- Ruby 3.4+
+- PostgreSQL (local or Docker)
 
-* System dependencies
+Run PostgreSQL with Docker
+docker run -d --name ctf01d-postgres -e POSTGRES_DB=web_rails_development -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres
 
-* Configuration
+Setup
+cd web-rails
+~/.local/share/gem/ruby/3.4.0/bin/bundle install
+bin/rails db:create db:migrate db:seed
 
-* Database creation
+Start server
+bin/rails s
 
-* Database initialization
+Login
+- URL: http://localhost:3000
+- Admin: admin / admin
 
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+Notes
+- Root points to `services#index` (public catalog)
+- Non-admins can view; only admins can create/update/delete
+- Models: User, Team, TeamMembership, Service, Game, Result, University

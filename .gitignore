@@ -7,3 +7,5 @@ main
 cmd/__debug*
 __debug*
 server
+log
+tmp

@@ -14,6 +14,7 @@
 <h2>Участники</h2>
 <div>
   <% memberships = @team.team_memberships.includes(:user) %>
+  <% events = @team.membership_events.includes(:user, :actor).order(created_at: :desc).limit(20) %>
   <% if memberships.any? %>
     <table border="1" cellpadding="4" cellspacing="0">
       <tr>
@@ -85,5 +86,42 @@
       <%= text_field_tag :user_name, '', placeholder: 'user_login' %>
       <%= submit_tag 'Пригласить' %>
     <% end %>
+  <% end %>
+
+  <hr>
+  <h3>История изменений</h3>
+  <% if events.any? %>
+    <ul>
+      <% events.each do |e| %>
+        <li>
+          <small><%= l(e.created_at, format: :short) rescue e.created_at %></small> —
+          <%= (e.actor&.display_name || 'Система') %>:
+          <% case e.action
+             when 'created' %>
+               добавил(а) участника <%= e.user.display_name %> (роль: <%= e.to_role %>)
+          <% when 'invited' %>
+               пригласил(а) <%= e.user.display_name %>
+          <% when 'join_requested' %>
+               <%= e.user.display_name %> подал(а) заявку
+          <% when 'approved' %>
+               одобрил(а) заявку <%= e.user.display_name %>
+          <% when 'rejected' %>
+               отклонил(а) заявку <%= e.user.display_name %>
+          <% when 'accepted' %>
+               <%= e.user.display_name %> принял(а) приглашение
+          <% when 'declined' %>
+               <%= e.user.display_name %> отклонил(а) приглашение
+          <% when 'role_changed' %>
+               изменил(а) роль <%= e.user.display_name %> с <%= e.from_role || '-' %> на <%= e.to_role || '-' %>
+          <% when 'removed' %>
+               удалил(а) <%= e.user.display_name %> из команды
+          <% when 'left' %>
+               <%= e.user.display_name %> покинул(а) команду
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>Пока нет событий.</p>
   <% end %>
 </div>

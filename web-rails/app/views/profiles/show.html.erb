@@ -49,3 +49,66 @@
 <% else %>
   <p>Вы пока не состоите в командах.</p>
 <% end %>
+
+<hr>
+<h2>История участий</h2>
+
+<div style="margin-bottom:8px;">
+  <%= form_with url: profile_path, method: :get, local: true do %>
+    <%= label_tag :team_id, 'Команда' %>
+    <%= select_tag :team_id,
+        options_for_select([["—", ""]] + Team.order(:name).pluck(:name, :id), params[:team_id]),
+        include_blank: false %>
+    <%= label_tag :action_type, 'Действие' %>
+    <%= select_tag :action_type,
+        options_for_select([["—", ""]] + TeamMembershipEvent::ACTIONS.map { |a| [a, a] }, params[:action_type]),
+        include_blank: false %>
+    <%= hidden_field_tag :per, @per_page %>
+    <%= submit_tag 'Фильтр' %>
+  <% end %>
+</div>
+
+<% if @events.any? %>
+  <ul>
+    <% @events.each do |e| %>
+      <li>
+        <small><%= l(e.created_at, format: :short) rescue e.created_at %></small>
+        — <%= (e.actor&.display_name || 'Система') %>:
+        <% case e.action
+           when 'created' %>
+             добавил(а) участника в <%= link_to(e.team.name, e.team) %> (роль: <%= e.to_role %>)
+        <% when 'invited' %>
+             пригласил(а) вас в <%= link_to(e.team.name, e.team) %>
+        <% when 'join_requested' %>
+             вы подали заявку в <%= link_to(e.team.name, e.team) %>
+        <% when 'approved' %>
+             одобрил(а) вашу заявку в <%= link_to(e.team.name, e.team) %>
+        <% when 'rejected' %>
+             отклонил(а) вашу заявку в <%= link_to(e.team.name, e.team) %>
+        <% when 'accepted' %>
+             вы приняли приглашение в <%= link_to(e.team.name, e.team) %>
+        <% when 'declined' %>
+             вы отклонили приглашение в <%= link_to(e.team.name, e.team) %>
+        <% when 'role_changed' %>
+             изменил(а) вашу роль в <%= link_to(e.team.name, e.team) %> с <%= e.from_role || '-' %> на <%= e.to_role || '-' %>
+        <% when 'removed' %>
+             удалил(а) вас из <%= link_to(e.team.name, e.team) %>
+        <% when 'left' %>
+             вы покинули <%= link_to(e.team.name, e.team) %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <div style="margin-top:8px;">
+    <% if @page > 1 %>
+      <%= link_to '« Предыдущая', profile_path(page: @page - 1, per: @per_page, team_id: params[:team_id], action_type: params[:action_type]) %>
+    <% end %>
+    <span style="margin: 0 8px;">Стр. <%= @page %> / <%= @total_pages.zero? ? 1 : @total_pages %></span>
+    <% if @page < @total_pages %>
+      <%= link_to 'Следующая »', profile_path(page: @page + 1, per: @per_page, team_id: params[:team_id], action_type: params[:action_type]) %>
+    <% end %>
+  </div>
+<% else %>
+  <p>Пока нет событий.</p>
+<% end %>

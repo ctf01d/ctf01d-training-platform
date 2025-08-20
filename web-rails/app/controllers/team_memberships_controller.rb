@@ -62,7 +62,13 @@ class TeamMembershipsController < ApplicationController
       team.update(captain_id: nil)
     end
 
+    from_role = @team_membership.role
+    from_status = @team_membership.status
+    user = @team_membership.user
+    actor = user_signed_in? ? current_user : nil
+    action = (actor && actor.id == user.id) ? 'left' : 'removed'
     @team_membership.destroy!
+    TeamMembershipEvent.create!(team: team, user: user, actor: actor, action: action, from_role: from_role, from_status: from_status)
     redirect_to team, notice: 'Участник удален.', status: :see_other
   end
 
@@ -71,7 +77,9 @@ class TeamMembershipsController < ApplicationController
     unless can_manage_team?(@team_membership.team)
       return redirect_to @team_membership.team, alert: 'Недостаточно прав'
     end
+    from = @team_membership.status
     if @team_membership.update(status: 'approved')
+      TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'approved', from_status: from, to_status: 'approved')
       redirect_to @team_membership.team, notice: 'Заявка одобрена.'
     else
       redirect_to @team_membership.team, alert: 'Не удалось одобрить заявку.'
@@ -83,7 +91,9 @@ class TeamMembershipsController < ApplicationController
     unless can_manage_team?(@team_membership.team)
       return redirect_to @team_membership.team, alert: 'Недостаточно прав'
     end
+    from = @team_membership.status
     if @team_membership.update(status: 'rejected')
+      TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'rejected', from_status: from, to_status: 'rejected')
       redirect_to @team_membership.team, notice: 'Заявка отклонена.'
     else
       redirect_to @team_membership.team, alert: 'Не удалось отклонить заявку.'
@@ -96,7 +106,9 @@ class TeamMembershipsController < ApplicationController
     unless user_signed_in? && current_user.id == @team_membership.user_id
       return redirect_to @team_membership.team, alert: 'Недостаточно прав'
     end
+    from = @team_membership.status
     if @team_membership.update(status: 'approved')
+      TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'accepted', from_status: from, to_status: 'approved')
       redirect_to @team_membership.team, notice: 'Вы приняли приглашение.'
     else
       redirect_to @team_membership.team, alert: 'Не удалось принять приглашение.'
@@ -109,7 +121,9 @@ class TeamMembershipsController < ApplicationController
     unless user_signed_in? && current_user.id == @team_membership.user_id
       return redirect_to @team_membership.team, alert: 'Недостаточно прав'
     end
+    from = @team_membership.status
     if @team_membership.update(status: 'rejected')
+      TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'declined', from_status: from, to_status: 'rejected')
       redirect_to @team_membership.team, notice: 'Вы отклонили приглашение.'
     else
       redirect_to @team_membership.team, alert: 'Не удалось отклонить приглашение.'
@@ -143,7 +157,9 @@ class TeamMembershipsController < ApplicationController
         end
       end
 
+      from_role = @team_membership.role
       @team_membership.update!(role: new_role, status: 'approved')
+      TeamMembershipEvent.create!(team: team, user: @team_membership.user, actor: current_user, action: 'role_changed', from_role: from_role, to_role: new_role)
     end
 
     redirect_to team, notice: 'Роль обновлена.'
