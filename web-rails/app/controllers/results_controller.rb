@@ -4,7 +4,7 @@ class ResultsController < ApplicationController
 
   # GET /results
   def index
-    @results = Result.all
+    @games = Game.includes(results: :team).order(starts_at: :desc, created_at: :desc)
   end
 
   # GET /results/1
@@ -14,6 +14,11 @@ class ResultsController < ApplicationController
   # GET /results/new
   def new
     @result = Result.new
+    if params[:game_id].present?
+      @result.game_id = params[:game_id]
+      taken_team_ids = Result.where(game_id: @result.game_id).select(:team_id)
+      @available_teams = Team.where.not(id: taken_team_ids).order(:name)
+    end
   end
 
   # GET /results/1/edit

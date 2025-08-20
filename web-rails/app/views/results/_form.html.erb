@@ -12,13 +12,13 @@
   <% end %>
 
   <div>
-    <%= form.label :game_id, style: "display: block" %>
-    <%= form.text_field :game_id %>
+    <%= form.label :game_id, 'Game', style: "display: block" %>
+    <%= form.collection_select :game_id, Game.order(starts_at: :desc, created_at: :desc), :id, :name, include_blank: false %>
   </div>
 
   <div>
-    <%= form.label :team_id, style: "display: block" %>
-    <%= form.text_field :team_id %>
+    <%= form.label :team_id, 'Team', style: "display: block" %>
+    <%= form.collection_select :team_id, (@available_teams || Team.order(:name)), :id, :name, include_blank: false %>
   </div>
 
   <div>

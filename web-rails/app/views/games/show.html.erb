@@ -1,8 +1,39 @@
 <%= render @game %>
 
-<div>
-  <%= link_to "Edit this game", edit_game_path(@game) %> |
-  <%= link_to "Back to games", games_path %>
-
-  <%= button_to "Destroy this game", @game, method: :delete %>
+<div style="margin-top:8px;">
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <%= link_to "Edit this game", edit_game_path(@game) %> |
+  <% end %>
+  <%= link_to "Back to games", games_path %> |
+  <%= link_to "Scoreboard", scoreboard_path %>
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    | <%= button_to "Destroy this game", @game, method: :delete, form: { style: 'display:inline' } %>
+  <% end %>
 </div>
+
+<hr>
+<h2>Результаты</h2>
+<% if @results.any? %>
+  <table border="1" cellpadding="6" cellspacing="0">
+    <tr>
+      <th>#</th>
+      <th>Команда</th>
+      <th>Очки</th>
+    </tr>
+    <% @results.each_with_index do |r, idx| %>
+      <tr>
+        <td><%= idx + 1 %></td>
+        <td><%= r.team&.name || '—' %></td>
+        <td><%= r.score %></td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <p>Пока нет результатов.</p>
+<% end %>
+
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <p style="margin-top:8px;">
+    <%= link_to 'Добавить результат', new_result_path(game_id: @game.id) %>
+  </p>
+<% end %>

@@ -9,6 +9,7 @@ class GamesController < ApplicationController
 
   # GET /games/1
   def show
+    @results = @game.results.includes(:team).order(score: :desc)
   end
 
   # GET /games/new
