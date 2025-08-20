@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_013855) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_014435) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,6 +44,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_013855) do
     t.boolean "public", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "service_archive_url"
+    t.string "checker_archive_url"
+    t.string "writeup_url"
     t.index ["name"], name: "index_services_on_name", unique: true
   end
 

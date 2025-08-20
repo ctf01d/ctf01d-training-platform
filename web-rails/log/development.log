@@ -8079,3 +8079,388 @@ Processing by ScoreboardsController#index as HTML
 Completed 200 OK in 31ms (Views: 24.9ms | ActiveRecord: 2.0ms (9 queries, 1 cached) | GC: 10.8ms)
 
 
+Started GET "/scoreboard" for 127.0.0.1 at 2025-08-21 01:45:14 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+  
+ActiveRecord::PendingMigrationError (
+
+Migrations are pending. To resolve this issue, run:
+
+        bin/rails db:migrate
+
+You have 1 pending migration:
+
+db/migrate/20250821014435_add_upload_links_to_services.rb
+
+
+):
+  
+activerecord (8.0.2.1) lib/active_record/migration.rb:743:in 'ActiveRecord::Migration.check_pending_migrations'
+activerecord (8.0.2.1) lib/active_record/migration.rb:660:in 'block (2 levels) in ActiveRecord::Migration::CheckPending#call'
+activesupport (8.0.2.1) lib/active_support/file_update_checker.rb:85:in 'ActiveSupport::FileUpdateChecker#execute'
+activesupport (8.0.2.1) lib/active_support/file_update_checker.rb:95:in 'ActiveSupport::FileUpdateChecker#execute_if_updated'
+activerecord (8.0.2.1) lib/active_record/migration.rb:667:in 'block in ActiveRecord::Migration::CheckPending#call'
+activerecord (8.0.2.1) lib/active_record/migration.rb:657:in 'Thread::Mutex#synchronize'
+activerecord (8.0.2.1) lib/active_record/migration.rb:657:in 'ActiveRecord::Migration::CheckPending#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/callbacks.rb:31:in 'block in ActionDispatch::Callbacks#call'
+activesupport (8.0.2.1) lib/active_support/callbacks.rb:100:in 'ActiveSupport::Callbacks#run_callbacks'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/callbacks.rb:30:in 'ActionDispatch::Callbacks#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/executor.rb:16:in 'ActionDispatch::Executor#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/actionable_exceptions.rb:18:in 'ActionDispatch::ActionableExceptions#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/debug_exceptions.rb:31:in 'ActionDispatch::DebugExceptions#call'
+web-console (4.2.1) lib/web_console/middleware.rb:132:in 'WebConsole::Middleware#call_app'
+web-console (4.2.1) lib/web_console/middleware.rb:28:in 'block in WebConsole::Middleware#call'
+web-console (4.2.1) lib/web_console/middleware.rb:17:in 'Kernel#catch'
+web-console (4.2.1) lib/web_console/middleware.rb:17:in 'WebConsole::Middleware#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/show_exceptions.rb:32:in 'ActionDispatch::ShowExceptions#call'
+railties (8.0.2.1) lib/rails/rack/logger.rb:41:in 'Rails::Rack::Logger#call_app'
+railties (8.0.2.1) lib/rails/rack/logger.rb:29:in 'Rails::Rack::Logger#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/remote_ip.rb:96:in 'ActionDispatch::RemoteIp#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/request_id.rb:34:in 'ActionDispatch::RequestId#call'
+rack (3.2.0) lib/rack/method_override.rb:28:in 'Rack::MethodOverride#call'
+rack (3.2.0) lib/rack/runtime.rb:24:in 'Rack::Runtime#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:61:in 'block in ActionDispatch::ServerTiming#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:26:in 'ActionDispatch::ServerTiming::Subscriber#collect_events'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:60:in 'ActionDispatch::ServerTiming#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/executor.rb:16:in 'ActionDispatch::Executor#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/static.rb:27:in 'ActionDispatch::Static#call'
+rack (3.2.0) lib/rack/sendfile.rb:114:in 'Rack::Sendfile#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/host_authorization.rb:143:in 'ActionDispatch::HostAuthorization#call'
+railties (8.0.2.1) lib/rails/engine.rb:535:in 'Rails::Engine#call'
+puma (6.6.1) lib/puma/configuration.rb:279:in 'Puma::Configuration::ConfigMiddleware#call'
+puma (6.6.1) lib/puma/request.rb:99:in 'block in Puma::Request#handle_request'
+puma (6.6.1) lib/puma/thread_pool.rb:390:in 'Puma::ThreadPool#with_force_shutdown'
+puma (6.6.1) lib/puma/request.rb:98:in 'Puma::Request#handle_request'
+puma (6.6.1) lib/puma/server.rb:472:in 'Puma::Server#process_client'
+puma (6.6.1) lib/puma/server.rb:254:in 'block in Puma::Server#run'
+puma (6.6.1) lib/puma/thread_pool.rb:167:in 'block in Puma::ThreadPool#spawn_thread'
+Started GET "/favicon.ico" for 127.0.0.1 at 2025-08-21 01:45:14 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+  
+ActiveRecord::PendingMigrationError (
+
+Migrations are pending. To resolve this issue, run:
+
+        bin/rails db:migrate
+
+You have 1 pending migration:
+
+db/migrate/20250821014435_add_upload_links_to_services.rb
+
+
+):
+  
+activerecord (8.0.2.1) lib/active_record/migration.rb:743:in 'ActiveRecord::Migration.check_pending_migrations'
+activerecord (8.0.2.1) lib/active_record/migration.rb:660:in 'block (2 levels) in ActiveRecord::Migration::CheckPending#call'
+activesupport (8.0.2.1) lib/active_support/file_update_checker.rb:85:in 'ActiveSupport::FileUpdateChecker#execute'
+activerecord (8.0.2.1) lib/active_record/migration.rb:665:in 'block in ActiveRecord::Migration::CheckPending#call'
+activerecord (8.0.2.1) lib/active_record/migration.rb:657:in 'Thread::Mutex#synchronize'
+activerecord (8.0.2.1) lib/active_record/migration.rb:657:in 'ActiveRecord::Migration::CheckPending#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/callbacks.rb:31:in 'block in ActionDispatch::Callbacks#call'
+activesupport (8.0.2.1) lib/active_support/callbacks.rb:100:in 'ActiveSupport::Callbacks#run_callbacks'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/callbacks.rb:30:in 'ActionDispatch::Callbacks#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/executor.rb:16:in 'ActionDispatch::Executor#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/actionable_exceptions.rb:18:in 'ActionDispatch::ActionableExceptions#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/debug_exceptions.rb:31:in 'ActionDispatch::DebugExceptions#call'
+web-console (4.2.1) lib/web_console/middleware.rb:132:in 'WebConsole::Middleware#call_app'
+web-console (4.2.1) lib/web_console/middleware.rb:28:in 'block in WebConsole::Middleware#call'
+web-console (4.2.1) lib/web_console/middleware.rb:17:in 'Kernel#catch'
+web-console (4.2.1) lib/web_console/middleware.rb:17:in 'WebConsole::Middleware#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/show_exceptions.rb:32:in 'ActionDispatch::ShowExceptions#call'
+railties (8.0.2.1) lib/rails/rack/logger.rb:41:in 'Rails::Rack::Logger#call_app'
+railties (8.0.2.1) lib/rails/rack/logger.rb:29:in 'Rails::Rack::Logger#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/remote_ip.rb:96:in 'ActionDispatch::RemoteIp#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/request_id.rb:34:in 'ActionDispatch::RequestId#call'
+rack (3.2.0) lib/rack/method_override.rb:28:in 'Rack::MethodOverride#call'
+rack (3.2.0) lib/rack/runtime.rb:24:in 'Rack::Runtime#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:61:in 'block in ActionDispatch::ServerTiming#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:26:in 'ActionDispatch::ServerTiming::Subscriber#collect_events'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:60:in 'ActionDispatch::ServerTiming#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/executor.rb:16:in 'ActionDispatch::Executor#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/static.rb:27:in 'ActionDispatch::Static#call'
+rack (3.2.0) lib/rack/sendfile.rb:114:in 'Rack::Sendfile#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/host_authorization.rb:143:in 'ActionDispatch::HostAuthorization#call'
+railties (8.0.2.1) lib/rails/engine.rb:535:in 'Rails::Engine#call'
+puma (6.6.1) lib/puma/configuration.rb:279:in 'Puma::Configuration::ConfigMiddleware#call'
+puma (6.6.1) lib/puma/request.rb:99:in 'block in Puma::Request#handle_request'
+puma (6.6.1) lib/puma/thread_pool.rb:390:in 'Puma::ThreadPool#with_force_shutdown'
+puma (6.6.1) lib/puma/request.rb:98:in 'Puma::Request#handle_request'
+puma (6.6.1) lib/puma/server.rb:472:in 'Puma::Server#process_client'
+puma (6.6.1) lib/puma/server.rb:254:in 'block in Puma::Server#run'
+puma (6.6.1) lib/puma/thread_pool.rb:167:in 'block in Puma::ThreadPool#spawn_thread'
+  [1m[35m (0.1ms)[0m  [1m[34mSELECT pg_try_advisory_lock(1603641364890720330) /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.4ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='WebRails'*/[0m
+Migrating to AddUploadLinksToServices (20250821014435)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*application='WebRails'*/[0m
+  [1m[35m (2.2ms)[0m  [1m[35mALTER TABLE "services" ADD "service_archive_url" character varying /*application='WebRails'*/[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "services" ADD "checker_archive_url" character varying /*application='WebRails'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[35mALTER TABLE "services" ADD "writeup_url" character varying /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20250821014435') RETURNING "version" /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mCOMMIT /*application='WebRails'*/[0m
+  [1m[35m (0.1ms)[0m  [1m[34mSELECT pg_advisory_unlock(1603641364890720330) /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+Started GET "/scoreboard" for 127.0.0.1 at 2025-08-21 01:45:23 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (0.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+Processing by ScoreboardsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering scoreboards/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.5ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:5
+  [1m[36mGame Load (0.3ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.7ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mTeam Load (0.7ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.5ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  Rendered scoreboards/index.html.erb within layouts/application (Duration: 128.9ms | GC: 16.7ms)
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 171.9ms | GC: 17.8ms)
+Completed 200 OK in 224ms (Views: 166.1ms | ActiveRecord: 14.1ms (9 queries, 1 cached) | GC: 17.8ms)
+
+
+Started GET "/results" for 127.0.0.1 at 2025-08-21 01:45:26 +0300
+Processing by ResultsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering results/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.5ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:9
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  Rendered results/index.html.erb within layouts/application (Duration: 28.6ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 33.7ms | GC: 0.1ms)
+Completed 200 OK in 38ms (Views: 33.1ms | ActiveRecord: 1.5ms (9 queries, 1 cached) | GC: 0.1ms)
+
+
+Started GET "/scoreboard" for 127.0.0.1 at 2025-08-21 01:45:28 +0300
+Processing by ScoreboardsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering scoreboards/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:5
+  [1m[36mGame Load (0.3ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.0ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  Rendered scoreboards/index.html.erb within layouts/application (Duration: 25.7ms | GC: 0.5ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 28.5ms | GC: 0.8ms)
+Completed 200 OK in 33ms (Views: 26.6ms | ActiveRecord: 2.1ms (9 queries, 1 cached) | GC: 0.8ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:45:39 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.5ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."public" = TRUE ORDER BY "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 2.0ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 16.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 21.9ms | GC: 0.0ms)
+Completed 200 OK in 37ms (Views: 22.0ms | ActiveRecord: 2.3ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services/1" for 127.0.0.1 at 2025-08-21 01:45:41 +0300
+Processing by ServicesController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mService Load (0.5ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:72:in 'ServicesController#set_service'
+  Rendering layout layouts/application.html.erb
+  Rendering services/show.html.erb within layouts/application
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered services/_service.html.erb (Duration: 2.3ms | GC: 0.0ms)
+  Rendered services/show.html.erb within layouts/application (Duration: 5.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.1ms | GC: 0.0ms)
+Completed 200 OK in 18ms (Views: 7.3ms | ActiveRecord: 0.8ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:45:43 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 1.9ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.5ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 6.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.7ms | GC: 0.0ms)
+Completed 200 OK in 15ms (Views: 8.4ms | ActiveRecord: 0.7ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services/1" for 127.0.0.1 at 2025-08-21 01:45:45 +0300
+Processing by ServicesController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mService Load (0.6ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:72:in 'ServicesController#set_service'
+  Rendering layout layouts/application.html.erb
+  Rendering services/show.html.erb within layouts/application
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered services/_service.html.erb (Duration: 2.1ms | GC: 0.0ms)
+  Rendered services/show.html.erb within layouts/application (Duration: 3.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.8ms | GC: 0.0ms)
+Completed 200 OK in 14ms (Views: 8.5ms | ActiveRecord: 0.9ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/services/1/edit" for 127.0.0.1 at 2025-08-21 01:45:47 +0300
+Processing by ServicesController#edit as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='edit',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mService Load (0.4ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."id" = 1 LIMIT 1 /*action='edit',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/services_controller.rb:72:in 'ServicesController#set_service'
+  Rendering layout layouts/application.html.erb
+  Rendering services/edit.html.erb within layouts/application
+  Rendered services/_form.html.erb (Duration: 17.0ms | GC: 0.0ms)
+  Rendered services/edit.html.erb within layouts/application (Duration: 18.6ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 19.9ms | GC: 0.0ms)
+Completed 200 OK in 29ms (Views: 21.1ms | ActiveRecord: 0.7ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/results" for 127.0.0.1 at 2025-08-21 01:46:07 +0300
+Processing by ResultsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering results/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:9
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.0ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  Rendered results/index.html.erb within layouts/application (Duration: 23.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 24.0ms | GC: 0.0ms)
+Completed 200 OK in 28ms (Views: 22.6ms | ActiveRecord: 1.8ms (9 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/scoreboard" for 127.0.0.1 at 2025-08-21 01:46:15 +0300
+Processing by ScoreboardsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering scoreboards/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:5
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.0ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  Rendered scoreboards/index.html.erb within layouts/application (Duration: 13.9ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 16.9ms | GC: 0.0ms)
+Completed 200 OK in 20ms (Views: 16.0ms | ActiveRecord: 1.3ms (9 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/results" for 127.0.0.1 at 2025-08-21 01:46:49 +0300
+Processing by ResultsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering results/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.5ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:9
+  [1m[36mGame Load (0.3ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.0ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  Rendered results/index.html.erb within layouts/application (Duration: 11.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 13.0ms | GC: 0.0ms)
+Completed 200 OK in 17ms (Views: 11.5ms | ActiveRecord: 2.1ms (9 queries, 1 cached) | GC: 0.0ms)
+
+
+Started GET "/scoreboard" for 127.0.0.1 at 2025-08-21 01:46:52 +0300
+Processing by ScoreboardsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering scoreboards/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:5
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.4ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.0ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  Rendered scoreboards/index.html.erb within layouts/application (Duration: 13.0ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 15.2ms | GC: 0.0ms)
+Completed 200 OK in 17ms (Views: 13.5ms | ActiveRecord: 1.9ms (9 queries, 1 cached) | GC: 0.0ms)
+
+

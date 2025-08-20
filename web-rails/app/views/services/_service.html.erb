@@ -28,12 +28,27 @@
     <% end %>
   </div>
 
+  <div style="margin-top:8px;">
+    <% if service.service_archive_url.present? %>
+      <div>Service archive: <%= link_to service.service_archive_url, service.service_archive_url, target: '_blank', rel: 'noopener' %></div>
+    <% end %>
+    <% if service.checker_archive_url.present? %>
+      <div>Checker archive: <%= link_to service.checker_archive_url, service.checker_archive_url, target: '_blank', rel: 'noopener' %></div>
+    <% end %>
+    <% if service.writeup_url.present? %>
+      <div>Writeup: <%= link_to service.writeup_url, service.writeup_url, target: '_blank', rel: 'noopener' %></div>
+    <% end %>
+  </div>
+
   <% if user_signed_in? && current_user.role == 'admin' %>
     <div style="margin-top:8px;">
       <% if service.public %>
         <%= button_to 'Сделать приватным', toggle_public_service_path(service), method: :post %>
       <% else %>
         <%= button_to 'Сделать публичным', toggle_public_service_path(service), method: :post %>
+      <% end %>
+      <% if service.checker_archive_url.present? %>
+        <%= button_to 'Проверить чекер', check_checker_service_path(service), method: :post, form: { style: 'display:inline' } %>
       <% end %>
     </div>
   <% end %>

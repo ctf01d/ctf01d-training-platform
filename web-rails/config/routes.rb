@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   resources :services do
     member do
       post :toggle_public
+      post :check_checker
     end
   end
   resources :team_memberships

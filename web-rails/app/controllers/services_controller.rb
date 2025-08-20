@@ -57,6 +57,15 @@ class ServicesController < ApplicationController
     redirect_to services_path, notice: "Сервис стал #{status}."
   end
 
+  # POST /services/:id/check_checker
+  def check_checker
+    unless @service.checker_archive_url.present?
+      return redirect_to @service, alert: 'Не указан URL архива чекера.'
+    end
+    # Заглушка: имитируем отправку задачи на проверку чекера
+    redirect_to @service, notice: 'Проверка чекера запущена (заглушка).'
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_service

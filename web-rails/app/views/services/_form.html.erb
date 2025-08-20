@@ -18,12 +18,12 @@
 
   <div>
     <%= form.label :public_description, style: "display: block" %>
-    <%= form.textarea :public_description %>
+    <%= form.text_area :public_description %>
   </div>
 
   <div>
     <%= form.label :private_description, style: "display: block" %>
-    <%= form.textarea :private_description %>
+    <%= form.text_area :private_description %>
   </div>
 
   <div>
@@ -43,7 +43,21 @@
 
   <div>
     <%= form.label :public, style: "display: block" %>
-    <%= form.checkbox :public %>
+    <%= form.check_box :public %>
+  </div>
+
+  <hr>
+  <div>
+    <%= form.label :service_archive_url, 'Service archive URL', style: "display: block" %>
+    <%= form.text_field :service_archive_url, placeholder: 'https://.../service.zip' %>
+  </div>
+  <div>
+    <%= form.label :checker_archive_url, 'Checker archive URL', style: "display: block" %>
+    <%= form.text_field :checker_archive_url, placeholder: 'https://.../checker.zip' %>
+  </div>
+  <div>
+    <%= form.label :writeup_url, 'Writeup URL', style: "display: block" %>
+    <%= form.text_field :writeup_url, placeholder: 'https://.../writeup.pdf' %>
   </div>
 
   <div>
