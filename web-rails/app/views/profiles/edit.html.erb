@@ -1,0 +1,41 @@
+<% content_for :title, 'Редактирование профиля' %>
+
+<h1>Редактирование профиля</h1>
+
+<%= form_with model: @user, url: profile_path, method: :patch do |f| %>
+  <% if @user.errors.any? %>
+    <div style="color: red">
+      <ul>
+        <% @user.errors.full_messages.each do |m| %>
+          <li><%= m %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :display_name, 'Имя' %><br>
+    <%= f.text_field :display_name %>
+  </div>
+
+  <div>
+    <%= f.label :avatar_url, 'Аватар (URL)' %><br>
+    <%= f.text_field :avatar_url %>
+  </div>
+
+  <hr>
+  <div>
+    <%= f.label :password, 'Новый пароль' %><br>
+    <%= f.password_field :password, autocomplete: 'new-password' %>
+  </div>
+  <div>
+    <%= f.label :password_confirmation, 'Подтверждение пароля' %><br>
+    <%= f.password_field :password_confirmation, autocomplete: 'new-password' %>
+  </div>
+
+  <div style="margin-top: 8px;">
+    <%= f.submit 'Сохранить' %>
+    <%= link_to 'Отмена', profile_path, style: 'margin-left: 8px;' %>
+  </div>
+<% end %>
+

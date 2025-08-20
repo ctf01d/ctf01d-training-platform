@@ -1,6 +1,6 @@
 class TeamMembershipsController < ApplicationController
-  before_action :require_admin, except: %i[index show]
-  before_action :set_team_membership, only: %i[ show edit update destroy ]
+  before_action :require_admin, except: %i[index show approve reject]
+  before_action :set_team_membership, only: %i[ show edit update destroy approve reject ]
 
   # GET /team_memberships
   def index
@@ -48,6 +48,30 @@ class TeamMembershipsController < ApplicationController
   def destroy
     @team_membership.destroy!
     redirect_to team_memberships_path, notice: "Team membership was successfully destroyed.", status: :see_other
+  end
+
+  # POST /team_memberships/:id/approve
+  def approve
+    unless can_manage_team?(@team_membership.team)
+      return redirect_to @team_membership.team, alert: 'Недостаточно прав'
+    end
+    if @team_membership.update(status: 'approved')
+      redirect_to @team_membership.team, notice: 'Заявка одобрена.'
+    else
+      redirect_to @team_membership.team, alert: 'Не удалось одобрить заявку.'
+    end
+  end
+
+  # POST /team_memberships/:id/reject
+  def reject
+    unless can_manage_team?(@team_membership.team)
+      return redirect_to @team_membership.team, alert: 'Недостаточно прав'
+    end
+    if @team_membership.update(status: 'rejected')
+      redirect_to @team_membership.team, notice: 'Заявка отклонена.'
+    else
+      redirect_to @team_membership.team, alert: 'Не удалось отклонить заявку.'
+    end
   end
 
   private

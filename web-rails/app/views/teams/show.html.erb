@@ -33,4 +33,27 @@
   <% if user_signed_in? && current_user.role == 'admin' %>
     <p><%= link_to 'Добавить участника', new_team_membership_path(team_id: @team.id) %></p>
   <% end %>
+
+  <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
+    <% @team.team_memberships.each do |m| %>
+      <% if m.status == 'pending' %>
+        <div style="margin-top: 6px;">
+          Заявка: <%= m.user.display_name %> —
+          <%= button_to 'Одобрить', approve_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
+          <%= button_to 'Отклонить', reject_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
+        </div>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if user_signed_in? %>
+    <% existing = @team.team_memberships.find { |tm| tm.user_id == current_user.id } %>
+    <% if existing.nil? || existing.status == 'rejected' %>
+      <p style="margin-top: 12px;">
+        <%= button_to 'Подать заявку в команду', join_request_team_path(@team), method: :post %>
+      </p>
+    <% elsif existing.status == 'pending' %>
+      <p style="margin-top: 12px; color:#666;">Ваша заявка на рассмотрении.</p>
+    <% end %>
+  <% end %>
 </div>

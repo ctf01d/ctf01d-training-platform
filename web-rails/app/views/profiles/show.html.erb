@@ -1,0 +1,23 @@
+<% content_for :title, 'Мой профиль' %>
+
+<h1>Мой профиль</h1>
+
+<div>
+  <% if @user.avatar_url.present? %>
+    <%= image_tag @user.avatar_url, alt: @user.display_name, class: 'avatar-image' %>
+  <% else %>
+    <% initial = @user.user_name.to_s.first&.upcase || '?' %>
+    <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+  <% end %>
+</div>
+
+<p><strong>Логин:</strong> <%= @user.user_name %></p>
+<p><strong>Имя:</strong> <%= @user.display_name %></p>
+<p><strong>Роль:</strong> <%= @user.role %></p>
+
+<p>
+  <%= link_to 'Редактировать', edit_profile_path %>
+  |
+  <%= link_to 'Мои команды', teams_path %>
+</p>
+

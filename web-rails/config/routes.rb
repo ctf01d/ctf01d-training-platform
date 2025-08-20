@@ -8,9 +8,20 @@ Rails.application.routes.draw do
   resources :games
   resources :services
   resources :team_memberships
-  resources :teams
+  resources :team_memberships do
+    member do
+      post :approve
+      post :reject
+    end
+  end
+  resources :teams do
+    member do
+      post :join_request
+    end
+  end
   resources :users
   get 'scoreboard', to: 'scoreboards#index', as: :scoreboard
+  resource :profile, only: %i[show edit update]
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

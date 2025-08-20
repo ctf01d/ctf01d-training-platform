@@ -11,4 +11,6 @@
   <% end %>
 </div>
 
-<%= link_to "New team", new_team_path %>
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <%= link_to "New team", new_team_path %>
+<% end %>

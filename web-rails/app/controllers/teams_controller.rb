@@ -1,6 +1,6 @@
 class TeamsController < ApplicationController
-  before_action :require_admin, except: %i[index show]
-  before_action :set_team, only: %i[ show edit update destroy ]
+  before_action :require_admin, except: %i[index show join_request]
+  before_action :set_team, only: %i[ show edit update destroy join_request ]
 
   # GET /teams
   def index
@@ -25,6 +25,14 @@ class TeamsController < ApplicationController
     @team = Team.new(team_params)
 
     if @team.save
+      if user_signed_in?
+        # Назначаем создателя команды владельцем и капитаном
+        @team.update(captain_id: current_user.id) unless @team.captain_id.present?
+        TeamMembership.find_or_create_by!(team_id: @team.id, user_id: current_user.id) do |m|
+          m.role = 'owner'
+          m.status = 'approved'
+        end
+      end
       redirect_to @team, notice: "Team was successfully created."
     else
       render :new, status: :unprocessable_entity
@@ -44,6 +52,27 @@ class TeamsController < ApplicationController
   def destroy
     @team.destroy!
     redirect_to teams_path, notice: "Team was successfully destroyed.", status: :see_other
+  end
+
+  # POST /teams/:id/join_request
+  def join_request
+    return redirect_to new_session_path, alert: 'Требуется авторизация' unless user_signed_in?
+
+    membership = TeamMembership.find_by(team_id: @team.id, user_id: current_user.id)
+    if membership&.status == 'approved'
+      redirect_to @team, notice: 'Вы уже участник команды.'
+    elsif membership&.status == 'pending'
+      redirect_to @team, notice: 'Заявка уже подана.'
+    else
+      membership ||= TeamMembership.new(team_id: @team.id, user_id: current_user.id)
+      membership.role = 'player'
+      membership.status = 'pending'
+      if membership.save
+        redirect_to @team, notice: 'Заявка отправлена.'
+      else
+        redirect_to @team, alert: 'Не удалось отправить заявку.'
+      end
+    end
   end
 
   private

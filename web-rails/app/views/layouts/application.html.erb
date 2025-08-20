@@ -35,7 +35,7 @@
       <% end %>
       <span style="float:right;">
         <% if user_signed_in? %>
-          Привет, <%= current_user.display_name %> (<%= current_user.role %>) |
+          Привет, <%= link_to current_user.display_name, profile_path %> (<%= current_user.role %>) |
           <%= button_to 'Выйти', session_path, method: :delete, form: { style: 'display:inline' } %>
         <% else %>
           <%= link_to 'Войти', new_session_path %>
