@@ -1,0 +1,40 @@
+<% content_for :title, "Scoreboard" %>
+
+<h1>Scoreboard</h1>
+
+<% if @games.any? %>
+  <% @games.each do |game| %>
+    <section style="margin: 16px 0;">
+      <h2 style="margin: 0 0 8px 0;">
+        <%= game.name %>
+        <% if game.starts_at.present? && game.ends_at.present? %>
+          <small style="font-weight: normal; color: #666;">
+            (<%= l(game.starts_at, format: :short) rescue game.starts_at %> — <%= l(game.ends_at, format: :short) rescue game.ends_at %>)
+          </small>
+        <% end %>
+      </h2>
+      <% results = game.results.includes(:team).sort_by { |r| -r.score.to_i } %>
+      <% if results.any? %>
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr>
+            <th>#</th>
+            <th>Команда</th>
+            <th>Очки</th>
+          </tr>
+          <% results.each_with_index do |r, idx| %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><%= r.team&.name || '—' %></td>
+              <td><%= r.score %></td>
+            </tr>
+          <% end %>
+        </table>
+      <% else %>
+        <p>Нет результатов.</p>
+      <% end %>
+    </section>
+  <% end %>
+<% else %>
+  <p>Пока нет игр.</p>
+<% end %>
+

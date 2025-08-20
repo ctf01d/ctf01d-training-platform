@@ -1381,3 +1381,302 @@ Completed 200 OK in 98ms (Views: 39.4ms | ActiveRecord: 22.5ms (2 queries, 0 cac
 
 
 Started GET "/assets/application-05ac9a9a.css" for 127.0.0.1 at 2025-08-21 00:43:01 +0300
+Started GET "/users" for 127.0.0.1 at 2025-08-21 00:44:43 +0300
+Processing by UsersController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering users/index.html.erb within layouts/application
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/views/users/index.html.erb:6
+  Rendered users/_user.html.erb (Duration: 0.8ms | GC: 0.0ms)
+  Rendered users/index.html.erb within layouts/application (Duration: 23.3ms | GC: 0.1ms)
+  [1m[36mUser Load (1.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 34.3ms | GC: 0.1ms)
+Completed 200 OK in 45ms (Views: 33.3ms | ActiveRecord: 2.5ms (2 queries, 0 cached) | GC: 0.3ms)
+
+
+Started GET "/scoreboard" for 127.0.0.1 at 2025-08-21 00:44:45 +0300
+Processing by ScoreboardsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering scoreboards/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:5
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.4ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mTeam Load (0.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  Rendered scoreboards/index.html.erb within layouts/application (Duration: 70.8ms | GC: 0.6ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 80.4ms | GC: 0.6ms)
+Completed 200 OK in 89ms (Views: 75.1ms | ActiveRecord: 6.3ms (8 queries, 1 cached) | GC: 0.6ms)
+
+
+Started GET "/results" for 127.0.0.1 at 2025-08-21 00:45:05 +0300
+Processing by ResultsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering results/index.html.erb within layouts/application
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:6
+  Rendered results/_result.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered results/_result.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered results/index.html.erb within layouts/application (Duration: 14.0ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 16.3ms | GC: 0.0ms)
+Completed 200 OK in 19ms (Views: 16.0ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 00:45:08 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  Rendered teams/_team.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  Rendered teams/index.html.erb within layouts/application (Duration: 6.9ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 9.1ms | GC: 0.0ms)
+Completed 200 OK in 12ms (Views: 9.0ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/teams/1" for 127.0.0.1 at 2025-08-21 00:45:12 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTeam Load (0.5ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:52:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  Rendered teams/_team.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  [1m[36mTeamMembership Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:14
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:21
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:21
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/show.html.erb within layouts/application (Duration: 37.1ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 38.5ms | GC: 0.0ms)
+Completed 200 OK in 45ms (Views: 36.8ms | ActiveRecord: 2.7ms (5 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/team_memberships/new?team_id=1" for 127.0.0.1 at 2025-08-21 00:45:18 +0300
+Processing by TeamMembershipsController#new as HTML
+  Parameters: {"team_id" => "1"}
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='new',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering team_memberships/new.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='new',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/views/team_memberships/_form.html.erb:16
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" /*action='new',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/views/team_memberships/_form.html.erb:21
+  Rendered team_memberships/_form.html.erb (Duration: 13.5ms | GC: 0.4ms)
+  Rendered team_memberships/new.html.erb within layouts/application (Duration: 14.2ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 14.9ms | GC: 0.4ms)
+Completed 200 OK in 35ms (Views: 15.3ms | ActiveRecord: 0.7ms (3 queries, 0 cached) | GC: 13.8ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 00:45:22 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.5ms)[0m  [1m[34mSELECT "services".* FROM "services" /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 13.1ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 13.8ms | GC: 0.4ms)
+Completed 200 OK in 23ms (Views: 12.5ms | ActiveRecord: 2.2ms (2 queries, 0 cached) | GC: 0.8ms)
+
+
+Started GET "/users" for 127.0.0.1 at 2025-08-21 00:45:25 +0300
+Processing by UsersController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering users/index.html.erb within layouts/application
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/views/users/index.html.erb:6
+  Rendered users/_user.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered users/index.html.erb within layouts/application (Duration: 4.7ms | GC: 0.3ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 8.9ms | GC: 0.3ms)
+Completed 200 OK in 12ms (Views: 8.6ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.3ms)
+
+
+Started GET "/users/new" for 127.0.0.1 at 2025-08-21 00:45:27 +0300
+Processing by UsersController#new as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='new',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering users/new.html.erb within layouts/application
+  Rendered users/_form.html.erb (Duration: 10.5ms | GC: 0.2ms)
+  Rendered users/new.html.erb within layouts/application (Duration: 11.0ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 11.9ms | GC: 0.2ms)
+Completed 200 OK in 17ms (Views: 12.3ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.2ms)
+
+
+Started POST "/users" for 127.0.0.1 at 2025-08-21 00:45:50 +0300
+Processing by UsersController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "user" => {"user_name" => "hotorcelexo", "display_name" => "hotor", "role" => "player", "rating" => "", "avatar_url" => "", "password" => "[FILTERED]", "password_confirmation" => "[FILTERED]"}, "commit" => "Create User"}
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mUser Exists? (2.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."user_name" = 'hotorcelexo' LIMIT 1 /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mUser Create (1.5ms)[0m  [1m[32mINSERT INTO "users" ("user_name", "display_name", "role", "rating", "avatar_url", "password_digest", "created_at", "updated_at") VALUES ('hotorcelexo', 'hotor', 'player', NULL, '', '$2a$12$NLR7x29.PPGxE7NoAwhrhuwsUbB55Pl17mx13wb571eENNORUmTDi', '2025-08-20 21:45:50.916747', '2025-08-20 21:45:50.916747') RETURNING "id" /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[31mROLLBACK /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+Completed 500 Internal Server Error in 185ms (ActiveRecord: 5.2ms (3 queries, 0 cached) | GC: 0.2ms)
+
+
+  
+ActiveRecord::NotNullViolation (PG::NotNullViolation: ERROR:  null value in column "rating" of relation "users" violates not-null constraint
+DETAIL:  Failing row contains (2, hotorcelexo, hotor, player, null, , $2a$12$NLR7x29.PPGxE7NoAwhrhuwsUbB55Pl17mx13wb571eENNORUmTDi, 2025-08-20 21:45:50.916747, 2025-08-20 21:45:50.916747).
+)
+Caused by: PG::NotNullViolation (ERROR:  null value in column "rating" of relation "users" violates not-null constraint
+DETAIL:  Failing row contains (2, hotorcelexo, hotor, player, null, , $2a$12$NLR7x29.PPGxE7NoAwhrhuwsUbB55Pl17mx13wb571eENNORUmTDi, 2025-08-20 21:45:50.916747, 2025-08-20 21:45:50.916747).
+)
+
+Information for: ActiveRecord::NotNullViolation (PG::NotNullViolation: ERROR:  null value in column "rating" of relation "users" violates not-null constraint
+DETAIL:  Failing row contains (2, hotorcelexo, hotor, player, null, , $2a$12$NLR7x29.PPGxE7NoAwhrhuwsUbB55Pl17mx13wb571eENNORUmTDi, 2025-08-20 21:45:50.916747, 2025-08-20 21:45:50.916747).
+):
+  
+
+Information for cause: PG::NotNullViolation (ERROR:  null value in column "rating" of relation "users" violates not-null constraint
+DETAIL:  Failing row contains (2, hotorcelexo, hotor, player, null, , $2a$12$NLR7x29.PPGxE7NoAwhrhuwsUbB55Pl17mx13wb571eENNORUmTDi, 2025-08-20 21:45:50.916747, 2025-08-20 21:45:50.916747).
+):
+  
+app/controllers/users_controller.rb:27:in 'UsersController#create'
+Started POST "/users" for 127.0.0.1 at 2025-08-21 00:46:08 +0300
+Processing by UsersController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "user" => {"user_name" => "hotorcelexo", "display_name" => "hotor", "role" => "player", "rating" => "1", "avatar_url" => "1", "password" => "[FILTERED]", "password_confirmation" => "[FILTERED]"}, "commit" => "Create User"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mUser Exists? (1.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."user_name" = 'hotorcelexo' LIMIT 1 /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mUser Create (0.2ms)[0m  [1m[32mINSERT INTO "users" ("user_name", "display_name", "role", "rating", "avatar_url", "password_digest", "created_at", "updated_at") VALUES ('hotorcelexo', 'hotor', 'player', 1, '1', '$2a$12$4rMWs6cx7D304CEtfsGWOusVa64EOT6zS1GkKoBLtRZZ5PTZvUfki', '2025-08-20 21:46:08.325982', '2025-08-20 21:46:08.325982') RETURNING "id" /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mTRANSACTION (3.1ms)[0m  [1m[35mCOMMIT /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+Redirected to http://127.0.0.1:3000/users/3
+Completed 302 Found in 182ms (ActiveRecord: 5.4ms (3 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/users/3" for 127.0.0.1 at 2025-08-21 00:46:08 +0300
+Processing by UsersController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:52:in 'UsersController#set_user'
+  Rendering layout layouts/application.html.erb
+  Rendering users/show.html.erb within layouts/application
+  Rendered users/_user.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered users/show.html.erb within layouts/application (Duration: 1.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.3ms | GC: 0.0ms)
+Completed 500 Internal Server Error in 5ms (ActiveRecord: 0.3ms (1 query, 0 cached) | GC: 0.3ms)
+
+
+  
+ActionView::Template::Error (The asset '1' was not found in the load path.)
+Caused by: Propshaft::MissingAssetError (The asset '1' was not found in the load path.)
+
+Information for: ActionView::Template::Error (The asset '1' was not found in the load path.):
+    1: <div id="<%= dom_id user %>">
+    2:   <p>
+    3:     <% if user.avatar_url.present? %>
+    4:       <%= image_tag user.avatar_url, alt: user.display_name, class: 'avatar-image' %>
+    5:     <% else %>
+    6:       <% initial = user.user_name.to_s.first&.upcase || '?' %>
+    7:       <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+  
+app/views/users/_user.html.erb:4
+app/views/users/show.html.erb:1
+
+Information for cause: Propshaft::MissingAssetError (The asset '1' was not found in the load path.):
+  
+app/views/users/_user.html.erb:4
+app/views/users/show.html.erb:1
+Started POST "/users" for 127.0.0.1 at 2025-08-21 00:46:21 +0300
+Processing by UsersController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "user" => {"user_name" => "hotorcelexo", "display_name" => "hotor", "role" => "player", "rating" => "1", "avatar_url" => "", "password" => "[FILTERED]", "password_confirmation" => "[FILTERED]"}, "commit" => "Create User"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mUser Exists? (1.1ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."user_name" = 'hotorcelexo' LIMIT 1 /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[31mROLLBACK /*action='create',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/users_controller.rb:27:in 'UsersController#create'
+  Rendering layout layouts/application.html.erb
+  Rendering users/new.html.erb within layouts/application
+  Rendered users/_form.html.erb (Duration: 8.1ms | GC: 0.0ms)
+  Rendered users/new.html.erb within layouts/application (Duration: 8.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.2ms | GC: 0.0ms)
+Completed 422 Unprocessable Content in 176ms (Views: 9.7ms | ActiveRecord: 1.8ms (2 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 00:46:33 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  Rendered teams/_team.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered teams/index.html.erb within layouts/application (Duration: 2.3ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 6.8ms | GC: 0.0ms)
+Completed 200 OK in 9ms (Views: 6.5ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/users" for 127.0.0.1 at 2025-08-21 00:46:34 +0300
+Processing by UsersController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering users/index.html.erb within layouts/application
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/views/users/index.html.erb:6
+  Rendered users/_user.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered users/_user.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered users/index.html.erb within layouts/application (Duration: 1.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.4ms | GC: 0.0ms)
+Completed 500 Internal Server Error in 3ms (ActiveRecord: 0.2ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+  
+ActionView::Template::Error (The asset '1' was not found in the load path.)
+Caused by: Propshaft::MissingAssetError (The asset '1' was not found in the load path.)
+
+Information for: ActionView::Template::Error (The asset '1' was not found in the load path.):
+    1: <div id="<%= dom_id user %>">
+    2:   <p>
+    3:     <% if user.avatar_url.present? %>
+    4:       <%= image_tag user.avatar_url, alt: user.display_name, class: 'avatar-image' %>
+    5:     <% else %>
+    6:       <% initial = user.user_name.to_s.first&.upcase || '?' %>
+    7:       <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
+  
+app/views/users/_user.html.erb:4
+app/views/users/index.html.erb:7
+app/views/users/index.html.erb:6
+
+Information for cause: Propshaft::MissingAssetError (The asset '1' was not found in the load path.):
+  
+app/views/users/_user.html.erb:4
+app/views/users/index.html.erb:7
+app/views/users/index.html.erb:6
