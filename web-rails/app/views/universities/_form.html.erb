@@ -1,0 +1,27 @@
+<%= form_with(model: university) do |form| %>
+  <% if university.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(university.errors.count, "error") %> prohibited this university from being saved:</h2>
+
+      <ul>
+        <% university.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :site_url, style: "display: block" %>
+    <%= form.text_field :site_url %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

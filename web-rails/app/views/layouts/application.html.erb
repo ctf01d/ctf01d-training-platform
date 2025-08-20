@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Web Rails" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app %>
+  </head>
+
+  <body>
+    <nav style="padding:8px; background:#f5f5f5; margin-bottom: 12px;">
+      <%= link_to 'Сервисы', services_path %> |
+      <%= link_to 'Команды', teams_path %> |
+      <%= link_to 'Игры', games_path %> |
+      <%= link_to 'Результаты', results_path %>
+      <span style="float:right;">
+        <% if user_signed_in? %>
+          Привет, <%= current_user.display_name %> (<%= current_user.role %>) |
+          <%= button_to 'Выйти', session_path, method: :delete, form: { style: 'display:inline' } %>
+        <% else %>
+          <%= link_to 'Войти', new_session_path %>
+        <% end %>
+      </span>
+    </nav>
+
+    <% if notice %>
+      <p style="color: green;"> <%= notice %> </p>
+    <% end %>
+    <% if alert %>
+      <p style="color: red;"> <%= alert %> </p>
+    <% end %>
+
+    <%= yield %>
+  </body>
+</html>

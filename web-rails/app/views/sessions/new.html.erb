@@ -1,0 +1,16 @@
+<h1>Вход</h1>
+
+<%= form_with url: session_path, method: :post, local: true do |f| %>
+  <div>
+    <%= label_tag :user_name, 'Логин' %>
+    <%= text_field_tag :user_name %>
+  </div>
+  <div>
+    <%= label_tag :password, 'Пароль' %>
+    <%= password_field_tag :password %>
+  </div>
+  <div>
+    <%= submit_tag 'Войти' %>
+  </div>
+<% end %>
+

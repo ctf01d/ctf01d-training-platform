@@ -1,0 +1,11 @@
+<% content_for :title, "New result" %>
+
+<h1>New result</h1>
+
+<%= render "form", result: @result %>
+
+<br>
+
+<div>
+  <%= link_to "Back to results", results_path %>
+</div>
