@@ -3,6 +3,7 @@ class ProfilesController < ApplicationController
 
   def show
     @user = current_user
+    @memberships = @user.team_memberships.includes(:team).order(created_at: :desc)
   end
 
   def edit
@@ -24,4 +25,3 @@ class ProfilesController < ApplicationController
     params.expect(user: [:display_name, :avatar_url, :password, :password_confirmation])
   end
 end
-

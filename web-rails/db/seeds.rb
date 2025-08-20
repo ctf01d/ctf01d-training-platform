@@ -6,8 +6,12 @@ admin.password = 'admin'
 admin.password_confirmation = 'admin'
 admin.save!
 
+uni = University.find_or_create_by!(name: 'Demo University') do |u|
+  u.site_url = 'https://example.edu'
+end
+
 team = Team.find_or_create_by!(name: 'Team One') do |t|
-  t.university = 'Demo University'
+  t.university = uni
   t.description = 'Demo team'
   t.website = 'https://example.com'
   t.avatar_url = ''

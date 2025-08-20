@@ -1,8 +1,24 @@
 <%= render @university %>
 
 <div>
-  <%= link_to "Edit this university", edit_university_path(@university) %> |
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <%= link_to "Edit this university", edit_university_path(@university) %> |
+  <% end %>
   <%= link_to "Back to universities", universities_path %>
-
-  <%= button_to "Destroy this university", @university, method: :delete %>
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    | <%= button_to "Destroy this university", @university, method: :delete, form: { style: 'display:inline' } %>
+  <% end %>
 </div>
+
+<hr>
+<h2>Команды</h2>
+<% teams = @university.teams.order(:name) %>
+<% if teams.any? %>
+  <ul>
+    <% teams.each do |t| %>
+      <li><%= link_to t.name, t %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>Пока нет команд.</p>
+<% end %>

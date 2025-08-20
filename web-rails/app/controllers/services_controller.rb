@@ -65,6 +65,7 @@ class ServicesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def service_params
-      params.expect(service: [ :name, :public_description, :private_description, :author, :copyright, :avatar_url, :public ])
+      params.expect(service: [ :name, :public_description, :private_description, :author, :copyright, :avatar_url, :public,
+                               :service_archive_url, :checker_archive_url, :writeup_url ])
     end
 end

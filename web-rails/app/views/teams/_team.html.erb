@@ -16,7 +16,11 @@
 
   <p>
     <strong>University:</strong>
-    <%= team.university %>
+    <% if team.university.present? %>
+      <%= link_to team.university.name, team.university %>
+    <% else %>
+      &mdash;
+    <% end %>
   </p>
 
   <p>

@@ -7002,3 +7002,1080 @@ Processing by TeamsController#show as HTML
 Completed 200 OK in 11ms (Views: 6.4ms | ActiveRecord: 1.7ms (13 queries, 6 cached) | GC: 0.2ms)
 
 
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:39:23 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (0.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+  
+ActiveRecord::PendingMigrationError (
+
+Migrations are pending. To resolve this issue, run:
+
+        bin/rails db:migrate
+
+You have 1 pending migration:
+
+db/migrate/20250821013855_normalize_team_university.rb
+
+
+):
+  
+activerecord (8.0.2.1) lib/active_record/migration.rb:743:in 'ActiveRecord::Migration.check_pending_migrations'
+activerecord (8.0.2.1) lib/active_record/migration.rb:660:in 'block (2 levels) in ActiveRecord::Migration::CheckPending#call'
+activesupport (8.0.2.1) lib/active_support/file_update_checker.rb:85:in 'ActiveSupport::FileUpdateChecker#execute'
+activesupport (8.0.2.1) lib/active_support/file_update_checker.rb:95:in 'ActiveSupport::FileUpdateChecker#execute_if_updated'
+activerecord (8.0.2.1) lib/active_record/migration.rb:667:in 'block in ActiveRecord::Migration::CheckPending#call'
+activerecord (8.0.2.1) lib/active_record/migration.rb:657:in 'Thread::Mutex#synchronize'
+activerecord (8.0.2.1) lib/active_record/migration.rb:657:in 'ActiveRecord::Migration::CheckPending#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/callbacks.rb:31:in 'block in ActionDispatch::Callbacks#call'
+activesupport (8.0.2.1) lib/active_support/callbacks.rb:100:in 'ActiveSupport::Callbacks#run_callbacks'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/callbacks.rb:30:in 'ActionDispatch::Callbacks#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/executor.rb:16:in 'ActionDispatch::Executor#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/actionable_exceptions.rb:18:in 'ActionDispatch::ActionableExceptions#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/debug_exceptions.rb:31:in 'ActionDispatch::DebugExceptions#call'
+web-console (4.2.1) lib/web_console/middleware.rb:132:in 'WebConsole::Middleware#call_app'
+web-console (4.2.1) lib/web_console/middleware.rb:28:in 'block in WebConsole::Middleware#call'
+web-console (4.2.1) lib/web_console/middleware.rb:17:in 'Kernel#catch'
+web-console (4.2.1) lib/web_console/middleware.rb:17:in 'WebConsole::Middleware#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/show_exceptions.rb:32:in 'ActionDispatch::ShowExceptions#call'
+railties (8.0.2.1) lib/rails/rack/logger.rb:41:in 'Rails::Rack::Logger#call_app'
+railties (8.0.2.1) lib/rails/rack/logger.rb:29:in 'Rails::Rack::Logger#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/remote_ip.rb:96:in 'ActionDispatch::RemoteIp#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/request_id.rb:34:in 'ActionDispatch::RequestId#call'
+rack (3.2.0) lib/rack/method_override.rb:28:in 'Rack::MethodOverride#call'
+rack (3.2.0) lib/rack/runtime.rb:24:in 'Rack::Runtime#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:61:in 'block in ActionDispatch::ServerTiming#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:26:in 'ActionDispatch::ServerTiming::Subscriber#collect_events'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/server_timing.rb:60:in 'ActionDispatch::ServerTiming#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/executor.rb:16:in 'ActionDispatch::Executor#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/static.rb:27:in 'ActionDispatch::Static#call'
+rack (3.2.0) lib/rack/sendfile.rb:114:in 'Rack::Sendfile#call'
+actionpack (8.0.2.1) lib/action_dispatch/middleware/host_authorization.rb:143:in 'ActionDispatch::HostAuthorization#call'
+railties (8.0.2.1) lib/rails/engine.rb:535:in 'Rails::Engine#call'
+puma (6.6.1) lib/puma/configuration.rb:279:in 'Puma::Configuration::ConfigMiddleware#call'
+puma (6.6.1) lib/puma/request.rb:99:in 'block in Puma::Request#handle_request'
+puma (6.6.1) lib/puma/thread_pool.rb:390:in 'Puma::ThreadPool#with_force_shutdown'
+puma (6.6.1) lib/puma/request.rb:98:in 'Puma::Request#handle_request'
+puma (6.6.1) lib/puma/server.rb:472:in 'Puma::Server#process_client'
+puma (6.6.1) lib/puma/server.rb:254:in 'block in Puma::Server#run'
+puma (6.6.1) lib/puma/thread_pool.rb:167:in 'block in Puma::ThreadPool#spawn_thread'
+  [1m[35m (0.2ms)[0m  [1m[34mSELECT pg_try_advisory_lock(1603641364890720330) /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='WebRails'*/[0m
+Migrating to NormalizeTeamUniversity (20250821013855)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*application='WebRails'*/[0m
+  [1m[35m (1.3ms)[0m  [1m[35mALTER TABLE "teams" ADD "university_id" bigint /*application='WebRails'*/[0m
+  [1m[35m (0.6ms)[0m  [1m[35mCREATE INDEX "index_teams_on_university_id" ON "teams" ("university_id") /*application='WebRails'*/[0m
+  [1m[35m (0.7ms)[0m  [1m[35mALTER TABLE "teams" ADD CONSTRAINT "fk_rails_c578b0729c"
+FOREIGN KEY ("university_id")
+  REFERENCES "universities" ("id")
+ /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MTeam Pluck (0.2ms)[0m  [1m[34mSELECT DISTINCT "teams"."university" FROM "teams" WHERE NOT (("teams"."university" = '' OR "teams"."university" IS NULL)) /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."name" = 'Demo University' LIMIT 1 /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mSAVEPOINT active_record_1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Create (0.3ms)[0m  [1m[32mINSERT INTO "universities" ("name", "site_url", "created_at", "updated_at") VALUES ('Demo University', NULL, '2025-08-20 22:39:30.739049', '2025-08-20 22:39:30.739049') RETURNING "id" /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Load (0.5ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."name" = 'TGU' LIMIT 1 /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mSAVEPOINT active_record_1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Create (1.1ms)[0m  [1m[32mINSERT INTO "universities" ("name", "site_url", "created_at", "updated_at") VALUES ('TGU', NULL, '2025-08-20 22:39:30.754627', '2025-08-20 22:39:30.754627') RETURNING "id" /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."name" = 'TUSUR' LIMIT 1 /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mSAVEPOINT active_record_1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Create (0.8ms)[0m  [1m[32mINSERT INTO "universities" ("name", "site_url", "created_at", "updated_at") VALUES ('TUSUR', NULL, '2025-08-20 22:39:30.761523', '2025-08-20 22:39:30.761523') RETURNING "id" /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE NOT (("teams"."university" = '' OR "teams"."university" IS NULL)) ORDER BY "teams"."id" ASC LIMIT 1000 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."name" = 'Demo University' LIMIT 1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MTeam Update (0.3ms)[0m  [1m[33mUPDATE "teams" SET "university_id" = 1 WHERE "teams"."id" = 1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."name" = 'TUSUR' LIMIT 1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MTeam Update (0.1ms)[0m  [1m[33mUPDATE "teams" SET "university_id" = 3 WHERE "teams"."id" = 2 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."name" = 'TGU' LIMIT 1 /*application='WebRails'*/[0m
+  [1m[36mNormalizeTeamUniversity::MTeam Update (0.1ms)[0m  [1m[33mUPDATE "teams" SET "university_id" = 2 WHERE "teams"."id" = 3 /*application='WebRails'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[35mALTER TABLE "teams" DROP COLUMN "university" /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20250821013855') RETURNING "version" /*application='WebRails'*/[0m
+  [1m[36mTRANSACTION (1.0ms)[0m  [1m[35mCOMMIT /*application='WebRails'*/[0m
+  [1m[35m (0.2ms)[0m  [1m[34mSELECT pg_advisory_unlock(1603641364890720330) /*application='WebRails'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:39:38 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.8ms)[0m  [1m[34mSELECT "services".* FROM "services" ORDER BY "services"."public" DESC, "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 4.6ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.4ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 22.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 29.9ms | GC: 0.0ms)
+Completed 200 OK in 111ms (Views: 32.2ms | ActiveRecord: 9.5ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:44 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (1.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.4ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 37.5ms | GC: 0.5ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.4ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.4ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.3ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 81.9ms | GC: 0.8ms)
+  Rendered layout layouts/application.html.erb (Duration: 86.0ms | GC: 0.8ms)
+Completed 200 OK in 122ms (Views: 80.8ms | ActiveRecord: 8.7ms (14 queries, 6 cached) | GC: 2.2ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:45 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.6ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 16.5ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 30.6ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 32.5ms | GC: 0.1ms)
+Completed 200 OK in 40ms (Views: 31.3ms | ActiveRecord: 1.9ms (14 queries, 6 cached) | GC: 0.1ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:46 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 3.9ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 17.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 19.6ms | GC: 0.0ms)
+Completed 200 OK in 24ms (Views: 18.8ms | ActiveRecord: 1.6ms (14 queries, 6 cached) | GC: 0.0ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:46 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 5.8ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 19.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 20.1ms | GC: 0.0ms)
+Completed 200 OK in 24ms (Views: 19.7ms | ActiveRecord: 1.1ms (14 queries, 6 cached) | GC: 0.0ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:46 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 4.5ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 14.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 15.4ms | GC: 0.0ms)
+Completed 200 OK in 22ms (Views: 18.6ms | ActiveRecord: 1.4ms (14 queries, 6 cached) | GC: 0.0ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:47 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 5.3ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 20.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 21.3ms | GC: 0.0ms)
+Completed 200 OK in 26ms (Views: 20.5ms | ActiveRecord: 1.7ms (14 queries, 6 cached) | GC: 0.0ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:47 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 2.0ms | GC: 0.0ms)
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 16.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 17.4ms | GC: 0.0ms)
+Completed 200 OK in 21ms (Views: 16.3ms | ActiveRecord: 1.9ms (14 queries, 6 cached) | GC: 0.0ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:39:47 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.5ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 5.6ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 16.1ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 17.9ms | GC: 0.0ms)
+Completed 200 OK in 21ms (Views: 17.3ms | ActiveRecord: 1.5ms (14 queries, 6 cached) | GC: 0.0ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:39:49 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.2ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."public" = TRUE ORDER BY "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 1.0ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 14.0ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 16.0ms | GC: 0.0ms)
+Completed 200 OK in 51ms (Views: 15.7ms | ActiveRecord: 3.9ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/universities" for 127.0.0.1 at 2025-08-21 01:39:52 +0300
+Processing by UniversitiesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering universities/index.html.erb within layouts/application
+  [1m[36mUniversity Load (0.4ms)[0m  [1m[34mSELECT "universities".* FROM "universities" /*action='index',application='WebRails',controller='universities'*/[0m
+  ↳ app/views/universities/index.html.erb:6
+  Rendered universities/_university.html.erb (Duration: 16.9ms | GC: 16.3ms)
+  Rendered universities/_university.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered universities/_university.html.erb (Duration: 0.0ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='universities'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered universities/index.html.erb within layouts/application (Duration: 28.7ms | GC: 16.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 30.3ms | GC: 16.3ms)
+Completed 200 OK in 38ms (Views: 28.7ms | ActiveRecord: 2.2ms (2 queries, 0 cached) | GC: 16.3ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:40:09 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.5ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 13.2ms | GC: 0.7ms)
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.5ms | GC: 0.0ms)
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 2.9ms | GC: 0.0ms)
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 26.9ms | GC: 1.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 31.0ms | GC: 2.0ms)
+Completed 200 OK in 38ms (Views: 28.8ms | ActiveRecord: 2.8ms (8 queries, 3 cached) | GC: 2.7ms)
+
+
+Started GET "/teams/1" for 127.0.0.1 at 2025-08-21 01:40:11 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTeam Load (0.5ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 2.9ms | GC: 0.0ms)
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 3, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 1[0m
+  ↳ app/views/teams/show.html.erb:61
+  Rendered teams/show.html.erb within layouts/application (Duration: 41.6ms | GC: 1.7ms)
+  Rendered layout layouts/application.html.erb (Duration: 42.4ms | GC: 1.7ms)
+Completed 200 OK in 49ms (Views: 41.6ms | ActiveRecord: 2.9ms (8 queries, 2 cached) | GC: 1.7ms)
+
+
+Started GET "/teams/1/edit" for 127.0.0.1 at 2025-08-21 01:40:15 +0300
+Processing by TeamsController#edit as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='edit',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 LIMIT 1 /*action='edit',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/edit.html.erb within layouts/application
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" ORDER BY "universities"."name" ASC /*action='edit',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_form.html.erb:21
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 1 AND "team_memberships"."status" = 'approved' /*action='edit',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_form.html.erb:42:in 'Enumerable#map'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 3) /*action='edit',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_form.html.erb:42:in 'Enumerable#map'
+  Rendered teams/_form.html.erb (Duration: 17.0ms | GC: 0.4ms)
+  Rendered teams/edit.html.erb within layouts/application (Duration: 18.0ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 19.4ms | GC: 0.8ms)
+Completed 200 OK in 28ms (Views: 19.2ms | ActiveRecord: 1.2ms (5 queries, 0 cached) | GC: 0.8ms)
+
+
+Started PATCH "/teams/1" for 127.0.0.1 at 2025-08-21 01:40:20 +0300
+Processing by TeamsController#update as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "team" => {"name" => "Team One", "university_id" => "2", "description" => "Demo team", "website" => "https://example.com", "avatar_url" => "", "captain_id" => "1"}, "commit" => "Update Team", "id" => "1"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='update',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 LIMIT 1 /*action='update',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN /*action='update',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:44:in 'TeamsController#update'
+  [1m[36mTeam Update (2.1ms)[0m  [1m[33mUPDATE "teams" SET "updated_at" = '2025-08-20 22:40:20.292185', "university_id" = 2 WHERE "teams"."id" = 1 /*action='update',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:44:in 'TeamsController#update'
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mCOMMIT /*action='update',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:44:in 'TeamsController#update'
+Redirected to http://127.0.0.1:3000/teams/1
+Completed 303 See Other in 42ms (ActiveRecord: 3.2ms (3 queries, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/teams/1" for 127.0.0.1 at 2025-08-21 01:40:20 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.7ms | GC: 0.0ms)
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" IN (1, 3, 4) /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 1[0m
+  ↳ app/views/teams/show.html.erb:61
+  Rendered teams/show.html.erb within layouts/application (Duration: 9.2ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 10.5ms | GC: 0.2ms)
+Completed 200 OK in 15ms (Views: 10.7ms | ActiveRecord: 1.0ms (8 queries, 2 cached) | GC: 0.2ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:41:01 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 3.9ms | GC: 0.0ms)
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.6ms | GC: 0.0ms)
+  [1m[36mCACHE University Load (0.0ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 0.8ms | GC: 0.1ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 10.1ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 10.7ms | GC: 0.1ms)
+Completed 200 OK in 13ms (Views: 9.7ms | ActiveRecord: 1.5ms (8 queries, 3 cached) | GC: 0.1ms)
+
+
+Started GET "/teams/2" for 127.0.0.1 at 2025-08-21 01:41:38 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.3ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 2 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 2 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 2 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 2 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 2 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 2[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 2 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 7.9ms | GC: 0.3ms)
+  Rendered layout layouts/application.html.erb (Duration: 8.3ms | GC: 0.3ms)
+Completed 200 OK in 11ms (Views: 7.8ms | ActiveRecord: 1.0ms (13 queries, 5 cached) | GC: 0.3ms)
+
+
+Started GET "/favicon.ico" for 127.0.0.1 at 2025-08-21 01:41:41 +0300
+  
+ActionController::RoutingError (No route matches [GET] "/favicon.ico"):
+  
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:41:43 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  Rendered profiles/show.html.erb within layouts/application (Duration: 2.8ms | GC: 0.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 5.0ms | GC: 0.5ms)
+Completed 200 OK in 28ms (Views: 5.8ms | ActiveRecord: 3.8ms (1 query, 0 cached) | GC: 1.4ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:41:45 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 16.3ms | GC: 0.2ms)
+  [1m[36mUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.2ms | GC: 0.2ms)
+  [1m[36mCACHE University Load (0.0ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 29.6ms | GC: 0.6ms)
+  Rendered layout layouts/application.html.erb (Duration: 31.8ms | GC: 0.6ms)
+Completed 200 OK in 39ms (Views: 28.2ms | ActiveRecord: 3.8ms (8 queries, 3 cached) | GC: 1.2ms)
+
+
+Started GET "/favicon.ico" for 127.0.0.1 at 2025-08-21 01:41:48 +0300
+  
+ActionController::RoutingError (No route matches [GET] "/favicon.ico"):
+  
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:42:10 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  [1m[36mTeamMembership Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:26
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 ORDER BY "team_memberships"."created_at" DESC /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (3, 1) /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  Rendered profiles/show.html.erb within layouts/application (Duration: 22.2ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 23.4ms | GC: 0.0ms)
+Completed 200 OK in 49ms (Views: 22.2ms | ActiveRecord: 6.1ms (4 queries, 0 cached) | GC: 0.0ms)
+
+
+Started DELETE "/team_memberships/7" for 127.0.0.1 at 2025-08-21 01:42:15 +0300
+Processing by TeamMembershipsController#destroy as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "id" => "7"}
+  [1m[36mTeamMembership Load (0.3ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."id" = 7 LIMIT 1 /*action='destroy',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:157:in 'TeamMembershipsController#set_team_membership'
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='destroy',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:49:in 'TeamMembershipsController#destroy'
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='destroy',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='destroy',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*action='destroy',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:65:in 'TeamMembershipsController#destroy'
+  [1m[36mTeamMembership Destroy (1.0ms)[0m  [1m[31mDELETE FROM "team_memberships" WHERE "team_memberships"."id" = 7 /*action='destroy',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:65:in 'TeamMembershipsController#destroy'
+  [1m[36mTRANSACTION (2.5ms)[0m  [1m[35mCOMMIT /*action='destroy',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:65:in 'TeamMembershipsController#destroy'
+Redirected to http://127.0.0.1:3000/teams/3
+Completed 303 See Other in 32ms (ActiveRecord: 4.8ms (5 queries, 0 cached) | GC: 7.1ms)
+
+
+Started GET "/teams/3" for 127.0.0.1 at 2025-08-21 01:42:15 +0300
+Processing by TeamsController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mTeam Load (0.5ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/teams_controller.rb:123:in 'TeamsController#set_team'
+  Rendering layout layouts/application.html.erb
+  Rendering teams/show.html.erb within layouts/application
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 12.9ms | GC: 0.4ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:17
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 /*action='show',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/show.html.erb:27
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3[0m
+  ↳ app/views/teams/show.html.erb:61
+  [1m[36mCACHE TeamMembership Load (0.0ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."team_id" = 3 AND "team_memberships"."user_id" = 4 AND "team_memberships"."status" = 'approved' LIMIT 1[0m
+  ↳ app/controllers/application_controller.rb:31:in 'ApplicationController#can_manage_team?'
+  Rendered teams/show.html.erb within layouts/application (Duration: 26.8ms | GC: 1.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 27.7ms | GC: 1.0ms)
+Completed 200 OK in 33ms (Views: 26.1ms | ActiveRecord: 2.8ms (13 queries, 5 cached) | GC: 1.6ms)
+
+
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:42:21 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  [1m[36mTeamMembership Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:26
+  [1m[36mTeamMembership Load (0.5ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 ORDER BY "team_memberships"."created_at" DESC /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  Rendered profiles/show.html.erb within layouts/application (Duration: 6.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.8ms | GC: 0.0ms)
+Completed 200 OK in 14ms (Views: 7.2ms | ActiveRecord: 1.7ms (4 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:42:28 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.9ms | GC: 0.0ms)
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 2.0ms | GC: 0.0ms)
+  [1m[36mCACHE University Load (0.0ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.9ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 11.1ms | GC: 0.7ms)
+  Rendered layout layouts/application.html.erb (Duration: 12.0ms | GC: 0.7ms)
+Completed 200 OK in 14ms (Views: 11.6ms | ActiveRecord: 1.1ms (8 queries, 3 cached) | GC: 1.2ms)
+
+
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:43:16 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  [1m[36mTeamMembership Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:26
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 ORDER BY "team_memberships"."created_at" DESC /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  Rendered profiles/show.html.erb within layouts/application (Duration: 20.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 22.7ms | GC: 0.0ms)
+Completed 200 OK in 42ms (Views: 23.3ms | ActiveRecord: 6.3ms (4 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/assets/application-57839cd3.css" for 127.0.0.1 at 2025-08-21 01:43:16 +0300
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:43:25 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  [1m[36mTeamMembership Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:26
+  [1m[36mTeamMembership Load (0.2ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 ORDER BY "team_memberships"."created_at" DESC /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  [1m[36mTeam Load (0.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  Rendered profiles/show.html.erb within layouts/application (Duration: 3.8ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 4.6ms | GC: 0.0ms)
+Completed 200 OK in 9ms (Views: 4.0ms | ActiveRecord: 1.4ms (4 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/profile" for 127.0.0.1 at 2025-08-21 01:43:31 +0300
+Processing by ProfilesController#show as HTML
+  [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering profiles/show.html.erb within layouts/application
+  [1m[36mTeamMembership Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 LIMIT 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:26
+  [1m[36mTeamMembership Load (0.1ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."user_id" = 4 ORDER BY "team_memberships"."created_at" DESC /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 /*action='show',application='WebRails',controller='profiles'*/[0m
+  ↳ app/views/profiles/show.html.erb:34
+  Rendered profiles/show.html.erb within layouts/application (Duration: 2.0ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 3.3ms | GC: 0.0ms)
+Completed 200 OK in 17ms (Views: 4.5ms | ActiveRecord: 0.9ms (4 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:43:38 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 18.6ms | GC: 6.8ms)
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.5ms | GC: 0.0ms)
+  [1m[36mCACHE University Load (0.0ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 23.9ms | GC: 6.8ms)
+  Rendered layout layouts/application.html.erb (Duration: 25.2ms | GC: 7.3ms)
+Completed 200 OK in 29ms (Views: 24.1ms | ActiveRecord: 2.4ms (8 queries, 3 cached) | GC: 7.3ms)
+
+
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:43:39 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Load (0.6ms)[0m  [1m[34mSELECT "games".* FROM "games" /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:6
+  Rendered games/_game.html.erb (Duration: 3.9ms | GC: 0.0ms)
+  Rendered games/_game.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered games/index.html.erb within layouts/application (Duration: 11.8ms | GC: 0.5ms)
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 15.3ms | GC: 0.5ms)
+Completed 200 OK in 30ms (Views: 19.1ms | ActiveRecord: 2.4ms (2 queries, 0 cached) | GC: 0.9ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:43:42 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 2.3ms | GC: 0.0ms)
+  [1m[36mUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.9ms | GC: 0.5ms)
+  [1m[36mCACHE University Load (0.0ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.1ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 8.1ms | GC: 0.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.1ms | GC: 0.5ms)
+Completed 200 OK in 13ms (Views: 9.3ms | ActiveRecord: 1.1ms (8 queries, 3 cached) | GC: 0.5ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:44:15 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.3ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."public" = TRUE ORDER BY "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 6.3ms | GC: 0.4ms)
+  Rendered layout layouts/application.html.erb (Duration: 14.6ms | GC: 0.4ms)
+Completed 200 OK in 26ms (Views: 16.6ms | ActiveRecord: 2.3ms (2 queries, 0 cached) | GC: 0.8ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:44:18 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.2ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 2.3ms | GC: 0.0ms)
+  [1m[36mUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 1.3ms | GC: 0.0ms)
+  [1m[36mCACHE University Load (0.0ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 6.1ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.0ms | GC: 0.0ms)
+Completed 200 OK in 9ms (Views: 6.8ms | ActiveRecord: 0.9ms (8 queries, 3 cached) | GC: 0.3ms)
+
+
+Started GET "/services" for 127.0.0.1 at 2025-08-21 01:44:19 +0300
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.2ms)[0m  [1m[34mSELECT "services".* FROM "services" WHERE "services"."public" = TRUE ORDER BY "services"."name" ASC /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 1.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 2.2ms | GC: 0.0ms)
+Completed 200 OK in 7ms (Views: 2.5ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/teams" for 127.0.0.1 at 2025-08-21 01:44:20 +0300
+Processing by TeamsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering teams/index.html.erb within layouts/application
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/index.html.erb:6
+  [1m[36mUniversity Load (0.3ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 3 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 2.1ms | GC: 0.2ms)
+  [1m[36mUniversity Load (0.1ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 0.9ms | GC: 0.0ms)
+  [1m[36mCACHE University Load (0.0ms)[0m  [1m[34mSELECT "universities".* FROM "universities" WHERE "universities"."id" = 2 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:19
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/views/teams/_team.html.erb:38
+  Rendered teams/_team.html.erb (Duration: 0.8ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='teams'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered teams/index.html.erb within layouts/application (Duration: 5.6ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 6.1ms | GC: 0.2ms)
+Completed 200 OK in 7ms (Views: 5.3ms | ActiveRecord: 0.9ms (8 queries, 3 cached) | GC: 0.2ms)
+
+
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:44:21 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Load (0.3ms)[0m  [1m[34mSELECT "games".* FROM "games" /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:6
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered games/index.html.erb within layouts/application (Duration: 2.4ms | GC: 0.3ms)
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 6.2ms | GC: 0.3ms)
+Completed 200 OK in 11ms (Views: 7.0ms | ActiveRecord: 0.7ms (2 queries, 0 cached) | GC: 0.3ms)
+
+
+Started GET "/results" for 127.0.0.1 at 2025-08-21 01:44:22 +0300
+Processing by ResultsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering results/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:9
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:10
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='results'*/[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.0ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/results/index.html.erb:20:in 'Enumerable#sort_by'
+  Rendered results/index.html.erb within layouts/application (Duration: 42.8ms | GC: 13.5ms)
+  Rendered layout layouts/application.html.erb (Duration: 44.2ms | GC: 13.8ms)
+Completed 200 OK in 54ms (Views: 45.5ms | ActiveRecord: 2.9ms (9 queries, 1 cached) | GC: 13.8ms)
+
+
+Started GET "/scoreboard" for 127.0.0.1 at 2025-08-21 01:44:24 +0300
+Processing by ScoreboardsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering scoreboards/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "games" LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:5
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" ORDER BY "games"."starts_at" DESC, "games"."created_at" DESC /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:6
+  [1m[36mResult Load (0.3ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mTeam Load (0.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (2, 1) /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  [1m[36mCACHE Team Load (0.0ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2)[0m
+  ↳ app/views/scoreboards/index.html.erb:16:in 'Enumerable#sort_by'
+  Rendered scoreboards/index.html.erb within layouts/application (Duration: 21.3ms | GC: 8.3ms)
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 4 LIMIT 1 /*action='index',application='WebRails',controller='scoreboards'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 24.8ms | GC: 9.8ms)
+Completed 200 OK in 31ms (Views: 24.9ms | ActiveRecord: 2.0ms (9 queries, 1 cached) | GC: 10.8ms)
+
+

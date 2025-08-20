@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_012527) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_013855) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,14 +60,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_012527) do
 
   create_table "teams", force: :cascade do |t|
     t.string "name", null: false
-    t.string "university"
     t.text "description"
     t.string "website"
     t.string "avatar_url"
     t.integer "captain_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "university_id"
     t.index ["captain_id"], name: "index_teams_on_captain_id"
+    t.index ["university_id"], name: "index_teams_on_university_id"
   end
 
   create_table "universities", force: :cascade do |t|
@@ -93,4 +94,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_012527) do
   add_foreign_key "results", "teams"
   add_foreign_key "team_memberships", "teams"
   add_foreign_key "team_memberships", "users"
+  add_foreign_key "teams", "universities"
 end
