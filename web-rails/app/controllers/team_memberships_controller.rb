@@ -13,7 +13,11 @@ class TeamMembershipsController < ApplicationController
 
   # GET /team_memberships/new
   def new
-    @team_membership = TeamMembership.new
+    @team_membership = TeamMembership.new(
+      team_id: params[:team_id],
+      role: 'player',
+      status: 'approved'
+    )
   end
 
   # GET /team_memberships/1/edit

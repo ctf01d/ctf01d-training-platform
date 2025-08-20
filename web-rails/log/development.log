@@ -1272,3 +1272,96 @@ Processing by ResultsController#show as HTML
 Completed 200 OK in 5ms (Views: 1.8ms | ActiveRecord: 0.4ms (2 queries, 0 cached) | GC: 0.0ms)
 
 
+Started GET "/services" for 127.0.0.1 at 2025-08-21 00:36:37 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (0.6ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='WebRails'*/[0m
+Processing by ServicesController#index as HTML
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering services/index.html.erb within layouts/application
+  [1m[36mService Load (0.7ms)[0m  [1m[34mSELECT "services".* FROM "services" /*action='index',application='WebRails',controller='services'*/[0m
+  ↳ app/views/services/index.html.erb:6
+  Rendered services/_service.html.erb (Duration: 0.7ms | GC: 0.0ms)
+  Rendered services/_service.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  Rendered services/index.html.erb within layouts/application (Duration: 21.4ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 31.1ms | GC: 0.0ms)
+Completed 200 OK in 105ms (Views: 32.9ms | ActiveRecord: 7.8ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/team_memberships" for 127.0.0.1 at 2025-08-21 00:36:41 +0300
+Processing by TeamMembershipsController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering team_memberships/index.html.erb within layouts/application
+  [1m[36mTeamMembership Load (0.5ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" /*action='index',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/views/team_memberships/index.html.erb:6
+  Rendered team_memberships/index.html.erb within layouts/application (Duration: 2.3ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 9.9ms | GC: 0.0ms)
+Completed 200 OK in 21ms (Views: 10.2ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/team_memberships/new" for 127.0.0.1 at 2025-08-21 00:36:43 +0300
+Processing by TeamMembershipsController#new as HTML
+  [1m[36mUser Load (1.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='new',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering team_memberships/new.html.erb within layouts/application
+  [1m[36mTeam Load (0.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" /*action='new',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/views/team_memberships/_form.html.erb:16
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" /*action='new',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/views/team_memberships/_form.html.erb:21
+  Rendered team_memberships/_form.html.erb (Duration: 31.4ms | GC: 0.8ms)
+  Rendered team_memberships/new.html.erb within layouts/application (Duration: 32.8ms | GC: 0.8ms)
+  Rendered layout layouts/application.html.erb (Duration: 38.2ms | GC: 0.8ms)
+Completed 200 OK in 57ms (Views: 36.4ms | ActiveRecord: 3.9ms (3 queries, 0 cached) | GC: 1.4ms)
+
+
+Started POST "/team_memberships" for 127.0.0.1 at 2025-08-21 00:36:54 +0300
+Processing by TeamMembershipsController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "team_membership" => {"team_id" => "1", "user_id" => "1", "role" => "player", "status" => "approved"}, "commit" => "Create Team membership"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='create',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='create',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:31:in 'TeamMembershipsController#create'
+  [1m[36mTeam Load (1.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 1 LIMIT 1 /*action='create',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:31:in 'TeamMembershipsController#create'
+  [1m[36mCACHE User Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1[0m
+  ↳ app/controllers/team_memberships_controller.rb:31:in 'TeamMembershipsController#create'
+  [1m[36mTeamMembership Create (0.6ms)[0m  [1m[32mINSERT INTO "team_memberships" ("team_id", "user_id", "role", "status", "created_at", "updated_at") VALUES (1, 1, 'player', 'approved', '2025-08-20 21:36:54.777104', '2025-08-20 21:36:54.777104') RETURNING "id" /*action='create',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:31:in 'TeamMembershipsController#create'
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mCOMMIT /*action='create',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:31:in 'TeamMembershipsController#create'
+Redirected to http://127.0.0.1:3000/team_memberships/1
+Completed 302 Found in 48ms (ActiveRecord: 2.8ms (4 queries, 1 cached) | GC: 0.3ms)
+
+
+Started GET "/team_memberships/1" for 127.0.0.1 at 2025-08-21 00:36:54 +0300
+Processing by TeamMembershipsController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mTeamMembership Load (0.4ms)[0m  [1m[34mSELECT "team_memberships".* FROM "team_memberships" WHERE "team_memberships"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/team_memberships_controller.rb:56:in 'TeamMembershipsController#set_team_membership'
+  Rendering layout layouts/application.html.erb
+  Rendering team_memberships/show.html.erb within layouts/application
+  Rendered team_memberships/_team_membership.html.erb (Duration: 1.0ms | GC: 0.0ms)
+  Rendered team_memberships/show.html.erb within layouts/application (Duration: 8.5ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='team_memberships'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 10.8ms | GC: 0.0ms)
+Completed 200 OK in 18ms (Views: 10.9ms | ActiveRecord: 0.7ms (2 queries, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/users" for 127.0.0.1 at 2025-08-21 00:37:08 +0300
+Processing by UsersController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering users/index.html.erb within layouts/application
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/views/users/index.html.erb:6
+  Rendered users/_user.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered users/index.html.erb within layouts/application (Duration: 4.5ms | GC: 0.2ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='users'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 9.6ms | GC: 0.2ms)
+Completed 200 OK in 12ms (Views: 9.4ms | ActiveRecord: 0.6ms (2 queries, 0 cached) | GC: 0.2ms)
+
+

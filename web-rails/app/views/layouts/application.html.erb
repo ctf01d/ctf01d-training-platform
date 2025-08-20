@@ -27,6 +27,11 @@
       <%= link_to 'Команды', teams_path %> |
       <%= link_to 'Игры', games_path %> |
       <%= link_to 'Результаты', results_path %>
+      <% if user_signed_in? && current_user.role == 'admin' %>
+        | <%= link_to 'Пользователи', users_path %>
+        | <%= link_to 'Университеты', universities_path %>
+        | <%= link_to 'Членства', team_memberships_path %>
+      <% end %>
       <span style="float:right;">
         <% if user_signed_in? %>
           Привет, <%= current_user.display_name %> (<%= current_user.role %>) |
@@ -37,11 +42,9 @@
       </span>
     </nav>
 
-    <% if notice %>
-      <p style="color: green;"> <%= notice %> </p>
-    <% end %>
-    <% if alert %>
-      <p style="color: red;"> <%= alert %> </p>
+    <% flash.each do |key, message| %>
+      <% color = key.to_s == 'alert' ? 'red' : 'green' %>
+      <p style="color: <%= color %>;"><%= message %></p>
     <% end %>
 
     <%= yield %>

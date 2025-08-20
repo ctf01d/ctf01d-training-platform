@@ -1,5 +1,3 @@
-<p style="color: green"><%= notice %></p>
-
 <%= render @team %>
 
 <div>
@@ -7,4 +5,32 @@
   <%= link_to "Back to teams", teams_path %>
 
   <%= button_to "Destroy this team", @team, method: :delete %>
+</div>
+
+<hr>
+<h2>Участники</h2>
+<div>
+  <% memberships = @team.team_memberships.includes(:user) %>
+  <% if memberships.any? %>
+    <table border="1" cellpadding="4" cellspacing="0">
+      <tr>
+        <th>Пользователь</th>
+        <th>Роль</th>
+        <th>Статус</th>
+      </tr>
+      <% memberships.each do |m| %>
+        <tr>
+          <td><%= link_to m.user.display_name, m.user %></td>
+          <td><%= m.role %></td>
+          <td><%= m.status %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <p>Пока нет участников.</p>
+  <% end %>
+
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <p><%= link_to 'Добавить участника', new_team_membership_path(team_id: @team.id) %></p>
+  <% end %>
 </div>
