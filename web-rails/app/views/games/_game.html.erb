@@ -1,22 +1,23 @@
 <div id="<%= dom_id game %>">
-  <p>
-    <strong>Name:</strong>
-    <%= game.name %>
-  </p>
+  <div style="display:flex; align-items:baseline; gap:8px;">
+    <strong><%= game.name %></strong>
+    <% st = game.status %>
+    <% if st == :ongoing %>
+      <span class="badge badge--green">ongoing</span>
+    <% elsif st == :upcoming %>
+      <span class="badge badge--blue">upcoming</span>
+    <% elsif st == :past %>
+      <span class="badge badge--gray">past</span>
+    <% end %>
+  </div>
 
-  <p>
-    <strong>Organizer:</strong>
+  <p style="margin:4px 0 0 0; color:#555;">
     <%= game.organizer %>
   </p>
 
-  <p>
-    <strong>Starts at:</strong>
-    <%= game.starts_at %>
-  </p>
-
-  <p>
-    <strong>Ends at:</strong>
-    <%= game.ends_at %>
+  <p style="margin:6px 0 0 0;">
+    <strong>Period:</strong>
+    <%= game.starts_at %> — <%= game.ends_at %>
   </p>
 
 </div>

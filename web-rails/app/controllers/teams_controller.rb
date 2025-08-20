@@ -33,7 +33,7 @@ class TeamsController < ApplicationController
           m.status = 'approved'
         end
       end
-      redirect_to @team, notice: "Team was successfully created."
+      redirect_to @team, notice: "Команда создана."
     else
       render :new, status: :unprocessable_entity
     end
@@ -60,7 +60,7 @@ class TeamsController < ApplicationController
           curr.save!
         end
       end
-      redirect_to @team, notice: "Team was successfully updated.", status: :see_other
+      redirect_to @team, notice: "Команда обновлена.", status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -69,7 +69,7 @@ class TeamsController < ApplicationController
   # DELETE /teams/1
   def destroy
     @team.destroy!
-    redirect_to teams_path, notice: "Team was successfully destroyed.", status: :see_other
+    redirect_to teams_path, notice: "Команда удалена.", status: :see_other
   end
 
   # POST /teams/:id/join_request

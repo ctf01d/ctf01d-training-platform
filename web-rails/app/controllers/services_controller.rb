@@ -29,7 +29,7 @@ class ServicesController < ApplicationController
     @service = Service.new(service_params)
 
     if @service.save
-      redirect_to @service, notice: "Service was successfully created."
+      redirect_to @service, notice: "Сервис создан."
     else
       render :new, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class ServicesController < ApplicationController
   # PATCH/PUT /services/1
   def update
     if @service.update(service_params)
-      redirect_to @service, notice: "Service was successfully updated.", status: :see_other
+      redirect_to @service, notice: "Сервис обновлён.", status: :see_other
     else
       render :edit, status: :unprocessable_entity
     end
@@ -47,7 +47,7 @@ class ServicesController < ApplicationController
   # DELETE /services/1
   def destroy
     @service.destroy!
-    redirect_to services_path, notice: "Service was successfully destroyed.", status: :see_other
+    redirect_to services_path, notice: "Сервис удалён.", status: :see_other
   end
 
   # POST /services/:id/toggle_public

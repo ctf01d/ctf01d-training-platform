@@ -4,7 +4,9 @@ class GamesController < ApplicationController
 
   # GET /games
   def index
-    @games = Game.all
+    @ongoing_games  = Game.ongoing.order(ends_at: :asc)
+    @upcoming_games = Game.upcoming.order(starts_at: :asc)
+    @past_games     = Game.past.order(ends_at: :desc)
   end
 
   # GET /games/1

@@ -8464,3 +8464,297 @@ Processing by ScoreboardsController#index as HTML
 Completed 200 OK in 17ms (Views: 13.5ms | ActiveRecord: 1.9ms (9 queries, 1 cached) | GC: 0.0ms)
 
 
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:54:56 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Load (11.2ms)[0m  [1m[34mSELECT "games".* FROM "games" /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:6
+  Rendered games/_game.html.erb (Duration: 2.1ms | GC: 0.0ms)
+  Rendered games/_game.html.erb (Duration: 0.3ms | GC: 0.0ms)
+  Rendered games/index.html.erb within layouts/application (Duration: 28.7ms | GC: 0.0ms)
+  [1m[36mUser Load (0.7ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered layout layouts/application.html.erb (Duration: 48.9ms | GC: 0.0ms)
+Completed 200 OK in 60ms (Views: 34.3ms | ActiveRecord: 15.6ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:55:07 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  Rendered games/index.html.erb within layouts/application (Duration: 1.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 1.8ms | GC: 0.0ms)
+Completed 500 Internal Server Error in 14ms (ActiveRecord: 1.9ms (0 queries, 0 cached) | GC: 0.3ms)
+
+
+  
+ActionView::Template::Error (undefined method 'each' for nil)
+Caused by: NoMethodError (undefined method 'each' for nil)
+
+Information for: ActionView::Template::Error (undefined method 'each' for nil):
+    3: <h1>Games</h1>
+    4: 
+    5: <div id="games">
+    6:   <% @games.each do |game| %>
+    7:     <%= render game %>
+    8:     <p>
+    9:       <%= link_to "Show this game", game %>
+  
+app/views/games/index.html.erb:6
+
+Information for cause: NoMethodError (undefined method 'each' for nil):
+  
+app/views/games/index.html.erb:6
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:55:08 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at <= '2025-08-20 22:55:08.950084' AND ends_at >= '2025-08-20 22:55:08.950095') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:5
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (starts_at <= '2025-08-20 22:55:08.950084' AND ends_at >= '2025-08-20 22:55:08.950095') ORDER BY "games"."ends_at" ASC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:8
+  Rendered games/_game.html.erb (Duration: 3.5ms | GC: 0.0ms)
+  Rendered games/_game.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  [1m[36mGame Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at > '2025-08-20 22:55:08.952576') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:15
+  [1m[36mGame Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (ends_at < '2025-08-20 22:55:08.952668') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:25
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered games/index.html.erb within layouts/application (Duration: 37.6ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 40.9ms | GC: 0.1ms)
+Completed 200 OK in 52ms (Views: 37.7ms | ActiveRecord: 5.9ms (5 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:55:09 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at <= '2025-08-20 22:55:09.955767' AND ends_at >= '2025-08-20 22:55:09.955812') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:5
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (starts_at <= '2025-08-20 22:55:09.955767' AND ends_at >= '2025-08-20 22:55:09.955812') ORDER BY "games"."ends_at" ASC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:8
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  Rendered games/_game.html.erb (Duration: 0.0ms | GC: 0.0ms)
+  [1m[36mGame Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at > '2025-08-20 22:55:09.955950') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:15
+  [1m[36mGame Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (ends_at < '2025-08-20 22:55:09.956232') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:25
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered games/index.html.erb within layouts/application (Duration: 7.3ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 8.2ms | GC: 0.0ms)
+Completed 200 OK in 11ms (Views: 7.6ms | ActiveRecord: 0.9ms (5 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/games/1" for 127.0.0.1 at 2025-08-21 01:55:16 +0300
+Processing by GamesController#show as HTML
+  Parameters: {"id" => "1"}
+  [1m[36mGame Load (0.4ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:55:in 'GamesController#set_game'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "results" WHERE "results"."game_id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:16
+  [1m[36mResult Load (0.2ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 1 ORDER BY "results"."score" DESC /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:23:in 'Enumerable#each_with_index'
+  [1m[36mTeam Load (0.3ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:23:in 'Enumerable#each_with_index'
+  Rendered games/show.html.erb within layouts/application (Duration: 25.1ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 26.0ms | GC: 0.0ms)
+Completed 200 OK in 46ms (Views: 23.6ms | ActiveRecord: 4.3ms (5 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:55:26 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at <= '2025-08-20 22:55:26.501751' AND ends_at >= '2025-08-20 22:55:26.501765') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:5
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (starts_at <= '2025-08-20 22:55:26.501751' AND ends_at >= '2025-08-20 22:55:26.501765') ORDER BY "games"."ends_at" ASC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:8
+  Rendered games/_game.html.erb (Duration: 0.6ms | GC: 0.0ms)
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  [1m[36mGame Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at > '2025-08-20 22:55:26.505147') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:15
+  [1m[36mGame Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (ends_at < '2025-08-20 22:55:26.505349') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:25
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered games/index.html.erb within layouts/application (Duration: 31.4ms | GC: 1.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 33.8ms | GC: 1.1ms)
+Completed 200 OK in 49ms (Views: 31.1ms | ActiveRecord: 4.6ms (5 queries, 0 cached) | GC: 5.5ms)
+
+
+Started GET "/assets/application-589f3b16.css" for 127.0.0.1 at 2025-08-21 01:55:26 +0300
+Started GET "/games/2" for 127.0.0.1 at 2025-08-21 01:55:44 +0300
+Processing by GamesController#show as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mGame Load (0.4ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:55:in 'GamesController#set_game'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "results" WHERE "results"."game_id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:16
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 ORDER BY "results"."score" DESC /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:23:in 'Enumerable#each_with_index'
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:23:in 'Enumerable#each_with_index'
+  Rendered games/show.html.erb within layouts/application (Duration: 26.6ms | GC: 0.9ms)
+  Rendered layout layouts/application.html.erb (Duration: 27.6ms | GC: 0.9ms)
+Completed 200 OK in 54ms (Views: 25.9ms | ActiveRecord: 4.7ms (5 queries, 0 cached) | GC: 1.3ms)
+
+
+Started GET "/games/2/edit" for 127.0.0.1 at 2025-08-21 01:55:47 +0300
+Processing by GamesController#edit as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mUser Load (0.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='edit',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mGame Load (0.3ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = 2 LIMIT 1 /*action='edit',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:55:in 'GamesController#set_game'
+  Rendering layout layouts/application.html.erb
+  Rendering games/edit.html.erb within layouts/application
+  Rendered games/_form.html.erb (Duration: 5.0ms | GC: 0.0ms)
+  Rendered games/edit.html.erb within layouts/application (Duration: 6.0ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 8.4ms | GC: 0.0ms)
+Completed 200 OK in 12ms (Views: 8.6ms | ActiveRecord: 0.9ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started PATCH "/games/2" for 127.0.0.1 at 2025-08-21 01:55:55 +0300
+Processing by GamesController#update as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "game" => {"name" => "SibirCTF", "organizer" => "keva", "starts_at" => "2024-08-01T22:22", "ends_at" => "2024-08-24T22:22"}, "commit" => "Update Game", "id" => "2"}
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='update',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = 2 LIMIT 1 /*action='update',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:55:in 'GamesController#set_game'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*action='update',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:39:in 'GamesController#update'
+  [1m[36mGame Update (1.6ms)[0m  [1m[33mUPDATE "games" SET "starts_at" = '2024-08-01 22:22:00', "ends_at" = '2024-08-24 22:22:00', "updated_at" = '2025-08-20 22:55:55.127379' WHERE "games"."id" = 2 /*action='update',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:39:in 'GamesController#update'
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mCOMMIT /*action='update',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:39:in 'GamesController#update'
+Redirected to http://127.0.0.1:3000/games/2
+Completed 303 See Other in 37ms (ActiveRecord: 2.7ms (3 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/games/2" for 127.0.0.1 at 2025-08-21 01:55:55 +0300
+Processing by GamesController#show as HTML
+  Parameters: {"id" => "2"}
+  [1m[36mGame Load (0.3ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:55:in 'GamesController#set_game'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  Rendered games/_game.html.erb (Duration: 0.5ms | GC: 0.1ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "results" WHERE "results"."game_id" = 2 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:16
+  [1m[36mResult Load (0.1ms)[0m  [1m[34mSELECT "results".* FROM "results" WHERE "results"."game_id" = 2 ORDER BY "results"."score" DESC /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:23:in 'Enumerable#each_with_index'
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" IN (1, 2) /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:23:in 'Enumerable#each_with_index'
+  Rendered games/show.html.erb within layouts/application (Duration: 4.7ms | GC: 0.1ms)
+  Rendered layout layouts/application.html.erb (Duration: 5.4ms | GC: 0.1ms)
+Completed 200 OK in 11ms (Views: 7.8ms | ActiveRecord: 0.8ms (5 queries, 0 cached) | GC: 0.1ms)
+
+
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:55:56 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at <= '2025-08-20 22:55:56.865042' AND ends_at >= '2025-08-20 22:55:56.865046') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:5
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (starts_at <= '2025-08-20 22:55:56.865042' AND ends_at >= '2025-08-20 22:55:56.865046') ORDER BY "games"."ends_at" ASC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:8
+  Rendered games/_game.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  [1m[36mGame Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at > '2025-08-20 22:55:56.865260') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:15
+  [1m[36mGame Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (ends_at < '2025-08-20 22:55:56.865318') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:25
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (ends_at < '2025-08-20 22:55:56.865318') ORDER BY "games"."ends_at" DESC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:28
+  Rendered games/_game.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered games/index.html.erb within layouts/application (Duration: 7.5ms | GC: 0.2ms)
+  Rendered layout layouts/application.html.erb (Duration: 9.2ms | GC: 0.2ms)
+Completed 200 OK in 11ms (Views: 8.7ms | ActiveRecord: 1.0ms (6 queries, 0 cached) | GC: 0.2ms)
+
+
+Started GET "/games/new" for 127.0.0.1 at 2025-08-21 01:56:02 +0300
+Processing by GamesController#new as HTML
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='new',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendering layout layouts/application.html.erb
+  Rendering games/new.html.erb within layouts/application
+  Rendered games/_form.html.erb (Duration: 6.8ms | GC: 0.0ms)
+  Rendered games/new.html.erb within layouts/application (Duration: 7.5ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 8.1ms | GC: 0.0ms)
+Completed 200 OK in 12ms (Views: 9.0ms | ActiveRecord: 0.4ms (1 query, 0 cached) | GC: 0.2ms)
+
+
+Started POST "/games" for 127.0.0.1 at 2025-08-21 01:56:40 +0300
+Processing by GamesController#create as HTML
+  Parameters: {"authenticity_token" => "[FILTERED]", "game" => {"name" => "VolgeCTF", "organizer" => "vctf", "starts_at" => "2026-02-20T00:00", "ends_at" => "2026-02-21T00:00"}, "commit" => "Create Game"}
+  [1m[36mUser Load (0.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='create',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*action='create',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:30:in 'GamesController#create'
+  [1m[36mGame Create (1.0ms)[0m  [1m[32mINSERT INTO "games" ("name", "organizer", "starts_at", "ends_at", "created_at", "updated_at") VALUES ('VolgeCTF', 'vctf', '2026-02-20 00:00:00', '2026-02-21 00:00:00', '2025-08-20 22:56:40.874143', '2025-08-20 22:56:40.874143') RETURNING "id" /*action='create',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:30:in 'GamesController#create'
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mCOMMIT /*action='create',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:30:in 'GamesController#create'
+Redirected to http://127.0.0.1:3000/games/3
+Completed 302 Found in 11ms (ActiveRecord: 1.9ms (2 queries, 0 cached) | GC: 0.3ms)
+
+
+Started GET "/games/3" for 127.0.0.1 at 2025-08-21 01:56:40 +0300
+Processing by GamesController#show as HTML
+  Parameters: {"id" => "3"}
+  [1m[36mGame Load (0.3ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/games_controller.rb:55:in 'GamesController#set_game'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  [1m[36mUser Load (0.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  [1m[36mResult Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "results" WHERE "results"."game_id" = 3 LIMIT 1 /*action='show',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/show.html.erb:16
+  Rendered games/show.html.erb within layouts/application (Duration: 3.9ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.3ms | GC: 0.0ms)
+Completed 200 OK in 12ms (Views: 6.9ms | ActiveRecord: 0.9ms (3 queries, 0 cached) | GC: 0.0ms)
+
+
+Started GET "/games" for 127.0.0.1 at 2025-08-21 01:56:44 +0300
+Processing by GamesController#index as HTML
+  Rendering layout layouts/application.html.erb
+  Rendering games/index.html.erb within layouts/application
+  [1m[36mGame Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at <= '2025-08-20 22:56:44.790544' AND ends_at >= '2025-08-20 22:56:44.790547') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:5
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (starts_at <= '2025-08-20 22:56:44.790544' AND ends_at >= '2025-08-20 22:56:44.790547') ORDER BY "games"."ends_at" ASC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:8
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  [1m[36mGame Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (starts_at > '2025-08-20 22:56:44.790790') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:15
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (starts_at > '2025-08-20 22:56:44.790790') ORDER BY "games"."starts_at" ASC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:18
+  Rendered games/_game.html.erb (Duration: 0.1ms | GC: 0.0ms)
+  [1m[36mGame Exists? (0.1ms)[0m  [1m[34mSELECT 1 AS one FROM "games" WHERE (ends_at < '2025-08-20 22:56:44.793125') LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:25
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE (ends_at < '2025-08-20 22:56:44.793125') ORDER BY "games"."ends_at" DESC /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/views/games/index.html.erb:28
+  Rendered games/_game.html.erb (Duration: 0.2ms | GC: 0.0ms)
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 LIMIT 1 /*action='index',application='WebRails',controller='games'*/[0m
+  ↳ app/controllers/application_controller.rb:11:in 'ApplicationController#current_user'
+  Rendered games/index.html.erb within layouts/application (Duration: 6.7ms | GC: 0.0ms)
+  Rendered layout layouts/application.html.erb (Duration: 7.9ms | GC: 0.0ms)
+Completed 200 OK in 12ms (Views: 6.6ms | ActiveRecord: 1.5ms (7 queries, 0 cached) | GC: 0.0ms)
+
+

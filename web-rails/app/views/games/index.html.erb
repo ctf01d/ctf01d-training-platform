@@ -2,13 +2,36 @@
 
 <h1>Games</h1>
 
-<div id="games">
-  <% @games.each do |game| %>
-    <%= render game %>
-    <p>
-      <%= link_to "Show this game", game %>
-    </p>
-  <% end %>
-</div>
+<% if @ongoing_games.any? %>
+  <h2>Ongoing</h2>
+  <div id="ongoing-games">
+    <% @ongoing_games.each do |game| %>
+      <%= render game %>
+      <p><%= link_to "Show", game %></p>
+    <% end %>
+  </div>
+<% end %>
 
-<%= link_to "New game", new_game_path %>
+<% if @upcoming_games.any? %>
+  <h2>Upcoming</h2>
+  <div id="upcoming-games">
+    <% @upcoming_games.each do |game| %>
+      <%= render game %>
+      <p><%= link_to "Show", game %></p>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @past_games.any? %>
+  <h2>Past</h2>
+  <div id="past-games">
+    <% @past_games.each do |game| %>
+      <%= render game %>
+      <p><%= link_to "Show", game %></p>
+    <% end %>
+  </div>
+<% end %>
+
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <%= link_to "New game", new_game_path %>
+<% end %>
