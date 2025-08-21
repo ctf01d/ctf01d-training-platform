@@ -10,4 +10,14 @@ class User < ApplicationRecord
                         format: { with: /\A[a-zA-Z0-9_]+\z/, message: 'латиница, цифры и _' }
   validates :display_name, presence: true
   validates :role, presence: true
+
+  validate :validate_avatar_url
+
+  private
+  def validate_avatar_url
+    url = avatar_url.to_s.strip
+    return if url.blank?
+    return if url =~ /\A(?:https?:\/\/|data:image)/i
+    errors.add(:avatar_url, 'должен начинаться с http(s):// или data:image')
+  end
 end

@@ -1,12 +1,6 @@
 <div id="<%= dom_id university %>">
   <div class="row">
-    <% url = university.avatar_url.to_s.strip %>
-    <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
-      <%= image_tag url, alt: university.name, class: 'avatar-image' %>
-    <% else %>
-      <% initial = university.name.to_s.first&.upcase || '?' %>
-      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
-    <% end %>
+    <%= avatar_image_tag(university.name, url: university.avatar_url) %>
     <div>
       <p><strong><%= university.name %></strong></p>
       <% if university.site_url.present? %>

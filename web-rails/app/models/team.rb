@@ -10,4 +10,14 @@ class Team < ApplicationRecord
   validates :name, presence: true
   # Глобальное ограничение: один пользователь может быть капитаном только в одной команде
   validates :captain_id, uniqueness: true, allow_nil: true
+
+  validate :validate_avatar_url
+
+  private
+  def validate_avatar_url
+    url = avatar_url.to_s.strip
+    return if url.blank?
+    return if url =~ /\A(?:https?:\/\/|data:image)/i
+    errors.add(:avatar_url, 'должен начинаться с http(s):// или data:image')
+  end
 end

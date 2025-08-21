@@ -6,6 +6,7 @@ class Game < ApplicationRecord
   has_many :writeups, dependent: :destroy
 
   validates :name, presence: true
+  validate :validate_avatar_url
 
   scope :upcoming, -> { where("starts_at > ?", Time.current) }
   scope :ongoing,  -> { where("starts_at <= ? AND ends_at >= ?", Time.current, Time.current) }
@@ -35,5 +36,13 @@ class Game < ApplicationRecord
     return :upcoming if open.present? && now < open
     return :open if (open.blank? || now >= open) && (close.blank? || now <= close)
     :closed
+  end
+
+  private
+  def validate_avatar_url
+    url = avatar_url.to_s.strip
+    return if url.blank?
+    return if url =~ /\A(?:https?:\/\/|data:image)/i
+    errors.add(:avatar_url, 'должен начинаться с http(s):// или data:image')
   end
 end

@@ -6,13 +6,7 @@
   <% @teams.each do |team| %>
     <div class="card">
       <div class="row">
-        <% url = team.avatar_url.to_s.strip %>
-        <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
-          <%= image_tag url, alt: team.name, class: 'avatar-image' %>
-        <% else %>
-          <% initial = team.name.to_s.first&.upcase || '?' %>
-          <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
-        <% end %>
+        <%= avatar_image_tag(team.name, url: team.avatar_url) %>
         <div>
           <div><strong><%= link_to team.name, team %></strong></div>
           <div class="muted">

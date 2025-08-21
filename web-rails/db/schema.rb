@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_141500) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_154000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,6 +38,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_141500) do
     t.string "ctftime_url"
     t.boolean "finalized", default: false, null: false
     t.datetime "finalized_at"
+    t.datetime "registration_opens_at"
+    t.datetime "registration_closes_at"
+    t.datetime "scoreboard_opens_at"
+    t.datetime "scoreboard_closes_at"
   end
 
   create_table "games_services", id: false, force: :cascade do |t|
@@ -71,6 +75,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_141500) do
     t.string "service_archive_url"
     t.string "checker_archive_url"
     t.string "writeup_url"
+    t.string "exploits_url"
+    t.string "check_status", default: "unknown", null: false
+    t.datetime "checked_at"
     t.index ["name"], name: "index_services_on_name", unique: true
   end
 

@@ -1,12 +1,6 @@
 <div id="<%= dom_id service %>">
   <div style="display:flex; align-items:center; gap:10px;">
-    <% url = service.avatar_url.to_s.strip %>
-    <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
-      <%= image_tag url, alt: service.name, class: 'avatar-image' %>
-    <% else %>
-      <% initial = service.name.to_s.first&.upcase || '?' %>
-      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
-    <% end %>
+    <%= avatar_image_tag(service.name, url: service.avatar_url) %>
     <div>
       <strong><%= service.name %></strong>
       <% if service.public %>

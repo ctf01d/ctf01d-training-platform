@@ -3,12 +3,7 @@
 <h1>Мой профиль</h1>
 
 <div>
-  <% if @user.avatar_url.present? %>
-    <%= image_tag @user.avatar_url, alt: @user.display_name, class: 'avatar-image' %>
-  <% else %>
-    <% initial = @user.user_name.to_s.first&.upcase || '?' %>
-    <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
-  <% end %>
+  <%= avatar_image_tag(@user.display_name.presence || @user.user_name, url: @user.avatar_url) %>
 </div>
 
 <p><strong>Логин:</strong> <%= @user.user_name %></p>

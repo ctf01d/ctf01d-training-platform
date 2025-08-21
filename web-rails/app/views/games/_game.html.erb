@@ -1,12 +1,6 @@
 <div id="<%= dom_id game %>">
   <div class="row">
-    <% url = game.avatar_url.to_s.strip %>
-    <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
-      <%= image_tag url, alt: game.name, class: 'avatar-image' %>
-    <% else %>
-      <% initial = game.name.to_s.first&.upcase || '?' %>
-      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
-    <% end %>
+    <%= avatar_image_tag(game.name, url: game.avatar_url) %>
     <div>
       <div style="display:flex; align-items:baseline; gap:8px;">
         <strong><%= game.name %></strong>

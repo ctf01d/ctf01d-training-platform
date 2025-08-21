@@ -1,12 +1,6 @@
 <div class="card">
   <div class="row">
-    <% url = @team.avatar_url.to_s.strip %>
-    <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
-      <%= image_tag url, alt: @team.name, class: 'avatar-image' %>
-    <% else %>
-      <% initial = @team.name.to_s.first&.upcase || '?' %>
-      <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
-    <% end %>
+    <%= avatar_image_tag(@team.name, url: @team.avatar_url) %>
     <div>
       <p><strong><%= @team.name %></strong></p>
       <p class="muted">

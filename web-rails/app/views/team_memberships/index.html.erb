@@ -7,13 +7,7 @@
     <div class="card">
       <div class="row">
         <% # Аватар пользователя слева %>
-        <% url = tm.user&.avatar_url.to_s.strip %>
-        <% if url.present? && (url.start_with?('http://', 'https://', '/') || url.start_with?('data:image')) %>
-          <%= image_tag url, alt: tm.user&.display_name, class: 'avatar-image' %>
-        <% else %>
-          <% initial = tm.user&.user_name.to_s.first&.upcase || '?' %>
-          <span class="avatar-circle" aria-label="avatar"><%= initial %></span>
-        <% end %>
+        <%= avatar_image_tag(tm.user&.display_name || tm.user&.user_name, url: tm.user&.avatar_url) %>
         <div>
           <div>
             <strong><%= link_to (tm.user&.display_name || '—'), tm.user %></strong>

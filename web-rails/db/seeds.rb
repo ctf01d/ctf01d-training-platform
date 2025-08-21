@@ -1,4 +1,23 @@
 # Seed: users
+require 'set'
+require 'erb'
+
+# Simple SVG avatar generator (data URL)
+def svg_data_avatar(text, bg = '#3B82F6')
+  initial = text.to_s[0]&.upcase || '?'
+  svg = <<~SVG
+    <svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'>
+      <rect width='100%' height='100%' fill='#{bg}' />
+      <text x='50%' y='56%' dominant-baseline='middle' text-anchor='middle'
+            font-family='Arial, Helvetica, sans-serif' font-size='48' fill='#fff'>#{initial}</text>
+    </svg>
+  SVG
+  "data:image/svg+xml;utf8,#{ERB::Util.url_encode(svg)}"
+end
+
+PALETTE = %w[
+  #3B82F6 #10B981 #F59E0B #EF4444 #8B5CF6 #06B6D4 #EC4899 #84CC16 #F97316 #22C55E
+]
 admin = User.find_or_initialize_by(user_name: 'admin')
 admin.display_name = 'Admin'
 admin.role = 'admin'
@@ -20,6 +39,18 @@ users_data = %w[
   rootkitten
   packet_pirate
   shellsamurai
+  bufferbuddha
+  crypto_owl
+  sqli_master
+  ssti_sniffer
+  des3
+  vmwizard
+  sigsegv
+  oob_read
+  sandboxer
+  botnet_bob
+  z3solver
+  regexploit
 ]
 
 users = users_data.map do |login|
@@ -29,6 +60,7 @@ users = users_data.map do |login|
   u.rating ||= rand(0..200)
   u.password = 'password'
   u.password_confirmation = 'password'
+  u.avatar_url = svg_data_avatar(u.display_name, PALETTE.sample)
   u.save!
   u
 end
@@ -50,7 +82,11 @@ university_names = [
 ]
 
 universities = university_names.map do |name|
-  University.find_or_create_by!(name: name)
+  u = University.find_or_create_by!(name: name)
+  if u.avatar_url.blank?
+    u.update!(avatar_url: svg_data_avatar(name, PALETTE.sample))
+  end
+  u
 end
 
 # Seed: teams
@@ -60,7 +96,11 @@ teams_data = [
   { name: 'CryptoCats',       website: 'https://cryptocats.ctf',       description: 'Meow-dern cryptography enthusiasts.' },
   { name: 'SegFault Squad',   website: 'https://segfaultsquad.ctf',    description: 'Core dumped since 2013.' },
   { name: 'RedOps',           website: 'https://redops.ctf',           description: 'Offense-first CTF crew.' },
-  { name: 'Overflower',       website: 'https://overflower.ctf',       description: 'Grow your stack.' }
+  { name: 'Overflower',       website: 'https://overflower.ctf',       description: 'Grow your stack.' },
+  { name: 'BitBenders',       website: 'https://bitbenders.ctf',       description: 'We bend bits to our will.' },
+  { name: 'Stack Smashers',   website: 'https://stacksmashers.ctf',    description: 'Mind the canaries.' },
+  { name: 'Cyber Owls',       website: 'https://cyberowls.ctf',        description: 'Night hunters of bugs.' },
+  { name: 'Ghost in Shellcode', website: 'https://ghostshellcode.ctf', description: 'Haunting binaries since forever.' }
 ]
 
 teams = teams_data.map do |attrs|
@@ -68,6 +108,7 @@ teams = teams_data.map do |attrs|
   t.description = attrs[:description]
   t.website = attrs[:website]
   t.university = [nil, *universities.sample(1)].compact.first
+  t.avatar_url = svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
 end
@@ -113,7 +154,10 @@ games_data = [
   { name: 'Hack The Planet',    organizer: 'CTF01D', starts_at: 8.days.ago,  ends_at: 7.days.ago  },
   { name: 'PWN Arena',          organizer: 'CTF01D', starts_at: 1.day.ago,   ends_at: 1.day.from_now },
   { name: 'Crypto Clash',       organizer: 'CTF01D', starts_at: 5.days.from_now, ends_at: 6.days.from_now },
-  { name: 'Forensics Frenzy',   organizer: 'CTF01D', starts_at: 15.days.from_now, ends_at: 16.days.from_now }
+  { name: 'Forensics Frenzy',   organizer: 'CTF01D', starts_at: 15.days.from_now, ends_at: 16.days.from_now },
+  { name: 'Reversing Rumble',   organizer: 'CTF01D', starts_at: 60.days.ago, ends_at: 58.days.ago },
+  { name: 'Binary Blitz',       organizer: 'CTF01D', starts_at: 10.days.from_now, ends_at: 11.days.from_now },
+  { name: 'Stego Showdown',     organizer: 'CTF01D', starts_at: 20.days.from_now, ends_at: 20.days.from_now + 12.hours }
 ]
 
 games = games_data.map do |attrs|
@@ -121,6 +165,7 @@ games = games_data.map do |attrs|
   g.organizer = attrs[:organizer]
   g.starts_at = attrs[:starts_at]
   g.ends_at = attrs[:ends_at]
+  g.avatar_url = svg_data_avatar(g.name, PALETTE.sample)
   # планирование
   if g.starts_at && g.ends_at
     g.registration_opens_at = g.starts_at - 7.days
@@ -175,12 +220,19 @@ services_data = [
 
 services = services_data.map do |attrs|
   Service.find_or_create_by!(name: attrs[:name]) do |s|
+    slug = attrs[:name].downcase.gsub(/[^a-z0-9]+/, '-').gsub(/^-|-$/,'')
     s.public_description = attrs[:public_description]
     s.private_description = ""
     s.author = attrs[:author]
-    s.avatar_url = ''
+    s.avatar_url = svg_data_avatar(attrs[:name], PALETTE.sample)
     s.public = attrs[:public]
-    s.check_status = 'unknown'
+    s.service_archive_url = "https://example.com/archives/#{slug}.zip"
+    s.checker_archive_url = "https://example.com/checkers/#{slug}-checker.zip"
+    s.writeup_url = "https://example.com/writeups/#{slug}.pdf"
+    s.exploits_url = (attrs[:name].start_with?('pwn') || attrs[:name].start_with?('web')) ? "https://example.com/exploits/#{slug}.zip" : nil
+    status_pool = %w[unknown queued ok fail]
+    s.check_status = status_pool.sample
+    s.checked_at = Time.now - rand(0..10).days
   end
 end
 
@@ -225,5 +277,4 @@ past_games.each do |g|
     end
   end
 end
-# Seed: users
-require 'set'
+# end of seeds

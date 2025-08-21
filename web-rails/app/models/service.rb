@@ -15,9 +15,12 @@ class Service < ApplicationRecord
     URL_FIELDS.each do |field|
       val = self.send(field).to_s.strip
       next if val.blank?
-      unless val =~ %r{\Ahttps?://}i
-        errors.add(field, 'должен начинаться с http(s)://')
+      if field == :avatar_url
+        next if val =~ %r{\A(data:image|https?://)}i
+      else
+        next if val =~ %r{\Ahttps?://}i
       end
+      errors.add(field, 'должен начинаться с http(s)://')
     end
   end
 end
