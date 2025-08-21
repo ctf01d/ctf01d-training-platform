@@ -26,8 +26,10 @@ class TeamsController < ApplicationController
 
     if @team.save
       if user_signed_in?
-        # Назначаем создателя команды владельцем и капитаном
-        @team.update(captain_id: current_user.id) unless @team.captain_id.present?
+        # Назначаем создателя команды владельцем и (если возможно) капитаном
+        if !@team.captain_id.present? && !Team.exists?(captain_id: current_user.id)
+          @team.update(captain_id: current_user.id)
+        end
         TeamMembership.find_or_create_by!(team_id: @team.id, user_id: current_user.id) do |m|
           m.role = 'owner'
           m.status = 'approved'

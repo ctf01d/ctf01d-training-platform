@@ -141,6 +141,13 @@ class TeamMembershipsController < ApplicationController
       return redirect_to team, alert: 'Недопустимая роль'
     end
 
+    # Глобальное ограничение: пользователь может быть капитаном только в одной команде
+    if new_role == 'captain'
+      if Team.where(captain_id: @team_membership.user_id).where.not(id: team.id).exists?
+        return redirect_to team, alert: 'Этот пользователь уже является капитаном другой команды.'
+      end
+    end
+
     ActiveRecord::Base.transaction do
       if new_role == 'captain'
         # Сбрасываем предыдущего капитана
