@@ -1,32 +1,33 @@
-<%= form_with(model: university) do |form| %>
-  <% if university.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(university.errors.count, "error") %> prohibited this university from being saved:</h2>
+<div class="card">
+  <%= form_with(model: university, html: { class: 'form' }) do |form| %>
+    <% if university.errors.any? %>
+      <div class="form-errors">
+        <strong><%= pluralize(university.errors.count, "ошибка") %></strong>
+        <ul>
+          <% university.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
 
-      <ul>
-        <% university.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+    <div class="form-group">
+      <%= form.label :name %>
+      <%= form.text_field :name %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :site_url %>
+      <%= form.text_field :site_url, placeholder: 'https://…' %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :avatar_url, 'Логотип (URL)' %>
+      <%= form.text_field :avatar_url, placeholder: 'https://…/logo.png' %>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit 'Сохранить', class: 'btn primary' %>
     </div>
   <% end %>
-
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
-  </div>
-
-  <div>
-    <%= form.label :site_url, style: "display: block" %>
-    <%= form.text_field :site_url %>
-  </div>
-
-  <div>
-    <%= form.label :avatar_url, 'Логотип (URL)', style: "display: block" %>
-    <%= form.text_field :avatar_url %>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
-<% end %>
+</div>

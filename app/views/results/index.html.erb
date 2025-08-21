@@ -2,55 +2,60 @@
 
 <h1>Результаты</h1>
 
-<p>
-  <%= link_to 'Таблица', scoreboard_path %>
- </p>
+<div style="margin: 8px 0 12px 0;">
+  <%= link_to 'Таблица', scoreboard_path, class: 'btn' %>
+</div>
 
 <% if @games.any? %>
   <% @games.each do |game| %>
-    <section style="margin: 16px 0;">
+    <section class="section">
       <h2 style="margin: 0 0 8px 0;">
         <%= link_to game.name, game %>
         <% if game.starts_at.present? && game.ends_at.present? %>
-          <small style="font-weight: normal; color: #666;">
+          <small class="muted" style="font-weight: normal;">
             (<%= l(game.starts_at, format: :short) rescue game.starts_at %> — <%= l(game.ends_at, format: :short) rescue game.ends_at %>)
           </small>
         <% end %>
       </h2>
       <% results = game.results.includes(:team).sort_by { |r| -r.score.to_i } %>
       <% if results.any? %>
-        <table border="1" cellpadding="6" cellspacing="0">
-          <tr>
-            <th>#</th>
-            <th>Команда</th>
-            <th>Очки</th>
-            <% if user_signed_in? && current_user.role == 'admin' %>
-              <th>Действия</th>
-            <% end %>
-          </tr>
-          <% results.each_with_index do |r, idx| %>
-            <tr>
-              <td><%= idx + 1 %></td>
-              <td><%= r.team&.name || '—' %></td>
-              <td><%= r.score %></td>
-              <% if user_signed_in? && current_user.role == 'admin' %>
-                <td>
-                  <%= link_to 'Редактировать', edit_result_path(r) %>
-                  |
-                  <%= button_to 'Удалить', r, method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить результат?' } } %>
-                </td>
+        <div class="card">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Команда</th>
+                <th>Очки</th>
+                <% if user_signed_in? && current_user.role == 'admin' %>
+                  <th>Действия</th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% results.each_with_index do |r, idx| %>
+                <tr>
+                  <td><%= idx + 1 %></td>
+                  <td><%= r.team&.name || '—' %></td>
+                  <td><%= r.score %></td>
+                  <% if user_signed_in? && current_user.role == 'admin' %>
+                    <td>
+                      <%= link_to 'Редактировать', edit_result_path(r), class: 'btn' %>
+                      <%= button_to 'Удалить', r, method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить результат?' } }, class: 'btn danger' %>
+                    </td>
+                  <% end %>
+                </tr>
               <% end %>
-            </tr>
-          <% end %>
-        </table>
+            </tbody>
+          </table>
+        </div>
       <% else %>
-        <p>Нет результатов.</p>
+        <div class="card"><p class="muted" style="margin: 8px 10px;">Нет результатов.</p></div>
       <% end %>
 
       <% if user_signed_in? && current_user.role == 'admin' %>
-        <p style="margin-top:8px;">
-          <%= link_to 'Добавить результат', new_result_path(game_id: game.id) %>
-        </p>
+        <div style="margin-top:8px;">
+          <%= link_to 'Добавить результат', new_result_path(game_id: game.id), class: 'btn primary' %>
+        </div>
       <% end %>
     </section>
   <% end %>

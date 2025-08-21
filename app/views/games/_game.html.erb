@@ -1,9 +1,9 @@
-<div id="<%= dom_id game %>">
+<div id="<%= dom_id game %>" class="card">
   <div class="row">
     <%= avatar_image_tag(game.name, url: game.avatar_url) %>
     <div>
       <div style="display:flex; align-items:baseline; gap:8px;">
-        <strong><%= game.name %></strong>
+        <strong><%= link_to game.name, game %></strong>
         <% st = game.status %>
         <% if st == :ongoing %>
           <span class="badge badge--green">идёт</span>
@@ -14,7 +14,7 @@
         <% end %>
       </div>
 
-      <p style="margin:4px 0 0 0; color:#555;">
+      <p style="margin:4px 0 0 0;" class="muted">
         <%= game.organizer %>
       </p>
 

@@ -22,32 +22,37 @@
   </head>
 
   <body>
-    <nav style="padding:8px; background:#f5f5f5; margin-bottom: 12px;">
-      <%= link_to 'Сервисы', services_path %> |
-      <%= link_to 'Команды', teams_path %> |
-      <%= link_to 'Игры', games_path %> |
-      <%= link_to 'Результаты', results_path %> |
-      <%= link_to 'Таблица', scoreboard_path %>
-      <% if user_signed_in? && current_user.role == 'admin' %>
-        | <%= link_to 'Пользователи', users_path %>
-        | <%= link_to 'Университеты', universities_path %>
-        | <%= link_to 'Членства', team_memberships_path %>
-      <% end %>
-      <span style="float:right;">
-        <% if user_signed_in? %>
-          Привет, <%= link_to current_user.display_name, profile_path %> (<%= current_user.role %>) |
-          <%= button_to 'Выйти', session_path, method: :delete, form: { style: 'display:inline' } %>
-        <% else %>
-          <%= link_to 'Войти', new_session_path %>
+    <div class="navbar">
+      <div class="container navbar-inner">
+        <div class="brand">CTF01D</div>
+        <%= link_to 'Сервисы', services_path %>
+        <%= link_to 'Команды', teams_path %>
+        <%= link_to 'Игры', games_path %>
+        <%= link_to 'Результаты', results_path %>
+        <%= link_to 'Таблица', scoreboard_path %>
+        <% if user_signed_in? && current_user.role == 'admin' %>
+          <%= link_to 'Пользователи', users_path %>
+          <%= link_to 'Университеты', universities_path %>
+          <%= link_to 'Членства', team_memberships_path %>
         <% end %>
-      </span>
-    </nav>
+        <div class="spacer"></div>
+        <% if user_signed_in? %>
+          <span class="navbar-auth">
+            <span class="muted">Привет,</span><%= link_to current_user.display_name, profile_path %><span class="muted">(<%= current_user.role %>)</span>
+          </span>
+          <%= button_to 'Выйти', session_path, method: :delete, form: { style: 'display:inline' }, class: 'btn' %>
+        <% else %>
+          <%= link_to 'Войти', new_session_path, class: 'btn' %>
+        <% end %>
+      </div>
+    </div>
 
-    <% flash.each do |key, message| %>
-      <% color = key.to_s == 'alert' ? 'red' : 'green' %>
-      <p style="color: <%= color %>;"><%= message %></p>
-    <% end %>
+    <div class="container">
+      <% flash.each do |key, message| %>
+        <p class="flash <%= 'alert' if key.to_s == 'alert' %>"><%= message %></p>
+      <% end %>
 
-    <%= yield %>
+      <%= yield %>
+    </div>
   </body>
 </html>

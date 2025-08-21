@@ -1,8 +1,9 @@
-<%= render @team_membership %>
+<div class="card" style="margin: 8px 0 16px;">
+  <%= render @team_membership %>
+  </div>
 
 <div>
-  <%= link_to "Редактировать", edit_team_membership_path(@team_membership) %> |
-  <%= link_to "Назад к членствам", team_memberships_path %>
-
-  <%= button_to "Destroy this team membership", @team_membership, method: :delete %>
+  <%= link_to "Редактировать", edit_team_membership_path(@team_membership), class: 'btn' %> |
+  <%= link_to "Назад к членствам", team_memberships_path, class: 'btn' %> |
+  <%= button_to "Удалить членство", @team_membership, method: :delete, class: 'btn danger' %>
 </div>

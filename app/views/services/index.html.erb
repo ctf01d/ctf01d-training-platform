@@ -2,15 +2,14 @@
 
 <h1>Сервисы</h1>
 
-<div id="services">
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <div style="margin: 8px 0 12px 0;">
+    <%= link_to "Создать сервис", new_service_path, class: 'btn primary' %>
+  </div>
+<% end %>
+
+<div id="services" class="list">
   <% @services.each do |service| %>
-    <%= render service %>
-    <p>
-      <%= link_to "Открыть", service %>
-    </p>
+    <%= render partial: 'services/service', locals: { service: service, condensed: true } %>
   <% end %>
 </div>
-
-<% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "Создать сервис", new_service_path %>
-<% end %>

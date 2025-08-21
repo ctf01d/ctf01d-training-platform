@@ -1,12 +1,14 @@
-<%= render @university %>
+<div class="card" style="margin: 8px 0 16px;">
+  <%= render @university %>
+</div>
 
 <div>
   <% if user_signed_in? && current_user.role == 'admin' %>
-    <%= link_to "Редактировать", edit_university_path(@university) %> |
+    <%= link_to "Редактировать", edit_university_path(@university), class: 'btn' %> |
   <% end %>
-  <%= link_to "Назад к университетам", universities_path %>
+  <%= link_to "Назад к университетам", universities_path, class: 'btn' %>
   <% if user_signed_in? && current_user.role == 'admin' %>
-    | <%= button_to "Destroy this university", @university, method: :delete, form: { style: 'display:inline' } %>
+    | <%= button_to "Destroy this university", @university, method: :delete, form: { style: 'display:inline' }, class: 'btn danger' %>
   <% end %>
 </div>
 

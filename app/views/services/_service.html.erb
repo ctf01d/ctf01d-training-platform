@@ -1,8 +1,9 @@
-<div id="<%= dom_id service %>">
-  <div style="display:flex; align-items:center; gap:10px;">
+<% condensed = local_assigns[:condensed] %>
+<div id="<%= dom_id service %>" class="card">
+  <div style="display:flex; align-items:center; gap:10px;" class="row">
     <%= avatar_image_tag(service.name, url: service.avatar_url) %>
     <div>
-      <strong><%= service.name %></strong>
+      <strong><%= link_to service.name, service %></strong>
       <% if service.public %>
         <span class="badge badge--green">public</span>
       <% else %>
@@ -19,41 +20,43 @@
     </div>
   </div>
 
-  <p style="margin: 6px 0 0 0;">
+  <p style="margin: 6px 0 0 0;" class="muted">
     <em><%= service.author %></em>
   </p>
 
   <div style="margin-top:8px;">
     <div><strong>Public description:</strong> <%= service.public_description %></div>
     <% if user_signed_in? && current_user.role == 'admin' %>
-      <div style="margin-top:4px; color:#666;"><strong>Private:</strong> <%= service.private_description %></div>
+      <div style="margin-top:4px;" class="muted"><strong>Private:</strong> <%= service.private_description %></div>
     <% end %>
   </div>
 
-  <div style="margin-top:8px;">
-    <% if service.service_archive_url.present? %>
-      <div>Service archive: <%= link_to service.service_archive_url, service.service_archive_url, target: '_blank', rel: 'noopener' %></div>
-    <% end %>
-    <% if service.checker_archive_url.present? %>
-      <div>Checker archive: <%= link_to service.checker_archive_url, service.checker_archive_url, target: '_blank', rel: 'noopener' %></div>
-    <% end %>
-    <% if service.writeup_url.present? %>
-      <div>Writeup: <%= link_to service.writeup_url, service.writeup_url, target: '_blank', rel: 'noopener' %></div>
-    <% end %>
-    <% if service.exploits_url.present? %>
-      <div>Exploits: <%= link_to service.exploits_url, service.exploits_url, target: '_blank', rel: 'noopener' %></div>
-    <% end %>
-  </div>
-
-  <% if user_signed_in? && current_user.role == 'admin' %>
+  <% unless condensed %>
     <div style="margin-top:8px;">
-      <% if service.public %>
-        <%= button_to 'Сделать приватным', toggle_public_service_path(service), method: :post %>
-      <% else %>
-        <%= button_to 'Сделать публичным', toggle_public_service_path(service), method: :post %>
+      <% if service.service_archive_url.present? %>
+        <div>Service archive: <%= link_to service.service_archive_url, service.service_archive_url, target: '_blank', rel: 'noopener' %></div>
       <% end %>
       <% if service.checker_archive_url.present? %>
-        <%= button_to 'Проверить чекер', check_checker_service_path(service), method: :post, form: { style: 'display:inline' } %>
+        <div>Checker archive: <%= link_to service.checker_archive_url, service.checker_archive_url, target: '_blank', rel: 'noopener' %></div>
+      <% end %>
+      <% if service.writeup_url.present? %>
+        <div>Writeup: <%= link_to service.writeup_url, service.writeup_url, target: '_blank', rel: 'noopener' %></div>
+      <% end %>
+      <% if service.exploits_url.present? %>
+        <div>Exploits: <%= link_to service.exploits_url, service.exploits_url, target: '_blank', rel: 'noopener' %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if user_signed_in? && current_user.role == 'admin' && !condensed %>
+    <div style="margin-top:8px;">
+      <% if service.public %>
+        <%= button_to 'Сделать приватным', toggle_public_service_path(service), method: :post, class: 'btn' %>
+      <% else %>
+        <%= button_to 'Сделать публичным', toggle_public_service_path(service), method: :post, class: 'btn' %>
+      <% end %>
+      <% if service.checker_archive_url.present? %>
+        <%= button_to 'Проверить чекер', check_checker_service_path(service), method: :post, form: { style: 'display:inline' }, class: 'btn' %>
       <% end %>
     </div>
   <% end %>

@@ -1,103 +1,102 @@
-<%= form_with(model: game) do |form| %>
-  <% if game.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(game.errors.count, "error") %> prohibited this game from being saved:</h2>
+<div class="card">
+  <%= form_with(model: game, html: { class: 'form' }) do |form| %>
+    <% if game.errors.any? %>
+      <div class="form-errors">
+        <strong><%= pluralize(game.errors.count, "ошибка") %></strong>
+        <ul>
+          <% game.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
 
-      <ul>
-        <% game.errors.each do |error| %>
-          <li><%= error.full_message %></li>
+    <div class="form-group">
+      <%= form.label :name %>
+      <%= form.text_field :name %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :organizer %>
+      <%= form.text_field :organizer %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :starts_at %>
+      <%= form.datetime_field :starts_at %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :ends_at %>
+      <%= form.datetime_field :ends_at %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :avatar_url, 'Логотип (URL)' %>
+      <%= form.text_field :avatar_url %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :site_url, 'Сайт' %>
+      <%= form.text_field :site_url, placeholder: 'https://example.com' %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :ctftime_url, 'CTFtime' %>
+      <%= form.text_field :ctftime_url, placeholder: 'https://ctftime.org/event/…' %>
+    </div>
+
+    <h3>Окна планирования</h3>
+    <div class="form-group">
+      <%= form.label :registration_opens_at, 'Регистрация — с' %>
+      <%= form.datetime_field :registration_opens_at %>
+    </div>
+    <div class="form-group">
+      <%= form.label :registration_closes_at, 'Регистрация — до' %>
+      <%= form.datetime_field :registration_closes_at %>
+    </div>
+    <div class="form-group">
+      <%= form.label :scoreboard_opens_at, 'Scoreboard — с' %>
+      <%= form.datetime_field :scoreboard_opens_at %>
+    </div>
+    <div class="form-group">
+      <%= form.label :scoreboard_closes_at, 'Scoreboard — до' %>
+      <%= form.datetime_field :scoreboard_closes_at %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :service_ids, 'Сервисы соревнования' %>
+      <div>
+        <% Service.order(:name).each do |svc| %>
+          <label style="display:block;">
+            <%= check_box_tag 'game[service_ids][]', svc.id, form.object.service_ids.include?(svc.id), id: "game_service_#{svc.id}" %>
+            <%= svc.name %>
+          </label>
         <% end %>
-      </ul>
+        <%= hidden_field_tag 'game[service_ids][]', '' %>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit 'Сохранить', class: 'btn primary' %>
+    </div>
+
+    <h3>Доступ / Сети</h3>
+    <div class="form-group">
+      <%= form.label :vpn_url, 'VPN URL' %>
+      <%= form.text_field :vpn_url, placeholder: 'https://vpn.example/connect' %>
+    </div>
+    <div class="form-group">
+      <%= form.label :vpn_config_url, 'VPN Config URL' %>
+      <%= form.text_field :vpn_config_url, placeholder: 'https://vpn.example/configs/game.ovpn' %>
+    </div>
+    <div class="form-group">
+      <%= form.label :access_secret, 'Секрет/ключ' %>
+      <%= form.text_field :access_secret, placeholder: 'секретная строка' %>
+    </div>
+    <div class="form-group">
+      <%= form.label :access_instructions, 'Инструкции' %>
+      <%= form.text_area :access_instructions, rows: 5, placeholder: "Подключитесь к VPN..." %>
     </div>
   <% end %>
-
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
-  </div>
-
-  <div>
-    <%= form.label :organizer, style: "display: block" %>
-    <%= form.text_field :organizer %>
-  </div>
-
-  <div>
-    <%= form.label :starts_at, style: "display: block" %>
-    <%= form.datetime_field :starts_at %>
-  </div>
-
-  <div>
-    <%= form.label :ends_at, style: "display: block" %>
-    <%= form.datetime_field :ends_at %>
-  </div>
-
-  <div>
-    <%= form.label :avatar_url, 'Логотип (URL)', style: "display: block" %>
-    <%= form.text_field :avatar_url %>
-  </div>
-
-  <div>
-    <%= form.label :site_url, 'Сайт', style: "display: block" %>
-    <%= form.text_field :site_url, placeholder: 'https://example.com' %>
-  </div>
-
-  <div>
-    <%= form.label :ctftime_url, 'CTFtime', style: "display: block" %>
-    <%= form.text_field :ctftime_url, placeholder: 'https://ctftime.org/event/…' %>
-  </div>
-
-  <hr>
-  <h3>Окна планирования</h3>
-  <div>
-    <%= form.label :registration_opens_at, 'Регистрация — с', style: "display: block" %>
-    <%= form.datetime_field :registration_opens_at %>
-  </div>
-  <div>
-    <%= form.label :registration_closes_at, 'Регистрация — до', style: "display: block" %>
-    <%= form.datetime_field :registration_closes_at %>
-  </div>
-  <div>
-    <%= form.label :scoreboard_opens_at, 'Scoreboard — с', style: "display: block" %>
-    <%= form.datetime_field :scoreboard_opens_at %>
-  </div>
-  <div>
-    <%= form.label :scoreboard_closes_at, 'Scoreboard — до', style: "display: block" %>
-    <%= form.datetime_field :scoreboard_closes_at %>
-  </div>
-
-  <div>
-    <%= form.label :service_ids, 'Сервисы соревнования', style: 'display:block' %>
-    <div>
-      <% Service.order(:name).each do |svc| %>
-        <label style="display:block;">
-          <%= check_box_tag 'game[service_ids][]', svc.id, form.object.service_ids.include?(svc.id), id: "game_service_#{svc.id}" %>
-          <%= svc.name %>
-        </label>
-      <% end %>
-      <%= hidden_field_tag 'game[service_ids][]', '' %>
-    </div>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
-  
-  <hr>
-  <h3>Доступ / Сети</h3>
-  <div>
-    <%= form.label :vpn_url, 'VPN URL', style: 'display:block' %>
-    <%= form.text_field :vpn_url, placeholder: 'https://vpn.example/connect' %>
-  </div>
-  <div>
-    <%= form.label :vpn_config_url, 'VPN Config URL', style: 'display:block' %>
-    <%= form.text_field :vpn_config_url, placeholder: 'https://vpn.example/configs/game.ovpn' %>
-  </div>
-  <div>
-    <%= form.label :access_secret, 'Секрет/ключ', style: 'display:block' %>
-    <%= form.text_field :access_secret, placeholder: 'секретная строка' %>
-  </div>
-  <div>
-    <%= form.label :access_instructions, 'Инструкции', style: 'display:block' %>
-    <%= form.text_area :access_instructions, rows: 5, placeholder: "Подключитесь к VPN..." %>
-  </div>
-<% end %>
+</div>

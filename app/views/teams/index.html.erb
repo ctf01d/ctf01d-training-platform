@@ -2,6 +2,12 @@
 
 <h1>Команды</h1>
 
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <div style="margin: 8px 0 12px 0;">
+    <%= link_to "Создать команду", new_team_path, class: 'btn primary' %>
+  </div>
+<% end %>
+
 <div class="list" id="teams">
   <% @teams.each do |team| %>
     <div class="card">
@@ -19,7 +25,3 @@
     </div>
   <% end %>
 </div>
-
-<% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "Создать команду", new_team_path %>
-<% end %>

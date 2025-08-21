@@ -9,6 +9,59 @@
  * Consider organizing styles into separate files for maintainability.
 */
 
+.container { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+.navbar { background: #f7f7f9; border-bottom: 1px solid #e5e7eb; }
+.navbar-inner { display:flex; align-items:center; gap:16px; padding: 10px 0; }
+.brand { font-weight: 700; color: #6aa9ff; letter-spacing: 0.2px; }
+.spacer { flex: 1 1 auto; }
+.flash { border: 1px solid #e5e7eb; background: #e7f5ee; color: #2a7f4f; padding: 8px 12px; border-radius: 8px; margin: 12px 0; }
+.flash.alert { background: #fdecec; color: #b42318; }
+
+body { background: #ffffff; color: #111827; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif; }
+a { color: #1a56db; }
+.muted { color: #6b7280; }
+
+.list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 700px) { .list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1040px) { .list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
+.row { display: flex; align-items: center; gap: 10px; }
+
+.btn { display: inline-block; padding: 6px 10px; border-radius: 8px; border: 1px solid #e5e7eb; background: #ffffff; color: #111827; text-decoration: none; }
+.btn:hover { background: #f8fafc; }
+.btn.primary { background: #eff6ff; border-color: #c7d2fe; color: #1d4ed8; }
+.btn.danger { background: #fff5f5; border-color: #fecaca; color: #b42318; }
+
+.section { margin: 16px 0; }
+
+/* Tables */
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+.table thead th { background: #f8fafc; color: #374151; font-weight: 600; }
+.table-striped tbody tr:nth-child(even) { background: #fafafa; }
+
+/* Navbar auth compact spacing */
+.navbar-auth { display: inline-flex; align-items: center; gap: 4px; }
+
+/* Forms */
+.card form.form { display: grid; gap: 12px; }
+.form-group { display: grid; gap: 4px; }
+.form-group label { font-weight: 600; color: #374151; }
+input[type="text"], input[type="number"], input[type="password"], input[type="datetime-local"], textarea, select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+}
+textarea { resize: vertical; }
+.form-actions { margin-top: 4px; }
+.form-errors { border: 1px solid #fecaca; background: #fff5f5; color: #b42318; padding: 8px 10px; border-radius: 8px; }
+
 .avatar-circle {
   width: 48px;
   height: 48px;
@@ -41,22 +94,4 @@
 .badge--blue { background:#e6f0ff; color:#214fa3; }
 .badge--red { background:#fde8e8; color:#b91c1c; }
 
-.list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.card {
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 10px;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.muted { color: #666; }
+/* cleaned duplicate legacy light styles */

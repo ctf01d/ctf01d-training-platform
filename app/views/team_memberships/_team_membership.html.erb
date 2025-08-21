@@ -1,21 +1,21 @@
 <div id="<%= dom_id team_membership %>">
   <p>
-    <strong>Team:</strong>
-    <%= team_membership.team_id %>
+    <strong>Команда:</strong>
+    <%= team_membership.team ? link_to(team_membership.team.name, team_membership.team) : team_membership.team_id %>
   </p>
 
   <p>
-    <strong>User:</strong>
-    <%= team_membership.user_id %>
+    <strong>Пользователь:</strong>
+    <%= team_membership.user ? link_to(team_membership.user.display_name, team_membership.user) : team_membership.user_id %>
   </p>
 
   <p>
-    <strong>Role:</strong>
+    <strong>Роль:</strong>
     <%= team_membership.role %>
   </p>
 
   <p>
-    <strong>Status:</strong>
+    <strong>Статус:</strong>
     <%= team_membership.status %>
   </p>
 

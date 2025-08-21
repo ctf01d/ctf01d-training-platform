@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card" style="margin: 8px 0 16px;">
   <div class="row">
     <%= avatar_image_tag(@team.name, url: @team.avatar_url) %>
     <div>
@@ -17,11 +17,11 @@
 
 <div>
   <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
-    <%= link_to "Редактировать", edit_team_path(@team) %> |
+    <%= link_to "Редактировать", edit_team_path(@team), class: 'btn' %> |
   <% end %>
-  <%= link_to "Назад к командам", teams_path %>
+  <%= link_to "Назад к командам", teams_path, class: 'btn' %>
   <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
-    | <%= button_to "Удалить команду", @team, method: :delete, form: { style: 'display:inline' } %>
+    | <%= button_to "Удалить команду", @team, method: :delete, form: { style: 'display:inline' }, class: 'btn danger' %>
   <% end %>
 </div>
 

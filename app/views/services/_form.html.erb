@@ -1,71 +1,73 @@
-<%= form_with(model: service) do |form| %>
-  <% if service.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(service.errors.count, "error") %> prohibited this service from being saved:</h2>
+<div class="card">
+  <%= form_with(model: service, html: { class: 'form' }) do |form| %>
+    <% if service.errors.any? %>
+      <div class="form-errors">
+        <strong><%= pluralize(service.errors.count, "ошибка") %></strong>
+        <ul>
+          <% service.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
 
-      <ul>
-        <% service.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+    <div class="form-group">
+      <%= form.label :name %>
+      <%= form.text_field :name %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :public_description %>
+      <%= form.text_area :public_description, rows: 4 %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :private_description %>
+      <%= form.text_area :private_description, rows: 4 %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :author %>
+      <%= form.text_field :author %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :copyright %>
+      <%= form.text_field :copyright %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :avatar_url %>
+      <%= form.text_field :avatar_url, placeholder: 'https://…/logo.png' %>
+    </div>
+
+    <div class="form-group">
+      <label>
+        <%= form.check_box :public %>
+        Публичный
+      </label>
+    </div>
+
+    <h3>Архивы и ссылки</h3>
+    <div class="form-group">
+      <%= form.label :service_archive_url, 'Service archive URL' %>
+      <%= form.text_field :service_archive_url, placeholder: 'https://…/service.zip' %>
+    </div>
+    <div class="form-group">
+      <%= form.label :checker_archive_url, 'Checker archive URL' %>
+      <%= form.text_field :checker_archive_url, placeholder: 'https://…/checker.zip' %>
+    </div>
+    <div class="form-group">
+      <%= form.label :writeup_url, 'Writeup URL' %>
+      <%= form.text_field :writeup_url, placeholder: 'https://…/writeup.pdf' %>
+    </div>
+    <div class="form-group">
+      <%= form.label :exploits_url, 'Exploits URL' %>
+      <%= form.text_field :exploits_url, placeholder: 'https://…/exploits.zip' %>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit 'Сохранить', class: 'btn primary' %>
     </div>
   <% end %>
-
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
-  </div>
-
-  <div>
-    <%= form.label :public_description, style: "display: block" %>
-    <%= form.text_area :public_description %>
-  </div>
-
-  <div>
-    <%= form.label :private_description, style: "display: block" %>
-    <%= form.text_area :private_description %>
-  </div>
-
-  <div>
-    <%= form.label :author, style: "display: block" %>
-    <%= form.text_field :author %>
-  </div>
-
-  <div>
-    <%= form.label :copyright, style: "display: block" %>
-    <%= form.text_field :copyright %>
-  </div>
-
-  <div>
-    <%= form.label :avatar_url, style: "display: block" %>
-    <%= form.text_field :avatar_url %>
-  </div>
-
-  <div>
-    <%= form.label :public, style: "display: block" %>
-    <%= form.check_box :public %>
-  </div>
-
-  <hr>
-  <div>
-    <%= form.label :service_archive_url, 'Service archive URL', style: "display: block" %>
-    <%= form.text_field :service_archive_url, placeholder: 'https://.../service.zip' %>
-  </div>
-  <div>
-    <%= form.label :checker_archive_url, 'Checker archive URL', style: "display: block" %>
-    <%= form.text_field :checker_archive_url, placeholder: 'https://.../checker.zip' %>
-  </div>
-  <div>
-    <%= form.label :writeup_url, 'Writeup URL', style: "display: block" %>
-    <%= form.text_field :writeup_url, placeholder: 'https://.../writeup.pdf' %>
-  </div>
-
-  <div>
-    <%= form.label :exploits_url, 'Exploits URL', style: "display: block" %>
-    <%= form.text_field :exploits_url, placeholder: 'https://.../exploits.zip' %>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
-<% end %>
+</div>

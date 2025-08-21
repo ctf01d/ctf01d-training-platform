@@ -1,48 +1,55 @@
-<%= render @game %>
-
-<div style="margin-top:8px;">
-  <% if user_signed_in? && current_user.role == 'admin' %>
-    <%= link_to "Редактировать", edit_game_path(@game) %> |
-  <% end %>
-  <%= link_to "Назад к играм", games_path %> |
-  <%= link_to "Таблица", scoreboard_path %>
-  <% if user_signed_in? && current_user.role == 'admin' %>
-    | <%= button_to "Destroy this game", @game, method: :delete, form: { style: 'display:inline' } %>
-    | <%= link_to "Сервисы игры", manage_services_game_path(@game) %>
-  <% end %>
+<div style="margin: 8px 0 16px;">
+  <%= render @game %>
+  <div style="margin-top:8px;">
+    <% if user_signed_in? && current_user.role == 'admin' %>
+      <%= link_to "Редактировать", edit_game_path(@game), class: 'btn' %> |
+      <%= link_to "Сервисы игры", manage_services_game_path(@game), class: 'btn' %> |
+      <%= button_to "Удалить игру", @game, method: :delete, form: { style: 'display:inline' }, class: 'btn danger' %> |
+    <% end %>
+    <%= link_to "Назад к играм", games_path, class: 'btn' %> |
+    <%= link_to "Таблица", scoreboard_path, class: 'btn' %>
+  </div>
 </div>
 
-<hr>
-<h2>
-  <% if @final %>Итоги (зафиксировано)<% else %>Результаты<% end %>
-  <% if user_signed_in? && current_user.role == 'admin' %>
-    <small style="font-weight:normal; margin-left:8px;">
-      <% if @final %>
-        <%= button_to 'Снять финализацию', unfinalize_game_path(@game), method: :delete, form: { style: 'display:inline' } %>
-      <% else %>
-        <%= button_to 'Зафиксировать итоги', finalize_game_path(@game), method: :post, form: { style: 'display:inline' } %>
-      <% end %>
-    </small>
-  <% end %>
-</h2>
-<% if @results.any? %>
-  <table border="1" cellpadding="6" cellspacing="0">
-    <tr>
-      <th>#</th>
-      <th>Команда</th>
-      <th>Очки</th>
-    </tr>
-    <% @results.each_with_index do |r, idx| %>
-      <tr>
-        <td><%= @final ? (r.position || idx + 1) : (idx + 1) %></td>
-        <td><%= r.team&.name || '—' %></td>
-        <td><%= r.score %></td>
-      </tr>
+<div class="section">
+  <h2 style="margin: 0 0 8px 0;">
+    <% if @final %>Итоги (зафиксировано)<% else %>Результаты<% end %>
+    <% if user_signed_in? && current_user.role == 'admin' %>
+      <small style="font-weight:normal; margin-left:8px;">
+        <% if @final %>
+          <%= button_to 'Снять финализацию', unfinalize_game_path(@game), method: :delete, form: { style: 'display:inline' }, class: 'btn' %>
+        <% else %>
+          <%= button_to 'Зафиксировать итоги', finalize_game_path(@game), method: :post, form: { style: 'display:inline' }, class: 'btn' %>
+        <% end %>
+      </small>
     <% end %>
-  </table>
-<% else %>
-  <p>Пока нет результатов.</p>
-<% end %>
+  </h2>
+
+  <% if @results.any? %>
+    <div class="card">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Команда</th>
+            <th>Очки</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @results.each_with_index do |r, idx| %>
+            <tr>
+              <td><%= @final ? (r.position || idx + 1) : (idx + 1) %></td>
+              <td><%= r.team&.name || '—' %></td>
+              <td><%= r.score %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="card"><p class="muted" style="margin: 8px 10px;">Пока нет результатов.</p></div>
+  <% end %>
+</div>
 
 <% if user_signed_in? && current_user.role == 'admin' %>
   <p style="margin-top:8px;">

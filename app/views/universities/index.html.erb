@@ -2,6 +2,12 @@
 
 <h1>Университеты</h1>
 
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <div style="margin: 8px 0 12px 0;">
+    <%= link_to "Создать университет", new_university_path, class: 'btn primary' %>
+  </div>
+<% end %>
+
 <div class="list" id="universities">
   <% @universities.each do |university| %>
     <div class="card">
@@ -17,7 +23,3 @@
     </div>
   <% end %>
 </div>
-
-<% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "Создать университет", new_university_path %>
-<% end %>

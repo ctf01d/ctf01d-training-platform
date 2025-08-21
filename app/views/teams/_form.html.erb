@@ -1,52 +1,53 @@
-<%= form_with(model: team) do |form| %>
-  <% if team.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(team.errors.count, "error") %> prohibited this team from being saved:</h2>
+<div class="card">
+  <%= form_with(model: team, html: { class: 'form' }) do |form| %>
+    <% if team.errors.any? %>
+      <div class="form-errors">
+        <strong><%= pluralize(team.errors.count, "ошибка") %></strong>
+        <ul>
+          <% team.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
 
-      <ul>
-        <% team.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+    <div class="form-group">
+      <%= form.label :name %>
+      <%= form.text_field :name %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :university_id, 'University' %>
+      <%= form.collection_select :university_id, University.order(:name), :id, :name, include_blank: true %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :description %>
+      <%= form.text_area :description, rows: 4 %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :website %>
+      <%= form.text_field :website, placeholder: 'https://…' %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :avatar_url %>
+      <%= form.text_field :avatar_url, placeholder: 'https://…/logo.png' %>
+    </div>
+
+    <% if team.persisted? %>
+      <div class="form-group">
+        <%= form.label :captain_id, 'Captain' %>
+        <% members = team.team_memberships.includes(:user).where(status: TeamMembership::STATUS_APPROVED).map(&:user) %>
+        <%= form.collection_select :captain_id, members, :id, :display_name, include_blank: true %>
+      </div>
+    <% else %>
+      <p class="muted">Капитаном будет назначен создатель команды.</p>
+    <% end %>
+
+    <div class="form-actions">
+      <%= form.submit 'Сохранить', class: 'btn primary' %>
     </div>
   <% end %>
-
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
-  </div>
-
-  <div>
-    <%= form.label :university_id, 'University', style: "display: block" %>
-    <%= form.collection_select :university_id, University.order(:name), :id, :name, include_blank: true %>
-  </div>
-
-  <div>
-    <%= form.label :description, style: "display: block" %>
-    <%= form.text_area :description %>
-  </div>
-
-  <div>
-    <%= form.label :website, style: "display: block" %>
-    <%= form.text_field :website %>
-  </div>
-
-  <div>
-    <%= form.label :avatar_url, style: "display: block" %>
-    <%= form.text_field :avatar_url %>
-  </div>
-
-  <% if team.persisted? %>
-    <div>
-      <%= form.label :captain_id, 'Captain', style: "display: block" %>
-      <% members = team.team_memberships.includes(:user).where(status: TeamMembership::STATUS_APPROVED).map(&:user) %>
-      <%= form.collection_select :captain_id, members, :id, :display_name, include_blank: true %>
-    </div>
-  <% else %>
-    <p style="color:#666;">Капитаном будет назначен создатель команды.</p>
-  <% end %>
-
-  <div>
-    <%= form.submit %>
-  </div>
-<% end %>
+</div>

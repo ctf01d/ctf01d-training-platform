@@ -2,6 +2,12 @@
 
 <h1>Пользователи</h1>
 
+<% if user_signed_in? && current_user.role == 'admin' %>
+  <div style="margin: 8px 0 12px 0;">
+    <%= link_to "Создать пользователя", new_user_path, class: 'btn primary' %>
+  </div>
+<% end %>
+
 <div class="list" id="users">
   <% @users.each do |user| %>
     <div class="card">
@@ -15,7 +21,3 @@
     </div>
   <% end %>
 </div>
-
-<% if user_signed_in? && current_user.role == 'admin' %>
-  <%= link_to "Создать пользователя", new_user_path %>
-<% end %>
