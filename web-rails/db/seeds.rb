@@ -199,5 +199,23 @@ Game.where('ends_at < ?', Time.now).find_each do |g|
   end
   g.update!(finalized: true, finalized_at: Time.now)
 end
+
+# Seed: writeups for past games (random teams)
+past_games = Game.where('ends_at < ?', Time.now).to_a
+titles = [
+  'How we pwned Baby Heap',
+  'Bypassing CSP in Cookie Monster',
+  'ECB Oracle Walkthrough',
+  'Reversing CrackMe Deluxe',
+  'Forensics PCAP Tips',
+  'ROP the Planet'
+]
+past_games.each do |g|
+  teams.sample(2).each_with_index do |t, i|
+    Writeup.find_or_create_by!(game: g, team: t, title: titles.sample) do |w|
+      w.url = "https://writeups.example/#{t.name.parameterize}-#{g.name.parameterize}-#{i+1}"
+    end
+  end
+end
 # Seed: users
 require 'set'

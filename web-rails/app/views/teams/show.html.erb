@@ -154,3 +154,22 @@
     <p>Пока нет событий.</p>
   <% end %>
 </div>
+
+<hr>
+<h2>Writeups команды</h2>
+<% writeups = @team.writeups.includes(:game).order(created_at: :desc) %>
+<% if writeups.any? %>
+  <ul>
+    <% writeups.each do |w| %>
+      <li>
+        <%= link_to(w.title, w.url, target: '_blank', rel: 'noopener') %>
+        <span class="muted">— <%= link_to w.game.name, w.game %></span>
+        <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
+          | <%= button_to 'Удалить', writeup_path(w), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить writeup?' } } %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>Пока нет writeup’ов.</p>
+<% end %>

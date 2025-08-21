@@ -49,3 +49,52 @@
     <%= link_to 'Добавить результат', new_result_path(game_id: @game.id) %>
   </p>
 <% end %>
+
+<hr>
+<h2>Writeups</h2>
+<% if @writeups.any? %>
+  <table border="1" cellpadding="6" cellspacing="0">
+    <tr>
+      <th>Команда</th>
+      <th>Заголовок</th>
+      <th>Ссылка</th>
+      <th></th>
+    </tr>
+    <% @writeups.each do |w| %>
+      <tr>
+        <td><%= link_to(w.team&.name || '—', w.team || teams_path) %></td>
+        <td><%= w.title %></td>
+        <td><%= link_to w.url, w.url, target: '_blank', rel: 'noopener' %></td>
+        <td>
+          <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(w.team)) %>
+            <%= button_to 'Удалить', writeup_path(w), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить writeup?' } } %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <p>Пока нет writeup’ов.</p>
+<% end %>
+
+<% if user_signed_in? && @my_manageable_teams.any? %>
+  <div style="margin-top: 12px;">
+    <h3>Добавить writeup</h3>
+    <%= form_with url: writeups_path, method: :post, local: true do |f| %>
+      <%= hidden_field_tag :game_id, @game.id %>
+      <div style="margin-bottom:6px;">
+        <%= label_tag :team_id, 'Ваша команда' %>
+        <%= select_tag :team_id, options_from_collection_for_select(@my_manageable_teams, :id, :name), include_blank: false %>
+      </div>
+      <div style="margin-bottom:6px;">
+        <%= label_tag :title, 'Заголовок' %>
+        <%= text_field_tag :title, '', placeholder: 'Название writeup' %>
+      </div>
+      <div style="margin-bottom:6px;">
+        <%= label_tag :url, 'Ссылка' %>
+        <%= text_field_tag :url, 'https://', placeholder: 'https://…' %>
+      </div>
+      <%= submit_tag 'Добавить' %>
+    <% end %>
+  </div>
+<% end %>

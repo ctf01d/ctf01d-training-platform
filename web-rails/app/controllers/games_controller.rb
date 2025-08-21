@@ -19,6 +19,14 @@ class GamesController < ApplicationController
       @final = false
       @results = @game.results.includes(:team).order(score: :desc)
     end
+    @writeups = @game.writeups.includes(:team).order(created_at: :desc)
+    if user_signed_in?
+      # команды пользователя, которыми он может управлять
+      my_team_ids = TeamMembership.where(user_id: current_user.id, status: TeamMembership::STATUS_APPROVED).pluck(:team_id)
+      @my_manageable_teams = Team.where(id: my_team_ids).select { |t| can_manage_team?(t) }
+    else
+      @my_manageable_teams = []
+    end
   end
 
   # GET /games/:id/manage_services

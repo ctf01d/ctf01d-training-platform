@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_131500) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_141500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "final_results", force: :cascade do |t|
+    t.bigint "game_id", null: false
+    t.bigint "team_id", null: false
+    t.integer "score", default: 0, null: false
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id", "team_id"], name: "index_final_results_on_game_id_and_team_id", unique: true
+    t.index ["game_id"], name: "index_final_results_on_game_id"
+    t.index ["team_id"], name: "index_final_results_on_team_id"
+  end
 
   create_table "games", force: :cascade do |t|
     t.string "name"
@@ -24,6 +36,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_131500) do
     t.string "avatar_url"
     t.string "site_url"
     t.string "ctftime_url"
+    t.boolean "finalized", default: false, null: false
+    t.datetime "finalized_at"
   end
 
   create_table "games_services", id: false, force: :cascade do |t|
@@ -121,6 +135,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_131500) do
     t.index ["user_name"], name: "index_users_on_user_name", unique: true
   end
 
+  create_table "writeups", force: :cascade do |t|
+    t.bigint "game_id", null: false
+    t.bigint "team_id", null: false
+    t.string "title", null: false
+    t.string "url", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id", "team_id", "title"], name: "index_writeups_on_game_id_and_team_id_and_title", unique: true
+    t.index ["game_id"], name: "index_writeups_on_game_id"
+    t.index ["team_id"], name: "index_writeups_on_team_id"
+  end
+
+  add_foreign_key "final_results", "games"
+  add_foreign_key "final_results", "teams"
   add_foreign_key "games_services", "games"
   add_foreign_key "games_services", "services"
   add_foreign_key "results", "games"
@@ -130,4 +158,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_131500) do
   add_foreign_key "team_memberships", "teams"
   add_foreign_key "team_memberships", "users"
   add_foreign_key "teams", "universities"
+  add_foreign_key "writeups", "games"
+  add_foreign_key "writeups", "teams"
 end

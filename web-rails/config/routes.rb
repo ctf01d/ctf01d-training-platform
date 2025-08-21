@@ -37,6 +37,7 @@ Rails.application.routes.draw do
     end
   end
   resources :users
+  resources :writeups, only: %i[create destroy]
   get 'scoreboard', to: 'scoreboards#index', as: :scoreboard
   resource :profile, only: %i[show edit update]
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
