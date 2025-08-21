@@ -39,7 +39,7 @@
   <% if team.persisted? %>
     <div>
       <%= form.label :captain_id, 'Captain', style: "display: block" %>
-      <% members = team.team_memberships.includes(:user).where(status: 'approved').map(&:user) %>
+      <% members = team.team_memberships.includes(:user).where(status: TeamMembership::STATUS_APPROVED).map(&:user) %>
       <%= form.collection_select :captain_id, members, :id, :display_name, include_blank: true %>
     </div>
   <% else %>

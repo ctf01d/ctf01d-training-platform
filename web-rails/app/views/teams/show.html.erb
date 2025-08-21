@@ -12,7 +12,7 @@
       <p class="muted">
         Университет: <%= @team.university ? link_to(@team.university.name, @team.university) : '—' %>
         <% if @team.captain %> • Капитан: <%= link_to @team.captain.display_name, @team.captain %><% end %>
-        • Участников: <%= @team.team_memberships.where(status: 'approved').count %>
+        • Участников: <%= @team.team_memberships.where(status: TeamMembership::STATUS_APPROVED).count %>
       </p>
       <% if @team.website.present? %>
         <p class="muted"><%= link_to @team.website, @team.website, target: '_blank', rel: 'noopener' %></p>
@@ -53,7 +53,7 @@
           <td><%= m.status %></td>
           <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
             <td>
-              <% if m.status == 'pending' %>
+              <% if m.status == TeamMembership::STATUS_PENDING %>
                 <% if current_user.id != m.user_id %>
                   <%= button_to 'Одобрить', approve_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
                   <%= button_to 'Отклонить', reject_team_membership_path(m), method: :post, form: { style: 'display:inline' } %>
@@ -62,11 +62,11 @@
                 <% end %>
               <% else %>
                 Установить роль:
-                <%= button_to 'owner', set_role_team_membership_path(m, role: 'owner'), method: :post, form: { style: 'display:inline' } %>
-                <%= button_to 'captain', set_role_team_membership_path(m, role: 'captain'), method: :post, form: { style: 'display:inline' } %>
-                <%= button_to 'vice_captain', set_role_team_membership_path(m, role: 'vice_captain'), method: :post, form: { style: 'display:inline' } %>
-                <%= button_to 'player', set_role_team_membership_path(m, role: 'player'), method: :post, form: { style: 'display:inline' } %>
-                <% unless m.role == 'owner' %>
+                <%= button_to 'owner', set_role_team_membership_path(m, role: TeamMembership::ROLE_OWNER), method: :post, form: { style: 'display:inline' } %>
+                <%= button_to 'captain', set_role_team_membership_path(m, role: TeamMembership::ROLE_CAPTAIN), method: :post, form: { style: 'display:inline' } %>
+                <%= button_to 'vice_captain', set_role_team_membership_path(m, role: TeamMembership::ROLE_VICE_CAPTAIN), method: :post, form: { style: 'display:inline' } %>
+                <%= button_to 'player', set_role_team_membership_path(m, role: TeamMembership::ROLE_PLAYER), method: :post, form: { style: 'display:inline' } %>
+                <% unless m.role == TeamMembership::ROLE_OWNER %>
                   | <%= button_to 'Удалить', team_membership_path(m), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить участника?' } } %>
                 <% end %>
               <% end %>
@@ -85,11 +85,11 @@
 
   <% if user_signed_in? %>
     <% existing = @team.team_memberships.find { |tm| tm.user_id == current_user.id } %>
-    <% if existing.nil? || existing.status == 'rejected' %>
+    <% if existing.nil? || existing.status == TeamMembership::STATUS_REJECTED %>
       <p style="margin-top: 12px;">
         <%= button_to 'Подать заявку в команду', join_request_team_path(@team), method: :post %>
       </p>
-    <% elsif existing.status == 'pending' %>
+    <% elsif existing.status == TeamMembership::STATUS_PENDING %>
       <p style="margin-top: 12px; color:#666;">Заявка в ожидании.
         <% if existing.user_id == current_user.id %>
           <% last_event = @team.membership_events.where(user_id: current_user.id).order(created_at: :desc).first %>
@@ -100,7 +100,7 @@
           <% end %>
         <% end %>
       </p>
-    <% elsif existing.status == 'approved' %>
+    <% elsif existing.status == TeamMembership::STATUS_APPROVED %>
       <p style="margin-top: 12px; color:#666;">
         <%= button_to 'Покинуть команду', team_membership_path(existing), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Покинуть команду?' } } %>
       </p>

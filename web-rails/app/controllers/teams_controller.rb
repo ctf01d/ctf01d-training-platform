@@ -31,8 +31,8 @@ class TeamsController < ApplicationController
           @team.update(captain_id: current_user.id)
         end
         TeamMembership.find_or_create_by!(team_id: @team.id, user_id: current_user.id) do |m|
-          m.role = 'owner'
-          m.status = 'approved'
+          m.role = TeamMembership::ROLE_OWNER
+          m.status = TeamMembership::STATUS_APPROVED
         end
       end
       redirect_to @team, notice: "Команда создана."
@@ -49,21 +49,21 @@ class TeamsController < ApplicationController
 
         if old_id.present?
           prev = TeamMembership.find_by(team_id: @team.id, user_id: old_id)
-          if prev && prev.role == 'captain'
+          if prev && prev.role == TeamMembership::ROLE_CAPTAIN
             # если бывший капитан был владельцем, оставляем owner, иначе делаем player
             prev_role_was = prev.role
-            prev.update(role: 'player')
-            TeamMembershipEvent.create!(team: @team, user: prev.user, actor: current_user, action: 'role_changed', from_role: prev_role_was, to_role: 'player')
+            prev.update(role: TeamMembership::ROLE_PLAYER)
+            TeamMembershipEvent.create!(team: @team, user: prev.user, actor: current_user, action: 'role_changed', from_role: prev_role_was, to_role: TeamMembership::ROLE_PLAYER)
           end
         end
 
         if new_id.present?
           curr = TeamMembership.find_or_initialize_by(team_id: @team.id, user_id: new_id)
           from_role = curr.role
-          curr.status = 'approved'
-          curr.role = 'captain'
+          curr.status = TeamMembership::STATUS_APPROVED
+          curr.role = TeamMembership::ROLE_CAPTAIN
           curr.save!
-          TeamMembershipEvent.create!(team: @team, user: curr.user, actor: current_user, action: 'role_changed', from_role: from_role, to_role: 'captain')
+          TeamMembershipEvent.create!(team: @team, user: curr.user, actor: current_user, action: 'role_changed', from_role: from_role, to_role: TeamMembership::ROLE_CAPTAIN)
         end
       end
       redirect_to @team, notice: "Команда обновлена.", status: :see_other
@@ -83,14 +83,14 @@ class TeamsController < ApplicationController
     return redirect_to new_session_path, alert: 'Требуется авторизация' unless user_signed_in?
 
     membership = TeamMembership.find_by(team_id: @team.id, user_id: current_user.id)
-    if membership&.status == 'approved'
+    if membership&.status == TeamMembership::STATUS_APPROVED
       redirect_to @team, notice: 'Вы уже участник команды.'
-    elsif membership&.status == 'pending'
+    elsif membership&.status == TeamMembership::STATUS_PENDING
       redirect_to @team, notice: 'Заявка уже подана.'
     else
       membership ||= TeamMembership.new(team_id: @team.id, user_id: current_user.id)
-      membership.role = 'player'
-      membership.status = 'pending'
+      membership.role = TeamMembership::ROLE_PLAYER
+      membership.status = TeamMembership::STATUS_PENDING
       if membership.save
         TeamMembershipEvent.create!(team: @team, user: current_user, actor: current_user, action: 'join_requested', to_status: 'pending')
         redirect_to @team, notice: 'Заявка отправлена.'
@@ -111,11 +111,11 @@ class TeamsController < ApplicationController
     return redirect_to @team, alert: 'Пользователь не найден' unless user
 
     membership = TeamMembership.find_or_initialize_by(team_id: @team.id, user_id: user.id)
-    if membership.status == 'approved'
+    if membership.status == TeamMembership::STATUS_APPROVED
       redirect_to @team, notice: 'Пользователь уже в команде.'
     else
-      membership.role ||= 'player'
-      membership.status = 'pending'
+      membership.role ||= TeamMembership::ROLE_PLAYER
+      membership.status = TeamMembership::STATUS_PENDING
       if membership.save
         TeamMembershipEvent.create!(team: @team, user: user, actor: current_user, action: 'invited', to_status: 'pending')
         redirect_to @team, notice: 'Приглашение отправлено.'

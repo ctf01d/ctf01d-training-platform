@@ -15,8 +15,8 @@ class TeamMembershipsController < ApplicationController
   def new
     @team_membership = TeamMembership.new(
       team_id: params[:team_id],
-      role: 'player',
-      status: 'approved'
+      role: TeamMembership::ROLE_PLAYER,
+      status: TeamMembership::STATUS_APPROVED
     )
   end
 
@@ -53,7 +53,7 @@ class TeamMembershipsController < ApplicationController
     end
 
     # Запрет удалять владельца не-админам
-    if @team_membership.role == 'owner' && !(user_signed_in? && current_user.role == 'admin')
+    if @team_membership.role == TeamMembership::ROLE_OWNER && !(user_signed_in? && current_user.role == 'admin')
       return redirect_to team, alert: 'Нельзя удалить владельца команды'
     end
 
@@ -81,7 +81,7 @@ class TeamMembershipsController < ApplicationController
       return redirect_to @team_membership.team, alert: 'Нельзя одобрить свою заявку. Используйте «Принять».'
     end
     from = @team_membership.status
-    if @team_membership.update(status: 'approved')
+    if @team_membership.update(status: TeamMembership::STATUS_APPROVED)
       TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'approved', from_status: from, to_status: 'approved')
       redirect_to @team_membership.team, notice: 'Заявка одобрена.'
     else
@@ -98,7 +98,7 @@ class TeamMembershipsController < ApplicationController
       return redirect_to @team_membership.team, alert: 'Нельзя отклонить свою заявку. Используйте «Отклонить» внизу.'
     end
     from = @team_membership.status
-    if @team_membership.update(status: 'rejected')
+    if @team_membership.update(status: TeamMembership::STATUS_REJECTED)
       TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'rejected', from_status: from, to_status: 'rejected')
       redirect_to @team_membership.team, notice: 'Заявка отклонена.'
     else
@@ -121,7 +121,7 @@ class TeamMembershipsController < ApplicationController
       return redirect_to @team_membership.team, alert: 'Недостаточно прав'
     end
     from = @team_membership.status
-    if @team_membership.update(status: 'rejected')
+    if @team_membership.update(status: TeamMembership::STATUS_REJECTED)
       TeamMembershipEvent.create!(team: @team_membership.team, user: @team_membership.user, actor: current_user, action: 'declined', from_status: from, to_status: 'rejected')
       redirect_to @team_membership.team, notice: 'Вы отклонили приглашение.'
     else
@@ -142,18 +142,18 @@ class TeamMembershipsController < ApplicationController
     end
 
     # Глобальное ограничение: пользователь может быть капитаном только в одной команде
-    if new_role == 'captain'
+    if new_role == TeamMembership::ROLE_CAPTAIN
       if Team.where(captain_id: @team_membership.user_id).where.not(id: team.id).exists?
         return redirect_to team, alert: 'Этот пользователь уже является капитаном другой команды.'
       end
     end
 
     ActiveRecord::Base.transaction do
-      if new_role == 'captain'
+      if new_role == TeamMembership::ROLE_CAPTAIN
         # Сбрасываем предыдущего капитана
         if team.captain_id.present? && team.captain_id != @team_membership.user_id
           prev = TeamMembership.find_by(team_id: team.id, user_id: team.captain_id)
-          prev.update!(role: 'player') if prev&.role == 'captain'
+          prev.update!(role: TeamMembership::ROLE_PLAYER) if prev&.role == TeamMembership::ROLE_CAPTAIN
         end
         team.update!(captain_id: @team_membership.user_id)
       else
@@ -164,7 +164,7 @@ class TeamMembershipsController < ApplicationController
       end
 
       from_role = @team_membership.role
-      @team_membership.update!(role: new_role, status: 'approved')
+      @team_membership.update!(role: new_role, status: TeamMembership::STATUS_APPROVED)
       TeamMembershipEvent.create!(team: team, user: @team_membership.user, actor: current_user, action: 'role_changed', from_role: from_role, to_role: new_role)
     end
 

@@ -37,9 +37,9 @@
         <td><%= m.role %></td>
         <td><%= m.status %></td>
         <td>
-          <% if m.status == 'approved' %>
+          <% if m.status == TeamMembership::STATUS_APPROVED %>
             <%= button_to 'Покинуть команду', team_membership_path(m), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Покинуть команду?' } } %>
-          <% elsif m.status == 'pending' %>
+          <% elsif m.status == TeamMembership::STATUS_PENDING %>
             <%= button_to 'Отозвать заявку', team_membership_path(m), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Отозвать заявку?' } } %>
           <% end %>
         </td>

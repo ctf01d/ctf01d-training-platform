@@ -28,8 +28,8 @@ class ApplicationController < ActionController::Base
   def can_manage_team?(team)
     return true if user_signed_in? && current_user.role == 'admin'
     return false unless user_signed_in?
-    membership = TeamMembership.find_by(team_id: team.id, user_id: current_user.id, status: 'approved')
+    membership = TeamMembership.find_by(team_id: team.id, user_id: current_user.id, status: TeamMembership::STATUS_APPROVED)
     return false unless membership
-    %w[owner captain vice_captain].include?(membership.role)
+    TeamMembership.manager_roles.include?(membership.role)
   end
 end

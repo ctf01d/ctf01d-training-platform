@@ -18,7 +18,7 @@
           <div class="muted">
             Университет: <%= team.university ? link_to(team.university.name, team.university) : '—' %>
             <% if team.captain %> • Капитан: <%= link_to team.captain.display_name, team.captain %><% end %>
-            • Участников: <%= team.team_memberships.where(status: 'approved').count %>
+            • Участников: <%= team.team_memberships.where(status: TeamMembership::STATUS_APPROVED).count %>
           </div>
         </div>
       </div>
