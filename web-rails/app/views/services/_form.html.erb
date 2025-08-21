@@ -61,6 +61,11 @@
   </div>
 
   <div>
+    <%= form.label :exploits_url, 'Exploits URL', style: "display: block" %>
+    <%= form.text_field :exploits_url, placeholder: 'https://.../exploits.zip' %>
+  </div>
+
+  <div>
     <%= form.submit %>
   </div>
 <% end %>

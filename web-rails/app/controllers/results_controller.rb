@@ -1,5 +1,6 @@
 class ResultsController < ApplicationController
   before_action :require_admin, except: %i[index show]
+  before_action :require_login, only: %i[index show]
   before_action :set_result, only: %i[ show edit update destroy ]
 
   # GET /results

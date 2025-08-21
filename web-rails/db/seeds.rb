@@ -121,6 +121,13 @@ games = games_data.map do |attrs|
   g.organizer = attrs[:organizer]
   g.starts_at = attrs[:starts_at]
   g.ends_at = attrs[:ends_at]
+  # планирование
+  if g.starts_at && g.ends_at
+    g.registration_opens_at = g.starts_at - 7.days
+    g.registration_closes_at = g.starts_at - 1.day
+    g.scoreboard_opens_at = g.starts_at
+    g.scoreboard_closes_at = g.ends_at + 7.days
+  end
   g.save!
   g
 end
@@ -173,6 +180,7 @@ services = services_data.map do |attrs|
     s.author = attrs[:author]
     s.avatar_url = ''
     s.public = attrs[:public]
+    s.check_status = 'unknown'
   end
 end
 

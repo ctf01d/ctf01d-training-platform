@@ -29,6 +29,42 @@
         <%= game.starts_at %> — <%= game.ends_at %>
       </p>
 
+      <p style="margin:6px 0 0 0;">
+        <strong>Регистрация:</strong>
+        <% case game.registration_status
+           when :open %>
+             <span class="badge badge--green">открыта</span>
+        <%   when :upcoming %>
+             <span class="badge badge--blue">скоро</span>
+        <%   when :closed %>
+             <span class="badge badge--gray">закрыта</span>
+        <%   else %>
+             <span class="badge badge--gray">не задано</span>
+        <% end %>
+        <% if game.registration_opens_at || game.registration_closes_at %>
+          <span class="muted">
+            (<%= game.registration_opens_at || '—' %> — <%= game.registration_closes_at || '—' %>)
+          </span>
+        <% end %>
+      </p>
+
+      <p style="margin:6px 0 0 0;">
+        <strong>Scoreboard:</strong>
+        <% case game.scoreboard_status
+           when :open, :always %>
+             <span class="badge badge--green">открыт</span>
+        <%   when :upcoming %>
+             <span class="badge badge--blue">скоро</span>
+        <%   when :closed %>
+             <span class="badge badge--gray">закрыт</span>
+        <% end %>
+        <% if game.scoreboard_opens_at || game.scoreboard_closes_at %>
+          <span class="muted">
+            (<%= game.scoreboard_opens_at || '—' %> — <%= game.scoreboard_closes_at || '—' %>)
+          </span>
+        <% end %>
+      </p>
+
       <% if game.site_url.present? || game.ctftime_url.present? %>
         <p class="muted" style="margin:6px 0 0 0;">
           <% if game.site_url.present? %>

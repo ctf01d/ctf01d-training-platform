@@ -46,6 +46,25 @@
     <%= form.text_field :ctftime_url, placeholder: 'https://ctftime.org/event/…' %>
   </div>
 
+  <hr>
+  <h3>Окна планирования</h3>
+  <div>
+    <%= form.label :registration_opens_at, 'Регистрация — с', style: "display: block" %>
+    <%= form.datetime_field :registration_opens_at %>
+  </div>
+  <div>
+    <%= form.label :registration_closes_at, 'Регистрация — до', style: "display: block" %>
+    <%= form.datetime_field :registration_closes_at %>
+  </div>
+  <div>
+    <%= form.label :scoreboard_opens_at, 'Scoreboard — с', style: "display: block" %>
+    <%= form.datetime_field :scoreboard_opens_at %>
+  </div>
+  <div>
+    <%= form.label :scoreboard_closes_at, 'Scoreboard — до', style: "display: block" %>
+    <%= form.datetime_field :scoreboard_closes_at %>
+  </div>
+
   <div>
     <%= form.label :service_ids, 'Сервисы соревнования', style: 'display:block' %>
     <div>

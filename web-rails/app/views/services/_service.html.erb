@@ -38,6 +38,9 @@
     <% if service.writeup_url.present? %>
       <div>Writeup: <%= link_to service.writeup_url, service.writeup_url, target: '_blank', rel: 'noopener' %></div>
     <% end %>
+    <% if service.exploits_url.present? %>
+      <div>Exploits: <%= link_to service.exploits_url, service.exploits_url, target: '_blank', rel: 'noopener' %></div>
+    <% end %>
   </div>
 
   <% if user_signed_in? && current_user.role == 'admin' %>
@@ -49,6 +52,14 @@
       <% end %>
       <% if service.checker_archive_url.present? %>
         <%= button_to 'Проверить чекер', check_checker_service_path(service), method: :post, form: { style: 'display:inline' } %>
+        <% if service.check_status.present? %>
+          <% color = case service.check_status
+                    when 'ok' then 'green'
+                    when 'fail' then 'red'
+                    when 'queued' then 'blue'
+                    else 'gray' end %>
+          <span class="badge" style="background:#<%= { 'green'=>'3a3', 'red':'c55', 'blue':'59c', 'gray':'999' }[color] %>; margin-left:8px;">checker: <%= service.check_status %></span>
+        <% end %>
       <% end %>
     </div>
   <% end %>

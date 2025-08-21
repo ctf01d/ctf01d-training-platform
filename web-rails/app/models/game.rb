@@ -17,4 +17,23 @@ class Game < ApplicationRecord
     return :past if ends_at.present? && ends_at < now
     :unknown
   end
+
+  def registration_status(now = Time.current)
+    return :unscheduled if registration_opens_at.blank? && registration_closes_at.blank?
+    open = registration_opens_at
+    close = registration_closes_at
+    return :upcoming if open.present? && now < open
+    return :open if (open.blank? || now >= open) && (close.blank? || now <= close)
+    :closed
+  end
+
+  def scoreboard_status(now = Time.current)
+    # если окно не задано — считаем всегда открытым
+    return :always if scoreboard_opens_at.blank? && scoreboard_closes_at.blank?
+    open = scoreboard_opens_at
+    close = scoreboard_closes_at
+    return :upcoming if open.present? && now < open
+    return :open if (open.blank? || now >= open) && (close.blank? || now <= close)
+    :closed
+  end
 end

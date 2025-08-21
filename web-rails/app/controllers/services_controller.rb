@@ -1,6 +1,6 @@
 class ServicesController < ApplicationController
   before_action :require_admin, except: %i[index show]
-  before_action :set_service, only: %i[ show edit update destroy toggle_public ]
+  before_action :set_service, only: %i[ show edit update destroy toggle_public check_checker ]
 
   # GET /services
   def index
@@ -63,7 +63,8 @@ class ServicesController < ApplicationController
       return redirect_to @service, alert: 'Не указан URL архива чекера.'
     end
     # Заглушка: имитируем отправку задачи на проверку чекера
-    redirect_to @service, notice: 'Проверка чекера запущена (заглушка).'
+    @service.update(check_status: 'queued', checked_at: Time.current)
+    redirect_to @service, notice: 'Проверка чекера запущена (заглушка): статус queued.'
   end
 
   private
@@ -75,6 +76,6 @@ class ServicesController < ApplicationController
     # Only allow a list of trusted parameters through.
     def service_params
       params.expect(service: [ :name, :public_description, :private_description, :author, :copyright, :avatar_url, :public,
-                               :service_archive_url, :checker_archive_url, :writeup_url ])
+                               :service_archive_url, :checker_archive_url, :writeup_url, :exploits_url ])
     end
 end
