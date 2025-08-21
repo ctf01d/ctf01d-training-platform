@@ -12,7 +12,13 @@ class GamesController < ApplicationController
 
   # GET /games/1
   def show
-    @results = @game.results.includes(:team).order(score: :desc)
+    if @game.final_results.exists?
+      @final = true
+      @results = @game.final_results.includes(:team).order(position: :asc, score: :desc)
+    else
+      @final = false
+      @results = @game.results.includes(:team).order(score: :desc)
+    end
   end
 
   # GET /games/:id/manage_services
@@ -68,6 +74,38 @@ class GamesController < ApplicationController
   def destroy
     @game.destroy!
     redirect_to games_path, notice: "Игра удалена.", status: :see_other
+  end
+
+  # POST /games/:id/finalize
+  def finalize
+    game = Game.find(params.expect(:id))
+    ActiveRecord::Base.transaction do
+      # Prevent double-finalization
+      if game.final_results.exists?
+        game.update!(finalized: true, finalized_at: Time.current) unless game.finalized
+      else
+        rows = game.results.includes(:team).order(score: :desc).to_a
+        rows.each_with_index do |r, idx|
+          FinalResult.create!(game_id: game.id, team_id: r.team_id, score: r.score.to_i, position: idx + 1)
+        end
+        game.update!(finalized: true, finalized_at: Time.current)
+      end
+    end
+    redirect_to game, notice: 'Итоги зафиксированы.'
+  rescue => e
+    redirect_to game, alert: 'Не удалось зафиксировать итоги.'
+  end
+
+  # DELETE /games/:id/unfinalize
+  def unfinalize
+    game = Game.find(params.expect(:id))
+    ActiveRecord::Base.transaction do
+      game.final_results.delete_all
+      game.update!(finalized: false, finalized_at: nil)
+    end
+    redirect_to game, notice: 'Финализация снята.'
+  rescue => e
+    redirect_to game, alert: 'Не удалось снять финализацию.'
   end
 
   private

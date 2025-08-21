@@ -189,5 +189,15 @@ games.each_with_index do |g, i|
   g.services = services.sample(count)
   g.save!
 end
+
+# Snapshot final results for past games
+Game.where('ends_at < ?', Time.now).find_each do |g|
+  next if g.final_results.exists?
+  rows = g.results.order(score: :desc).to_a
+  rows.each_with_index do |r, idx|
+    FinalResult.create!(game_id: g.id, team_id: r.team_id, score: r.score.to_i, position: idx + 1)
+  end
+  g.update!(finalized: true, finalized_at: Time.now)
+end
 # Seed: users
 require 'set'

@@ -13,7 +13,18 @@
 </div>
 
 <hr>
-<h2>Результаты</h2>
+<h2>
+  <% if @final %>Итоги (зафиксировано)<% else %>Результаты<% end %>
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <small style="font-weight:normal; margin-left:8px;">
+      <% if @final %>
+        <%= button_to 'Снять финализацию', unfinalize_game_path(@game), method: :delete, form: { style: 'display:inline' } %>
+      <% else %>
+        <%= button_to 'Зафиксировать итоги', finalize_game_path(@game), method: :post, form: { style: 'display:inline' } %>
+      <% end %>
+    </small>
+  <% end %>
+</h2>
 <% if @results.any? %>
   <table border="1" cellpadding="6" cellspacing="0">
     <tr>
@@ -23,7 +34,7 @@
     </tr>
     <% @results.each_with_index do |r, idx| %>
       <tr>
-        <td><%= idx + 1 %></td>
+        <td><%= @final ? (r.position || idx + 1) : (idx + 1) %></td>
         <td><%= r.team&.name || '—' %></td>
         <td><%= r.score %></td>
       </tr>

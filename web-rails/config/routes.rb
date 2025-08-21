@@ -10,6 +10,8 @@ Rails.application.routes.draw do
       get :manage_services
       post :add_service
       delete :remove_service
+      post :finalize
+      delete :unfinalize
     end
   end
   resources :services do
