@@ -1,4 +1,5 @@
-.PHONY: codegen database-attach database-remove database-reset database-run database-stop fmt install lint server-build server-run test
+.PHONY: codegen database-attach database-remove database-reset database-run database-stop fmt install lint server-build server-run test \
+	web-rails-image-build web-rails-image-save web-rails-image-build-and-save
 
 # Lint the code with golangci-lint
 lint:
@@ -96,3 +97,27 @@ test:
 # Generate Go server boilerplate from OpenAPI 3
 codegen:
 	oapi-codegen -generate models,gin -o internal/httpserver/httpserver.gen.go --package httpserver api/openapi.yaml
+
+# -----------------------------------------------------------------------------
+# Docker images (production)
+
+# Image name can be overridden: make WEB_RAILS_IMAGE=myrepo/web-rails web-rails-image-build
+WEB_RAILS_IMAGE ?= ctf01d/web-rails
+GIT_TAG := $(shell git describe --tags --always 2>/dev/null || echo dev)
+
+# Build production image for web-rails app
+web-rails-image-build:
+	docker build -t $(WEB_RAILS_IMAGE):$(GIT_TAG) -f web-rails/Dockerfile web-rails
+
+# Export the built image into a tar file under dist/
+web-rails-image-save:
+	@mkdir -p dist
+	@if ! docker image inspect $(WEB_RAILS_IMAGE):$(GIT_TAG) >/dev/null 2>&1; then \
+		echo "Image $(WEB_RAILS_IMAGE):$(GIT_TAG) not found. Run 'make web-rails-image-build' first."; \
+		exit 1; \
+	fi
+	docker image save $(WEB_RAILS_IMAGE):$(GIT_TAG) -o dist/web-rails-$(GIT_TAG).tar
+	@echo "Saved to dist/web-rails-$(GIT_TAG).tar"
+
+# Convenience: build then export
+web-rails-image-build-and-save: web-rails-image-build web-rails-image-save
