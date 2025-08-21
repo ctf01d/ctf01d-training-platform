@@ -1,0 +1,22 @@
+{
+  email {$ACME_EMAIL}
+}
+
+ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
+  encode gzip zstd
+
+  @health path /healthz
+  handle @health {
+    respond 200 {
+      body "ok"
+    }
+  }
+
+  reverse_proxy app:80
+
+  log {
+    output stdout
+    format console
+  }
+}
+

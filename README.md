@@ -1,32 +1,35 @@
-CTF01D Rails MVP
+CTF01D Training Platform
 
-Quick Rails prototype to demo core entities and flows before porting to Go. Uses PostgreSQL and default ERB views.
+Прототип на Rails для демонстрации основных сущностей и потоков.
 
-Features
-- Public services list (only public items for guests)
-- Admin CRUD for Users, Teams, Services, Games, Results, Universities
-- Session-based auth (login/logout), seeded admin user
+Документация
+- `docs/CONCEPT.md`: концепция платформы и ключевые идеи.
+- `docs/MVP_STATUS.md`: состав и статус MVP, что реализовано.
+- `docs/JURY_AND_SERVICE.md`: модель «жюри/сервис», роли и взаимодействия.
+- `docs/ROADMAP.md`: план работ и ближайшие шаги.
 
-Prerequisites
-- Ruby 3.4+
-- PostgreSQL (local or Docker)
+Подробности и прочие материалы смотрите в директории `docs/`.
 
-Run PostgreSQL with Docker
-docker run -d --name ctf01d-postgres -e POSTGRES_DB=web_rails_development -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres
+Производственный запуск (Docker Compose)
+- Требуется: Docker 24+, Docker Compose v2.
+- Подготовка:
+  - Скопируйте `.env.sample` в `.env` и задайте значения:
+    - `POSTGRES_PASSWORD` — пароль БД
+    - `RAILS_MASTER_KEY` — ключ из `config/master.key`
+    - `ACME_EMAIL` — e‑mail для регистрации сертификата Let's Encrypt
+- Запуск/обновление:
+  - Первый запуск: `docker compose up -d --build`
+  - Обновление образа: `docker compose pull && docker compose up -d --build`
+- Миграции:
+  - При старте веб-приложения запускается `rails db:prepare` (создание/миграция БД).
+  - Для ручного прогона миграций: `docker compose run --rm app ./bin/rails db:migrate`.
 
-Setup
-cd web-rails
-~/.local/share/gem/ruby/3.4.0/bin/bundle install
-bin/rails db:create db:migrate db:seed
+Сервисы в Compose
+- `db` — PostgreSQL (создаются БД: `web_rails_production`, `web_rails_production_cache`, `web_rails_production_queue`).
+- `app` — Rails-приложение из `Dockerfile` (экспонирует порт `80` внутри сети Compose).
+- `reverse-proxy` — Caddy с автоматическим HTTPS (Let's Encrypt), слушает `80/443` и проксирует на `app:80`.
 
-Start server
-bin/rails s
-
-Login
-- URL: http://localhost:3000
-- Admin: admin / admin
-
-Notes
-- Root points to `services#index` (public catalog)
-- Non-admins can view; only admins can create/update/delete
-- Models: User, Team, TeamMembership, Service, Game, Result, University
+HTTPS (Let's Encrypt)
+- Настройте DNS: `A` (и при необходимости `AAAA`) запись домена `ctf01d-training-platform.ru` на IP вашего VDS.
+- Укажите e‑mail для ACME в `.env` через `ACME_EMAIL`.
+- При запуске `reverse-proxy` выпустит и продлит сертификаты автоматически. Логи можно смотреть: `docker compose logs -f reverse-proxy`.
