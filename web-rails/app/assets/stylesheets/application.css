@@ -39,6 +39,7 @@
 .badge--green { background:#e6f6e9; color:#1b7f2a; }
 .badge--gray { background:#eee; color:#555; }
 .badge--blue { background:#e6f0ff; color:#214fa3; }
+.badge--red { background:#fde8e8; color:#b91c1c; }
 
 .list {
   display: grid;

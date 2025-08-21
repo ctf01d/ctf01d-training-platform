@@ -1,6 +1,7 @@
 # Seed: users
 require 'set'
 require 'erb'
+require 'zlib'
 
 # Simple SVG avatar generator (data URL)
 def svg_data_avatar(text, bg = '#3B82F6')
@@ -166,6 +167,33 @@ games = games_data.map do |attrs|
   g.starts_at = attrs[:starts_at]
   g.ends_at = attrs[:ends_at]
   g.avatar_url = svg_data_avatar(g.name, PALETTE.sample)
+  # access/networks demo (публикуем для прошедших и идущих игр; для далёких будущих — оставим пустым)
+  if g.ends_at && g.ends_at < Time.now || (g.starts_at && g.starts_at <= Time.now + 2.days)
+    slug = g.name.parameterize
+    seed_n = Zlib.crc32(slug)
+    net_a = 10 + (seed_n % 10)
+    net_b = 10 + (seed_n % 200)
+    subnet = "10.#{net_a}.#{net_b}.0/24"
+    g.vpn_url = "https://vpn.ctf01d.local/#{slug}/connect"
+    g.vpn_config_url = "https://vpn.ctf01d.local/#{slug}/#{slug}.ovpn"
+    g.access_secret = "DEMO-#{slug.upcase}-#{(seed_n % 1000).to_s.rjust(3,'0')}"
+    g.access_instructions = <<~TXT
+      Подключитесь к VPN перед атакой на сервисы.
+
+      Вариант 1 — OpenVPN:
+      1) Скачайте конфиг: #{g.vpn_config_url}
+      2) Импортируйте в OpenVPN и подключитесь.
+
+      Вариант 2 — WireGuard:
+      1) Скачайте профиль: https://vpn.ctf01d.local/#{slug}/#{slug}.conf
+      2) Импортируйте в WireGuard и подключитесь.
+
+      Логин: team-<team_id>
+      Пароль/ключ: узнавайте у капитана или организаторов (секрет: #{g.access_secret}).
+
+      Внутренняя сеть игры: #{subnet}
+    TXT
+  end
   # планирование
   if g.starts_at && g.ends_at
     g.registration_opens_at = g.starts_at - 7.days

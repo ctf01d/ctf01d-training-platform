@@ -81,4 +81,23 @@
   <div>
     <%= form.submit %>
   </div>
+  
+  <hr>
+  <h3>Доступ / Сети</h3>
+  <div>
+    <%= form.label :vpn_url, 'VPN URL', style: 'display:block' %>
+    <%= form.text_field :vpn_url, placeholder: 'https://vpn.example/connect' %>
+  </div>
+  <div>
+    <%= form.label :vpn_config_url, 'VPN Config URL', style: 'display:block' %>
+    <%= form.text_field :vpn_config_url, placeholder: 'https://vpn.example/configs/game.ovpn' %>
+  </div>
+  <div>
+    <%= form.label :access_secret, 'Секрет/ключ', style: 'display:block' %>
+    <%= form.text_field :access_secret, placeholder: 'секретная строка' %>
+  </div>
+  <div>
+    <%= form.label :access_instructions, 'Инструкции', style: 'display:block' %>
+    <%= form.text_area :access_instructions, rows: 5, placeholder: "Подключитесь к VPN..." %>
+  </div>
 <% end %>

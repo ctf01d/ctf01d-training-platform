@@ -27,6 +27,7 @@ class GamesController < ApplicationController
     else
       @my_manageable_teams = []
     end
+    @can_access = can_access_game?(@game)
   end
 
   # GET /games/:id/manage_services
@@ -132,6 +133,7 @@ class GamesController < ApplicationController
       params.expect(game: [ :name, :organizer, :starts_at, :ends_at, :avatar_url, :site_url, :ctftime_url,
                             :registration_opens_at, :registration_closes_at,
                             :scoreboard_opens_at, :scoreboard_closes_at,
+                            :vpn_url, :vpn_config_url, :access_secret, :access_instructions,
                             { service_ids: [] } ])
     end
 end

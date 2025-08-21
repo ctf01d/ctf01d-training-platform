@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_154000) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_162000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_154000) do
     t.datetime "registration_closes_at"
     t.datetime "scoreboard_opens_at"
     t.datetime "scoreboard_closes_at"
+    t.string "vpn_url"
+    t.string "vpn_config_url"
+    t.text "access_instructions"
+    t.string "access_secret"
   end
 
   create_table "games_services", id: false, force: :cascade do |t|

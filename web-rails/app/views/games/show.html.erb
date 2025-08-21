@@ -51,6 +51,35 @@
 <% end %>
 
 <hr>
+<h2>Доступ / Сети</h2>
+<% if @game.vpn_url.present? || @game.vpn_config_url.present? || @game.access_instructions.present? %>
+  <% if @can_access %>
+    <div>
+      <% if @game.vpn_url.present? %>
+        <div><strong>VPN URL:</strong> <%= link_to @game.vpn_url, @game.vpn_url, target: '_blank', rel: 'noopener' %></div>
+      <% end %>
+      <% if @game.vpn_config_url.present? %>
+        <div><strong>VPN config:</strong> <%= link_to @game.vpn_config_url, @game.vpn_config_url, target: '_blank', rel: 'noopener' %></div>
+      <% end %>
+      <% if @game.access_secret.present? %>
+        <div><strong>Секрет/ключ:</strong> <code><%= @game.access_secret %></code></div>
+      <% end %>
+      <% if @game.access_instructions.present? %>
+        <div style="margin-top:6px;"><strong>Инструкции:</strong><br><pre style="white-space:pre-wrap;"><%= @game.access_instructions %></pre></div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="muted">Доступ к сетям доступен только участникам игр (одобренные члены команд-участников).</p>
+  <% end %>
+<% else %>
+  <p class="muted">Оргкомитет ещё не опубликовал информацию о доступе.
+    <% if user_signed_in? && current_user.role == 'admin' %>
+      — <%= link_to 'заполнить', edit_game_path(@game) %>
+    <% end %>
+  </p>
+<% end %>
+
+<hr>
 <h2>Writeups</h2>
 <% if @writeups.any? %>
   <table border="1" cellpadding="6" cellspacing="0">

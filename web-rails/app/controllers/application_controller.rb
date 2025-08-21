@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
   helper_method :current_user, :user_signed_in?, :can_manage_team?
+  helper_method :can_access_game?
 
   private
 
@@ -31,5 +32,14 @@ class ApplicationController < ActionController::Base
     membership = TeamMembership.find_by(team_id: team.id, user_id: current_user.id, status: TeamMembership::STATUS_APPROVED)
     return false unless membership
     TeamMembership.manager_roles.include?(membership.role)
+  end
+
+  # Доступ к сетям/инфраструктуре игры
+  def can_access_game?(game)
+    return true if user_signed_in? && current_user.role == 'admin'
+    return false unless user_signed_in?
+    team_ids = game.results.select(:team_id)
+    return false if team_ids.blank?
+    TeamMembership.where(team_id: team_ids, user_id: current_user.id, status: TeamMembership::STATUS_APPROVED).exists?
   end
 end

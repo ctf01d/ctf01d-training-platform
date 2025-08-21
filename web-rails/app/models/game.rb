@@ -7,6 +7,7 @@ class Game < ApplicationRecord
 
   validates :name, presence: true
   validate :validate_avatar_url
+  validate :validate_urls
 
   scope :upcoming, -> { where("starts_at > ?", Time.current) }
   scope :ongoing,  -> { where("starts_at <= ? AND ends_at >= ?", Time.current, Time.current) }
@@ -44,5 +45,14 @@ class Game < ApplicationRecord
     return if url.blank?
     return if url =~ /\A(?:https?:\/\/|data:image)/i
     errors.add(:avatar_url, 'должен начинаться с http(s):// или data:image')
+  end
+
+  def validate_urls
+    { vpn_url: vpn_url, vpn_config_url: vpn_config_url }.each do |field, value|
+      v = value.to_s.strip
+      next if v.blank?
+      next if v =~ /\Ahttps?:\/\//i
+      errors.add(field, 'должен начинаться с http(s)://')
+    end
   end
 end
