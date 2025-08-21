@@ -40,6 +40,13 @@
           <% end %>
         </p>
       <% end %>
+
+      <% if game.services.any? %>
+        <p style="margin:8px 0 0 0;">
+          <strong>Сервисы:</strong>
+          <%= game.services.order(:name).map { |s| link_to s.name, s }.join(' • ').html_safe %>
+        </p>
+      <% end %>
     </div>
   </div>
 </div>

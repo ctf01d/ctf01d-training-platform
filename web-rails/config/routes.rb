@@ -5,7 +5,13 @@ Rails.application.routes.draw do
 
   resources :universities
   resources :results
-  resources :games
+  resources :games do
+    member do
+      get :manage_services
+      post :add_service
+      delete :remove_service
+    end
+  end
   resources :services do
     member do
       post :toggle_public

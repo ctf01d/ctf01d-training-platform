@@ -8,6 +8,7 @@
   <%= link_to "Таблица", scoreboard_path %>
   <% if user_signed_in? && current_user.role == 'admin' %>
     | <%= button_to "Destroy this game", @game, method: :delete, form: { style: 'display:inline' } %>
+    | <%= link_to "Сервисы игры", manage_services_game_path(@game) %>
   <% end %>
 </div>
 

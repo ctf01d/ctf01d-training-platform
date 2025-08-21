@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_023340) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_131500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,6 +24,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_023340) do
     t.string "avatar_url"
     t.string "site_url"
     t.string "ctftime_url"
+  end
+
+  create_table "games_services", id: false, force: :cascade do |t|
+    t.bigint "game_id", null: false
+    t.bigint "service_id", null: false
+    t.index ["game_id", "service_id"], name: "index_games_services_on_game_id_and_service_id", unique: true
+    t.index ["service_id", "game_id"], name: "index_games_services_on_service_id_and_game_id"
   end
 
   create_table "results", force: :cascade do |t|
@@ -90,7 +97,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_023340) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "university_id"
-    t.index ["captain_id"], name: "index_teams_on_captain_id"
+    t.index ["captain_id"], name: "index_teams_on_captain_id_unique", unique: true, where: "(captain_id IS NOT NULL)"
     t.index ["university_id"], name: "index_teams_on_university_id"
   end
 
@@ -114,6 +121,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_023340) do
     t.index ["user_name"], name: "index_users_on_user_name", unique: true
   end
 
+  add_foreign_key "games_services", "games"
+  add_foreign_key "games_services", "services"
   add_foreign_key "results", "games"
   add_foreign_key "results", "teams"
   add_foreign_key "team_membership_events", "teams"

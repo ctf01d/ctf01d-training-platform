@@ -1,6 +1,7 @@
 class GamesController < ApplicationController
   before_action :require_admin, except: %i[index show]
   before_action :set_game, only: %i[ show edit update destroy ]
+  before_action :set_game_for_manage, only: %i[ manage_services add_service remove_service ]
 
   # GET /games
   def index
@@ -12,6 +13,26 @@ class GamesController < ApplicationController
   # GET /games/1
   def show
     @results = @game.results.includes(:team).order(score: :desc)
+  end
+
+  # GET /games/:id/manage_services
+  def manage_services
+    @services = Service.order(:name)
+    @attached_ids = @game.services.pluck(:id).to_set
+  end
+
+  # POST /games/:id/add_service
+  def add_service
+    service = Service.find(params.expect(:service_id))
+    @game.services << service unless @game.services.exists?(service.id)
+    redirect_to manage_services_game_path(@game), notice: 'Сервис добавлен.'
+  end
+
+  # DELETE /games/:id/remove_service
+  def remove_service
+    service = Service.find(params.expect(:service_id))
+    @game.services.destroy(service)
+    redirect_to manage_services_game_path(@game), notice: 'Сервис удалён.'
   end
 
   # GET /games/new
@@ -55,8 +76,13 @@ class GamesController < ApplicationController
       @game = Game.find(params.expect(:id))
     end
 
+    def set_game_for_manage
+      require_admin
+      @game = Game.find(params.expect(:id))
+    end
+
     # Only allow a list of trusted parameters through.
-    def game_params
-      params.expect(game: [ :name, :organizer, :starts_at, :ends_at, :avatar_url, :site_url, :ctftime_url ])
+  def game_params
+      params.expect(game: [ :name, :organizer, :starts_at, :ends_at, :avatar_url, :site_url, :ctftime_url, { service_ids: [] } ])
     end
 end

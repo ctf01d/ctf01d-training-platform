@@ -1,0 +1,36 @@
+<% content_for :title, "Сервисы игры: #{@game.name}" %>
+
+<h1>Сервисы игры: <%= @game.name %></h1>
+
+<p>
+  <%= link_to 'Назад к игре', @game %>
+</p>
+
+<div class="list">
+  <% if @services.any? %>
+    <table border="1" cellpadding="6" cellspacing="0">
+      <tr>
+        <th>Сервис</th>
+        <th>Публичный</th>
+        <th>Действие</th>
+      </tr>
+      <% @services.each do |svc| %>
+        <% attached = @attached_ids.include?(svc.id) %>
+        <tr>
+          <td><%= link_to svc.name, svc %></td>
+          <td><%= svc.public ? 'да' : 'нет' %></td>
+          <td>
+            <% if attached %>
+              <%= button_to 'Убрать', remove_service_game_path(@game, service_id: svc.id), method: :delete, form: { style: 'display:inline' } %>
+            <% else %>
+              <%= button_to 'Добавить', add_service_game_path(@game, service_id: svc.id), method: :post, form: { style: 'display:inline' } %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <p>Сервисов пока нет.</p>
+  <% end %>
+</div>
+

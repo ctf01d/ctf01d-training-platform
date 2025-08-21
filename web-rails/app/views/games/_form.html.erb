@@ -47,6 +47,19 @@
   </div>
 
   <div>
+    <%= form.label :service_ids, 'Сервисы соревнования', style: 'display:block' %>
+    <div>
+      <% Service.order(:name).each do |svc| %>
+        <label style="display:block;">
+          <%= check_box_tag 'game[service_ids][]', svc.id, form.object.service_ids.include?(svc.id), id: "game_service_#{svc.id}" %>
+          <%= svc.name %>
+        </label>
+      <% end %>
+      <%= hidden_field_tag 'game[service_ids][]', '' %>
+    </div>
+  </div>
+
+  <div>
     <%= form.submit %>
   </div>
 <% end %>
