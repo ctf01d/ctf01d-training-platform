@@ -20,7 +20,7 @@ class Service < ApplicationRecord
       else
         next if val =~ %r{\Ahttps?://}i
       end
-      errors.add(field, 'должен начинаться с http(s)://')
+      errors.add(field, "должен начинаться с http(s)://")
     end
   end
 end

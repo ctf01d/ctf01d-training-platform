@@ -3,11 +3,11 @@ class User < ApplicationRecord
 
   has_many :team_memberships, dependent: :destroy
   has_many :teams, through: :team_memberships
-  has_many :membership_events, class_name: 'TeamMembershipEvent', dependent: :nullify
-  has_many :authored_membership_events, class_name: 'TeamMembershipEvent', foreign_key: 'actor_id', dependent: :nullify
+  has_many :membership_events, class_name: "TeamMembershipEvent", dependent: :nullify
+  has_many :authored_membership_events, class_name: "TeamMembershipEvent", foreign_key: "actor_id", dependent: :nullify
 
   validates :user_name, presence: true, uniqueness: true,
-                        format: { with: /\A[a-zA-Z0-9_]+\z/, message: 'латиница, цифры и _' }
+                        format: { with: /\A[a-zA-Z0-9_]+\z/, message: "латиница, цифры и _" }
   validates :display_name, presence: true
   validates :role, presence: true
 
@@ -18,6 +18,6 @@ class User < ApplicationRecord
     url = avatar_url.to_s.strip
     return if url.blank?
     return if url =~ /\A(?:https?:\/\/|data:image)/i
-    errors.add(:avatar_url, 'должен начинаться с http(s):// или data:image')
+    errors.add(:avatar_url, "должен начинаться с http(s):// или data:image")
   end
 end

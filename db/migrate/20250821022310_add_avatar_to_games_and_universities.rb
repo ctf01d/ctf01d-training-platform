@@ -4,4 +4,3 @@ class AddAvatarToGamesAndUniversities < ActiveRecord::Migration[8.0]
     add_column :universities, :avatar_url, :string
   end
 end
-

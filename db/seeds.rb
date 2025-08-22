@@ -108,7 +108,7 @@ teams = teams_data.map do |attrs|
   t = Team.find_or_initialize_by(name: attrs[:name])
   t.description = attrs[:description]
   t.website = attrs[:website]
-  t.university = [nil, *universities.sample(1)].compact.first
+  t.university = [ nil, *universities.sample(1) ].compact.first
   t.avatar_url = svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
@@ -176,7 +176,7 @@ games = games_data.map do |attrs|
     subnet = "10.#{net_a}.#{net_b}.0/24"
     g.vpn_url = "https://vpn.ctf01d.local/#{slug}/connect"
     g.vpn_config_url = "https://vpn.ctf01d.local/#{slug}/#{slug}.ovpn"
-    g.access_secret = "DEMO-#{slug.upcase}-#{(seed_n % 1000).to_s.rjust(3,'0')}"
+    g.access_secret = "DEMO-#{slug.upcase}-#{(seed_n % 1000).to_s.rjust(3, '0')}"
     g.access_instructions = <<~TXT
       Подключитесь к VPN перед атакой на сервисы.
 
@@ -210,11 +210,11 @@ srand(42)
 games.each do |g|
   next if g.starts_at > Time.now # skip upcoming
   # Rank a random subset of teams (4..teams.size)
-  participating = teams.sample([teams.size, 4 + rand(0..(teams.size - 4))].min)
+  participating = teams.sample([ teams.size, 4 + rand(0..(teams.size - 4)) ].min)
   base = 1000
   step = 75
   participating.shuffle.each_with_index do |t, rank|
-    score = [base - step * rank + rand(-20..20), 0].max
+    score = [ base - step * rank + rand(-20..20), 0 ].max
     r = Result.find_or_initialize_by(game_id: g.id, team_id: t.id)
     r.score = score
     r.save!
@@ -248,7 +248,7 @@ services_data = [
 
 services = services_data.map do |attrs|
   Service.find_or_create_by!(name: attrs[:name]) do |s|
-    slug = attrs[:name].downcase.gsub(/[^a-z0-9]+/, '-').gsub(/^-|-$/,'')
+    slug = attrs[:name].downcase.gsub(/[^a-z0-9]+/, '-').gsub(/^-|-$/, '')
     s.public_description = attrs[:public_description]
     s.private_description = ""
     s.author = attrs[:author]
@@ -269,11 +269,11 @@ games.each_with_index do |g, i|
   # Upcoming games: fewer services; ongoing/past: more
   count = if g.ends_at && g.ends_at < Time.now
             4
-          elsif g.starts_at && g.starts_at <= Time.now && g.ends_at && g.ends_at >= Time.now
+  elsif g.starts_at && g.starts_at <= Time.now && g.ends_at && g.ends_at >= Time.now
             5
-          else
+  else
             3
-          end
+  end
   g.services = services.sample(count)
   g.save!
 end

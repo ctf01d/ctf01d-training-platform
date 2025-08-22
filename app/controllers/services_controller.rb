@@ -4,7 +4,7 @@ class ServicesController < ApplicationController
 
   # GET /services
   def index
-    @services = if current_user&.role == 'admin'
+    @services = if current_user&.role == "admin"
       Service.order(public: :desc, name: :asc)
     else
       Service.publicly_visible.order(name: :asc)
@@ -53,18 +53,18 @@ class ServicesController < ApplicationController
   # POST /services/:id/toggle_public
   def toggle_public
     @service.update(public: !@service.public)
-    status = @service.public ? 'публичным' : 'приватным'
+    status = @service.public ? "публичным" : "приватным"
     redirect_to services_path, notice: "Сервис стал #{status}."
   end
 
   # POST /services/:id/check_checker
   def check_checker
     unless @service.checker_archive_url.present?
-      return redirect_to @service, alert: 'Не указан URL архива чекера.'
+      return redirect_to @service, alert: "Не указан URL архива чекера."
     end
     # Заглушка: имитируем отправку задачи на проверку чекера
-    @service.update(check_status: 'queued', checked_at: Time.current)
-    redirect_to @service, notice: 'Проверка чекера запущена (заглушка): статус queued.'
+    @service.update(check_status: "queued", checked_at: Time.current)
+    redirect_to @service, notice: "Проверка чекера запущена (заглушка): статус queued."
   end
 
   private

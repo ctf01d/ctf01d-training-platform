@@ -44,7 +44,7 @@ class Game < ApplicationRecord
     url = avatar_url.to_s.strip
     return if url.blank?
     return if url =~ /\A(?:https?:\/\/|data:image)/i
-    errors.add(:avatar_url, 'должен начинаться с http(s):// или data:image')
+    errors.add(:avatar_url, "должен начинаться с http(s):// или data:image")
   end
 
   def validate_urls
@@ -52,7 +52,7 @@ class Game < ApplicationRecord
       v = value.to_s.strip
       next if v.blank?
       next if v =~ /\Ahttps?:\/\//i
-      errors.add(field, 'должен начинаться с http(s)://')
+      errors.add(field, "должен начинаться с http(s)://")
     end
   end
 end

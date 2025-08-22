@@ -4,4 +4,3 @@ class AddLinksToGames < ActiveRecord::Migration[8.0]
     add_column :games, :ctftime_url, :string
   end
 end
-

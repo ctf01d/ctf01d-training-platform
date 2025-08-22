@@ -12,11 +12,11 @@ class NormalizeTeamUniversity < ActiveRecord::Migration[8.0]
 
     # Backfill: create universities from distinct team.university strings
     if column_exists?(:teams, :university)
-      MTeam.distinct.where.not(university: [nil, '']).pluck(:university).each do |name|
+      MTeam.distinct.where.not(university: [ nil, '' ]).pluck(:university).each do |name|
         uni = MUniversity.find_or_create_by!(name: name)
       end
 
-      MTeam.where.not(university: [nil, '']).find_each do |t|
+      MTeam.where.not(university: [ nil, '' ]).find_each do |t|
         uni = MUniversity.find_by(name: t.university)
         t.update_columns(university_id: uni&.id)
       end
@@ -39,4 +39,3 @@ class NormalizeTeamUniversity < ActiveRecord::Migration[8.0]
     end
   end
 end
-

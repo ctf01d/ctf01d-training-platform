@@ -14,7 +14,6 @@ class CreateTeamMembershipEvents < ActiveRecord::Migration[8.0]
     end
 
     add_index :team_membership_events, :actor_id
-    add_index :team_membership_events, [:team_id, :created_at]
+    add_index :team_membership_events, [ :team_id, :created_at ]
   end
 end
-

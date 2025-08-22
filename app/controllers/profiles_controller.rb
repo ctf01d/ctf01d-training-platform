@@ -32,7 +32,7 @@ class ProfilesController < ApplicationController
   def update
     @user = current_user
     if @user.update(profile_params)
-      redirect_to profile_path, notice: 'Профиль обновлен.'
+      redirect_to profile_path, notice: "Профиль обновлен."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -41,6 +41,6 @@ class ProfilesController < ApplicationController
   private
 
   def profile_params
-    params.expect(user: [:display_name, :avatar_url, :password, :password_confirmation])
+    params.expect(user: [ :display_name, :avatar_url, :password, :password_confirmation ])
   end
 end

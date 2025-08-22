@@ -9,6 +9,6 @@ class University < ApplicationRecord
     url = avatar_url.to_s.strip
     return if url.blank?
     return if url =~ /\A(?:https?:\/\/|data:image)/i
-    errors.add(:avatar_url, 'должен начинаться с http(s):// или data:image')
+    errors.add(:avatar_url, "должен начинаться с http(s):// или data:image")
   end
 end

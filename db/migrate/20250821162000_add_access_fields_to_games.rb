@@ -6,4 +6,3 @@ class AddAccessFieldsToGames < ActiveRecord::Migration[8.0]
     add_column :games, :access_secret, :string
   end
 end
-

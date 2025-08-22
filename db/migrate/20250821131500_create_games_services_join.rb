@@ -5,8 +5,7 @@ class CreateGamesServicesJoin < ActiveRecord::Migration[8.0]
       t.belongs_to :service, null: false, foreign_key: true, index: false
     end
 
-    add_index :games_services, [:game_id, :service_id], unique: true
-    add_index :games_services, [:service_id, :game_id]
+    add_index :games_services, [ :game_id, :service_id ], unique: true
+    add_index :games_services, [ :service_id, :game_id ]
   end
 end
-

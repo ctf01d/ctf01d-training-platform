@@ -40,14 +40,14 @@ class GamesController < ApplicationController
   def add_service
     service = Service.find(params.expect(:service_id))
     @game.services << service unless @game.services.exists?(service.id)
-    redirect_to manage_services_game_path(@game), notice: 'Сервис добавлен.'
+    redirect_to manage_services_game_path(@game), notice: "Сервис добавлен."
   end
 
   # DELETE /games/:id/remove_service
   def remove_service
     service = Service.find(params.expect(:service_id))
     @game.services.destroy(service)
-    redirect_to manage_services_game_path(@game), notice: 'Сервис удалён.'
+    redirect_to manage_services_game_path(@game), notice: "Сервис удалён."
   end
 
   # GET /games/new
@@ -100,9 +100,9 @@ class GamesController < ApplicationController
         game.update!(finalized: true, finalized_at: Time.current)
       end
     end
-    redirect_to game, notice: 'Итоги зафиксированы.'
+    redirect_to game, notice: "Итоги зафиксированы."
   rescue => e
-    redirect_to game, alert: 'Не удалось зафиксировать итоги.'
+    redirect_to game, alert: "Не удалось зафиксировать итоги."
   end
 
   # DELETE /games/:id/unfinalize
@@ -112,9 +112,9 @@ class GamesController < ApplicationController
       game.final_results.delete_all
       game.update!(finalized: false, finalized_at: nil)
     end
-    redirect_to game, notice: 'Финализация снята.'
+    redirect_to game, notice: "Финализация снята."
   rescue => e
-    redirect_to game, alert: 'Не удалось снять финализацию.'
+    redirect_to game, alert: "Не удалось снять финализацию."
   end
 
   private
@@ -128,7 +128,7 @@ class GamesController < ApplicationController
       @game = Game.find(params.expect(:id))
     end
 
-    # Only allow a list of trusted parameters through.
+  # Only allow a list of trusted parameters through.
   def game_params
       params.expect(game: [ :name, :organizer, :starts_at, :ends_at, :avatar_url, :site_url, :ctftime_url,
                             :registration_opens_at, :registration_closes_at,

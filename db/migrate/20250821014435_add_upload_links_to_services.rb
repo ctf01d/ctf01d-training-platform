@@ -5,4 +5,3 @@ class AddUploadLinksToServices < ActiveRecord::Migration[8.0]
     add_column :services, :writeup_url, :string
   end
 end
-

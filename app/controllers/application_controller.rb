@@ -17,17 +17,17 @@ class ApplicationController < ActionController::Base
   end
 
   def require_login
-    redirect_to new_session_path, alert: 'Требуется авторизация' unless user_signed_in?
+    redirect_to new_session_path, alert: "Требуется авторизация" unless user_signed_in?
   end
 
   def require_admin
-    unless user_signed_in? && current_user.role == 'admin'
-      redirect_to root_path, alert: 'Недостаточно прав'
+    unless user_signed_in? && current_user.role == "admin"
+      redirect_to root_path, alert: "Недостаточно прав"
     end
   end
 
   def can_manage_team?(team)
-    return true if user_signed_in? && current_user.role == 'admin'
+    return true if user_signed_in? && current_user.role == "admin"
     return false unless user_signed_in?
     membership = TeamMembership.find_by(team_id: team.id, user_id: current_user.id, status: TeamMembership::STATUS_APPROVED)
     return false unless membership
@@ -36,7 +36,7 @@ class ApplicationController < ActionController::Base
 
   # Доступ к сетям/инфраструктуре игры
   def can_access_game?(game)
-    return true if user_signed_in? && current_user.role == 'admin'
+    return true if user_signed_in? && current_user.role == "admin"
     return false unless user_signed_in?
     team_ids = game.results.select(:team_id)
     return false if team_ids.blank?

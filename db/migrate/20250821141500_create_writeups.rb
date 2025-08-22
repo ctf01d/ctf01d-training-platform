@@ -7,7 +7,6 @@ class CreateWriteups < ActiveRecord::Migration[8.0]
       t.string :url, null: false
       t.timestamps
     end
-    add_index :writeups, [:game_id, :team_id, :title], unique: true
+    add_index :writeups, [ :game_id, :team_id, :title ], unique: true
   end
 end
-

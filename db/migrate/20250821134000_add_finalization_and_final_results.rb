@@ -10,7 +10,6 @@ class AddFinalizationAndFinalResults < ActiveRecord::Migration[8.0]
       t.integer :position
       t.timestamps
     end
-    add_index :final_results, [:game_id, :team_id], unique: true
+    add_index :final_results, [ :game_id, :team_id ], unique: true
   end
 end
-

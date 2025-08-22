@@ -8,4 +8,3 @@ class FinalResult < ApplicationRecord
   validates :position, numericality: { only_integer: true }, allow_nil: true
   validates :team_id, uniqueness: { scope: :game_id }
 end
-
