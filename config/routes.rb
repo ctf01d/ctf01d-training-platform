@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  root to: "services#index"
+  root to: "games#index"
 
   resource :session, only: %i[new create destroy]
 
@@ -10,6 +10,8 @@ Rails.application.routes.draw do
       get :manage_services
       post :add_service
       delete :remove_service
+      get :export_ctf01d_options
+      get :export_ctf01d
       post :finalize
       delete :unfinalize
     end

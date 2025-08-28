@@ -1,0 +1,68 @@
+<div class="card" style="padding: 12px;">
+  <h2 style="margin-top:0;">Экспорт архива ctf01d</h2>
+  <p class="muted">Собрать zip-архив с конфигом, html и чекерами-заглушками на основе текущей игры.</p>
+
+  <%= form_with url: export_ctf01d_game_path(@game), method: :get, local: true do |f| %>
+    <div class="row" style="gap:16px; align-items:flex-end;">
+      <div>
+        <%= label_tag :port, 'Порт scoreboard' %><br>
+        <%= number_field_tag :port, @form[:port], min: 11, max: 65535, step: 1 %>
+      </div>
+      <div>
+        <%= label_tag :flag_ttl_min, 'Флаг TTL (мин)' %><br>
+        <%= number_field_tag :flag_ttl_min, @form[:flag_ttl_min], min: 1, max: 25, step: 1 %>
+      </div>
+      <div>
+        <%= label_tag :basic_attack_cost, 'Баз. стоимость атаки' %><br>
+        <%= number_field_tag :basic_attack_cost, @form[:basic_attack_cost], min: 1, max: 500, step: 1 %>
+      </div>
+      <div>
+        <%= label_tag :defence_cost, 'Стоимость защиты' %><br>
+        <%= number_field_tag :defence_cost, @form[:defence_cost], min: 0, step: 0.1 %>
+      </div>
+      <div>
+        <%= label_tag :ip_pattern, 'Шаблон IP команд' %><br>
+        <%= text_field_tag :ip_pattern, @form[:ip_pattern], placeholder: '10.0.*.1' %>
+      </div>
+    </div>
+
+    <div class="muted" style="font-size:12px; margin-top:4px;">
+      Подсказка: используйте {n} или * — это номер команды (с 1)
+    </div>
+
+    <div class="row" style="gap:16px; margin-top:8px;">
+      <div>
+        <%= label_tag :coffee_break_start, 'Кофебрейк с' %><br>
+        <%= text_field_tag :coffee_break_start, nil, placeholder: 'YYYY-MM-DD HH:MM:SS' %>
+      </div>
+      <div>
+        <%= label_tag :coffee_break_end, 'по' %><br>
+        <%= text_field_tag :coffee_break_end, nil, placeholder: 'YYYY-MM-DD HH:MM:SS' %>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <label>
+        <%= check_box_tag :include_html, '1', @form[:include_html] %> Включить html табло
+      </label>
+      <br>
+      <label>
+        <%= check_box_tag :include_compose, '1', @form[:include_compose] %> Добавить docker-compose.yml
+      </label>
+    </div>
+
+    <div style="margin-top:12px;">
+      <%= submit_tag 'Собрать архив', class: 'btn' %>
+      <%= link_to 'Назад к игре', game_path(@game), class: 'btn' %>
+    </div>
+  <% end %>
+
+  <div class="muted" style="margin-top:12px;">
+    Примечания:
+    <ul>
+      <li>Чекеры — один на каждый сервис игры (шаблонный checker.py).</li>
+      <li>Логотипы команд — берутся из avatar_url команды (http(s) или data:image). При отсутствии — из примеров.</li>
+      <li>IP команд — временно синтетические. При добавлении поля ip_address в Team будет использовано оно.</li>
+    </ul>
+  </div>
+</div>

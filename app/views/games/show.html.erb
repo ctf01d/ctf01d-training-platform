@@ -4,6 +4,7 @@
     <% if user_signed_in? && current_user.role == 'admin' %>
       <%= link_to "Редактировать", edit_game_path(@game), class: 'btn' %> |
       <%= link_to "Сервисы игры", manage_services_game_path(@game), class: 'btn' %> |
+      <%= link_to "Экспорт ctf01d", export_ctf01d_options_game_path(@game), class: 'btn' %> |
       <%= button_to "Удалить игру", @game, method: :delete, form: { style: 'display:inline' }, class: 'btn danger' %> |
     <% end %>
     <%= link_to "Назад к играм", games_path, class: 'btn' %> |

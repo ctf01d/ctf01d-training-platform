@@ -2,6 +2,7 @@ class GamesController < ApplicationController
   before_action :require_admin, except: %i[index show]
   before_action :set_game, only: %i[ show edit update destroy ]
   before_action :set_game_for_manage, only: %i[ manage_services add_service remove_service ]
+  before_action :require_admin, only: %i[ export_ctf01d export_ctf01d_options ]
 
   # GET /games
   def index
@@ -48,6 +49,163 @@ class GamesController < ApplicationController
     service = Service.find(params.expect(:service_id))
     @game.services.destroy(service)
     redirect_to manage_services_game_path(@game), notice: "Сервис удалён."
+  end
+
+  # GET /games/:id/export_ctf01d_options
+  def export_ctf01d_options
+    @game = Game.find(params.expect(:id))
+    @form = {
+      port: 8080,
+      include_html: true,
+      include_compose: true,
+      flag_ttl_min: 1,
+      basic_attack_cost: 1,
+      defence_cost: 1.0,
+      coffee_break_start: nil,
+      coffee_break_end: nil,
+      ip_pattern: "10.0.*.1"
+    }
+  end
+
+  # GET /games/:id/export_ctf01d
+  # Генерация zip-архива для ctf01d (шаблон с примерами до настройки маппинга)
+  def export_ctf01d
+    game = Game.find(params.expect(:id))
+
+    # Базовые значения (если не заданы даты — возьмём сейчас + 6 часов)
+    starts = game.starts_at || Time.current
+    ends   = game.ends_at   || (starts + 6.hours)
+
+    game_payload = {
+      id: game.name.to_s.downcase.gsub(/[^a-z0-9]+/, "").slice(0, 24).presence || "game#{game.id}",
+      name: game.name,
+      start_utc: starts.utc,
+      end_utc: ends.utc,
+      flag_ttl_min: 1,
+      basic_attack_cost: 1,
+      defence_cost: 1.0
+    }
+
+    # Параметры из формы (если заданы)
+    port = params[:port].present? ? params[:port].to_i : 8080
+    flag_ttl_min = params[:flag_ttl_min].present? ? params[:flag_ttl_min].to_i : 1
+    basic_attack_cost = params[:basic_attack_cost].present? ? params[:basic_attack_cost].to_i : 1
+    defence_cost = params[:defence_cost].present? ? params[:defence_cost].to_f : 1.0
+    ip_pattern = params[:ip_pattern].present? ? params[:ip_pattern].to_s : "10.0.*.1"
+
+    if params[:coffee_break_start].present? && params[:coffee_break_end].present?
+      begin
+        game_payload[:coffee_break_start_utc] = Time.zone.parse(params[:coffee_break_start]).utc
+        game_payload[:coffee_break_end_utc] = Time.zone.parse(params[:coffee_break_end]).utc
+      rescue
+        # игнорируем некорректный ввод — сервис провалидирует позже
+      end
+    end
+
+    game_payload[:flag_ttl_min] = flag_ttl_min
+    game_payload[:basic_attack_cost] = basic_attack_cost
+    game_payload[:defence_cost] = defence_cost
+
+    scoreboard_payload = { port: port, htmlfolder: "./html", random: false }
+
+    # Команды: если нет привязанных — создадим 6 заглушек из примера
+    teams_scope = game.teams.presence || []
+    teams = []
+    if teams_scope.any?
+      teams_scope.each_with_index do |t, idx|
+        n = (idx + 1)
+        team_id = format("t%02d", n)
+        logo_rel = "./html/images/teams/#{team_id}.png"
+        logo_url = t.respond_to?(:avatar_url) ? t.avatar_url.to_s : nil
+        ip = t.respond_to?(:ip_address) ? t.ip_address.to_s.presence : nil
+        ip ||= ip_pattern.to_s.gsub("{n}", n.to_s).gsub("*", n.to_s)
+        fallback_logo = Rails.root.join("ctf01d", "data_sample", "html", "images", "teams", format("team%02d.png", [ n, 30 ].min)).to_s
+        teams << {
+          id: team_id,
+          name: t.name,
+          active: true,
+          ip_address: ip,
+          logo_rel: logo_rel,
+          logo_url: logo_url.presence,
+          logo_src: (logo_url.present? ? nil : fallback_logo)
+        }
+      end
+    else
+      # Заглушки t01..t06 из примера
+      6.times do |i|
+        n = i + 1
+        teams << {
+          id: format("t%02d", n),
+          name: "Team ##{n}",
+          active: true,
+          ip_address: ip_pattern.to_s.gsub("{n}", n.to_s).gsub("*", n.to_s),
+          logo_rel: format("./html/images/teams/team%02d.png", n),
+          logo_src: Rails.root.join("ctf01d", "data_sample", "html", "images", "teams", format("team%02d.png", n)).to_s
+        }
+      end
+    end
+
+    # Чекеры: по одному на каждый сервис игры; если нет сервисов — один пример
+    sample_checker_dir = Rails.root.join("ctf01d", "data_sample", "checker_example_service1").to_s
+    services = game.services.order(:name).to_a
+    used_ids = Set.new
+    mk_id = ->(name, idx) do
+      base = name.to_s.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/\A_+|_+\z/, "")
+      base = "service#{idx}" if base.blank?
+      id = base
+      n = 1
+      while used_ids.include?(id)
+        id = "#{base}_#{n}"
+        n += 1
+      end
+      used_ids << id
+      id
+    end
+
+    if services.any?
+      checkers = services.each_with_index.map do |svc, idx|
+        cid = mk_id.call(svc.name, idx+1)
+        {
+          id: cid,
+          name: svc.name,
+          enabled: true,
+          script_wait: 5,
+          round_sleep: 15,
+          script_rel: "./checker.py",
+          files: [ { src: File.join(sample_checker_dir, "checker.py"), rel: "checker.py" } ]
+        }
+      end
+    else
+      checkers = [
+        { id: "example_service1", name: "Service1", enabled: true, script_wait: 5, round_sleep: 15,
+          script_rel: "./checker.py", files: [ { src: File.join(sample_checker_dir, "checker.py"), rel: "checker.py" } ] }
+      ]
+    end
+
+    include_html = ActiveModel::Type::Boolean.new.cast(params[:include_html]).nil? ? true : ActiveModel::Type::Boolean.new.cast(params[:include_html])
+    include_compose = ActiveModel::Type::Boolean.new.cast(params[:include_compose]).nil? ? true : ActiveModel::Type::Boolean.new.cast(params[:include_compose])
+
+    result = Ctf01d::ExportZip.call(
+      game: game_payload,
+      scoreboard: scoreboard_payload,
+      teams: teams,
+      checkers: checkers,
+      options: {
+        prefix: "ctf01d_#{game_payload[:id]}",
+        include_html: include_html,
+        html_source_path: Rails.root.join("ctf01d", "data_sample", "html").to_s,
+        include_compose: include_compose,
+        compose_project: game_payload[:id]
+      }
+    )
+
+    send_data result[:data], filename: result[:filename], type: "application/zip"
+  rescue Ctf01d::ExportError => e
+    Rails.logger.error("[export_ctf01d] #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}")
+    redirect_to game_path(game), alert: "Не удалось собрать архив: #{e.message}"
+  rescue => e
+    Rails.logger.error("[export_ctf01d] #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}")
+    redirect_to game_path(game), alert: "Ошибка экспорта архива."
   end
 
   # GET /games/new

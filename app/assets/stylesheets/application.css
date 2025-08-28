@@ -24,6 +24,8 @@ a { color: #1a56db; }
 .list { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 700px) { .list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1040px) { .list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Полноширинный список (баннер на всю ширину) */
+.list--full { grid-template-columns: 1fr !important; }
 
 .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
 .row { display: flex; align-items: center; gap: 10px; }

@@ -1,0 +1,40 @@
+<div class="card" style="padding: 14px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+    <!-- Left: аватар + основная информация -->
+    <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+      <%= avatar_image_tag(game.name, url: game.avatar_url, size: 56) %>
+      <div style="min-width:0;">
+        <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+          <strong style="font-size:18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            <%= link_to game.name, game %>
+          </strong>
+          <% st = game.status %>
+          <% if st == :ongoing %>
+            <span class="badge badge--green">идёт</span>
+          <% elsif st == :upcoming %>
+            <span class="badge badge--blue">скоро</span>
+          <% elsif st == :past %>
+            <span class="badge badge--gray">прошла</span>
+          <% end %>
+        </div>
+        <% if game.organizer.present? %>
+          <div class="muted" style="margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            <%= game.organizer %>
+          </div>
+        <% end %>
+        <% if game.services.any? %>
+          <div style="margin-top:6px;">
+            <strong>Сервисы:</strong>
+            <%= game.services.order(:name).map { |s| link_to s.name, s }.join(' • ').html_safe %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Right: период + окно табло -->
+    <div style="text-align:right; display:flex; flex-direction:column; gap:6px; min-width:220px;">
+      <div style="color:#374151;"><strong>Период:</strong> <%= game.starts_at %> — <%= game.ends_at %></div>
+      <div class="muted">Табло: <%= game.scoreboard_opens_at || '—' %> — <%= game.scoreboard_closes_at || '—' %></div>
+    </div>
+  </div>
+</div>

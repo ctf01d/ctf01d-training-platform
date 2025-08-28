@@ -10,27 +10,27 @@
 
 <% if @ongoing_games.any? %>
   <h2>Идут сейчас</h2>
-  <div id="ongoing-games" class="list">
+  <div id="ongoing-games" class="list list--full">
     <% @ongoing_games.each do |game| %>
-      <%= render game %>
+      <%= render partial: 'game_banner', locals: { game: game } %>
     <% end %>
   </div>
 <% end %>
 
 <% if @upcoming_games.any? %>
   <h2>Скоро</h2>
-  <div id="upcoming-games" class="list">
+  <div id="upcoming-games" class="list list--full">
     <% @upcoming_games.each do |game| %>
-      <%= render game %>
+      <%= render partial: 'game_banner', locals: { game: game } %>
     <% end %>
   </div>
 <% end %>
 
 <% if @past_games.any? %>
   <h2>Прошедшие</h2>
-  <div id="past-games" class="list">
+  <div id="past-games" class="list list--full">
     <% @past_games.each do |game| %>
-      <%= render game %>
+      <%= render partial: 'game_banner', locals: { game: game } %>
     <% end %>
   </div>
 <% end %>
