@@ -20,6 +20,13 @@ Rails.application.routes.draw do
     member do
       post :toggle_public
       post :check_checker
+      post :redownload
+      post :upload_archives
+      get  :download_local
+    end
+    collection do
+      get :import_github
+      post :import_github
     end
   end
   resources :team_memberships

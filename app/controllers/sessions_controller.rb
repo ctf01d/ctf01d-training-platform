@@ -8,7 +8,7 @@ class SessionsController < ApplicationController
       redirect_to root_path, notice: "Успешный вход"
     else
       flash.now[:alert] = "Неверный логин или пароль"
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 

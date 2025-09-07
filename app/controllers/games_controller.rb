@@ -224,7 +224,7 @@ class GamesController < ApplicationController
     if @game.save
       redirect_to @game, notice: "Игра создана."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -233,7 +233,7 @@ class GamesController < ApplicationController
     if @game.update(game_params)
       redirect_to @game, notice: "Игра обновлена.", status: :see_other
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

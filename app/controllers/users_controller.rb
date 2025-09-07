@@ -27,7 +27,7 @@ class UsersController < ApplicationController
     if @user.save
       redirect_to @user, notice: "Пользователь создан."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class UsersController < ApplicationController
     if @user.update(user_params)
       redirect_to @user, notice: "Пользователь обновлён.", status: :see_other
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

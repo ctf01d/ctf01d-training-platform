@@ -27,7 +27,7 @@ class UniversitiesController < ApplicationController
     if @university.save
       redirect_to @university, notice: "Университет создан."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class UniversitiesController < ApplicationController
     if @university.update(university_params)
       redirect_to @university, notice: "Университет обновлён.", status: :see_other
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

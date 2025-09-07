@@ -37,7 +37,7 @@ class TeamsController < ApplicationController
       end
       redirect_to @team, notice: "Команда создана."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -68,7 +68,7 @@ class TeamsController < ApplicationController
       end
       redirect_to @team, notice: "Команда обновлена.", status: :see_other
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

@@ -31,7 +31,7 @@ class TeamMembershipsController < ApplicationController
     if @team_membership.save
       redirect_to @team_membership, notice: "Team membership was successfully created."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -40,7 +40,7 @@ class TeamMembershipsController < ApplicationController
     if @team_membership.update(team_membership_params)
       redirect_to @team_membership, notice: "Team membership was successfully updated.", status: :see_other
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

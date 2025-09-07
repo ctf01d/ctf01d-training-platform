@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_162000) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_07_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -82,6 +82,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_162000) do
     t.string "exploits_url"
     t.string "check_status", default: "unknown", null: false
     t.datetime "checked_at"
+    t.string "service_local_path"
+    t.integer "service_local_size"
+    t.string "service_local_sha256"
+    t.datetime "service_downloaded_at"
+    t.string "checker_local_path"
+    t.integer "checker_local_size"
+    t.string "checker_local_sha256"
+    t.datetime "checker_downloaded_at"
     t.index ["name"], name: "index_services_on_name", unique: true
   end
 

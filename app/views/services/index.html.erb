@@ -5,6 +5,7 @@
 <% if user_signed_in? && current_user.role == 'admin' %>
   <div style="margin: 8px 0 12px 0;">
     <%= link_to "Создать сервис", new_service_path, class: 'btn primary' %>
+    <%= link_to "Импорт с GitHub", import_github_services_path, class: 'btn' %>
   </div>
 <% end %>
 

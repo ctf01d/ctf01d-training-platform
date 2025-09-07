@@ -33,7 +33,7 @@ class ResultsController < ApplicationController
     if @result.save
       redirect_to @result, notice: "Результат создан."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -42,7 +42,7 @@ class ResultsController < ApplicationController
     if @result.update(result_params)
       redirect_to @result, notice: "Результат обновлён.", status: :see_other
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 
