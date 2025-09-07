@@ -165,7 +165,7 @@ class ServicesController < ApplicationController
         render :import_github, status: :unprocessable_content
       end
     end
-  rescue GithubImporter::Error => e
+  rescue GithubImporter::Error, ArchiveDownloader::Error, ServiceArchives::Error => e
     @errors = [ e.message ]
     render :import_github, status: :unprocessable_content
   end

@@ -7,7 +7,13 @@ require "securerandom"
 class ServiceArchives
   class Error < StandardError; end
 
-  ROOT_DIR = Rails.root.join("storage", "services").to_s
+  # Базовая директория хранения архивов сервисов.
+  # Можно переопределить через ENV["SERVICES_STORAGE_DIR"] (например, на проде смонтировать volume).
+  ROOT_DIR = begin
+    env_dir = ENV["SERVICES_STORAGE_DIR"].to_s.strip
+    base = env_dir.present? ? env_dir : Rails.root.join("storage", "services").to_s
+    File.expand_path(base)
+  end
 
   # Сохранить загруженный файл (service|checker)
   def self.save_uploaded(service:, kind:, uploaded_file:)
@@ -30,6 +36,7 @@ class ServiceArchives
 
   def initialize(service)
     @service = service
+    @root_checked = false
   end
 
   def redownload(kind: :both)
@@ -90,12 +97,33 @@ class ServiceArchives
   end
 
   def ensure_dir(service_id)
+    ensure_root_dir!
     dir = File.join(ROOT_DIR, service_id.to_s)
-    FileUtils.mkdir_p(dir)
+    begin
+      FileUtils.mkdir_p(dir)
+    rescue SystemCallError => e
+      raise Error, "не удалось создать каталог #{dir}: #{e.message}"
+    end
+    unless File.writable?(dir)
+      raise Error, "каталог недоступен для записи: #{dir}. Проверьте права/владельца или задайте SERVICES_STORAGE_DIR"
+    end
     dir
   end
 
   def relative_path(abs)
     abs.to_s.sub(%r{\A#{Regexp.escape(Rails.root.to_s)}/?}, "")
+  end
+
+  def ensure_root_dir!
+    return if @root_checked
+    begin
+      FileUtils.mkdir_p(ROOT_DIR)
+    rescue SystemCallError => e
+      raise Error, "не удалось создать базовый каталог #{ROOT_DIR}: #{e.message}"
+    end
+    unless File.directory?(ROOT_DIR) && File.writable?(ROOT_DIR)
+      raise Error, "базовый каталог недоступен для записи: #{ROOT_DIR}. Проверьте права или задайте SERVICES_STORAGE_DIR"
+    end
+    @root_checked = true
   end
 end
