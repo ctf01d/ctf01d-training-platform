@@ -31,8 +31,12 @@ services:
       CACHE_DATABASE_URL: postgres://web_rails:${POSTGRES_PASSWORD}@db:5432/web_rails_production_cache
       QUEUE_DATABASE_URL: postgres://web_rails:${POSTGRES_PASSWORD}@db:5432/web_rails_production_queue
       WEB_RAILS_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      # Директория для хранения архивов сервисов (см. docs/SERVICE_ARCHIVES_STORAGE.md)
+      SERVICES_STORAGE_DIR: "/data/services"
     expose:
       - "80"
+    volumes:
+      - services-data:/data/services
     # Default CMD in Dockerfile uses thruster and runs db:prepare via entrypoint
   
   reverse-proxy:
@@ -54,3 +58,4 @@ volumes:
   db-data:
   caddy-data:
   caddy-config:
+  services-data:

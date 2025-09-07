@@ -118,7 +118,7 @@ class ServicesController < ApplicationController
     else nil
     end
     return redirect_to @service, alert: "Не найден локальный архив." if path_rel.blank?
-    abs = Rails.root.join(path_rel)
+    abs = path_rel.to_s.start_with?("/") ? path_rel.to_s : Rails.root.join(path_rel)
     unless File.file?(abs)
       return redirect_to @service, alert: "Файл отсутствует на диске."
     end
