@@ -15,6 +15,8 @@ ru:
       university: "Университет"
       team_membership: "Членство"
     attributes:
+      service:
+        name: "Название"
       user:
         user_name: "Логин"
         display_name: "Имя"
@@ -23,3 +25,7 @@ ru:
         avatar_url: "Аватар (URL)"
         password: "Пароль"
         password_confirmation: "Подтверждение пароля"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      taken: "уже занято"
