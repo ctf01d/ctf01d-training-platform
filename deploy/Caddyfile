@@ -5,13 +5,68 @@
 ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
   encode gzip zstd
 
+  # healthcheck
   @health path /healthz
   handle @health {
-    respond 200 {
-      body "ok"
-    }
+    respond "ok" 200
   }
 
+  # ---------------------------
+  # 1. Скрытые / служебные объекты
+  # ---------------------------
+
+  # Разрешаем только .well-known (ACME, проверки домена и т.п.)
+  @well_known path /.well-known/*
+
+  # Всё, что начинается с точки и НЕ .well-known — прячем
+  @hidden_dotfiles path_regexp hidden_dotfiles ^/(?:\.(?!well-known)(?:.*))$
+  handle @hidden_dotfiles {
+    respond "Not found" 404
+  }
+
+  # ---------------------------
+  # 2. Запрет вендорных каталогов / конфигов
+  #    Аналог:
+  #    ^/(vendor|composer.json|...|Vagrantfile)
+  # ---------------------------
+  @forbidden_paths path_regexp forbidden_paths (?i)^/(vendor/|composer\.json|composer\.lock|package\.json|yarn\.lock|config\.(?:ya?ml|json)|\.env|Dockerfile|Makefile|Vagrantfile)
+  handle @forbidden_paths {
+    respond "Not found" 404
+  }
+
+  # ---------------------------
+  # 3. Если нет WP / phpMyAdmin — сразу гасим
+  #    Аналог:
+  #    ^/(wp-admin|wp-login.php|xmlrpc.php|phpmyadmin|pma)
+  # ---------------------------
+  @forbidden_php path_regexp forbidden_php (?i)^/(wp-admin/|wp-login\.php|xmlrpc\.php|phpmyadmin/|pma/)
+  handle @forbidden_php {
+    respond "Not found" 404
+  }
+
+  # ---------------------------
+  # 4. Запрет редких/опасных HTTP-методов
+  #    Аналог map $request_method $is_bad_method
+  # ---------------------------
+  @bad_method method TRACE TRACK DEBUG
+  handle @bad_method {
+    respond "" 405
+  }
+
+  # ---------------------------
+  # 5. Плохие User-Agent'ы
+  #    Аналог map $http_user_agent $is_bad_ua
+  #    Важно: здесь НЕ блокируем Go-http-client и OkHttp,
+  #    как у тебя в Nginx.
+  # ---------------------------
+  @bad_ua expression `{>User-Agent} == "" || re_match("(?i)(curl|wget|python-requests|python-urllib|libwww-perl|perl|Apache-HttpClient|httpclient|Scrapy|httpx|aiohttp|Mechanize|PhantomJS|HeadlessChrome|node-fetch|Nikto|sqlmap|Nmap Scripting Engine|wpscan|dirbuster|dirb|gobuster|wfuzz|Arachni|w3af|acunetix|netsparker|nessus|openvas|zgrab|360Spider|JikeSpider|2345Explorer|webZIP|qihoobot|Baiduspider|Googlebot|Googlebot-Mobile|Googlebot-Image|Mediapartners-Google|Adsbot-Google|Feedfetcher-Google|Yahoo! Slurp|Yahoo! Slurp China|YoudaoBot|Sosospider|Sogou spider|Sogou web spider|MSNBot|bingbot|ia_archiver|Tomato Bot|NSPlayer|Spider|bot|Bot)", {>User-Agent})`
+  handle @bad_ua {
+    respond "" 403
+  }
+
+  # ---------------------------
+  # 6. Всё остальное — в app:80
+  # ---------------------------
   reverse_proxy app:80
 
   log {
@@ -19,4 +74,3 @@ ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
     format console
   }
 }
-
