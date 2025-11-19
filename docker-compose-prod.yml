@@ -1,0 +1,63 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: web_rails
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: web_rails_production
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/prod/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: "80"
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      RAILS_LOG_TO_STDOUT: "1"
+      # Primary DB and auxiliary DBs for solid_cache / solid_queue
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: postgres://web_rails:${POSTGRES_PASSWORD}@db:5432/web_rails_production
+      CACHE_DATABASE_URL: postgres://web_rails:${POSTGRES_PASSWORD}@db:5432/web_rails_production_cache
+      QUEUE_DATABASE_URL: postgres://web_rails:${POSTGRES_PASSWORD}@db:5432/web_rails_production_queue
+      WEB_RAILS_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      # Директория для хранения архивов сервисов (см. docs/SERVICE_ARCHIVES_STORAGE.md)
+      SERVICES_STORAGE_DIR: "/data/services"
+    expose:
+      - "80"
+    volumes:
+      - services-data:/data/services
+    # Default CMD in Dockerfile uses thruster and runs db:prepare via entrypoint
+
+  reverse-proxy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
+  services-data:
