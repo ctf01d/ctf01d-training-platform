@@ -5,76 +5,44 @@
 ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
   encode gzip zstd
 
-  # healthcheck
   @health path /healthz
   handle @health {
     respond "ok" 200
   }
 
   # =============================
-  # 1. Скрытые / "точечные" файлы
+  # Скрытые файлы и служебные пути
+  # (как уже настроили)
   # =============================
 
-  # Явно разрешаем .well-known (ACME и проверки домена)
-  @well_known path /.well-known/*
-
-  # Всё, что начинается с "." и НЕ /.well-known/* — режем
   @hidden_dotfiles {
-    # Любой путь, начинающийся с /.
     path_regexp hidden_dotfiles ^/\.
-
-    # Но не /.well-known/*
     not path /.well-known/*
   }
-
   handle @hidden_dotfiles {
     respond "Not found" 404
   }
 
-  # ============================================
-  # 2. Вендорные каталоги / конфиги / .env и т.п.
-  #    Аналог nginx-локации:
-  #    ^/(vendor|composer.json|...|Vagrantfile)
-  # ============================================
-
   @forbidden_paths path_regexp forbidden_paths (?i)^/(vendor/|composer\.json|composer\.lock|package\.json|yarn\.lock|config\.(ya?ml|json)|\.env|Dockerfile|Makefile|Vagrantfile)
-
   handle @forbidden_paths {
     respond "Not found" 404
   }
 
-  # =================================
-  # 3. wp-admin / phpmyadmin / pma и т.п.
-  # =================================
-
   @forbidden_php path_regexp forbidden_php (?i)^/(wp-admin/|wp-login\.php|xmlrpc\.php|phpmyadmin/|pma/)
-
   handle @forbidden_php {
     respond "Not found" 404
   }
 
-  # =================================
-  # 4. Опасные HTTP-методы
-  # =================================
-
   @bad_method method TRACE TRACK DEBUG
-
   handle @bad_method {
     respond "" 405
   }
 
-  # =================================
-  # 5. Плохие User-Agent'ы
-  # =================================
-
-  # Пустой / отсутствующий User-Agent
   @empty_ua header !User-Agent
-
   handle @empty_ua {
     respond "" 403
   }
 
-  # Сканеры, библиотеки и боты
   @bad_ua header_regexp badua User-Agent "(?i)(curl|wget|python-requests|python-urllib|libwww-perl|perl|Apache-HttpClient|httpclient|Scrapy|httpx|aiohttp|Mechanize|PhantomJS|HeadlessChrome|node-fetch|Nikto|sqlmap|Nmap Scripting Engine|wpscan|dirbuster|dirb|gobuster|wfuzz|Arachni|w3af|acunetix|netsparker|nessus|openvas|zgrab|360Spider|JikeSpider|2345Explorer|webZIP|qihoobot|Baiduspider|Googlebot|Googlebot-Mobile|Googlebot-Image|Mediapartners-Google|Adsbot-Google|Feedfetcher-Google|Yahoo! Slurp|Yahoo! Slurp China|YoudaoBot|Sosospider|Sogou spider|Sogou web spider|MSNBot|bingbot|ia_archiver|Tomato Bot|NSPlayer|Spider|bot|Bot)"
 
   handle @bad_ua {
@@ -82,8 +50,34 @@ ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
   }
 
   # =============================
-  # 6. Остальное — в backend app:80
+  # Заголовки безопасности
   # =============================
+  header {
+    # Убираем "Server: Caddy"
+    -Server
+
+    # На всякий случай — если Rails что-то такое шлёт
+    -X-Powered-By
+
+    # Жёстко форсим HTTPS на год (можно включить preload, если уверен)
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Защита от встраивания в iframe
+    X-Frame-Options "DENY"
+
+    # Не пытаться угадывать тип контента
+    X-Content-Type-Options "nosniff"
+
+    # Управление реферером
+    Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Запрещаем лишние браузерные фичи (под себя можешь ослабить)
+    Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Базовый CSP, чтобы сильно не ломать Rails-ассеты
+    # Если будет что-то падать — это первое, что ослабляем/тюним
+    Content-Security-Policy "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+  }
 
   reverse_proxy app:80
 
