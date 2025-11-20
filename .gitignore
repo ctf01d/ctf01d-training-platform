@@ -1,6 +1,7 @@
 dckr_mysql/*
 pg_docker
 src/server
+.bundle
 vendor
 /docker_tmp
 main
