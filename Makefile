@@ -27,8 +27,8 @@ web-rails-image-build-and-save: web-rails-image-build web-rails-image-save
 # -----------------------------------------------------------------------------
 # Remote deploy helper (rsync with excludes)
 
-DEPLOY_HOST ?= own-vds-helsinki
-DEPLOY_TARGET ?= ctf-time
+DEPLOY_HOST ?= own-vds-france
+DEPLOY_TARGET ?= ctf01d-training-platform
 
 RSYNC_EXCLUDES = \
 	--exclude .git \
