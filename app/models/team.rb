@@ -6,6 +6,8 @@ class Team < ApplicationRecord
   has_many :users, through: :team_memberships
   has_many :membership_events, class_name: "TeamMembershipEvent", dependent: :destroy
   has_many :writeups, dependent: :destroy
+  has_many :results, dependent: :destroy
+  has_many :games, through: :results
 
   validates :name, presence: true
   # Глобальное ограничение: один пользователь может быть капитаном только в одной команде

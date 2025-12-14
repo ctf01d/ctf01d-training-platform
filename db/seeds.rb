@@ -2,6 +2,7 @@
 require 'set'
 require 'erb'
 require 'zlib'
+require 'time'
 
 # Simple SVG avatar generator (data URL)
 def svg_data_avatar(text, bg = '#3B82F6')
@@ -78,8 +79,12 @@ university_names = [
   'Уральский федеральный университет',
   'Казанский федеральный университет',
   'Дальневосточный федеральный университет',
-  'Томский государственный университет',
-  'Высшая школа экономики'
+  'Высшая школа экономики',
+  'Алтайский государственный технический университет (АлтГТУ, AltSTU)',
+  'Томский государственный университет систем управления и радиоэлектроники (ТУСУР, TUSUR)',
+  'Томский государственный университет (ТГУ, TSU)',
+  'Сибирский государственный университет геосистем и технологий (ССУГиТ, SSUGT)',
+  'Новосибирский государственный технический университет (НГТУ, NSTU)'
 ]
 
 universities = university_names.map do |name|
@@ -90,34 +95,152 @@ universities = university_names.map do |name|
   u
 end
 
-# Seed: teams
-teams_data = [
-  { name: 'Pwnicorns',        website: 'https://pwnicorns.ctf',        description: 'We pwn for fun and profit.' },
-  { name: 'NullByte',         website: 'https://nullbyte.ctf',         description: 'Nothing but 0x00(s).' },
-  { name: 'CryptoCats',       website: 'https://cryptocats.ctf',       description: 'Meow-dern cryptography enthusiasts.' },
-  { name: 'SegFault Squad',   website: 'https://segfaultsquad.ctf',    description: 'Core dumped since 2013.' },
-  { name: 'RedOps',           website: 'https://redops.ctf',           description: 'Offense-first CTF crew.' },
-  { name: 'Overflower',       website: 'https://overflower.ctf',       description: 'Grow your stack.' },
-  { name: 'BitBenders',       website: 'https://bitbenders.ctf',       description: 'We bend bits to our will.' },
-  { name: 'Stack Smashers',   website: 'https://stacksmashers.ctf',    description: 'Mind the canaries.' },
-  { name: 'Cyber Owls',       website: 'https://cyberowls.ctf',        description: 'Night hunters of bugs.' },
-  { name: 'Ghost in Shellcode', website: 'https://ghostshellcode.ctf', description: 'Haunting binaries since forever.' }
+teams = []
+
+# Seed: CyberSibir 2025 teams (ctf01d config)
+cybersibir_teams_data = [
+  { config_id: 't01', name: 'QarabagTeam',      ip_address: '10.10.1.3',  logo: './html/images/teams/team01.png', active: true },
+  { config_id: 't02', name: 'W@zz4b1',          ip_address: '10.10.2.3',  logo: './html/images/teams/team02.png', active: true },
+  { config_id: 't03', name: 'smiley-from-telega', ip_address: '10.10.3.3', logo: './html/images/teams/team03.png', active: true },
+  { config_id: 't04', name: 'R3T4RD0Z',         ip_address: '10.10.4.3',  logo: './html/images/teams/team04.png', active: true },
+  { config_id: 't05', name: 'химозный рулет',   ip_address: '10.10.5.3',  logo: './html/images/teams/team05.png', active: true },
+  { config_id: 't06', name: 'SiBears',          ip_address: '10.10.6.3',  logo: './html/images/teams/team06.png', active: true },
+  { config_id: 't07', name: 'kekw',             ip_address: '10.10.7.3',  logo: './html/images/teams/team07.png', active: true },
+  { config_id: 't08', name: 'CyberCringe',      ip_address: '10.10.8.3',  logo: './html/images/teams/team08.png', active: true },
+  { config_id: 't09', name: 'NFB',              ip_address: '10.10.9.3',  logo: './html/images/teams/team09.png', active: true },
+  { config_id: 't10', name: 'SharLike',         ip_address: '10.10.10.3', logo: './html/images/teams/team10.png', active: true },
+  { config_id: 't11', name: 'ScareCrow',        ip_address: '10.10.11.3', logo: './html/images/teams/team11.png', active: true },
+  { config_id: 't12', name: 'd34dl1n3',         ip_address: '10.10.12.3', logo: './html/images/teams/team12.png', active: true },
+  { config_id: 't13', name: 'Keva',             ip_address: '10.10.13.3', logo: './html/images/teams/team13.png', active: true },
+  { config_id: 't14', name: '4Ray',             ip_address: '10.10.14.3', logo: './html/images/teams/team14.png', active: true },
+  { config_id: 't15', name: 'N0N@me13',         ip_address: '10.10.15.3', logo: './html/images/teams/team15.png', active: true },
+  { config_id: 't16', name: 'XAKCET',           ip_address: '10.10.16.3', logo: './html/images/teams/team16.png', active: true },
+  { config_id: 't17', name: 'TyumGUard',        ip_address: '10.10.17.3', logo: './html/images/teams/team17.png', active: true },
+  { config_id: 't18', name: 'datapoison',       ip_address: '10.10.18.3', logo: './html/images/teams/team18.png', active: true },
+  { config_id: 't19', name: 'Netoverkill',      ip_address: '10.10.19.3', logo: './html/images/teams/team19.png', active: true },
+  { config_id: 't20', name: 'CUT',              ip_address: '10.10.20.3', logo: './html/images/teams/team20.png', active: true },
+  { config_id: 't21', name: 'Ibeee',            ip_address: '10.10.21.3', logo: './html/images/teams/team21.png', active: true },
+  { config_id: 't22', name: 'o1d_bu7_go1d',     ip_address: '10.10.22.3', logo: './html/images/teams/team22.png', active: true },
+  { config_id: 't23', name: 'CyberPatriots',    ip_address: '10.10.23.3', logo: './html/images/teams/team23.png', active: true },
+  { config_id: 't24', name: 'vim>nano',         ip_address: '10.10.24.3', logo: './html/images/teams/team24.png', active: true },
+  { config_id: 't25', name: 'ГостиИзБудущего',  ip_address: '10.10.25.3', logo: './html/images/teams/team25.png', active: true },
+  { config_id: 't26', name: 'Циферки',          ip_address: '10.10.26.3', logo: './html/images/teams/team26.png', active: true },
+  { config_id: 't27', name: 'Team #27',         ip_address: '10.10.27.3', logo: './html/images/teams/team27.png', active: true },
+  { config_id: 't28', name: 'Team #28',         ip_address: '10.10.28.3', logo: './html/images/teams/team28.png', active: true },
+  { config_id: 't29', name: 'Team #29',         ip_address: '10.10.29.3', logo: './html/images/teams/team29.png', active: true }
 ]
 
-teams = teams_data.map do |attrs|
+cybersibir_teams = cybersibir_teams_data.map do |attrs|
   t = Team.find_or_initialize_by(name: attrs[:name])
-  t.description = attrs[:description]
-  t.website = attrs[:website]
-  t.university = [ nil, *universities.sample(1) ].compact.first
-  t.avatar_url = svg_data_avatar(t.name, PALETTE.sample)
+  t.description = [
+    'CyberSibir 2025 roster',
+    "ctf01d_id: #{attrs[:config_id]}",
+    ("IP: #{attrs[:ip_address]}" if attrs[:ip_address]),
+    ("Лого: #{attrs[:logo]}" if attrs[:logo]),
+    ("Активна: #{attrs[:active] ? 'yes' : 'no'}")
+  ].compact.join(' · ')
+  t.website = nil
+  t.university = nil
+  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
+end
+
+teams += cybersibir_teams
+cybersibir_team_ids = cybersibir_teams.map(&:id)
+
+# SibirCTF 2018 roster (из jury config)
+sibir2018_teams_data = [
+  { config_id: 'team1', name: 'Life', logo: 'images/teams/life.jpg', ip_address: '10.218.1.2', active: true },
+  { config_id: 'team2', name: 'Void*', logo: 'images/teams/void_.jpg', ip_address: '10.218.2.2', active: true },
+  { config_id: 'team3', name: 'SiBears', logo: 'images/teams/sibears.png', ip_address: '10.218.3.2', active: true },
+  { config_id: 'team4', name: 'Novosibirsk SU X', logo: 'images/teams/unknown.png', ip_address: '10.218.4.2', active: true },
+  { config_id: 'team5', name: 'paperwhale', logo: 'images/teams/paperwhale.png', ip_address: '10.218.5.2', active: true },
+  { config_id: 'team6', name: 'Omaviat', logo: 'images/teams/unknown.png', ip_address: '10.218.6.2', active: true },
+  { config_id: 'team7', name: 'CatchFM', logo: 'images/teams/unknown.png', ip_address: '10.218.7.2', active: true },
+  { config_id: 'team8', name: 'RWX', logo: 'images/teams/rwx.png', ip_address: '10.218.8.2', active: true },
+  { config_id: 'team9', name: 'SharLike', logo: 'images/teams/sharlike.png', ip_address: '10.218.9.2', active: true },
+  { config_id: 'team10', name: 'd34dl1n3', logo: 'images/teams/d34dl1n3.png', ip_address: '10.218.10.2', active: true },
+  { config_id: 'team11', name: 'n57u n00bz', logo: 'images/teams/n57u_n00bz.png', ip_address: '10.218.11.2', active: true },
+  { config_id: 'team12', name: 'VoidHack', logo: 'images/teams/voidhack.png', ip_address: '10.218.12.2', active: true },
+  { config_id: 'team13', name: "Новосибирский Д'Артаньян", logo: 'images/teams/unknown.png', ip_address: '10.218.13.2', active: true },
+  { config_id: 'team14', name: 'Trash Querty', logo: 'images/teams/trash_querty.jpg', ip_address: '10.218.14.2', active: true },
+  { config_id: 'team15', name: 'Life (Guest)', logo: 'images/teams/life.jpg', ip_address: '10.218.15.2', active: true },
+  { config_id: 'team16', name: 'HawkSquad', logo: 'images/teams/hawk.png', ip_address: '10.218.16.2', active: true },
+  # team17 пустое имя и inactive — пропускаем
+  { config_id: 'team18', name: 'NeosFun', logo: 'images/teams/neosfun.png', ip_address: '10.218.18.2', active: true }
+]
+
+sibir2018_teams = sibir2018_teams_data.filter { |t| t[:name].present? }.map do |attrs|
+  t = Team.find_or_initialize_by(name: attrs[:name])
+  t.description = [
+    'SibirCTF 2018 roster',
+    "ctf01d_id: #{attrs[:config_id]}",
+    ("IP: #{attrs[:ip_address]}" if attrs[:ip_address]),
+    ("Лого: #{attrs[:logo]}" if attrs[:logo]),
+    ("Активна: #{attrs[:active] ? 'yes' : 'no'}")
+  ].compact.join(' · ')
+  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
+  t.save!
+  t
+end
+
+teams += sibir2018_teams
+sibir2018_team_ids = sibir2018_teams.map(&:id)
+
+# Привязки команд к университетам (ручные корректировки)
+altstu = universities.find { |u| u.name.include?('AltSTU') }
+if altstu
+  if (sharlike = Team.find_by(name: 'SharLike'))
+    desc_parts = sharlike.description.to_s.split(' · ').map(&:strip)
+    desc_parts << 'Academic team AltSTU' unless desc_parts.any? { |p| p =~ /AltSTU/i }
+    sharlike.update!(university: altstu, description: desc_parts.uniq.join(' · '))
+  end
+end
+
+tusur = universities.find { |u| u.name =~ /ТУСУР|TUSUR/i }
+if tusur
+  if (keva = Team.find_by(name: 'Keva'))
+    desc_parts = keva.description.to_s.split(' · ').map(&:strip)
+    desc_parts << 'Academic team Tomsk State University of Control Systems and Radioelectronics (TUSUR)'
+    keva.update!(university: tusur, description: desc_parts.uniq.join(' · '))
+  end
+end
+
+tsu = universities.find { |u| u.name =~ /ТГУ|TSU/i }
+if tsu
+  if (sibears = Team.find_by(name: 'SiBears'))
+    desc_parts = sibears.description.to_s.split(' · ').map(&:strip)
+    desc_parts << 'Academic team TSU'
+    desc_parts << 'Томского государственного университета'
+    sibears.update!(university: tsu, description: desc_parts.uniq.join(' · '))
+  end
+end
+
+ssugt = universities.find { |u| u.name =~ /ССУГ|SSUGT|геосистем/i }
+if ssugt
+  if (dteam = Team.find_by(name: 'd34dl1n3'))
+    desc_parts = dteam.description.to_s.split(' · ').map(&:strip)
+    desc_parts << 'Academic team SSUGT'
+    dteam.update!(university: ssugt, description: desc_parts.uniq.join(' · '), website: dteam.website.presence || 'https://sgugit.ru')
+  end
+end
+
+nstu = universities.find { |u| u.name =~ /НГТУ|NSTU/i }
+if nstu
+  if (qarabag = Team.find_by(name: 'QarabagTeam'))
+    desc_parts = qarabag.description.to_s.split(' · ').map(&:strip)
+    desc_parts << 'Academic team NSTU'
+    qarabag.update!(university: nstu, description: desc_parts.uniq.join(' · '), website: qarabag.website.presence || 'https://nstu.ru/')
+  end
 end
 
 # Assign memberships, roles, and captains
 used_captain_user_ids = Team.where.not(captain_id: nil).pluck(:captain_id).to_set
 
 teams.each_with_index do |team, idx|
+  next if cybersibir_team_ids.include?(team.id) || (defined?(sibir2018_team_ids) && sibir2018_team_ids.include?(team.id)) # не добавляем фейковых игроков в предзаполненные ростеры
+
   # Pick 4-6 distinct users for the team
   members = users.sample(4 + (idx % 3))
 
@@ -151,14 +274,15 @@ end
 
 # Seed: games (past, ongoing, upcoming)
 games_data = [
-  { name: '0CTF Intergalactic', organizer: 'CTF01D', starts_at: 30.days.ago, ends_at: 29.days.ago },
-  { name: 'Hack The Planet',    organizer: 'CTF01D', starts_at: 8.days.ago,  ends_at: 7.days.ago  },
-  { name: 'PWN Arena',          organizer: 'CTF01D', starts_at: 1.day.ago,   ends_at: 1.day.from_now },
-  { name: 'Crypto Clash',       organizer: 'CTF01D', starts_at: 5.days.from_now, ends_at: 6.days.from_now },
-  { name: 'Forensics Frenzy',   organizer: 'CTF01D', starts_at: 15.days.from_now, ends_at: 16.days.from_now },
-  { name: 'Reversing Rumble',   organizer: 'CTF01D', starts_at: 60.days.ago, ends_at: 58.days.ago },
-  { name: 'Binary Blitz',       organizer: 'CTF01D', starts_at: 10.days.from_now, ends_at: 11.days.from_now },
-  { name: 'Stego Showdown',     organizer: 'CTF01D', starts_at: 20.days.from_now, ends_at: 20.days.from_now + 12.hours }
+  { name: 'SibirCTF 2014',   organizer: 'SibirCTF',    starts_at: Time.utc(2014, 4, 19, 6, 0, 0),  ends_at: Time.utc(2014, 4, 19, 14, 0, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2015',   organizer: 'SibirCTF',    starts_at: Time.utc(2015, 4, 18, 6, 0, 0),  ends_at: Time.utc(2015, 4, 18, 14, 0, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2016',   organizer: 'SibirCTF',    starts_at: Time.utc(2016, 4, 23, 6, 0, 0),  ends_at: Time.utc(2016, 4, 23, 14, 0, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2017',   organizer: 'SibirCTF',    starts_at: Time.utc(2017, 4, 22, 6, 0, 0),  ends_at: Time.utc(2017, 4, 22, 14, 0, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2018',   organizer: 'SibirCTF',    starts_at: Time.utc(2018, 10, 21, 4, 0, 0), ends_at: Time.utc(2018, 10, 21, 12, 30, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2019',   organizer: 'keva',        starts_at: Time.iso8601('2019-11-01T02:00:00Z'), ends_at: Time.iso8601('2019-11-01T12:00:00Z'), site_url: 'https://sibirctf.org/', ctftime_url: 'https://ctftime.org/event/889/', logo_url: 'https://ctftime.org/media/events/sibir_logo.png' },
+  { name: 'SibirCTF 2023',   organizer: 'keva',        starts_at: Time.utc(2023, 11, 19, 5, 45, 0), ends_at: Time.utc(2023, 11, 19, 13, 0, 0), site_url: 'https://vk.com/sibirctf', ctftime_url: 'https://ctftime.org/event/2132/', logo_url: 'https://ctftime.org/media/events/glaz2023.jpg' },
+  { name: 'CyberSibir 2025', organizer: 'keva',        starts_at: Time.utc(2025, 3, 28, 4, 20, 0), ends_at: Time.utc(2025, 3, 28, 12, 20, 0), site_url: 'https://vk.com/sibirctf', ctftime_url: 'https://ctftime.org/event/2742/', logo_url: 'https://ctftime.org/media/events/cybersibir2025logo_1.png' },
+  { name: 'CyberSibir 2026', organizer: 'CyberSibir',  starts_at: Time.utc(2026, 3, 27, 4, 0, 0),  ends_at: Time.utc(2026, 3, 27, 12, 0, 0), site_url: 'https://vk.com/sibirctf' }
 ]
 
 games = games_data.map do |attrs|
@@ -166,7 +290,9 @@ games = games_data.map do |attrs|
   g.organizer = attrs[:organizer]
   g.starts_at = attrs[:starts_at]
   g.ends_at = attrs[:ends_at]
-  g.avatar_url = svg_data_avatar(g.name, PALETTE.sample)
+  g.site_url = attrs[:site_url] if attrs[:site_url]
+  g.ctftime_url = attrs[:ctftime_url] if attrs[:ctftime_url]
+  g.avatar_url = attrs[:logo_url] || g.avatar_url || svg_data_avatar(g.name, PALETTE.sample)
   # access/networks demo (публикуем для прошедших и идущих игр; для далёких будущих — оставим пустым)
   if g.ends_at && g.ends_at < Time.now || (g.starts_at && g.starts_at <= Time.now + 2.days)
     slug = g.name.parameterize
@@ -209,6 +335,10 @@ end
 srand(42)
 games.each do |g|
   next if g.starts_at > Time.now # skip upcoming
+  next if g.name == 'CyberSibir 2025' # реальные результаты ниже
+  next if g.name == 'SibirCTF 2023' # реальные результаты ниже
+  next if g.name == 'SibirCTF 2019' # реальные результаты ниже
+  next if g.name == 'SibirCTF 2016' # реальные результаты ниже
   # Rank a random subset of teams (4..teams.size)
   participating = teams.sample([ teams.size, 4 + rand(0..(teams.size - 4)) ].min)
   base = 1000
@@ -221,60 +351,218 @@ games.each do |g|
   end
 end
 
-# Seed: services (CTF-flavored)
+# Seed: реальные результаты CyberSibir 2025 (CTFtime)
+cyber2025 = games.find { |g| g.name == 'CyberSibir 2025' }
+if cyber2025
+  scoreboard_2025 = [
+    { name: 'TyumGUard',        points: 8746.5 },
+    { name: 'smiley-from-telega', points: 8404.6 },
+    { name: 'W@zz4b1',          points: 8145.0 },
+    { name: 'QarabagTeam',      points: 4646.7 },
+    { name: 'химозный рулет',   points: 4595.1 },
+    { name: 'datapoison',       points: 4578.5 },
+    { name: '4Ray',             points: 4476.9 },
+    { name: 'SiBears',          points: 4407.6 },
+    { name: 'N0N@me13',         points: 4350.8 },
+    { name: 'CUT',              points: 4318.1 },
+    { name: 'Ibeee',            points: 3958.7 },
+    { name: 'vim>nano',         points: 3224.9 },
+    { name: 'NFB',              points: 3190.0 },
+    { name: 'o1d_bu7_go1d',     points: 2891.9 },
+    { name: 'Циферки',          points: 2693.1 },
+    { name: 'ScareCrow',        points: 2567.4 },
+    { name: 'd34dl1n3',         points: 2451.2 },
+    { name: 'SharLike',         points: 1826.1 },
+    { name: 'R3T4RD0Z',         points: 1518.7 },
+    { name: 'Netoverkill',      points: 1498.4 },
+    { name: 'kekw',             points: 1442.8 },
+    { name: 'CyberCringe',      points: 1390.8 },
+    { name: 'CyberPatriots',    points: 1223.8 },
+    { name: 'XAKCET',           points: 810.4 }
+  ]
+
+  team_index = Team.all.index_by { |t| t.name.downcase }
+  scoreboard_2025.each do |row|
+    team = team_index[row[:name].downcase]
+    unless team
+      team = Team.create!(
+        name: row[:name],
+        description: 'Импортировано из scoreboard CyberSibir 2025',
+        avatar_url: svg_data_avatar(row[:name], PALETTE.sample)
+      )
+      team_index[team.name.downcase] = team
+      teams << team
+    end
+    result = Result.find_or_initialize_by(game_id: cyber2025.id, team_id: team.id)
+    result.score = (row[:points] * 1000).to_i # сохраняем точность до тысячных
+    result.save!
+  end
+end
+
+# Seed: реальные результаты SibirCTF 2023 (CTFtime)
+cyber2023 = games.find { |g| g.name == 'SibirCTF 2023' }
+if cyber2023
+  scoreboard_2023 = [
+    { name: 'SiBears',                  points: 7893.1 },
+    { name: 'ыыыыЫЫЫЫЫ',                points: 7386.4 },
+    { name: 'CubaLibre',                points: 5832.6 },
+    { name: 'QarabagTeam',              points: 5570.8 },
+    { name: 'Продам гараж за флаги',    points: 5511.9 },
+    { name: 'o1d_bu7_go1d',             points: 4528.1 },
+    { name: 'SharLike',                 points: 2817.4 },
+    { name: 'd34dl1n3',                 points: 2658.4 },
+    { name: 'A4PT Reshetneva',          points: 2569.5 },
+    { name: 'ИнфоБесы',                 points: 1783.5 },
+    { name: 'LCD',                      points: 897.7 }
+  ]
+
+  team_index = Team.all.index_by { |t| t.name.downcase }
+  scoreboard_2023.each do |row|
+    team = team_index[row[:name].downcase]
+    unless team
+      team = Team.create!(
+        name: row[:name],
+        description: 'Импортировано из scoreboard SibirCTF 2023',
+        avatar_url: svg_data_avatar(row[:name], PALETTE.sample)
+      )
+      team_index[team.name.downcase] = team
+      teams << team
+    end
+    result = Result.find_or_initialize_by(game_id: cyber2023.id, team_id: team.id)
+    result.score = (row[:points] * 1000).to_i
+    result.save!
+  end
+end
+
+# Seed: реальные результаты SibirCTF 2019 (CTFtime)
+cyber2019 = games.find { |g| g.name == 'SibirCTF 2019' }
+if cyber2019
+  scoreboard_2019 = [
+    { name: 'Суслобатя',   points: 89430.9 },
+    { name: 'Dragon Hat',  points: 88713.5 },
+    { name: 'Tanuki squad',points: 55170.2 },
+    { name: 'SiBears',     points: 51399.1 },
+    { name: 'Omaviat',     points: 47788.8 },
+    { name: 'SharNear',    points: 42291.8 },
+    { name: 'rwx',         points: 41812.4 },
+    { name: 'UkVQ',        points: 36416.3 },
+    { name: '4ерниkа',     points: 32676.4 },
+    { name: 'Keva19',      points: 32497.7 },
+    { name: 'a-cool-team', points: 26495.9 },
+    { name: 'Life',        points: 26139.0 },
+    { name: 'd34dl1n3',    points: 24739.2 },
+    { name: 'CatchFM',     points: 24347.0 },
+    { name: 'BANOЧKA',     points: 6261.2 },
+    { name: 'Team 16',     points: 4727.0 }
+  ]
+
+  team_index = Team.all.index_by { |t| t.name.downcase }
+  scoreboard_2019.each do |row|
+    team = team_index[row[:name].downcase]
+    unless team
+      team = Team.create!(
+        name: row[:name],
+        description: 'Импортировано из scoreboard SibirCTF 2019',
+        avatar_url: svg_data_avatar(row[:name], PALETTE.sample)
+      )
+      team_index[team.name.downcase] = team
+      teams << team
+    end
+    result = Result.find_or_initialize_by(game_id: cyber2019.id, team_id: team.id)
+    result.score = (row[:points]).to_i # очки целые в CTFTIME
+    result.save!
+  end
+end
+
+# Seed: реальные результаты SibirCTF 2016 (CTFtime)
+cyber2016 = games.find { |g| g.name == 'SibirCTF 2016' }
+if cyber2016
+  scoreboard_2016 = [
+    { name: 'SiBears',                         points: 3250.770 },
+    { name: 'Yozik',                           points: 18.790 },
+    { name: 'Team Information Offensive',      points: 45.940 },
+    { name: 'FoXXXeS',                         points: 304.700 },
+    { name: 'Mu574n9',                         points: 359.700 },
+    { name: '!2day',                           points: 982.820 },
+    { name: 'SharLike',                        points: 1186.730 },
+    { name: '(_xXx_-=HOBOCu6uPCKuE_IICbl_1337=-_xXx_)', points: 1436.590 },
+    { name: 'Life',                            points: 1753.340 },
+    { name: 'xXx_Я_не_ХЛЕБ_я_КОТ_хХх',         points: 1763.670 },
+    { name: 'paperwhale',                      points: 0.810 }
+  ]
+
+  team_index = Team.all.index_by { |t| t.name.downcase }
+  scoreboard_2016.each do |row|
+    team = team_index[row[:name].downcase]
+    unless team
+      team = Team.create!(
+        name: row[:name],
+        description: 'Импортировано из scoreboard SibirCTF 2016',
+        avatar_url: svg_data_avatar(row[:name], PALETTE.sample)
+      )
+      team_index[team.name.downcase] = team
+      teams << team
+    end
+    result = Result.find_or_initialize_by(game_id: cyber2016.id, team_id: team.id)
+    result.score = (row[:points] * 1000).to_i
+    result.save!
+  end
+end
+
+# Seed: services (SibirCTF/CyberSibir)
 services_data = [
-  { name: 'pwn: Baby Heap',            public_description: 'Базовые аллокации/фри, tcache.', author: 'core', public: true },
-  { name: 'pwn: ROP Gadgets',          public_description: 'Ret2libc и ROP в x64.', author: 'core', public: true },
-  { name: 'pwn: Format String 101',    public_description: 'Базовая FSB, чтение/запись.', author: 'core', public: true },
-  { name: 'pwn: Kernel Intro',         public_description: 'Средний уровень: kalloc, uaf.', author: 'core', public: false },
-
-  { name: 'web: Cookie Monster',       public_description: 'XSS, cookies, CSP.', author: 'webops', public: true },
-  { name: 'web: SSTI Bakery',          public_description: 'SSTI в шаблонизаторе.', author: 'webops', public: true },
-  { name: 'web: SQL Trickery',         public_description: 'Blind SQLi и WAF bypass.', author: 'webops', public: true },
-  { name: 'web: Deserialization Mayhem', public_description: 'Insecure deserialization.', author: 'webops', public: false },
-
-  { name: 'crypto: ECB Roulette',      public_description: 'ECB oracle, padding.', author: 'crypto', public: true },
-  { name: 'crypto: LCG Madness',       public_description: 'PRNG predictability.', author: 'crypto', public: true },
-  { name: 'crypto: RSA Clinic',        public_description: 'Common RSA pitfalls.', author: 'crypto', public: true },
-
-  { name: 're: CrackMe Deluxe',        public_description: 'Reverse basic auth.', author: 'rev', public: true },
-  { name: 're: VM Confuser',           public_description: 'VM obfuscation tricks.', author: 'rev', public: false },
-
-  { name: 'forensics: PCAP Hunt',      public_description: 'Разбор сетевого дампа.', author: 'forensics', public: true },
-  { name: 'forensics: Disk Image',     public_description: 'Образы и артефакты.', author: 'forensics', public: true },
-  { name: 'misc: OSINT Trail',         public_description: 'Поиск по следам.', author: 'misc', public: true },
-  { name: 'hardware: UART Quest',      public_description: 'Железо и логи.', author: 'hw', public: false }
+  # CyberSibir 2025
+  { name: 'EyeSee',       public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-eyesee', language: 'Python', games: ['CyberSibir 2025'] },
+  { name: 'MSPD',         public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-mspd', language: 'Go', games: ['CyberSibir 2025'] },
+  { name: 'NcDEx',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-ncdex', language: 'Crystal', games: ['CyberSibir 2025'] },
+  { name: 'Unpleasant',   public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-unpleasant', language: 'HTML', games: ['CyberSibir 2025'] },
+  { name: 'WrNum',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-wrnum', language: 'Python', games: ['CyberSibir 2025'] },
+  { name: 'CyberBank',    public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-bank', language: 'JavaScript', games: ['CyberSibir 2025'] },
+  { name: 'NeuroLink234', public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-neLi234', language: 'C', games: ['CyberSibir 2025'] },
+  { name: 'BioGuard',     public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-BioGuard', language: 'Python', games: ['CyberSibir 2025'] },
+  # SibirCTF 2023
+  { name: 'StickMarket',    public_description: 'SibirCTF 2023 service (StickMarket)', author: 'SibirCTF', repo: '2023-service-sibirctf-stickmarket', language: 'CSS', games: ['SibirCTF 2023'] },
+  { name: 'SouthParkChat',  public_description: 'SibirCTF 2023 service (SouthParkChat)', author: 'SibirCTF', repo: '2023-service-sibirctf-southparkchat', language: 'Go', games: ['SibirCTF 2023'] },
+  { name: 'SX',             public_description: 'SibirCTF 2023 service (SX)', author: 'SibirCTF', repo: '2023-service-sibirctf-sx', language: 'Python', games: ['SibirCTF 2023'] },
+  { name: 'Chef',           public_description: 'SibirCTF 2023 service (Chef)', author: 'SibirCTF', repo: '2023-service-sibirctf-chef', language: 'C', games: ['SibirCTF 2023'] },
+  { name: 'Card Vault',     public_description: 'SibirCTF 2023 CardVault service', author: 'SibirCTF', repo: '2023-service-sibirctf-cardvault', language: 'Elixir', games: ['SibirCTF 2023'] },
+  # SibirCTF 2018
+  { name: 'maxigram',       public_description: 'SibirCTF 2018 service (maxigram)', author: 'SibirCTF', repo: '2018-service-maxigram', language: 'Python', games: ['SibirCTF 2018'] },
+  { name: 'The Fakebook',   public_description: 'SibirCTF 2018 service (The Fakebook)', author: 'SibirCTF', repo: '2018-service-thefakebook', language: 'HTML', games: ['SibirCTF 2018'] },
+  { name: 'The Hole',       public_description: 'SibirCTF 2018 service (The Hole)', author: 'SibirCTF', repo: '2018-service-the-hole', language: 'C++', games: ['SibirCTF 2018'] },
+  { name: 'Legacy News',    public_description: 'SibirCTF 2018 service (Legacy News)', author: 'SibirCTF', repo: nil, language: nil, games: ['SibirCTF 2018'] },
+  { name: 'Mirai',          public_description: 'SibirCTF 2018 service (Mirai)', author: 'SibirCTF', repo: '2018-service-mirai', language: 'PHP', games: ['SibirCTF 2018'] },
+  { name: 'LNKS',           public_description: 'SibirCTF 2018 service (LNKS)', author: 'SibirCTF', repo: '2018-service-lnks', language: 'PHP', games: ['SibirCTF 2018'] },
+  { name: 'Lie2Me',         public_description: 'SibirCTF 2018 service (Lie2Me)', author: 'SibirCTF', repo: '2018-service-lie-to-me', language: 'Perl', games: ['SibirCTF 2018'] }
 ]
 
 services = services_data.map do |attrs|
   Service.find_or_create_by!(name: attrs[:name]) do |s|
-    slug = attrs[:name].downcase.gsub(/[^a-z0-9]+/, '-').gsub(/^-|-$/, '')
     s.public_description = attrs[:public_description]
     s.private_description = ""
     s.author = attrs[:author]
     s.avatar_url = svg_data_avatar(attrs[:name], PALETTE.sample)
-    s.public = attrs[:public]
-    s.service_archive_url = "https://example.com/archives/#{slug}.zip"
-    s.checker_archive_url = "https://example.com/checkers/#{slug}-checker.zip"
-    s.writeup_url = "https://example.com/writeups/#{slug}.pdf"
-    s.exploits_url = (attrs[:name].start_with?('pwn') || attrs[:name].start_with?('web')) ? "https://example.com/exploits/#{slug}.zip" : nil
-    status_pool = %w[unknown queued ok fail]
-    s.check_status = status_pool.sample
-    s.checked_at = Time.now - rand(0..10).days
+    s.public = true
+    s.service_archive_url = attrs[:repo] ? "https://github.com/SibirCTF/#{attrs[:repo]}/archive/refs/heads/main.zip" : nil
+    s.checker_archive_url = nil
+    s.writeup_url = nil
+    s.exploits_url = nil
+    s.check_status = 'unknown'
+    s.checked_at = nil
+  end.tap do |s|
+    s.update!(language: attrs[:language]) if s.respond_to?(:language=) && attrs[:language]
   end
 end
 
-# Assign services to games
-games.each_with_index do |g, i|
-  # Upcoming games: fewer services; ongoing/past: more
-  count = if g.ends_at && g.ends_at < Time.now
-            4
-  elsif g.starts_at && g.starts_at <= Time.now && g.ends_at && g.ends_at >= Time.now
-            5
-  else
-            3
-  end
-  g.services = services.sample(count)
+# Assign services to games (детерминированно)
+services_by_game = Hash.new { |h, k| h[k] = [] }
+services_data.each do |svc|
+  svc[:games].each { |g| services_by_game[g] << svc[:name] }
+end
+
+games.each do |g|
+  names = services_by_game[g.name] || []
+  g.services = Service.where(name: names)
   g.save!
 end
 

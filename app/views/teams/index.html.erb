@@ -16,9 +16,10 @@
         <div>
           <div><strong><%= link_to team.name, team %></strong></div>
           <div class="muted">
-            Университет: <%= team.university ? link_to(team.university.name, team.university) : '—' %>
+            <%= team.university ? link_to(team.university.name, team.university) : '' %>
             <% if team.captain %> • Капитан: <%= link_to team.captain.display_name, team.captain %><% end %>
             • Участников: <%= team.team_memberships.where(status: TeamMembership::STATUS_APPROVED).count %>
+            • Принял участие в соревнованиях: <%= team.results.count %>
           </div>
         </div>
       </div>

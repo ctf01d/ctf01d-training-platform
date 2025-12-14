@@ -40,7 +40,13 @@
           <% @results.each_with_index do |r, idx| %>
             <tr>
               <td><%= @final ? (r.position || idx + 1) : (idx + 1) %></td>
-              <td><%= r.team&.name || '—' %></td>
+              <td>
+                <% if r.team.present? %>
+                  <%= link_to r.team.name, r.team %>
+                <% else %>
+                  — 
+                <% end %>
+              </td>
               <td><%= r.score %></td>
             </tr>
           <% end %>

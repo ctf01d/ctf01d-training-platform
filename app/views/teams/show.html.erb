@@ -4,9 +4,10 @@
     <div>
       <p><strong><%= @team.name %></strong></p>
       <p class="muted">
-        Университет: <%= @team.university ? link_to(@team.university.name, @team.university) : '—' %>
+        <%= @team.university ? link_to(@team.university.name, @team.university) : '' %>
         <% if @team.captain %> • Капитан: <%= link_to @team.captain.display_name, @team.captain %><% end %>
         • Участников: <%= @team.team_memberships.where(status: TeamMembership::STATUS_APPROVED).count %>
+        • Соревнований: <%= @team.results.count %>
       </p>
       <% if @team.website.present? %>
         <p class="muted"><%= link_to @team.website, @team.website, target: '_blank', rel: 'noopener' %></p>
@@ -144,10 +145,33 @@
         </li>
       <% end %>
     </ul>
-  <% else %>
+<% else %>
     <p>Пока нет событий.</p>
   <% end %>
 </div>
+
+<hr>
+<h2>Участие в соревнованиях</h2>
+<% participations = @team.results.includes(game: :final_results).order(score: :desc) %>
+<% if participations.any? %>
+  <table border="1" cellpadding="6" cellspacing="0">
+    <tr>
+      <th>Игра</th>
+      <th>Очки</th>
+      <th>Место (если зафиксировано)</th>
+    </tr>
+    <% participations.each do |r| %>
+      <tr>
+        <td><%= link_to r.game.name, r.game %></td>
+        <td><%= r.score %></td>
+        <% finalized = r.game.final_results.find { |fr| fr.team_id == r.team_id } %>
+        <td><%= finalized&.position || '—' %></td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <p>Команда ещё не участвовала в соревнованиях.</p>
+<% end %>
 
 <hr>
 <h2>Writeups команды</h2>
