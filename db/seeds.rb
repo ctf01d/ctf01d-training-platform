@@ -71,7 +71,7 @@ end
 university_names = [
   'Московский государственный университет имени М.В. Ломоносова',
   'Санкт-Петербургский государственный университет',
-  'Новосибирский государственный университет',
+  'Новосибирский государственный университет (НГУ, NSU)',
   'Московский физико-технический институт',
   'Национальный исследовательский ядерный университет МИФИ',
   'Бауманский МГТУ',
@@ -188,6 +188,56 @@ end
 teams += sibir2018_teams
 sibir2018_team_ids = sibir2018_teams.map(&:id)
 
+# SibirCTF 2015 roster (по итогам статьи)
+sibir2015_team_names = [
+  'SuSlo.PAS',
+  'Failers',
+  'FTS',
+  'Life',
+  'Mustang',
+  'OMAVIAT',
+  'Sharlike',
+  'SibirTSU',
+  'Zanyato',
+  'TIO',
+  'Luck3rz',
+  'Shikata ga nai',
+  'Hell ZIP',
+  'n57u n00bz'
+]
+
+sibir2015_teams = sibir2015_team_names.map do |name|
+  t = Team.find_or_initialize_by(name: name)
+  t.description = [t.description.presence, 'SibirCTF 2015 roster'].compact.join(' · ')
+  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
+  t.save!
+  t
+end
+
+teams += sibir2015_teams
+sibir2015_team_ids = sibir2015_teams.map(&:id)
+
+# SibirCTF 2014 roster (по графику флагов)
+sibir2014_teams_data = [
+  { name: 'h34dump',              score: 1501 },
+  { name: 'Yozik',                score: 1163 },
+  { name: 'Brizz',                score: 659 },
+  { name: 'Mustang',              score: 626 },
+  { name: 'Сборная АлтГТУ',      score: 476 },
+  { name: 'Life',                 score: 318 }
+]
+
+sibir2014_teams = sibir2014_teams_data.map do |attrs|
+  t = Team.find_or_initialize_by(name: attrs[:name])
+  t.description = [t.description.presence, 'SibirCTF 2014 roster'].compact.join(' · ')
+  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
+  t.save!
+  t
+end
+
+teams += sibir2014_teams
+sibir2014_team_ids = sibir2014_teams.map(&:id)
+
 # Привязки команд к университетам (ручные корректировки)
 altstu = universities.find { |u| u.name.include?('AltSTU') }
 if altstu
@@ -235,11 +285,22 @@ if nstu
   end
 end
 
+nsu = universities.find { |u| u.name =~ /НГУ|NSU/i }
+if nsu
+  if (suslo = Team.find_by(name: 'SuSlo.PAS'))
+    desc_parts = suslo.description.to_s.split(' · ').map(&:strip)
+    aliases = ['SUSlo', 'EpicFairPlay', 'ШАПКА ПЕТУХА', 'ОМСКИЙ АНДЕГРАУНД И КУБОК ПЕТУХА', '地松鼠.PAS', '新西伯利亚地松鼠.PAS', 'HoBoCu6uPcKuu NPC', 'Zorro.PAS', 'Большой хомяк выходного дня точка PAS']
+    desc_parts << "Also known as: #{aliases.join(', ')}"
+    desc_parts << 'Academic team Novosibirsk State University (NSU)'
+    suslo.update!(university: nsu, description: desc_parts.uniq.join(' · '))
+  end
+end
+
 # Assign memberships, roles, and captains
 used_captain_user_ids = Team.where.not(captain_id: nil).pluck(:captain_id).to_set
 
 teams.each_with_index do |team, idx|
-  next if cybersibir_team_ids.include?(team.id) || (defined?(sibir2018_team_ids) && sibir2018_team_ids.include?(team.id)) # не добавляем фейковых игроков в предзаполненные ростеры
+  next if cybersibir_team_ids.include?(team.id) || sibir2018_team_ids.include?(team.id) || sibir2015_team_ids.include?(team.id) || sibir2014_team_ids.include?(team.id) # не добавляем фейковых игроков в предзаполненные ростеры
 
   # Pick 4-6 distinct users for the team
   members = users.sample(4 + (idx % 3))
@@ -275,7 +336,7 @@ end
 # Seed: games (past, ongoing, upcoming)
 games_data = [
   { name: 'SibirCTF 2014',   organizer: 'SibirCTF',    starts_at: Time.utc(2014, 4, 19, 6, 0, 0),  ends_at: Time.utc(2014, 4, 19, 14, 0, 0), site_url: 'https://sibirctf.org/' },
-  { name: 'SibirCTF 2015',   organizer: 'SibirCTF',    starts_at: Time.utc(2015, 4, 18, 6, 0, 0),  ends_at: Time.utc(2015, 4, 18, 14, 0, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2015',   organizer: 'SibirCTF',    starts_at: Time.utc(2015, 4, 18, 6, 0, 0),  ends_at: Time.utc(2015, 4, 18, 14, 0, 0), site_url: 'https://sibirctf.org/', logo_url: 'https://sun9-29.userapi.com/s/v1/ig1/YxcZz4g9cU0748u9NKGxsxJPwdJ7j6mRYNpsHKZwrYuncf_UVOtVmPPVgkH7SGOgFyluzE5c.jpg?quality=96&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,534x534&from=bu&cs=534x0' },
   { name: 'SibirCTF 2016',   organizer: 'SibirCTF',    starts_at: Time.utc(2016, 4, 23, 6, 0, 0),  ends_at: Time.utc(2016, 4, 23, 14, 0, 0), site_url: 'https://sibirctf.org/' },
   { name: 'SibirCTF 2017',   organizer: 'SibirCTF',    starts_at: Time.utc(2017, 4, 22, 6, 0, 0),  ends_at: Time.utc(2017, 4, 22, 14, 0, 0), site_url: 'https://sibirctf.org/' },
   { name: 'SibirCTF 2018',   organizer: 'SibirCTF',    starts_at: Time.utc(2018, 10, 21, 4, 0, 0), ends_at: Time.utc(2018, 10, 21, 12, 30, 0), site_url: 'https://sibirctf.org/' },
@@ -329,26 +390,6 @@ games = games_data.map do |attrs|
   end
   g.save!
   g
-end
-
-# Seed: results for past and ongoing games
-srand(42)
-games.each do |g|
-  next if g.starts_at > Time.now # skip upcoming
-  next if g.name == 'CyberSibir 2025' # реальные результаты ниже
-  next if g.name == 'SibirCTF 2023' # реальные результаты ниже
-  next if g.name == 'SibirCTF 2019' # реальные результаты ниже
-  next if g.name == 'SibirCTF 2016' # реальные результаты ниже
-  # Rank a random subset of teams (4..teams.size)
-  participating = teams.sample([ teams.size, 4 + rand(0..(teams.size - 4)) ].min)
-  base = 1000
-  step = 75
-  participating.shuffle.each_with_index do |t, rank|
-    score = [ base - step * rank + rand(-20..20), 0 ].max
-    r = Result.find_or_initialize_by(game_id: g.id, team_id: t.id)
-    r.score = score
-    r.save!
-  end
 end
 
 # Seed: реальные результаты CyberSibir 2025 (CTFtime)
@@ -509,6 +550,80 @@ if cyber2016
   end
 end
 
+# Seed: реальные результаты SibirCTF 2015 (из публикации)
+cyber2015 = games.find { |g| g.name == 'SibirCTF 2015' }
+if cyber2015
+  # порядок из статьи; баллы задаём убывающими для сохранения ранга
+  scoreboard_2015 = [
+    'SuSlo.PAS',
+    'Failers',
+    'FTS',
+    'Life',
+    'Mustang',
+    'OMAVIAT',
+    'Sharlike',
+    'SibirTSU',
+    'Zanyato',
+    'TIO',
+    'Luck3rz',
+    'Shikata ga nai',
+    'Hell ZIP',
+    'n57u n00bz'
+  ]
+
+  team_index = Team.all.index_by { |t| t.name.downcase }
+  base_score = 14000
+  step = 600
+
+  scoreboard_2015.each_with_index do |name, idx|
+    team = team_index[name.downcase]
+    unless team
+      team = Team.create!(
+        name: name,
+        description: 'Импортировано из scoreboard SibirCTF 2015',
+        avatar_url: svg_data_avatar(name, PALETTE.sample)
+      )
+      team_index[team.name.downcase] = team
+      teams << team
+    end
+
+    score = [base_score - step * idx, step].max
+    result = Result.find_or_initialize_by(game_id: cyber2015.id, team_id: team.id)
+    result.score = score
+    result.save!
+  end
+end
+
+# Seed: результаты SibirCTF 2014 (по графику флагов)
+cyber2014 = games.find { |g| g.name == 'SibirCTF 2014' }
+if cyber2014
+  scoreboard_2014 = [
+    { name: 'h34dump', score: 1501 },
+    { name: 'Yozik', score: 1163 },
+    { name: 'Brizz', score: 659 },
+    { name: 'Mustang', score: 626 },
+    { name: 'Сборная АлтГТУ', score: 476 },
+    { name: 'Life', score: 318 }
+  ]
+
+  team_index = Team.all.index_by { |t| t.name.downcase }
+  scoreboard_2014.each_with_index do |row, idx|
+    team = team_index[row[:name].downcase]
+    unless team
+      team = Team.create!(
+        name: row[:name],
+        description: 'Импортировано из scoreboard SibirCTF 2014',
+        avatar_url: svg_data_avatar(row[:name], PALETTE.sample)
+      )
+      team_index[team.name.downcase] = team
+      teams << team
+    end
+    result = Result.find_or_initialize_by(game_id: cyber2014.id, team_id: team.id)
+    result.score = row[:score]
+    result.save!
+  end
+end
+
 # Seed: services (SibirCTF/CyberSibir)
 services_data = [
   # CyberSibir 2025
@@ -533,7 +648,12 @@ services_data = [
   { name: 'Legacy News',    public_description: 'SibirCTF 2018 service (Legacy News)', author: 'SibirCTF', repo: nil, language: nil, games: ['SibirCTF 2018'] },
   { name: 'Mirai',          public_description: 'SibirCTF 2018 service (Mirai)', author: 'SibirCTF', repo: '2018-service-mirai', language: 'PHP', games: ['SibirCTF 2018'] },
   { name: 'LNKS',           public_description: 'SibirCTF 2018 service (LNKS)', author: 'SibirCTF', repo: '2018-service-lnks', language: 'PHP', games: ['SibirCTF 2018'] },
-  { name: 'Lie2Me',         public_description: 'SibirCTF 2018 service (Lie2Me)', author: 'SibirCTF', repo: '2018-service-lie-to-me', language: 'Perl', games: ['SibirCTF 2018'] }
+  { name: 'Lie2Me',         public_description: 'SibirCTF 2018 service (Lie2Me)', author: 'SibirCTF', repo: '2018-service-lie-to-me', language: 'Perl', games: ['SibirCTF 2018'] },
+  # SibirCTF 2015
+  { name: 'CryChat',        public_description: 'SibirCTF 2015 service (CryChat)', author: 'SibirCTF', repo: '2015-crychat', language: 'PHP', games: ['SibirCTF 2015'] },
+  { name: "O'Foody",        public_description: 'SibirCTF 2015 service (O’Foody)', author: 'SibirCTF', repo: '2015-ofoody', language: 'Perl', games: ['SibirCTF 2015'] },
+  { name: 'CTFGram',        public_description: 'SibirCTF 2015 service (CTFGram)', author: 'SibirCTF', repo: '2015-ctfgram', language: 'JavaScript', games: ['SibirCTF 2015'] },
+  { name: 'EasyAs',         public_description: 'SibirCTF 2015 service (EasyAs)', author: 'SibirCTF', repo: '2015-easyas', language: 'Python', games: ['SibirCTF 2015'] }
 ]
 
 services = services_data.map do |attrs|

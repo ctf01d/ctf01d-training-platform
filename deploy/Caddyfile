@@ -76,7 +76,8 @@ ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
 
     # Базовый CSP, чтобы сильно не ломать Rails-ассеты
     # Если будет что-то падать — это первое, что ослабляем/тюним
-    Content-Security-Policy "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    # img-src расширен под внешние лого (ctftime.org и др.)
+    Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
   }
 
   reverse_proxy app:80
