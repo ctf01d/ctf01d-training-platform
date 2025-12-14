@@ -62,9 +62,12 @@ module Ctf01d
         html_target = File.join(data_dir, "html")
         FileUtils.mkdir_p(data_dir)
 
-        # 1) HTML (если включено)
+        html_source = @options[:html_source_path]
         if @options[:include_html]
-          copy_tree!(@options[:html_source_path], html_target, required: true)
+          unless html_source && Dir.exist?(html_source)
+            html_source = build_fallback_html(tmpdir)
+          end
+          copy_tree!(html_source, html_target, required: false)
         end
 
         # 2) Логотипы команд в соответствии с logo_rel
@@ -177,13 +180,21 @@ module Ctf01d
       end
 
       teams = @teams.map do |t|
-        {
+        row = {
           "id" => t[:id].to_s,
           "name" => t[:name].to_s,
           "active" => !!t[:active],
           "logo" => t[:logo_rel].to_s,
           "ip_address" => t[:ip_address].to_s
         }
+
+        extras = (t[:ctf01d_extra] || {}).to_h
+        extras.each do |k, v|
+          key = k.to_s.sub(/\Actf01d_/, "")
+          row[key] = v
+        end
+
+        row
       end
 
       data = {
@@ -295,13 +306,18 @@ module Ctf01d
         cid = normalize_id(c[:id])
         dir = File.join(data_dir, "checker_#{cid}")
         FileUtils.mkdir_p(dir)
-        (c[:files] || []).each do |f|
+        files = (c[:files] || [])
+        files = [ { src: nil, rel: "checker.py" } ] if files.empty?
+        files.each do |f|
           src = f[:src].to_s
-          rel = f[:rel].to_s
-          raise ExportError, "checker #{cid}: отсутствует файл #{src}" unless File.file?(src)
+          rel = f[:rel].presence || (File.file?(src) ? File.basename(src) : "checker.py")
           dest = File.join(dir, rel)
           FileUtils.mkdir_p(File.dirname(dest))
-          FileUtils.cp(src, dest)
+          if File.file?(src)
+            FileUtils.cp(src, dest)
+          else
+            File.write(dest, "#!/usr/bin/env python3\nprint('dummy checker for #{cid}')\n")
+          end
         end
       end
     end
@@ -325,6 +341,32 @@ module Ctf01d
           end
         end
       end
+    end
+
+    def build_fallback_html(tmpdir)
+      dir = File.join(tmpdir, "fallback_html")
+      FileUtils.mkdir_p(dir)
+      File.write(File.join(dir, "index-template.html"), <<~HTML)
+        <!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>ctf01d scoreboard</title>
+          </head>
+          <body>
+            <h1>ctf01d scoreboard placeholder</h1>
+            <p>HTML не найден в репозитории, сгенерирован шаблон по умолчанию.</p>
+          </body>
+        </html>
+      HTML
+      teams_dir = File.join(dir, "images", "teams")
+      FileUtils.mkdir_p(teams_dir)
+      png = Base64.decode64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+ZzoAAAAASUVORK5CYII=")
+      10.times do |i|
+        n = i + 1
+        File.binwrite(File.join(teams_dir, format("team%02d.png", n)), png)
+      end
+      dir
     end
 
     def compose_yml

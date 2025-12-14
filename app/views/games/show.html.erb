@@ -13,6 +13,122 @@
 </div>
 
 <div class="section">
+  <h2 style="margin: 0 0 8px 0;">Команды</h2>
+
+  <% if @game_teams.any? %>
+    <div class="card">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Порядок</th>
+            <th>Команда</th>
+            <th>IP</th>
+            <th>ctf01d_id</th>
+            <th>ctf01d_*</th>
+            <% if user_signed_in? && current_user.role == 'admin' %>
+              <th>Действия</th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @game_teams.each do |gt| %>
+            <% if user_signed_in? && current_user.role == 'admin' %>
+              <%= form_with model: gt, url: game_team_path(gt), method: :patch, local: true, html: { style: 'display: contents;' } do |f| %>
+                <tr>
+                  <td><%= f.number_field :order, value: gt.order, style: 'width: 72px;' %></td>
+                  <td>
+                    <div>
+                      <%= link_to(gt.team&.name || '—', gt.team || teams_path) %>
+                      <%= team_type_badge(gt) %>
+                    </div>
+                    <div class="muted" style="margin-top:4px;">
+                      <%= f.label :team_type, 'Тип (blue/red/...)', style: 'display:block; font-weight:normal;' %>
+                      <%= f.text_field :team_type, value: gt.team_type, placeholder: 'blue', style: 'width: 160px;' %>
+                    </div>
+                  </td>
+                  <td><%= f.text_field :ip_address, value: gt.ip_address, placeholder: '10.10.1.3', style: 'width: 160px;' %></td>
+                  <td><%= f.text_field :ctf01d_id, value: gt.ctf01d_id, placeholder: 't01', style: 'width: 90px;' %></td>
+                  <td>
+                    <%= f.text_area :ctf01d_overrides_text, rows: 2, placeholder: "ctf01d_type: blue\nctf01d_flag: yes", style: 'width: 100%;' %>
+                    <div class="muted" style="font-size:12px;">только ключи вида ctf01d_*</div>
+                  </td>
+                  <td>
+                    <%= f.hidden_field :game_id, value: @game.id %>
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                      <%= f.submit 'Сохранить', class: 'btn primary' %>
+                      <%= link_to 'Удалить', game_team_path(gt), data: { turbo_method: :delete, turbo_confirm: 'Убрать команду из игры?' }, class: 'btn danger' %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <% extra = (gt.ctf01d_overrides || {}).to_h.transform_keys(&:to_s) %>
+              <% extra['ctf01d_type'] ||= gt.team_type if gt.team_type.present? %>
+              <% extra.delete('ctf01d_id') %>
+              <% extra.delete_if { |_k, v| v.to_s.strip.empty? } %>
+              <tr>
+                <td><%= gt.order %></td>
+                <td>
+                  <%= link_to(gt.team&.name || '—', gt.team || teams_path) %>
+                  <%= team_type_badge(gt) %>
+                </td>
+                <td><%= gt.ip_address.presence || '—' %></td>
+                <td><%= gt.ctf01d_id.presence || '—' %></td>
+                <td><%= extra.any? ? extra.map { |k, v| "#{k}=#{v}" }.join(', ') : '—' %></td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="card"><p class="muted" style="margin: 8px 10px;">Команды пока не добавлены.</p></div>
+  <% end %>
+
+  <% if @new_game_team %>
+    <div class="card" style="margin-top:8px;">
+      <h3 style="margin-top:0;">Добавить команду</h3>
+      <%= form_with model: @new_game_team, url: game_teams_path, method: :post, local: true, html: { class: 'form' } do |f| %>
+        <%= f.hidden_field :game_id, value: @game.id %>
+        <div class="form-group">
+          <%= f.label :team_id, 'Команда' %>
+          <% if @available_teams.any? %>
+            <%= f.collection_select :team_id, @available_teams, :id, :name, include_blank: false %>
+          <% else %>
+            <p class="muted" style="margin: 0;">Свободных команд нет — все уже добавлены.</p>
+          <% end %>
+        </div>
+        <div class="form-group" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div>
+            <%= f.label :order, 'Порядок' %><br>
+            <%= f.number_field :order, value: (@new_game_team.order || @game_teams.size + 1), style: 'width: 100px;' %>
+          </div>
+          <div>
+            <%= f.label :team_type, 'Тип' %><br>
+            <%= f.text_field :team_type, placeholder: 'blue/red', style: 'width: 150px;' %>
+          </div>
+          <div>
+            <%= f.label :ip_address, 'IP' %><br>
+            <%= f.text_field :ip_address, placeholder: '10.10.1.3', style: 'width: 160px;' %>
+          </div>
+          <div>
+            <%= f.label :ctf01d_id, 'ctf01d_id' %><br>
+            <%= f.text_field :ctf01d_id, placeholder: 't01', style: 'width: 100px;' %>
+          </div>
+        </div>
+        <div class="form-group">
+          <%= f.label :ctf01d_overrides_text, 'Доп. поля ctf01d_*' %><br>
+          <%= f.text_area :ctf01d_overrides_text, rows: 2, placeholder: "ctf01d_type: blue\nctf01d_flag: yes" %>
+        </div>
+        <div class="form-actions">
+          <%= f.submit 'Добавить', class: 'btn primary', disabled: @available_teams.empty? %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<div class="section">
   <h2 style="margin: 0 0 8px 0;">
     <% if @final %>Итоги (зафиксировано)<% else %>Результаты<% end %>
     <% if user_signed_in? && current_user.role == 'admin' %>
@@ -43,6 +159,9 @@
               <td>
                 <% if r.team.present? %>
                   <%= link_to r.team.name, r.team %>
+                  <% if (gt = @game_team_lookup[r.team_id]) %>
+                    <%= team_type_badge(gt) %>
+                  <% end %>
                 <% else %>
                   — 
                 <% end %>
@@ -96,7 +215,7 @@
 <hr>
 <h2>Writeups</h2>
 <% if @writeups.any? %>
-  <table border="1" cellpadding="6" cellspacing="0">
+  <table class="table table-striped">
     <tr>
       <th>Команда</th>
       <th>Заголовок</th>
@@ -104,11 +223,16 @@
       <th></th>
     </tr>
     <% @writeups.each do |w| %>
-      <tr>
-        <td><%= link_to(w.team&.name || '—', w.team || teams_path) %></td>
-        <td><%= w.title %></td>
-        <td><%= link_to w.url, w.url, target: '_blank', rel: 'noopener' %></td>
-        <td>
+    <tr>
+      <td>
+        <%= link_to(w.team&.name || '—', w.team || teams_path) %>
+        <% if w.team && (gt = @game_team_lookup[w.team_id]) %>
+          <%= team_type_badge(gt) %>
+        <% end %>
+      </td>
+      <td><%= w.title %></td>
+      <td><%= link_to w.url, w.url, target: '_blank', rel: 'noopener' %></td>
+      <td>
           <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(w.team)) %>
             <%= button_to 'Удалить', writeup_path(w), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить writeup?' } } %>
           <% end %>

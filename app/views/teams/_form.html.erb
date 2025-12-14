@@ -1,5 +1,5 @@
 <div class="card">
-  <%= form_with(model: team, html: { class: 'form' }) do |form| %>
+  <%= form_with(model: team, html: { class: 'form', multipart: true }) do |form| %>
     <% if team.errors.any? %>
       <div class="form-errors">
         <strong><%= pluralize(team.errors.count, "ошибка") %></strong>
@@ -34,6 +34,8 @@
     <div class="form-group">
       <%= form.label :avatar_url %>
       <%= form.text_field :avatar_url, placeholder: 'https://…/logo.png' %>
+      <div class="muted" style="font-size:12px;">Можно загрузить файл или указать URL (http/https/data:image).</div>
+      <%= form.file_field :avatar_upload, accept: 'image/*' %>
     </div>
 
     <% if team.persisted? %>

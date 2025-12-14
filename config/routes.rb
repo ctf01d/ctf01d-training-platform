@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       delete :unfinalize
     end
   end
+  resources :game_teams, only: %i[create update destroy]
   resources :services do
     member do
       post :toggle_public

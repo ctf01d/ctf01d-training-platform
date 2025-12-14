@@ -1,4 +1,5 @@
 class TeamsController < ApplicationController
+  require "securerandom"
   before_action :require_admin, except: %i[index show join_request]
   before_action :set_team, only: %i[ show edit update destroy join_request ]
 
@@ -22,7 +23,10 @@ class TeamsController < ApplicationController
 
   # POST /teams
   def create
-    @team = Team.new(team_params)
+    attrs = team_params
+    upload = attrs.delete(:avatar_upload)
+    @team = Team.new(attrs)
+    apply_avatar(@team, upload, placeholder_dir: "team-logos")
 
     if @team.save
       if user_signed_in?
@@ -43,7 +47,12 @@ class TeamsController < ApplicationController
 
   # PATCH/PUT /teams/1
   def update
-    if @team.update(team_params)
+    attrs = team_params
+    upload = attrs.delete(:avatar_upload)
+    @team.assign_attributes(attrs)
+    apply_avatar(@team, upload, placeholder_dir: "team-logos")
+
+    if @team.save
       if @team.saved_change_to_captain_id?
         old_id, new_id = @team.saved_change_to_captain_id
 
@@ -132,7 +141,41 @@ class TeamsController < ApplicationController
     end
 
     # Only allow a list of trusted parameters through.
-    def team_params
-      params.expect(team: [ :name, :university_id, :description, :website, :avatar_url, :captain_id ])
+  def team_params
+      params.expect(team: [ :name, :university_id, :description, :website, :avatar_url, :avatar_upload, :captain_id ])
+    end
+
+    def apply_avatar(record, upload, placeholder_dir:)
+      if upload.respond_to?(:original_filename)
+        path = save_avatar_file(upload, folder: "teams")
+        record.avatar_url = path if path
+      elsif record.avatar_url.blank?
+        placeholder = pick_placeholder(record.name, base_dir: placeholder_dir)
+        record.avatar_url = placeholder if placeholder
+      end
+    end
+
+    def save_avatar_file(upload, folder:)
+      ext = File.extname(upload.original_filename.to_s)
+      ext = ".png" if ext.blank?
+      fname = "#{Time.now.utc.strftime('%Y%m%d')}-#{SecureRandom.hex(6)}#{ext}"
+      dir = Rails.root.join("public", "uploads", folder)
+      FileUtils.mkdir_p(dir)
+      File.open(dir.join(fname), "wb") { |f| f.write(upload.read) }
+      "/uploads/#{folder}/#{fname}"
+    end
+
+    def pick_placeholder(name, base_dir:)
+      slug = name.to_s.parameterize
+      return nil if slug.blank?
+      public_dir = Rails.root.join("public", "img", base_dir)
+      source_dir = Rails.root.join("img", base_dir)
+      if Dir.exist?(source_dir) && !Dir.exist?(public_dir)
+        FileUtils.mkdir_p(public_dir)
+        FileUtils.cp_r("#{source_dir}/.", public_dir)
+      end
+      candidates = Dir.glob(public_dir.join("#{slug}.*"))
+      candidates = Dir.glob(public_dir.join("#{slug.tr('-', '_')}.*")) if candidates.empty?
+      candidates.first&.sub(Rails.root.join("public").to_s, "")
     end
 end

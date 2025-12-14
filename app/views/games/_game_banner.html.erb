@@ -1,40 +1,68 @@
-<div class="card" style="padding: 14px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+<div class="card game-banner">
+  <div class="game-banner__body">
     <!-- Left: аватар + основная информация -->
-    <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-      <%= avatar_image_tag(game.name, url: game.avatar_url, size: 56) %>
-      <div style="min-width:0;">
-        <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
-          <strong style="font-size:18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-            <%= link_to game.name, game %>
-          </strong>
+    <div class="game-banner__left">
+      <%= avatar_image_tag(game.name, url: game.avatar_url, size: 68) %>
+      <div class="game-banner__meta">
+        <div class="game-banner__title-row">
+          <strong class="game-banner__title"><%= link_to game.name, game %></strong>
           <% st = game.status %>
           <% if st == :ongoing %>
-            <span class="badge badge--green">идёт</span>
+            <span class="badge badge--green game-banner__badge">идёт</span>
           <% elsif st == :upcoming %>
-            <span class="badge badge--blue">скоро</span>
+            <span class="badge badge--blue game-banner__badge">скоро</span>
           <% elsif st == :past %>
-            <span class="badge badge--gray">прошла</span>
+            <span class="badge badge--gray game-banner__badge">прошла</span>
           <% end %>
         </div>
-        <% if game.organizer.present? %>
-          <div class="muted" style="margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-            <%= game.organizer %>
-          </div>
-        <% end %>
+
+        <div class="game-banner__sub muted">
+          <% if game.organizer.present? %>
+            <span><%= game.organizer %></span>
+          <% end %>
+          <% if game.ctftime_url.present? %>
+            <span>• <%= link_to 'CTFtime', game.ctftime_url, target: '_blank', rel: 'noopener' %></span>
+          <% end %>
+          <% if game.site_url.present? %>
+            <span>• <%= link_to 'Сайт', game.site_url, target: '_blank', rel: 'noopener' %></span>
+          <% end %>
+        </div>
+
         <% if game.services.any? %>
-          <div style="margin-top:6px;">
-            <strong>Сервисы:</strong>
-            <%= game.services.order(:name).map { |s| link_to s.name, s }.join(' • ').html_safe %>
+          <div class="game-banner__services">
+            <strong>Сервисы (<%= game.services.count %>):</strong>
+            <% svc_list = game.services.order(:name).map { |s| link_to s.name, s } %>
+            <span class="game-banner__services-list"><%= svc_list.join(' • ').html_safe %></span>
+            <span class="muted" style="margin-left:8px; font-size:13px;">
+              <%= link_to 'Управлять', manage_services_game_path(game) %>
+            </span>
           </div>
         <% end %>
       </div>
     </div>
 
     <!-- Right: период + окно табло -->
-    <div style="text-align:right; display:flex; flex-direction:column; gap:6px; min-width:220px;">
-      <div style="color:#374151;"><strong>Период:</strong> <%= game.starts_at %> — <%= game.ends_at %></div>
-      <div class="muted">Табло: <%= game.scoreboard_opens_at || '—' %> — <%= game.scoreboard_closes_at || '—' %></div>
+    <div class="game-banner__right">
+      <div class="game-banner__times">
+        <div class="game-banner__time-title">Период</div>
+        <div class="game-banner__time-value">
+          <span class="game-banner__icon">🕒</span>
+          <div>
+            <div><%= game.starts_at %></div>
+            <div>— <%= game.ends_at %></div>
+          </div>
+        </div>
+      </div>
+      <div class="game-banner__times muted">
+        <div class="game-banner__time-title">Табло</div>
+        <div class="game-banner__time-value">
+          <span class="game-banner__icon">📊</span>
+          <div>
+            <div><%= game.scoreboard_opens_at || '—' %></div>
+            <div>— <%= game.scoreboard_closes_at || '—' %></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

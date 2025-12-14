@@ -1,4 +1,7 @@
+require "set"
+
 class GamesController < ApplicationController
+  require "securerandom"
   before_action :require_admin, except: %i[index show]
   before_action :set_game, only: %i[ show edit update destroy ]
   before_action :set_game_for_manage, only: %i[ manage_services add_service remove_service ]
@@ -20,6 +23,8 @@ class GamesController < ApplicationController
       @final = false
       @results = @game.results.includes(:team).order(score: :desc)
     end
+    @game_teams = @game.game_teams.includes(:team).order(:order, :id)
+    @game_team_lookup = @game_teams.index_by(&:team_id)
     @writeups = @game.writeups.includes(:team).order(created_at: :desc)
     if user_signed_in?
       # команды пользователя, которыми он может управлять
@@ -27,6 +32,14 @@ class GamesController < ApplicationController
       @my_manageable_teams = Team.where(id: my_team_ids).select { |t| can_manage_team?(t) }
     else
       @my_manageable_teams = []
+    end
+    if user_signed_in? && current_user.role == "admin"
+      taken_ids = @game_teams.map(&:team_id)
+      @available_teams = Team.where.not(id: taken_ids).order(:name)
+      @new_game_team = GameTeam.new(game: @game, order: @game_teams.size + 1)
+    else
+      @available_teams = []
+      @new_game_team = nil
     end
     @can_access = can_access_game?(@game)
   end
@@ -62,8 +75,7 @@ class GamesController < ApplicationController
       basic_attack_cost: 1,
       defence_cost: 1.0,
       coffee_break_start: nil,
-      coffee_break_end: nil,
-      ip_pattern: "10.0.*.1"
+      coffee_break_end: nil
     }
   end
 
@@ -91,8 +103,6 @@ class GamesController < ApplicationController
     flag_ttl_min = params[:flag_ttl_min].present? ? params[:flag_ttl_min].to_i : 1
     basic_attack_cost = params[:basic_attack_cost].present? ? params[:basic_attack_cost].to_i : 1
     defence_cost = params[:defence_cost].present? ? params[:defence_cost].to_f : 1.0
-    ip_pattern = params[:ip_pattern].present? ? params[:ip_pattern].to_s : "10.0.*.1"
-
     if params[:coffee_break_start].present? && params[:coffee_break_end].present?
       begin
         game_payload[:coffee_break_start_utc] = Time.zone.parse(params[:coffee_break_start]).utc
@@ -108,37 +118,86 @@ class GamesController < ApplicationController
 
     scoreboard_payload = { port: port, htmlfolder: "./html", random: false }
 
-    # Команды: если нет привязанных — создадим 6 заглушек из примера
-    teams_scope = game.teams.presence || []
+    # Команды: если в игре заведён список — используем его с порядком и кастомными полями
+    game_team_records = game.game_teams.includes(:team).order(:order, :id).to_a
+    if game_team_records.empty? && game.results.exists?
+      game_team_records = game.results.includes(:team).order(score: :desc).map.with_index do |res, idx|
+        GameTeam.new(game: game, team: res.team, order: idx + 1)
+      end
+    end
+
     teams = []
-    if teams_scope.any?
-      teams_scope.each_with_index do |t, idx|
-        n = (idx + 1)
-        team_id = format("t%02d", n)
+    used_team_ids = Set.new
+
+    if game_team_records.any?
+      game_team_records.each_with_index do |gt, idx|
+        n = idx + 1
+        team_model = gt.respond_to?(:team) ? gt.team : nil
+        base_overrides = if gt.respond_to?(:ctf01d_extra_hash)
+          gt.ctf01d_extra_hash
+        elsif gt.respond_to?(:ctf01d_overrides)
+          gt.ctf01d_overrides
+        else
+          {}
+        end
+        overrides = base_overrides.to_h.transform_keys { |k| k.to_s.strip }
+        overrides.delete_if { |_k, v| v.to_s.strip.empty? }
+
+        ctf_id = if gt.respond_to?(:ctf01d_id)
+          gt.ctf01d_id
+        else
+          nil
+        end
+        ctf_id = overrides.delete("ctf01d_id") if ctf_id.to_s.strip.empty?
+        overrides.delete("ctf01d_id")
+
+        if gt.respond_to?(:team_type) && gt.team_type.present?
+          overrides["ctf01d_type"] ||= gt.team_type
+        end
+
+        active_flag = true
+        if overrides.key?("ctf01d_active")
+          active_flag = ActiveModel::Type::Boolean.new.cast(overrides.delete("ctf01d_active"))
+        end
+
+        team_id_base = ctf_id.to_s.downcase.gsub(/[^a-z0-9]+/, "")
+        team_id_base = format("t%02d", n) if team_id_base.empty?
+        team_id = team_id_base
+        suffix = 2
+        while used_team_ids.include?(team_id)
+          team_id = "#{team_id_base}#{suffix}"
+          suffix += 1
+        end
+        used_team_ids << team_id
+
+        ip = gt.respond_to?(:ip_address) ? gt.ip_address.to_s.presence : nil
+        ip ||= "10.0.#{n}.1"
+
         logo_rel = "./html/images/teams/#{team_id}.png"
-        logo_url = t.respond_to?(:avatar_url) ? t.avatar_url.to_s : nil
-        ip = t.respond_to?(:ip_address) ? t.ip_address.to_s.presence : nil
-        ip ||= ip_pattern.to_s.gsub("{n}", n.to_s).gsub("*", n.to_s)
+        logo_url = team_model&.avatar_url
         fallback_logo = Rails.root.join("ctf01d", "data_sample", "html", "images", "teams", format("team%02d.png", [ n, 30 ].min)).to_s
+
         teams << {
           id: team_id,
-          name: t.name,
-          active: true,
+          name: team_model&.name || "Team ##{n}",
+          active: active_flag,
           ip_address: ip,
           logo_rel: logo_rel,
           logo_url: logo_url.presence,
-          logo_src: (logo_url.present? ? nil : fallback_logo)
+          logo_src: (logo_url.present? ? nil : fallback_logo),
+          ctf01d_extra: overrides
         }
       end
     else
       # Заглушки t01..t06 из примера
       6.times do |i|
         n = i + 1
+        team_id = format("t%02d", n)
         teams << {
-          id: format("t%02d", n),
+          id: team_id,
           name: "Team ##{n}",
           active: true,
-          ip_address: ip_pattern.to_s.gsub("{n}", n.to_s).gsub("*", n.to_s),
+          ip_address: "10.0.#{n}.1",
           logo_rel: format("./html/images/teams/team%02d.png", n),
           logo_src: Rails.root.join("ctf01d", "data_sample", "html", "images", "teams", format("team%02d.png", n)).to_s
         }
@@ -219,7 +278,10 @@ class GamesController < ApplicationController
 
   # POST /games
   def create
-    @game = Game.new(game_params)
+    attrs = game_params
+    upload = attrs.delete(:avatar_upload)
+    @game = Game.new(attrs)
+    apply_avatar(@game, upload, placeholder_dir: "game-logos")
 
     if @game.save
       redirect_to @game, notice: "Игра создана."
@@ -230,7 +292,12 @@ class GamesController < ApplicationController
 
   # PATCH/PUT /games/1
   def update
-    if @game.update(game_params)
+    attrs = game_params
+    upload = attrs.delete(:avatar_upload)
+    @game.assign_attributes(attrs)
+    apply_avatar(@game, upload, placeholder_dir: "game-logos")
+
+    if @game.save
       redirect_to @game, notice: "Игра обновлена.", status: :see_other
     else
       render :edit, status: :unprocessable_content
@@ -291,7 +358,41 @@ class GamesController < ApplicationController
       params.expect(game: [ :name, :organizer, :starts_at, :ends_at, :avatar_url, :site_url, :ctftime_url,
                             :registration_opens_at, :registration_closes_at,
                             :scoreboard_opens_at, :scoreboard_closes_at,
-                            :vpn_url, :vpn_config_url, :access_secret, :access_instructions,
+                            :vpn_url, :vpn_config_url, :access_secret, :access_instructions, :avatar_upload,
                             { service_ids: [] } ])
+    end
+
+    def apply_avatar(record, upload, placeholder_dir:)
+      if upload.respond_to?(:original_filename)
+        path = save_avatar_file(upload, folder: placeholder_dir.include?("game") ? "games" : "teams")
+        record.avatar_url = path if path
+      elsif record.avatar_url.blank?
+        placeholder = pick_placeholder(record.name, base_dir: placeholder_dir)
+        record.avatar_url = placeholder if placeholder
+      end
+    end
+
+    def save_avatar_file(upload, folder:)
+      ext = File.extname(upload.original_filename.to_s)
+      ext = ".png" if ext.blank?
+      fname = "#{Time.now.utc.strftime('%Y%m%d')}-#{SecureRandom.hex(6)}#{ext}"
+      dir = Rails.root.join("public", "uploads", folder)
+      FileUtils.mkdir_p(dir)
+      File.open(dir.join(fname), "wb") { |f| f.write(upload.read) }
+      "/uploads/#{folder}/#{fname}"
+    end
+
+    def pick_placeholder(name, base_dir:)
+      slug = name.to_s.parameterize
+      return nil if slug.blank?
+      public_dir = Rails.root.join("public", "img", base_dir)
+      source_dir = Rails.root.join("img", base_dir)
+      if Dir.exist?(source_dir) && !Dir.exist?(public_dir)
+        FileUtils.mkdir_p(public_dir)
+        FileUtils.cp_r("#{source_dir}/.", public_dir)
+      end
+      candidates = Dir.glob(public_dir.join("#{slug}.*"))
+      candidates = Dir.glob(public_dir.join("#{slug.tr('-', '_')}.*")) if candidates.empty?
+      candidates.first&.sub(Rails.root.join("public").to_s, "")
     end
 end

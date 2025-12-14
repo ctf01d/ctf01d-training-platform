@@ -1,81 +1,106 @@
-<div id="<%= dom_id game %>" class="card">
-  <div class="row">
-    <%= avatar_image_tag(game.name, url: game.avatar_url) %>
-    <div>
-      <div style="display:flex; align-items:baseline; gap:8px;">
-        <strong><%= link_to game.name, game %></strong>
-        <% st = game.status %>
-        <% if st == :ongoing %>
-          <span class="badge badge--green">идёт</span>
-        <% elsif st == :upcoming %>
-          <span class="badge badge--blue">скоро</span>
-        <% elsif st == :past %>
-          <span class="badge badge--gray">прошла</span>
+<div id="<%= dom_id game %>" class="card game-card">
+  <div class="game-card__body">
+    <div class="game-card__left">
+      <%= avatar_image_tag(game.name, url: game.avatar_url, size: 68) %>
+      <div class="game-card__meta">
+        <div class="game-card__title-row">
+          <strong class="game-card__title"><%= link_to game.name, game %></strong>
+          <% st = game.status %>
+          <% if st == :ongoing %>
+            <span class="badge badge--green game-card__badge">идёт</span>
+          <% elsif st == :upcoming %>
+            <span class="badge badge--blue game-card__badge">скоро</span>
+          <% elsif st == :past %>
+            <span class="badge badge--gray game-card__badge">прошла</span>
+          <% end %>
+        </div>
+
+        <% if game.organizer.present? || game.site_url.present? || game.ctftime_url.present? %>
+          <div class="game-card__sub muted">
+            <% if game.organizer.present? %>
+              <span><%= game.organizer %></span>
+            <% end %>
+            <% if game.site_url.present? %>
+              <span>• <%= link_to 'Сайт', game.site_url, target: '_blank', rel: 'noopener' %></span>
+            <% end %>
+            <% if game.ctftime_url.present? %>
+              <span>• <%= link_to 'CTFtime', game.ctftime_url, target: '_blank', rel: 'noopener' %></span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="game-card__row">
+          <div class="game-card__label">Период</div>
+          <div class="game-card__value">
+            <span class="game-card__icon">🕒</span>
+            <div><%= game.starts_at %> — <%= game.ends_at %></div>
+          </div>
+        </div>
+
+        <div class="game-card__row">
+          <div class="game-card__label">Регистрация</div>
+          <div class="game-card__value">
+            <% case game.registration_status
+               when :open %>
+                 <span class="badge badge--green">открыта</span>
+            <%   when :upcoming %>
+                 <span class="badge badge--blue">скоро</span>
+            <%   when :closed %>
+                 <span class="badge badge--gray">закрыта</span>
+            <%   else %>
+                 <span class="badge badge--gray">не задано</span>
+            <% end %>
+            <% if game.registration_opens_at || game.registration_closes_at %>
+              <span class="muted game-card__dates">
+                <%= game.registration_opens_at || '—' %> — <%= game.registration_closes_at || '—' %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="game-card__row">
+          <div class="game-card__label">Табло</div>
+          <div class="game-card__value">
+            <% case game.scoreboard_status
+               when :open, :always %>
+                 <span class="badge badge--green">открыт</span>
+            <%   when :upcoming %>
+                 <span class="badge badge--blue">скоро</span>
+            <%   when :closed %>
+                 <span class="badge badge--gray">закрыт</span>
+            <% end %>
+            <% if game.scoreboard_opens_at || game.scoreboard_closes_at %>
+              <span class="muted game-card__dates">
+                <%= game.scoreboard_opens_at || '—' %> — <%= game.scoreboard_closes_at || '—' %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <% if game.services.any? %>
+          <div class="game-card__services">
+            <strong>Сервисы (<%= game.services.count %>):</strong>
+            <span class="game-card__services-list">
+              <%= game.services.order(:name).map { |s| link_to s.name, s }.join(' • ').html_safe %>
+            </span>
+          </div>
         <% end %>
       </div>
+    </div>
 
-      <p style="margin:4px 0 0 0;" class="muted">
-        <%= game.organizer %>
-      </p>
-
-      <p style="margin:6px 0 0 0;">
-        <strong>Период:</strong>
-        <%= game.starts_at %> — <%= game.ends_at %>
-      </p>
-
-      <p style="margin:6px 0 0 0;">
-        <strong>Регистрация:</strong>
-        <% case game.registration_status
-           when :open %>
-             <span class="badge badge--green">открыта</span>
-        <%   when :upcoming %>
-             <span class="badge badge--blue">скоро</span>
-        <%   when :closed %>
-             <span class="badge badge--gray">закрыта</span>
-        <%   else %>
-             <span class="badge badge--gray">не задано</span>
-        <% end %>
-        <% if game.registration_opens_at || game.registration_closes_at %>
-          <span class="muted">
-            (<%= game.registration_opens_at || '—' %> — <%= game.registration_closes_at || '—' %>)
-          </span>
-        <% end %>
-      </p>
-
-      <p style="margin:6px 0 0 0;">
-        <strong>Scoreboard:</strong>
-        <% case game.scoreboard_status
-           when :open, :always %>
-             <span class="badge badge--green">открыт</span>
-        <%   when :upcoming %>
-             <span class="badge badge--blue">скоро</span>
-        <%   when :closed %>
-             <span class="badge badge--gray">закрыт</span>
-        <% end %>
-        <% if game.scoreboard_opens_at || game.scoreboard_closes_at %>
-          <span class="muted">
-            (<%= game.scoreboard_opens_at || '—' %> — <%= game.scoreboard_closes_at || '—' %>)
-          </span>
-        <% end %>
-      </p>
-
-      <% if game.site_url.present? || game.ctftime_url.present? %>
-        <p class="muted" style="margin:6px 0 0 0;">
-          <% if game.site_url.present? %>
-            <%= link_to 'Сайт', game.site_url, target: '_blank', rel: 'noopener' %>
+    <div class="game-card__right">
+      <% if game.vpn_url.present? || game.vpn_config_url.present? || game.access_secret.present? %>
+        <div class="game-card__access">
+          <% if game.vpn_url.present? %>
+            <div><strong>VPN:</strong> <%= link_to game.vpn_url, game.vpn_url, target: '_blank', rel: 'noopener' %></div>
           <% end %>
-          <% if game.ctftime_url.present? %>
-            <% if game.site_url.present? %> • <% end %>
-            <%= link_to 'CTFtime', game.ctftime_url, target: '_blank', rel: 'noopener' %>
+          <% if game.vpn_config_url.present? %>
+            <div><strong>Config:</strong> <%= link_to game.vpn_config_url, game.vpn_config_url, target: '_blank', rel: 'noopener' %></div>
           <% end %>
-        </p>
-      <% end %>
-
-      <% if game.services.any? %>
-        <p style="margin:8px 0 0 0;">
-          <strong>Сервисы:</strong>
-          <%= game.services.order(:name).map { |s| link_to s.name, s }.join(' • ').html_safe %>
-        </p>
+          <% if game.access_secret.present? %>
+            <div><strong>Секрет:</strong> <code><%= game.access_secret %></code></div>
+          <% end %>
+        </div>
       <% end %>
     </div>
   </div>

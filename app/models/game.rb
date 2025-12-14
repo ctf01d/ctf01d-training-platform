@@ -1,6 +1,8 @@
 class Game < ApplicationRecord
   has_many :results, dependent: :destroy
-  has_many :teams, through: :results
+  has_many :game_teams, -> { order(:order, :id) }, dependent: :destroy
+  has_many :teams, through: :game_teams
+  has_many :result_teams, through: :results, source: :team
   has_and_belongs_to_many :services
   has_many :final_results, dependent: :destroy
   has_many :writeups, dependent: :destroy
@@ -43,8 +45,9 @@ class Game < ApplicationRecord
   def validate_avatar_url
     url = avatar_url.to_s.strip
     return if url.blank?
+    return if url.start_with?("/")
     return if url =~ /\A(?:https?:\/\/|data:image)/i
-    errors.add(:avatar_url, "должен начинаться с http(s):// или data:image")
+    errors.add(:avatar_url, "должен начинаться с http(s)://, data:image или /uploads")
   end
 
   def validate_urls

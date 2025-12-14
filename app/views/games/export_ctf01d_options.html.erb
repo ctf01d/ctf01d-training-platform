@@ -20,14 +20,6 @@
         <%= label_tag :defence_cost, 'Стоимость защиты' %><br>
         <%= number_field_tag :defence_cost, @form[:defence_cost], min: 0, step: 0.1 %>
       </div>
-      <div>
-        <%= label_tag :ip_pattern, 'Шаблон IP команд' %><br>
-        <%= text_field_tag :ip_pattern, @form[:ip_pattern], placeholder: '10.0.*.1' %>
-      </div>
-    </div>
-
-    <div class="muted" style="font-size:12px; margin-top:4px;">
-      Подсказка: используйте {n} или * — это номер команды (с 1)
     </div>
 
     <div class="row" style="gap:16px; margin-top:8px;">
@@ -62,7 +54,7 @@
     <ul>
       <li>Чекеры — один на каждый сервис игры (шаблонный checker.py).</li>
       <li>Логотипы команд — берутся из avatar_url команды (http(s) или data:image). При отсутствии — из примеров.</li>
-      <li>IP команд — временно синтетические. При добавлении поля ip_address в Team будет использовано оно.</li>
+      <li>IP команд — берутся из настроек команд игры; при пустом IP подставляется 10.0.&lt;n&gt;.1.</li>
     </ul>
   </div>
 </div>

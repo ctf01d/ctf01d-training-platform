@@ -32,7 +32,7 @@
   <% memberships = @team.team_memberships.includes(:user) %>
   <% events = @team.membership_events.includes(:user, :actor).order(created_at: :desc).limit(20) %>
   <% if memberships.any? %>
-    <table border="1" cellpadding="4" cellspacing="0">
+    <table class="table table-striped">
       <tr>
         <th>Пользователь</th>
         <th>Роль</th>
@@ -154,7 +154,7 @@
 <h2>Участие в соревнованиях</h2>
 <% participations = @team.results.includes(game: :final_results).order(score: :desc) %>
 <% if participations.any? %>
-  <table border="1" cellpadding="6" cellspacing="0">
+  <table class="table table-striped">
     <tr>
       <th>Игра</th>
       <th>Очки</th>

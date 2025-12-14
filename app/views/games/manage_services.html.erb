@@ -3,34 +3,89 @@
 <h1>Сервисы игры: <%= @game.name %></h1>
 
 <p>
-  <%= link_to 'Назад к игре', @game %>
+  <%= link_to 'Назад к игре', @game, class: 'btn' %>
 </p>
 
-<div class="list">
-  <% if @services.any? %>
-    <table border="1" cellpadding="6" cellspacing="0">
-      <tr>
-        <th>Сервис</th>
-        <th>Публичный</th>
-        <th>Действие</th>
-      </tr>
-      <% @services.each do |svc| %>
-        <% attached = @attached_ids.include?(svc.id) %>
-        <tr>
-          <td><%= link_to svc.name, svc %></td>
-          <td><%= svc.public ? 'да' : 'нет' %></td>
-          <td>
-            <% if attached %>
-              <%= button_to 'Убрать', remove_service_game_path(@game, service_id: svc.id), method: :delete, form: { style: 'display:inline' } %>
-            <% else %>
-              <%= button_to 'Добавить', add_service_game_path(@game, service_id: svc.id), method: :post, form: { style: 'display:inline' } %>
-            <% end %>
-          </td>
-        </tr>
+<%
+  attached = @services.select { |s| @attached_ids.include?(s.id) }
+  available = @services.reject { |s| @attached_ids.include?(s.id) }
+
+  status_badge = ->(service) do
+    next nil unless service.check_status.present?
+    cls = case service.check_status
+    when 'ok' then 'badge--green'
+    when 'fail' then 'badge--red'
+    when 'queued' then 'badge--blue'
+    else 'badge--gray'
+    end
+    content_tag(:span, "checker: #{service.check_status}", class: "badge #{cls}", style: "margin-left:6px;")
+  end
+%>
+
+<div class="section">
+  <h2 style="margin:0 0 8px 0;">Сервисы в игре (<%= attached.size %>)</h2>
+  <% if attached.any? %>
+    <div class="list">
+      <% attached.each do |svc| %>
+        <div class="card" style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+            <div>
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <strong><%= link_to svc.name, svc %></strong>
+                <span class="badge <%= svc.public ? 'badge--green' : 'badge--gray' %>"><%= svc.public ? 'public' : 'private' %></span>
+                <% if svc.respond_to?(:language) && svc.language.present? %>
+                  <span class="badge badge--blue"><%= svc.language %></span>
+                <% end %>
+                <%= status_badge.call(svc) %>
+              </div>
+              <% if svc.author.present? %>
+                <div class="muted" style="margin-top:2px;"><em><%= svc.author %></em></div>
+              <% end %>
+              <% if svc.public_description.present? %>
+                <div class="muted" style="margin-top:6px; font-size:14px;"><%= truncate(svc.public_description, length: 140) %></div>
+              <% end %>
+            </div>
+            <div>
+              <%= button_to 'Убрать', remove_service_game_path(@game, service_id: svc.id), method: :delete, class: 'btn danger' %>
+            </div>
+          </div>
+          <% if svc.service_archive_url.present? %>
+            <div class="muted" style="font-size:13px;">Репозиторий: <%= link_to svc.service_archive_url, svc.service_archive_url, target: '_blank', rel: 'noopener' %></div>
+          <% end %>
+        </div>
       <% end %>
-    </table>
+    </div>
   <% else %>
-    <p>Сервисов пока нет.</p>
+    <div class="card"><p class="muted" style="margin:0;">Пока нет прикреплённых сервисов.</p></div>
   <% end %>
 </div>
 
+<div class="section">
+  <h2 style="margin:0 0 8px 0;">Доступные (<%= available.size %>)</h2>
+  <% if available.any? %>
+    <div class="list">
+      <% available.each do |svc| %>
+        <div class="card" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <strong><%= link_to svc.name, svc %></strong>
+              <span class="badge <%= svc.public ? 'badge--green' : 'badge--gray' %>"><%= svc.public ? 'public' : 'private' %></span>
+              <% if svc.respond_to?(:language) && svc.language.present? %>
+                <span class="badge badge--blue"><%= svc.language %></span>
+              <% end %>
+                <%= status_badge.call(svc) %>
+            </div>
+            <% if svc.public_description.present? %>
+              <div class="muted" style="margin-top:6px; font-size:14px;"><%= truncate(svc.public_description, length: 140) %></div>
+            <% end %>
+          </div>
+          <div>
+            <%= button_to 'Добавить', add_service_game_path(@game, service_id: svc.id), method: :post, class: 'btn primary' %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="card"><p class="muted" style="margin:0;">Все сервисы уже в игре.</p></div>
+  <% end %>
+</div>

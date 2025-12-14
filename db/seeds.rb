@@ -208,7 +208,7 @@ sibir2015_team_names = [
 
 sibir2015_teams = sibir2015_team_names.map do |name|
   t = Team.find_or_initialize_by(name: name)
-  t.description = [t.description.presence, 'SibirCTF 2015 roster'].compact.join(' · ')
+  t.description = [ t.description.presence, 'SibirCTF 2015 roster' ].compact.join(' · ')
   t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
@@ -229,7 +229,7 @@ sibir2014_teams_data = [
 
 sibir2014_teams = sibir2014_teams_data.map do |attrs|
   t = Team.find_or_initialize_by(name: attrs[:name])
-  t.description = [t.description.presence, 'SibirCTF 2014 roster'].compact.join(' · ')
+  t.description = [ t.description.presence, 'SibirCTF 2014 roster' ].compact.join(' · ')
   t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
@@ -237,6 +237,12 @@ end
 
 teams += sibir2014_teams
 sibir2014_team_ids = sibir2014_teams.map(&:id)
+
+# Маппинг метаданных ctf01d (id/ip) по имени команды
+ctf_team_meta = {}
+(cybersibir_teams_data + sibir2018_teams_data).each do |attrs|
+  ctf_team_meta[attrs[:name].downcase] = { ctf01d_id: attrs[:config_id], ip_address: attrs[:ip_address] }
+end
 
 # Привязки команд к университетам (ручные корректировки)
 altstu = universities.find { |u| u.name.include?('AltSTU') }
@@ -289,7 +295,7 @@ nsu = universities.find { |u| u.name =~ /НГУ|NSU/i }
 if nsu
   if (suslo = Team.find_by(name: 'SuSlo.PAS'))
     desc_parts = suslo.description.to_s.split(' · ').map(&:strip)
-    aliases = ['SUSlo', 'EpicFairPlay', 'ШАПКА ПЕТУХА', 'ОМСКИЙ АНДЕГРАУНД И КУБОК ПЕТУХА', '地松鼠.PAS', '新西伯利亚地松鼠.PAS', 'HoBoCu6uPcKuu NPC', 'Zorro.PAS', 'Большой хомяк выходного дня точка PAS']
+    aliases = [ 'SUSlo', 'EpicFairPlay', 'ШАПКА ПЕТУХА', 'ОМСКИЙ АНДЕГРАУНД И КУБОК ПЕТУХА', '地松鼠.PAS', '新西伯利亚地松鼠.PAS', 'HoBoCu6uPcKuu NPC', 'Zorro.PAS', 'Большой хомяк выходного дня точка PAS' ]
     desc_parts << "Also known as: #{aliases.join(', ')}"
     desc_parts << 'Academic team Novosibirsk State University (NSU)'
     suslo.update!(university: nsu, description: desc_parts.uniq.join(' · '))
@@ -335,15 +341,15 @@ end
 
 # Seed: games (past, ongoing, upcoming)
 games_data = [
-  { name: 'SibirCTF 2014',   organizer: 'SibirCTF',    starts_at: Time.utc(2014, 4, 19, 6, 0, 0),  ends_at: Time.utc(2014, 4, 19, 14, 0, 0), site_url: 'https://sibirctf.org/' },
-  { name: 'SibirCTF 2015',   organizer: 'SibirCTF',    starts_at: Time.utc(2015, 4, 18, 6, 0, 0),  ends_at: Time.utc(2015, 4, 18, 14, 0, 0), site_url: 'https://sibirctf.org/', logo_url: 'https://sun9-29.userapi.com/s/v1/ig1/YxcZz4g9cU0748u9NKGxsxJPwdJ7j6mRYNpsHKZwrYuncf_UVOtVmPPVgkH7SGOgFyluzE5c.jpg?quality=96&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,534x534&from=bu&cs=534x0' },
-  { name: 'SibirCTF 2016',   organizer: 'SibirCTF',    starts_at: Time.utc(2016, 4, 23, 6, 0, 0),  ends_at: Time.utc(2016, 4, 23, 14, 0, 0), site_url: 'https://sibirctf.org/' },
-  { name: 'SibirCTF 2017',   organizer: 'SibirCTF',    starts_at: Time.utc(2017, 4, 22, 6, 0, 0),  ends_at: Time.utc(2017, 4, 22, 14, 0, 0), site_url: 'https://sibirctf.org/' },
-  { name: 'SibirCTF 2018',   organizer: 'SibirCTF',    starts_at: Time.utc(2018, 10, 21, 4, 0, 0), ends_at: Time.utc(2018, 10, 21, 12, 30, 0), site_url: 'https://sibirctf.org/' },
-  { name: 'SibirCTF 2019',   organizer: 'keva',        starts_at: Time.iso8601('2019-11-01T02:00:00Z'), ends_at: Time.iso8601('2019-11-01T12:00:00Z'), site_url: 'https://sibirctf.org/', ctftime_url: 'https://ctftime.org/event/889/', logo_url: 'https://ctftime.org/media/events/sibir_logo.png' },
-  { name: 'SibirCTF 2023',   organizer: 'keva',        starts_at: Time.utc(2023, 11, 19, 5, 45, 0), ends_at: Time.utc(2023, 11, 19, 13, 0, 0), site_url: 'https://vk.com/sibirctf', ctftime_url: 'https://ctftime.org/event/2132/', logo_url: 'https://ctftime.org/media/events/glaz2023.jpg' },
-  { name: 'CyberSibir 2025', organizer: 'keva',        starts_at: Time.utc(2025, 3, 28, 4, 20, 0), ends_at: Time.utc(2025, 3, 28, 12, 20, 0), site_url: 'https://vk.com/sibirctf', ctftime_url: 'https://ctftime.org/event/2742/', logo_url: 'https://ctftime.org/media/events/cybersibir2025logo_1.png' },
-  { name: 'CyberSibir 2026', organizer: 'CyberSibir',  starts_at: Time.utc(2026, 3, 27, 4, 0, 0),  ends_at: Time.utc(2026, 3, 27, 12, 0, 0), site_url: 'https://vk.com/sibirctf' }
+  { name: 'SibirCTF 2014',   organizer: 'keva',    starts_at: Time.utc(2014, 4, 19, 6, 0, 0),  ends_at: Time.utc(2014, 4, 19, 14, 0, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2015',   organizer: 'keva',    starts_at: Time.utc(2015, 4, 18, 6, 0, 0),  ends_at: Time.utc(2015, 4, 18, 14, 0, 0), site_url: 'https://sibirctf.org/', logo_url: 'https://sun9-29.userapi.com/s/v1/ig1/YxcZz4g9cU0748u9NKGxsxJPwdJ7j6mRYNpsHKZwrYuncf_UVOtVmPPVgkH7SGOgFyluzE5c.jpg?quality=96&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,534x534&from=bu&cs=534x0' },
+  { name: 'SibirCTF 2016',   organizer: 'keva',    starts_at: Time.utc(2016, 4, 23, 6, 0, 0),  ends_at: Time.utc(2016, 4, 23, 14, 0, 0), site_url: 'https://sibirctf.org/', ctftime_url: 'https://ctftime.org/event/362/' },
+  { name: 'SibirCTF 2017',   organizer: 'keva',    starts_at: Time.utc(2017, 4, 22, 6, 0, 0),  ends_at: Time.utc(2017, 4, 22, 14, 0, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2018',   organizer: 'keva',    starts_at: Time.utc(2018, 10, 21, 4, 0, 0), ends_at: Time.utc(2018, 10, 21, 12, 30, 0), site_url: 'https://sibirctf.org/' },
+  { name: 'SibirCTF 2019',   organizer: 'keva',    starts_at: Time.iso8601('2019-11-01T02:00:00Z'), ends_at: Time.iso8601('2019-11-01T12:00:00Z'), site_url: 'https://sibirctf.org/', ctftime_url: 'https://ctftime.org/event/889/', logo_url: 'https://ctftime.org/media/events/sibir_logo.png' },
+  { name: 'SibirCTF 2023',   organizer: 'keva',    starts_at: Time.utc(2023, 11, 19, 5, 45, 0), ends_at: Time.utc(2023, 11, 19, 13, 0, 0), site_url: 'https://vk.com/sibirctf', ctftime_url: 'https://ctftime.org/event/2132/', logo_url: 'https://ctftime.org/media/events/glaz2023.jpg' },
+  { name: 'CyberSibir 2025', organizer: 'keva',    starts_at: Time.utc(2025, 3, 28, 4, 20, 0), ends_at: Time.utc(2025, 3, 28, 12, 20, 0), site_url: 'https://vk.com/sibirctf', ctftime_url: 'https://ctftime.org/event/2742/', logo_url: 'https://ctftime.org/media/events/cybersibir2025logo_1.png' },
+  { name: 'CyberSibir 2026', organizer: 'keva',  starts_at: Time.utc(2026, 3, 27, 4, 0, 0),  ends_at: Time.utc(2026, 3, 27, 12, 0, 0), site_url: 'https://vk.com/sibirctf' }
 ]
 
 games = games_data.map do |attrs|
@@ -481,7 +487,7 @@ if cyber2019
   scoreboard_2019 = [
     { name: 'Суслобатя',   points: 89430.9 },
     { name: 'Dragon Hat',  points: 88713.5 },
-    { name: 'Tanuki squad',points: 55170.2 },
+    { name: 'Tanuki squad', points: 55170.2 },
     { name: 'SiBears',     points: 51399.1 },
     { name: 'Omaviat',     points: 47788.8 },
     { name: 'SharNear',    points: 42291.8 },
@@ -587,9 +593,60 @@ if cyber2015
       teams << team
     end
 
-    score = [base_score - step * idx, step].max
+    score = [ base_score - step * idx, step ].max
     result = Result.find_or_initialize_by(game_id: cyber2015.id, team_id: team.id)
     result.score = score
+    result.save!
+  end
+end
+
+# Seed: результаты SibirCTF 2018 (по финальному scoreboard)
+cyber2018 = games.find { |g| g.name == 'SibirCTF 2018' }
+if cyber2018
+  scoreboard_2018 = [
+    { name: 'Новосиб',      score: 7760.15 },
+    { name: 'SharLike',     score: 4450.17 },
+    { name: 'VoidHack',     score: 4028.91 },
+    { name: 'SiBears',      score: 3602.50 },
+    { name: 'Novosibir',    score: 1736.33 },
+    { name: 'HawkSqu',      score: 1086.32 },
+    { name: 'Void*',        score: 1130.22 },
+    { name: 'RWX',          score: 1068.26 },
+    { name: 'NeosFun',      score: 1047.88 },
+    { name: 'Life (Guest)', score: 932.49 },
+    { name: 'CatchFM',      score: 903.86 },
+    { name: 'paperwhale',   score: 890.19 },
+    { name: 'd34dl1n3',     score: 829.86 },
+    { name: 'Omaviat',      score: 780.55 },
+    { name: 'Life',         score: 778.84 },
+    { name: 'Trash Querty', score: 618.19 },
+    { name: 'n57u n00bz',   score: 390.13 }
+  ]
+
+  alias_to_team = {
+    'новосиб' => "Новосибирский Д'Артаньян",
+    'novosibir' => 'Novosibirsk SU X',
+    'hawksqu' => 'HawkSquad',
+    'paperwhale' => 'paperwhale',
+    'trash querty' => 'Trash Querty',
+    'life (guest)' => 'Life (Guest)'
+  }
+
+  team_index = Team.all.index_by { |t| t.name.downcase }
+  scoreboard_2018.each do |row|
+    lookup = alias_to_team[row[:name].downcase] || row[:name]
+    team = team_index[lookup.downcase]
+    unless team
+      team = Team.create!(
+        name: lookup,
+        description: 'Импортировано из scoreboard SibirCTF 2018',
+        avatar_url: svg_data_avatar(lookup, PALETTE.sample)
+      )
+      team_index[team.name.downcase] = team
+      teams << team
+    end
+    result = Result.find_or_initialize_by(game_id: cyber2018.id, team_id: team.id)
+    result.score = row[:score].to_i
     result.save!
   end
 end
@@ -624,36 +681,50 @@ if cyber2014
   end
 end
 
+# GameTeams: создаём связи игра↔команда с порядком и ctf01d метаданными
+Game.find_each do |g|
+  results = g.results.includes(:team).order(score: :desc, id: :asc).to_a
+  results.each_with_index do |r, idx|
+    next unless r.team
+    meta = ctf_team_meta[r.team.name.downcase] || {}
+    gt = GameTeam.find_or_initialize_by(game_id: g.id, team_id: r.team_id)
+    gt.order = idx + 1 if gt.order.to_i.zero?
+    gt.ctf01d_id ||= meta[:ctf01d_id]
+    gt.ip_address ||= meta[:ip_address]
+    gt.save!
+  end
+end
+
 # Seed: services (SibirCTF/CyberSibir)
 services_data = [
   # CyberSibir 2025
-  { name: 'EyeSee',       public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-eyesee', language: 'Python', games: ['CyberSibir 2025'] },
-  { name: 'MSPD',         public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-mspd', language: 'Go', games: ['CyberSibir 2025'] },
-  { name: 'NcDEx',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-ncdex', language: 'Crystal', games: ['CyberSibir 2025'] },
-  { name: 'Unpleasant',   public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-unpleasant', language: 'HTML', games: ['CyberSibir 2025'] },
-  { name: 'WrNum',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-wrnum', language: 'Python', games: ['CyberSibir 2025'] },
-  { name: 'CyberBank',    public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-bank', language: 'JavaScript', games: ['CyberSibir 2025'] },
-  { name: 'NeuroLink234', public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-neLi234', language: 'C', games: ['CyberSibir 2025'] },
-  { name: 'BioGuard',     public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-BioGuard', language: 'Python', games: ['CyberSibir 2025'] },
+  { name: 'EyeSee',       public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-eyesee', language: 'Python', games: [ 'CyberSibir 2025' ] },
+  { name: 'MSPD',         public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-mspd', language: 'Go', games: [ 'CyberSibir 2025' ] },
+  { name: 'NcDEx',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-ncdex', language: 'Crystal', games: [ 'CyberSibir 2025' ] },
+  { name: 'Unpleasant',   public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-unpleasant', language: 'HTML', games: [ 'CyberSibir 2025' ] },
+  { name: 'WrNum',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-wrnum', language: 'Python', games: [ 'CyberSibir 2025' ] },
+  { name: 'CyberBank',    public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-bank', language: 'JavaScript', games: [ 'CyberSibir 2025' ] },
+  { name: 'NeuroLink234', public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-neLi234', language: 'C', games: [ 'CyberSibir 2025' ] },
+  { name: 'BioGuard',     public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-BioGuard', language: 'Python', games: [ 'CyberSibir 2025' ] },
   # SibirCTF 2023
-  { name: 'StickMarket',    public_description: 'SibirCTF 2023 service (StickMarket)', author: 'SibirCTF', repo: '2023-service-sibirctf-stickmarket', language: 'CSS', games: ['SibirCTF 2023'] },
-  { name: 'SouthParkChat',  public_description: 'SibirCTF 2023 service (SouthParkChat)', author: 'SibirCTF', repo: '2023-service-sibirctf-southparkchat', language: 'Go', games: ['SibirCTF 2023'] },
-  { name: 'SX',             public_description: 'SibirCTF 2023 service (SX)', author: 'SibirCTF', repo: '2023-service-sibirctf-sx', language: 'Python', games: ['SibirCTF 2023'] },
-  { name: 'Chef',           public_description: 'SibirCTF 2023 service (Chef)', author: 'SibirCTF', repo: '2023-service-sibirctf-chef', language: 'C', games: ['SibirCTF 2023'] },
-  { name: 'Card Vault',     public_description: 'SibirCTF 2023 CardVault service', author: 'SibirCTF', repo: '2023-service-sibirctf-cardvault', language: 'Elixir', games: ['SibirCTF 2023'] },
+  { name: 'StickMarket',    public_description: 'SibirCTF 2023 service (StickMarket)', author: 'SibirCTF', repo: '2023-service-sibirctf-stickmarket', language: 'CSS', games: [ 'SibirCTF 2023' ] },
+  { name: 'SouthParkChat',  public_description: 'SibirCTF 2023 service (SouthParkChat)', author: 'SibirCTF', repo: '2023-service-sibirctf-southparkchat', language: 'Go', games: [ 'SibirCTF 2023' ] },
+  { name: 'SX',             public_description: 'SibirCTF 2023 service (SX)', author: 'SibirCTF', repo: '2023-service-sibirctf-sx', language: 'Python', games: [ 'SibirCTF 2023' ] },
+  { name: 'Chef',           public_description: 'SibirCTF 2023 service (Chef)', author: 'SibirCTF', repo: '2023-service-sibirctf-chef', language: 'C', games: [ 'SibirCTF 2023' ] },
+  { name: 'Card Vault',     public_description: 'SibirCTF 2023 CardVault service', author: 'SibirCTF', repo: '2023-service-sibirctf-cardvault', language: 'Elixir', games: [ 'SibirCTF 2023' ] },
   # SibirCTF 2018
-  { name: 'maxigram',       public_description: 'SibirCTF 2018 service (maxigram)', author: 'SibirCTF', repo: '2018-service-maxigram', language: 'Python', games: ['SibirCTF 2018'] },
-  { name: 'The Fakebook',   public_description: 'SibirCTF 2018 service (The Fakebook)', author: 'SibirCTF', repo: '2018-service-thefakebook', language: 'HTML', games: ['SibirCTF 2018'] },
-  { name: 'The Hole',       public_description: 'SibirCTF 2018 service (The Hole)', author: 'SibirCTF', repo: '2018-service-the-hole', language: 'C++', games: ['SibirCTF 2018'] },
-  { name: 'Legacy News',    public_description: 'SibirCTF 2018 service (Legacy News)', author: 'SibirCTF', repo: nil, language: nil, games: ['SibirCTF 2018'] },
-  { name: 'Mirai',          public_description: 'SibirCTF 2018 service (Mirai)', author: 'SibirCTF', repo: '2018-service-mirai', language: 'PHP', games: ['SibirCTF 2018'] },
-  { name: 'LNKS',           public_description: 'SibirCTF 2018 service (LNKS)', author: 'SibirCTF', repo: '2018-service-lnks', language: 'PHP', games: ['SibirCTF 2018'] },
-  { name: 'Lie2Me',         public_description: 'SibirCTF 2018 service (Lie2Me)', author: 'SibirCTF', repo: '2018-service-lie-to-me', language: 'Perl', games: ['SibirCTF 2018'] },
+  { name: 'maxigram',       public_description: 'SibirCTF 2018 service (maxigram)', author: 'SibirCTF', repo: '2018-service-maxigram', language: 'Python', games: [ 'SibirCTF 2018' ] },
+  { name: 'The Fakebook',   public_description: 'SibirCTF 2018 service (The Fakebook)', author: 'SibirCTF', repo: '2018-service-thefakebook', language: 'HTML', games: [ 'SibirCTF 2018' ] },
+  { name: 'The Hole',       public_description: 'SibirCTF 2018 service (The Hole)', author: 'SibirCTF', repo: '2018-service-the-hole', language: 'C++', games: [ 'SibirCTF 2018' ] },
+  { name: 'Legacy News',    public_description: 'SibirCTF 2018 service (Legacy News)', author: 'SibirCTF', repo: nil, language: nil, games: [ 'SibirCTF 2018' ] },
+  { name: 'Mirai',          public_description: 'SibirCTF 2018 service (Mirai)', author: 'SibirCTF', repo: '2018-service-mirai', language: 'PHP', games: [ 'SibirCTF 2018' ] },
+  { name: 'LNKS',           public_description: 'SibirCTF 2018 service (LNKS)', author: 'SibirCTF', repo: '2018-service-lnks', language: 'PHP', games: [ 'SibirCTF 2018' ] },
+  { name: 'Lie2Me',         public_description: 'SibirCTF 2018 service (Lie2Me)', author: 'SibirCTF', repo: '2018-service-lie-to-me', language: 'Perl', games: [ 'SibirCTF 2018' ] },
   # SibirCTF 2015
-  { name: 'CryChat',        public_description: 'SibirCTF 2015 service (CryChat)', author: 'SibirCTF', repo: '2015-crychat', language: 'PHP', games: ['SibirCTF 2015'] },
-  { name: "O'Foody",        public_description: 'SibirCTF 2015 service (O’Foody)', author: 'SibirCTF', repo: '2015-ofoody', language: 'Perl', games: ['SibirCTF 2015'] },
-  { name: 'CTFGram',        public_description: 'SibirCTF 2015 service (CTFGram)', author: 'SibirCTF', repo: '2015-ctfgram', language: 'JavaScript', games: ['SibirCTF 2015'] },
-  { name: 'EasyAs',         public_description: 'SibirCTF 2015 service (EasyAs)', author: 'SibirCTF', repo: '2015-easyas', language: 'Python', games: ['SibirCTF 2015'] }
+  { name: 'CryChat',        public_description: 'SibirCTF 2015 service (CryChat)', author: 'SibirCTF', repo: '2015-crychat', language: 'PHP', games: [ 'SibirCTF 2015' ] },
+  { name: "O'Foody",        public_description: 'SibirCTF 2015 service (O’Foody)', author: 'SibirCTF', repo: '2015-ofoody', language: 'Perl', games: [ 'SibirCTF 2015' ] },
+  { name: 'CTFGram',        public_description: 'SibirCTF 2015 service (CTFGram)', author: 'SibirCTF', repo: '2015-ctfgram', language: 'JavaScript', games: [ 'SibirCTF 2015' ] },
+  { name: 'EasyAs',         public_description: 'SibirCTF 2015 service (EasyAs)', author: 'SibirCTF', repo: '2015-easyas', language: 'Python', games: [ 'SibirCTF 2015' ] }
 ]
 
 services = services_data.map do |attrs|
