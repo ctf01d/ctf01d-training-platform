@@ -1,4 +1,5 @@
 class ServicesController < ApplicationController
+  require "zip"
   before_action :require_admin, except: %i[index show]
   before_action :set_service, only: %i[ show edit update destroy toggle_public check_checker redownload upload_archives download_local ]
 
@@ -170,6 +171,48 @@ class ServicesController < ApplicationController
     render :import_github, status: :unprocessable_content
   end
 
+  # GET/POST /services/import_zip
+  def import_zip
+    require_admin
+    if request.get?
+      return
+    end
+
+    upload = params[:archive]
+    raise ArgumentError, "файл не выбран" unless upload.respond_to?(:read)
+    data = upload.read
+    raise ArgumentError, "пустой файл" if data.blank?
+
+    parts = split_zip(data)
+    service_zip = parts[:service]
+    checker_zip = parts[:checker]
+    raise ArgumentError, "не найден каталог service/ или содержимое архива" if service_zip.nil?
+
+    name = params[:name].presence || File.basename(upload.original_filename.to_s, File.extname(upload.original_filename.to_s)).tr("_", " ").strip
+    author = current_user&.display_name || "upload"
+
+    svc = Service.new(
+      name: name.presence || "Uploaded service",
+      author: author,
+      public_description: params[:description],
+      public: false
+    )
+
+    if svc.save
+      ServiceArchives.save_uploaded(service: svc, kind: :service, uploaded_file: uploaded_from_bytes(service_zip, "service.zip"))
+      if checker_zip
+        ServiceArchives.save_uploaded(service: svc, kind: :checker, uploaded_file: uploaded_from_bytes(checker_zip, "checker.zip"))
+      end
+      redirect_to svc, notice: "Сервис импортирован из ZIP."
+    else
+      @errors = svc.errors.full_messages
+      render :import_zip, status: :unprocessable_content
+    end
+  rescue Zip::Error, ArgumentError, ArchiveDownloader::Error, ServiceArchives::Error => e
+    @errors = [ e.message ]
+    render :import_zip, status: :unprocessable_content
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_service
@@ -189,5 +232,51 @@ class ServicesController < ApplicationController
         io.define_singleton_method(:content_type) { "application/zip" }
         io.define_singleton_method(:size) { bytes.bytesize }
       end
+    end
+
+    def split_zip(zip_bytes)
+      buffer = StringIO.new(zip_bytes)
+      service_zip = nil
+      checker_zip = nil
+      root_prefix = nil
+
+      Zip::File.open_buffer(buffer) do |zip|
+        first = zip.first
+        root_prefix = if first&.name&.include?("/")
+          first.name.split("/").first + "/"
+        else
+          ""
+        end
+
+        # если есть каталоги service/ и checker/
+        has_service = zip.any? { |e| e.name.start_with?(File.join(root_prefix, "service/")) }
+        has_checker = zip.any? { |e| e.name.start_with?(File.join(root_prefix, "checker/")) }
+
+        service_zip = build_subzip(zip_bytes, File.join(root_prefix, has_service ? "service/" : ""))
+        checker_zip = build_subzip(zip_bytes, File.join(root_prefix, "checker/")) if has_checker
+      end
+
+      { service: service_zip, checker: checker_zip }
+    end
+
+    def build_subzip(zip_bytes, subdir_prefix)
+      buffer = StringIO.new
+      Zip::OutputStream.write_buffer(buffer) do |zos|
+        Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
+          zip.each do |entry|
+            next unless entry.name.start_with?(subdir_prefix)
+            rel = entry.name.sub(subdir_prefix, "")
+            next if rel.empty?
+            if entry.name.end_with?("/")
+              zos.put_next_entry(rel + "/")
+            else
+              zos.put_next_entry(rel)
+              zos.write(entry.get_input_stream.read)
+            end
+          end
+        end
+      end
+      buffer.rewind
+      buffer.read
     end
 end

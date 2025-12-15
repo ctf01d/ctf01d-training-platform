@@ -14,7 +14,7 @@
         <div class="dropdown-menu" id="service-dropdown-menu">
           <%= link_to "Создать новый", new_service_path %>
           <%= link_to "Импорт с GitHub", import_github_services_path %>
-          <button disabled title="Скоро">Импорт из ZIP (скоро)</button>
+          <%= link_to "Импорт из ZIP", import_zip_services_path %>
         </div>
       </div>
     </div>

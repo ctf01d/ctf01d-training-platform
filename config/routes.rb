@@ -28,6 +28,8 @@ Rails.application.routes.draw do
     collection do
       get :import_github
       post :import_github
+      get :import_zip
+      post :import_zip
     end
   end
   resources :team_memberships

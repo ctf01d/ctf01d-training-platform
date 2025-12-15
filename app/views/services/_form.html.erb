@@ -66,8 +66,9 @@
       <%= form.text_field :exploits_url, placeholder: 'https://…/exploits.zip' %>
     </div>
 
-    <div class="form-actions">
-      <%= form.submit 'Сохранить', class: 'btn primary' %>
+    <div class="form-actions" style="display:flex; gap:8px; align-items:center;">
+      <%= form.submit 'Создать', class: 'btn btn-success' %>
+      <%= link_to 'Назад', services_path, class: 'btn' %>
     </div>
   <% end %>
 </div>

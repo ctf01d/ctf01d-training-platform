@@ -1,0 +1,36 @@
+<% content_for :title, "Импорт сервиса из ZIP" %>
+
+<h1>Импорт сервиса из ZIP</h1>
+
+<div class="card">
+  <% if defined?(@errors) && @errors.present? %>
+    <div class="form-errors">
+      <strong><%= pluralize(@errors.size, 'ошибка') %></strong>
+      <ul>
+        <% @errors.each do |m| %>
+          <li><%= m %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with url: import_zip_services_path, method: :post, html: { class: 'form', multipart: true } do |f| %>
+    <div class="form-group">
+      <label for="archive">ZIP архив</label>
+      <input type="file" name="archive" id="archive" accept=".zip" required>
+      <div class="muted" style="font-size:12px;">Ожидаются папки service/ и (опционально) checker/ внутри архива.</div>
+    </div>
+    <div class="form-group">
+      <label for="name">Название (опционально)</label>
+      <%= text_field_tag :name, params[:name], placeholder: 'Берётся из имени файла, если пусто' %>
+    </div>
+    <div class="form-group">
+      <label for="description">Описание (опционально)</label>
+      <%= text_area_tag :description, params[:description], rows: 3, placeholder: 'Публичное описание' %>
+    </div>
+    <div class="form-actions">
+      <%= submit_tag 'Импортировать', class: 'btn btn-success' %>
+      <%= link_to 'Назад', services_path, class: 'btn' %>
+    </div>
+  <% end %>
+</div>
