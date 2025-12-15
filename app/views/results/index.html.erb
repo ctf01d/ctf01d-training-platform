@@ -2,10 +2,6 @@
 
 <h1>Результаты</h1>
 
-<div style="margin: 8px 0 12px 0;">
-  <%= link_to 'Таблица', scoreboard_path, class: 'btn' %>
-</div>
-
 <% if @games.any? %>
   <% @games.each do |game| %>
     <section class="section">

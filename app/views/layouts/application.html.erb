@@ -54,5 +54,44 @@
 
       <%= yield %>
     </div>
+
+    <script>
+      // Простой фильтр по вводу: ищет по data-search или тексту элемента
+      document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('.js-search-input');
+        inputs.forEach(function(input) {
+          const targetSel = input.dataset.target;
+          let items = [];
+          if (targetSel) {
+            const containers = Array.from(document.querySelectorAll(targetSel));
+            if (containers.length > 0) {
+              containers.forEach(function(c) {
+                items = items.concat(Array.from(c.querySelectorAll('.js-search-item')));
+              });
+            } else {
+              items = Array.from(document.querySelectorAll(targetSel));
+            }
+          } else {
+            items = Array.from(document.querySelectorAll('.js-search-item'));
+          }
+          if (items.length === 0) { return; }
+
+          items.forEach(function(el) {
+            const txt = (el.dataset.search || el.textContent || '').toLowerCase();
+            el.dataset.searchNormalized = txt;
+          });
+
+          const applyFilter = function() {
+            const q = (input.value || '').trim().toLowerCase();
+            items.forEach(function(el) {
+              const match = q === '' || (el.dataset.searchNormalized && el.dataset.searchNormalized.includes(q));
+              el.style.display = match ? '' : 'none';
+            });
+          };
+
+          input.addEventListener('input', applyFilter);
+        });
+      });
+    </script>
   </body>
 </html>

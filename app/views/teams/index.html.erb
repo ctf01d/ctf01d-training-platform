@@ -8,9 +8,14 @@
   </div>
 <% end %>
 
+<div class="card" style="margin: 8px 0 12px 0;">
+  <label for="teams-search"><strong>Поиск</strong></label>
+  <%= text_field_tag :teams_search, '', id: 'teams-search', class: 'js-search-input', placeholder: 'Название, вуз, капитан', data: { target: '#teams' } %>
+</div>
+
 <div class="list" id="teams">
   <% @teams.each do |team| %>
-    <div class="card">
+    <div class="card js-search-item" data-search="<%= [team.name, team.university&.name, team.captain&.display_name].compact.join(' ').downcase %>">
       <div class="row">
         <%= avatar_image_tag(team.name, url: team.avatar_url) %>
         <div>

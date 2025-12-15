@@ -9,6 +9,11 @@
   </div>
 <% end %>
 
+<div class="card" style="margin: 8px 0 12px 0;">
+  <label for="services-search"><strong>Поиск</strong></label>
+  <%= text_field_tag :services_search, '', id: 'services-search', class: 'js-search-input', placeholder: 'Введите название или автора', data: { target: '#services' } %>
+</div>
+
 <div id="services" class="list">
   <% @services.each do |service| %>
     <%= render partial: 'services/service', locals: { service: service, condensed: true } %>

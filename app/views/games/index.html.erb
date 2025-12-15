@@ -8,9 +8,14 @@
   </div>
 <% end %>
 
+<div class="card" style="margin: 8px 0 12px 0;">
+  <label for="games-search"><strong>Поиск</strong></label>
+  <%= text_field_tag :games_search, '', id: 'games-search', class: 'js-search-input', placeholder: 'Название или организатор', data: { target: '.js-games-container' } %>
+</div>
+
 <% if @ongoing_games.any? %>
   <h2>Идут сейчас</h2>
-  <div id="ongoing-games" class="list list--full">
+  <div id="ongoing-games" class="list list--full js-games-container">
     <% @ongoing_games.each do |game| %>
       <%= render partial: 'game_banner', locals: { game: game } %>
     <% end %>
@@ -19,7 +24,7 @@
 
 <% if @upcoming_games.any? %>
   <h2>Скоро</h2>
-  <div id="upcoming-games" class="list list--full">
+  <div id="upcoming-games" class="list list--full js-games-container">
     <% @upcoming_games.each do |game| %>
       <%= render partial: 'game_banner', locals: { game: game } %>
     <% end %>
@@ -28,7 +33,7 @@
 
 <% if @past_games.any? %>
   <h2>Прошедшие</h2>
-  <div id="past-games" class="list list--full">
+  <div id="past-games" class="list list--full js-games-container">
     <% @past_games.each do |game| %>
       <%= render partial: 'game_banner', locals: { game: game } %>
     <% end %>
