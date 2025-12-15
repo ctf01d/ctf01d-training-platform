@@ -23,7 +23,7 @@
 
       <% if results.any? %>
         <div class="card">
-          <table class="table table-striped">
+          <table class="table table-striped table--scores">
             <thead>
               <tr>
                 <th>#</th>
@@ -35,7 +35,14 @@
               <% results.each_with_index do |r, idx| %>
                 <tr>
                   <td><%= r.respond_to?(:position) && r.position ? r.position : (idx + 1) %></td>
-                  <td><%= r.team&.name || '—' %></td>
+                  <td>
+                    <% if r.team %>
+                      <%= avatar_image_tag(r.team.name, url: r.team.avatar_url, size: 28, class_name: 'avatar-image') %>
+                      <%= link_to r.team.name, r.team, style: "margin-left:6px;" %>
+                    <% else %>
+                      — 
+                    <% end %>
+                  </td>
                   <td><%= r.score %></td>
                 </tr>
               <% end %>

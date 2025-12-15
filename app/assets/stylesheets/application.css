@@ -57,6 +57,12 @@ a { color: #1a56db; }
 .table th, .table td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
 .table thead th { background: #f8fafc; color: #374151; font-weight: 600; }
 .table-striped tbody tr:nth-child(even) { background: #fafafa; }
+.table--scores th:first-child,
+.table--scores td:first-child { width: 60px; text-align: right; }
+.table--scores th:last-child,
+.table--scores td:last-child { width: 140px; text-align: right; white-space: nowrap; }
+.table--scores td:nth-child(2),
+.table--scores th:nth-child(2) { width: auto; }
 
 /* Navbar auth compact spacing */
 .navbar-auth { display: inline-flex; align-items: center; gap: 4px; }

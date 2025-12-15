@@ -20,7 +20,7 @@
       <% results = game.results.includes(:team).sort_by { |r| -r.score.to_i } %>
       <% if results.any? %>
         <div class="card">
-          <table class="table table-striped">
+          <table class="table table-striped table--scores">
             <thead>
               <tr>
                 <th>#</th>

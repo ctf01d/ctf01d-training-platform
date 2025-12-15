@@ -3,6 +3,7 @@ require 'set'
 require 'erb'
 require 'zlib'
 require 'time'
+require 'fileutils'
 
 # Simple SVG avatar generator (data URL)
 def svg_data_avatar(text, bg = '#3B82F6')
@@ -20,6 +21,71 @@ end
 PALETTE = %w[
   #3B82F6 #10B981 #F59E0B #EF4444 #8B5CF6 #06B6D4 #EC4899 #84CC16 #F97316 #22C55E
 ]
+
+PLACEHOLDER_INDEX = {}
+PLACEHOLDER_ALIASES = {
+  "team-logos" => {
+    "wzz4b1" => "wazz4b1",
+    "w@zz4b1" => "wazz4b1",
+    "w-zz4b1" => "wazz4b1",
+    "n0nme13" => "noname13",
+    "n0n@me13" => "noname13",
+    "non@me13" => "noname13",
+  }
+}
+
+def ensure_placeholders_copied(kind)
+  src_dir = Rails.root.join("img", kind)
+  dst_dir = Rails.root.join("public", "img", kind)
+  return dst_dir if Dir.exist?(dst_dir)
+  return nil unless Dir.exist?(src_dir)
+  FileUtils.mkdir_p(dst_dir)
+  FileUtils.cp_r("#{src_dir}/.", dst_dir)
+  dst_dir
+end
+
+def placeholder_index(kind)
+  return PLACEHOLDER_INDEX[kind] if PLACEHOLDER_INDEX[kind]
+  ensure_placeholders_copied(kind)
+  base_dir = Rails.root.join("public", "img", kind)
+  map = {}
+  Dir.glob(base_dir.join("*")).each do |p|
+    next if File.directory?(p)
+    base = File.basename(p, ".*")
+    slug = base.parameterize
+    key_variants = [slug, slug.delete("-"), slug.tr("-", "_")]
+    key_variants.each do |k|
+      map[k] ||= p.sub(Rails.root.join("public").to_s, "")
+    end
+  end
+  PLACEHOLDER_INDEX[kind] = map
+end
+
+def pick_placeholder_path(name, kind)
+  idx = placeholder_index(kind) || {}
+  slug = name.to_s.parameterize
+  alias_map = PLACEHOLDER_ALIASES[kind] || {}
+  return nil if slug.blank?
+  slug_variants = [slug, slug.delete("-"), slug.tr("-", "_")]
+  # прямое совпадение
+  slug_variants.each do |s|
+    return idx[s] if idx[s]
+  end
+  # алиасы по «сжатому» ключу
+  compact_key = name.to_s.downcase.gsub(/[^a-z0-9а-яё]+/, "")
+  if compact_key.present? && alias_map[compact_key]
+    alias_key = alias_map[compact_key]
+    return idx[alias_key] if idx[alias_key]
+  end
+  slug_variants.each do |s|
+    if alias_map[s]
+      alias_key = alias_map[s]
+      return idx[alias_key] if idx[alias_key]
+    end
+  end
+  nil
+end
+
 admin = User.find_or_initialize_by(user_name: 'admin')
 admin.display_name = 'Admin'
 admin.role = 'admin'
@@ -141,7 +207,7 @@ cybersibir_teams = cybersibir_teams_data.map do |attrs|
   ].compact.join(' · ')
   t.website = nil
   t.university = nil
-  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
+  t.avatar_url ||= pick_placeholder_path(t.name, "team-logos") || svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
 end
@@ -180,7 +246,7 @@ sibir2018_teams = sibir2018_teams_data.filter { |t| t[:name].present? }.map do |
     ("Лого: #{attrs[:logo]}" if attrs[:logo]),
     ("Активна: #{attrs[:active] ? 'yes' : 'no'}")
   ].compact.join(' · ')
-  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
+  t.avatar_url ||= pick_placeholder_path(t.name, "team-logos") || svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
 end
@@ -209,7 +275,7 @@ sibir2015_team_names = [
 sibir2015_teams = sibir2015_team_names.map do |name|
   t = Team.find_or_initialize_by(name: name)
   t.description = [ t.description.presence, 'SibirCTF 2015 roster' ].compact.join(' · ')
-  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
+  t.avatar_url ||= pick_placeholder_path(t.name, "team-logos") || svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
 end
@@ -230,7 +296,7 @@ sibir2014_teams_data = [
 sibir2014_teams = sibir2014_teams_data.map do |attrs|
   t = Team.find_or_initialize_by(name: attrs[:name])
   t.description = [ t.description.presence, 'SibirCTF 2014 roster' ].compact.join(' · ')
-  t.avatar_url ||= svg_data_avatar(t.name, PALETTE.sample)
+  t.avatar_url ||= pick_placeholder_path(t.name, "team-logos") || svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
 end
@@ -359,7 +425,7 @@ games = games_data.map do |attrs|
   g.ends_at = attrs[:ends_at]
   g.site_url = attrs[:site_url] if attrs[:site_url]
   g.ctftime_url = attrs[:ctftime_url] if attrs[:ctftime_url]
-  g.avatar_url = attrs[:logo_url] || g.avatar_url || svg_data_avatar(g.name, PALETTE.sample)
+  g.avatar_url = attrs[:logo_url] || pick_placeholder_path(g.name, "game-logos") || g.avatar_url || svg_data_avatar(g.name, PALETTE.sample)
   # access/networks demo (публикуем для прошедших и идущих игр; для далёких будущих — оставим пустым)
   if g.ends_at && g.ends_at < Time.now || (g.starts_at && g.starts_at <= Time.now + 2.days)
     slug = g.name.parameterize
