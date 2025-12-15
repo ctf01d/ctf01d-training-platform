@@ -72,6 +72,40 @@ a { color: #1a56db; }
 .table--scores td:nth-child(2),
 .table--scores th:nth-child(2) { width: auto; }
 
+.game-teams-table { table-layout: fixed; }
+.game-teams-table th:nth-child(1),
+.game-teams-table td:nth-child(1) { width: 70px; }
+.game-teams-table th:nth-child(3),
+.game-teams-table td:nth-child(3) { width: 70px; }
+.game-teams-table th:nth-child(4),
+.game-teams-table td:nth-child(4) { width: 145px; }
+.game-teams-table th:nth-child(5),
+.game-teams-table td:nth-child(5) { width: 80px; }
+.game-teams-table th:nth-child(6),
+.game-teams-table td:nth-child(6) { width: 220px; }
+.game-teams-table th:last-child,
+.game-teams-table td:last-child { width: 88px; }
+.game-teams-table th:last-child,
+.game-teams-table td:last-child { text-align: right; }
+.game-teams-table td:nth-child(2) a { word-break: break-word; }
+.game-teams-table input,
+.game-teams-table select,
+.game-teams-table textarea { font-size: 15px; }
+.game-teams-actions { display: inline-flex; gap: 8px; justify-content: flex-end; width: 100%; }
+.btn.btn-icon {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
 /* Navbar auth compact spacing */
 .navbar-auth { display: inline-flex; align-items: center; gap: 4px; }
 
@@ -163,7 +197,7 @@ textarea { resize: vertical; }
 .game-banner__sub { display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
 .game-banner__services { margin-top:10px; line-height:1.4; }
 .game-banner__services-list { display:inline; }
-.game-banner__right { min-width:260px; display:flex; flex-direction:column; gap:8px; text-align:left; }
+.game-banner__right { min-width:260px; display:flex; flex-direction:column; gap:8px; text-align:left; align-items:flex-end; }
 .game-banner__times { display:flex; gap:10px; align-items:flex-start; }
 .game-banner__time-title { font-weight:700; color:#374151; min-width:72px; }
 .game-banner__time-value { display:flex; gap:8px; align-items:flex-start; color:#111827; }
@@ -175,14 +209,14 @@ textarea { resize: vertical; }
 }
 
 /* Game card (show) */
-.game-card { padding: 16px; border-radius: 14px; background: #fcfcff; }
-.game-card__body { display:flex; gap:20px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
+.game-card { padding: 20px; border-radius: 14px; background: #fcfcff; }
+.game-card__body { display:flex; gap:24px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
 .game-card__left { display:flex; gap:14px; align-items:flex-start; min-width:0; flex: 1 1 60%; }
 .game-card__meta { min-width:0; }
 .game-card__title-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.game-card__title { font-size:20px; }
+.game-card__title { font-size:24px; line-height:1.2; }
 .game-card__badge { padding:4px 8px; }
-.game-card__sub { display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
+.game-card__sub { display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 6px; }
 .game-card__row { display:flex; gap:10px; align-items:flex-start; margin-top:8px; }
 .game-card__label { font-weight:700; color:#374151; min-width:100px; }
 .game-card__value { display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:#111827; }
@@ -190,12 +224,14 @@ textarea { resize: vertical; }
 .game-card__dates { font-size:13px; }
 .game-card__services { margin-top:10px; line-height:1.4; }
 .game-card__services-list { display:inline; }
-.game-card__right { min-width:240px; flex: 0 0 auto; }
+.game-card__right { min-width:280px; flex: 0 0 auto; display:flex; justify-content:flex-end; }
+.game-card__logo-img { width: 220px; height: 220px; object-fit: contain; background: transparent; border: none; box-shadow: none; border-radius: 0; }
 .game-card__access { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px; display:grid; gap:4px; }
 
 @media (max-width: 900px) {
   .game-card__body { flex-direction:column; }
-  .game-card__right { width:100%; }
+  .game-card__right { width:100%; justify-content:flex-start; }
+  .game-card__logo-img { width: 160px; height: 160px; }
 }
 
 /* Modal */

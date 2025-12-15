@@ -16,14 +16,19 @@
 
   <% if @game_teams.any? %>
     <div class="card">
-      <table class="table table-striped table--scores">
+      <table class="table table-striped game-teams-table">
         <thead>
           <tr>
             <th>Порядок</th>
             <th>Команда</th>
+            <th>Тип</th>
             <th>IP</th>
             <th>ctf01d_id</th>
-            <th>ctf01d_*</th>
+            <th>
+              ctf01d_*
+              <% info = "Только ключи вида ctf01d_*, например ctf01d_type: blue" %>
+              <span class="muted" title="<%= info %>" style="cursor: help;">?</span>
+            </th>
             <% if user_signed_in? && current_user.role == 'admin' %>
               <th>Действия</th>
             <% end %>
@@ -34,28 +39,25 @@
             <% if user_signed_in? && current_user.role == 'admin' %>
               <%= form_with model: gt, url: game_team_path(gt), method: :patch, local: true, html: { style: 'display: contents;' } do |f| %>
                 <tr>
-                  <td><%= f.number_field :order, value: gt.order, style: 'width: 72px;' %></td>
+                  <td><%= f.number_field :order, value: gt.order, style: 'width: 100%;' %></td>
                   <td>
-                    <div>
-                      <%= link_to(gt.team&.name || '—', gt.team || teams_path) %>
-                      <%= team_type_badge(gt) %>
-                    </div>
-                    <div class="muted" style="margin-top:4px;">
-                      <%= f.label :team_type, 'Тип (blue/red/...)', style: 'display:block; font-weight:normal;' %>
-                      <%= f.text_field :team_type, value: gt.team_type, placeholder: 'blue', style: 'width: 160px;' %>
-                    </div>
+                    <div><%= link_to(gt.team&.name || '—', gt.team || teams_path) %></div>
                   </td>
-                  <td><%= f.text_field :ip_address, value: gt.ip_address, placeholder: '10.10.1.3', style: 'width: 160px;' %></td>
-                  <td><%= f.text_field :ctf01d_id, value: gt.ctf01d_id, placeholder: 't01', style: 'width: 90px;' %></td>
                   <td>
-                    <%= f.text_area :ctf01d_overrides_text, rows: 2, placeholder: "ctf01d_type: blue\nctf01d_flag: yes", style: 'width: 100%;' %>
-                    <div class="muted" style="font-size:12px;">только ключи вида ctf01d_*</div>
+                    <%= f.select :team_type,
+                      options_for_select([['—', ''], ['blue', 'blue'], ['red', 'red'], ['guest', 'guest']], gt.team_type),
+                      {}, { style: 'width: 100%; height: 44px;' } %>
+                  </td>
+                  <td><%= f.text_field :ip_address, value: gt.ip_address, placeholder: '10.10.1.3', style: 'width: 100%;' %></td>
+                  <td><%= f.text_field :ctf01d_id, value: gt.ctf01d_id, placeholder: 't01', style: 'width: 100%;' %></td>
+                  <td>
+                    <%= f.text_area :ctf01d_overrides_text, rows: 1, placeholder: "ctf01d_type: blue", style: 'width: 100%; height: 44px;' %>
                   </td>
                   <td>
                     <%= f.hidden_field :game_id, value: @game.id %>
-                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                      <%= f.submit 'Сохранить', class: 'btn primary' %>
-                      <%= link_to 'Удалить', game_team_path(gt), data: { turbo_method: :delete, turbo_confirm: 'Убрать команду из игры?' }, class: 'btn danger' %>
+                    <div class="game-teams-actions">
+                      <%= f.submit '💾', class: 'btn primary btn-icon', title: 'Сохранить' %>
+                      <%= link_to '✕', game_team_path(gt), data: { turbo_method: :delete, turbo_confirm: 'Убрать команду из игры?' }, class: 'btn danger btn-icon', title: 'Удалить' %>
                     </div>
                   </td>
                 </tr>
@@ -67,10 +69,8 @@
               <% extra.delete_if { |_k, v| v.to_s.strip.empty? } %>
               <tr>
                 <td><%= gt.order %></td>
-                <td>
-                  <%= link_to(gt.team&.name || '—', gt.team || teams_path) %>
-                  <%= team_type_badge(gt) %>
-                </td>
+                <td><%= link_to(gt.team&.name || '—', gt.team || teams_path) %></td>
+                <td><%= gt.team_type.presence || '—' %></td>
                 <td><%= gt.ip_address.presence || '—' %></td>
                 <td><%= gt.ctf01d_id.presence || '—' %></td>
                 <td><%= extra.any? ? extra.map { |k, v| "#{k}=#{v}" }.join(', ') : '—' %></td>
@@ -117,7 +117,7 @@
         </div>
         <div class="form-group">
           <%= f.label :ctf01d_overrides_text, 'Доп. поля ctf01d_*' %><br>
-          <%= f.text_area :ctf01d_overrides_text, rows: 2, placeholder: "ctf01d_type: blue\nctf01d_flag: yes" %>
+          <%= f.text_area :ctf01d_overrides_text, rows: 2, placeholder: "ctf01d_type: blue" %>
         </div>
         <div class="form-actions">
           <%= f.submit 'Добавить', class: 'btn primary', disabled: @available_teams.empty? %>
@@ -162,7 +162,7 @@
                     <%= team_type_badge(gt) %>
                   <% end %>
                 <% else %>
-                  — 
+                  —
                 <% end %>
               </td>
               <td><%= r.score %></td>

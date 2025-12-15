@@ -1,7 +1,6 @@
 <div id="<%= dom_id game %>" class="card game-card">
   <div class="game-card__body">
     <div class="game-card__left">
-      <%= avatar_image_tag(game.name, url: game.avatar_url, size: 68) %>
       <div class="game-card__meta">
         <div class="game-card__title-row">
           <strong class="game-card__title"><%= link_to game.name, game %></strong>
@@ -89,19 +88,21 @@
     </div>
 
     <div class="game-card__right">
-      <% if game.vpn_url.present? || game.vpn_config_url.present? || game.access_secret.present? %>
-        <div class="game-card__access">
-          <% if game.vpn_url.present? %>
-            <div><strong>VPN:</strong> <%= link_to game.vpn_url, game.vpn_url, target: '_blank', rel: 'noopener' %></div>
-          <% end %>
-          <% if game.vpn_config_url.present? %>
-            <div><strong>Config:</strong> <%= link_to game.vpn_config_url, game.vpn_config_url, target: '_blank', rel: 'noopener' %></div>
-          <% end %>
-          <% if game.access_secret.present? %>
-            <div><strong>Секрет:</strong> <code><%= game.access_secret %></code></div>
-          <% end %>
-        </div>
-      <% end %>
+      <%= avatar_image_tag(game.name, url: game.avatar_url, size: 220, class_name: 'game-card__logo-img') %>
     </div>
   </div>
+
+  <% if game.vpn_url.present? || game.vpn_config_url.present? || game.access_secret.present? %>
+    <div class="game-card__access" style="margin-top:12px;">
+      <% if game.vpn_url.present? %>
+        <div><strong>VPN:</strong> <%= link_to game.vpn_url, game.vpn_url, target: '_blank', rel: 'noopener' %></div>
+      <% end %>
+      <% if game.vpn_config_url.present? %>
+        <div><strong>Config:</strong> <%= link_to game.vpn_config_url, game.vpn_config_url, target: '_blank', rel: 'noopener' %></div>
+      <% end %>
+      <% if game.access_secret.present? %>
+        <div><strong>Секрет:</strong> <code><%= game.access_secret %></code></div>
+      <% end %>
+    </div>
+  <% end %>
 </div>
