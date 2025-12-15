@@ -2,15 +2,18 @@
 
 <h1>Пользователи</h1>
 
-<% if user_signed_in? && current_user.role == 'admin' %>
-  <div style="margin: 8px 0 12px 0;">
-    <%= link_to "Создать пользователя", new_user_path, class: 'btn primary' %>
+<div class="toolbar" style="display:flex; align-items:center; gap:16px; margin: 8px 0 12px 0;">
+  <div style="flex:1;">
+    <div class="search-box">
+      <span class="search-icon" aria-hidden="true"></span>
+      <%= text_field_tag :users_search, '', id: 'users-search', class: 'js-search-input', placeholder: 'Поиск: имя или логин', data: { target: '#users' } %>
+    </div>
   </div>
-<% end %>
-
-<div class="card" style="margin: 8px 0 12px 0;">
-  <label for="users-search"><strong>Поиск</strong></label>
-  <%= text_field_tag :users_search, '', id: 'users-search', class: 'js-search-input', placeholder: 'Имя или логин', data: { target: '#users' } %>
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <div style="flex:0;">
+      <%= link_to "Создать пользователя", new_user_path, class: 'btn btn-success' %>
+    </div>
+  <% end %>
 </div>
 
 <div class="list" id="users">

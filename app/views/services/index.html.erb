@@ -1,17 +1,24 @@
 <% content_for :title, "Сервисы" %>
 
-<h1>Сервисы</h1>
-
-<% if user_signed_in? && current_user.role == 'admin' %>
-  <div style="margin: 8px 0 12px 0;">
-    <%= link_to "Создать сервис", new_service_path, class: 'btn primary' %>
-    <%= link_to "Импорт с GitHub", import_github_services_path, class: 'btn' %>
+<div class="toolbar" style="display:flex; align-items:center; gap:16px; margin: 8px 0 12px 0;">
+  <div style="flex:1;">
+    <div class="search-box">
+      <span class="search-icon" aria-hidden="true"></span>
+      <%= text_field_tag :services_search, '', id: 'services-search', class: 'js-search-input', placeholder: 'Поиск по названию или автору', data: { target: '#services' } %>
+    </div>
   </div>
-<% end %>
-
-<div class="card" style="margin: 8px 0 12px 0;">
-  <label for="services-search"><strong>Поиск</strong></label>
-  <%= text_field_tag :services_search, '', id: 'services-search', class: 'js-search-input', placeholder: 'Введите название или автора', data: { target: '#services' } %>
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <div style="flex:0; display:flex; gap:10px; align-items:center;">
+      <div class="dropdown">
+        <button class="btn btn-success" id="service-dropdown-toggle">Создать / Импорт <span class="dropdown-caret">▼</span></button>
+        <div class="dropdown-menu" id="service-dropdown-menu">
+          <%= link_to "Создать новый", new_service_path %>
+          <%= link_to "Импорт с GitHub", import_github_services_path %>
+          <button disabled title="Скоро">Импорт из ZIP (скоро)</button>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>
 
 <div id="services" class="list">

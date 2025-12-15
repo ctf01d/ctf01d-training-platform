@@ -1,16 +1,17 @@
 <% content_for :title, "Игры" %>
 
-<h1>Игры</h1>
-
-<% if user_signed_in? && current_user.role == 'admin' %>
-  <div style="margin: 8px 0 12px 0;">
-    <%= link_to "Создать игру", new_game_path, class: 'btn primary' %>
+<div class="toolbar" style="display:flex; align-items:center; gap:16px; margin: 8px 0 12px 0;">
+  <div style="flex:1;">
+    <div class="search-box">
+      <span class="search-icon" aria-hidden="true"></span>
+      <%= text_field_tag :games_search, '', id: 'games-search', class: 'js-search-input', placeholder: 'Поиск: название или организатор', data: { target: '.js-games-container' } %>
+    </div>
   </div>
-<% end %>
-
-<div class="card" style="margin: 8px 0 12px 0;">
-  <label for="games-search"><strong>Поиск</strong></label>
-  <%= text_field_tag :games_search, '', id: 'games-search', class: 'js-search-input', placeholder: 'Название или организатор', data: { target: '.js-games-container' } %>
+  <% if user_signed_in? && current_user.role == 'admin' %>
+    <div style="flex:0;">
+      <%= link_to "Создать игру", new_game_path, class: 'btn btn-success' %>
+    </div>
+  <% end %>
 </div>
 
 <% if @ongoing_games.any? %>

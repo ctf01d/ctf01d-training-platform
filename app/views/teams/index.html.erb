@@ -1,17 +1,23 @@
 <% content_for :title, "Команды" %>
 
-<h1>Команды</h1>
-
 <% if user_signed_in? && current_user.role == 'admin' %>
-  <div style="margin: 8px 0 12px 0;">
-    <%= link_to "Создать команду", new_team_path, class: 'btn primary' %>
+  <div class="toolbar" style="display:flex; align-items:center; gap:16px; margin: 8px 0 12px 0;">
+    <div style="flex:1;">
+      <div class="search-box">
+        <span class="search-icon" aria-hidden="true"></span>
+        <%= text_field_tag :teams_search, '', id: 'teams-search', class: 'js-search-input', placeholder: 'Поиск: название, вуз, капитан', data: { target: '#teams' } %>
+      </div>
+    </div>
+    <div style="flex:0;">
+      <%= link_to "Создать команду", new_team_path, class: 'btn btn-success' %>
+    </div>
+  </div>
+<% else %>
+  <div class="search-box" style="margin: 8px 0 12px 0;">
+    <span class="search-icon" aria-hidden="true"></span>
+    <%= text_field_tag :teams_search, '', id: 'teams-search', class: 'js-search-input', placeholder: 'Поиск: название, вуз, капитан', data: { target: '#teams' } %>
   </div>
 <% end %>
-
-<div class="card" style="margin: 8px 0 12px 0;">
-  <label for="teams-search"><strong>Поиск</strong></label>
-  <%= text_field_tag :teams_search, '', id: 'teams-search', class: 'js-search-input', placeholder: 'Название, вуз, капитан', data: { target: '#teams' } %>
-</div>
 
 <div class="list" id="teams">
   <% @teams.each do |team| %>
