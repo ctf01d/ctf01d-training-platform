@@ -1,7 +1,5 @@
 <% content_for :title, "Результаты" %>
 
-<h1>Результаты</h1>
-
 <% if @games.any? %>
   <% @games.each do |game| %>
     <section class="section">
@@ -36,7 +34,7 @@
                       <%= avatar_image_tag(r.team.name, url: r.team.avatar_url, size: 28, class_name: 'avatar-image') %>
                       <%= link_to r.team.name, r.team, style: "margin-left:6px;" %>
                     <% else %>
-                      — 
+                      —
                     <% end %>
                   </td>
                   <td><%= r.score %></td>

@@ -1,7 +1,7 @@
 <% content_for :title, "Команды" %>
 
 <% if user_signed_in? && current_user.role == 'admin' %>
-  <div class="toolbar" style="display:flex; align-items:center; gap:16px; margin: 8px 0 12px 0;">
+  <div class="toolbar">
     <div style="flex:1;">
       <div class="search-box">
         <span class="search-icon" aria-hidden="true"></span>
@@ -13,7 +13,7 @@
     </div>
   </div>
 <% else %>
-  <div class="search-box" style="margin: 8px 0 12px 0;">
+  <div class="search-box">
     <span class="search-icon" aria-hidden="true"></span>
     <%= text_field_tag :teams_search, '', id: 'teams-search', class: 'js-search-input', placeholder: 'Поиск: название, вуз, капитан', data: { target: '#teams' } %>
   </div>

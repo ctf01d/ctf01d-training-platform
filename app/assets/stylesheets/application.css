@@ -51,6 +51,13 @@ a { color: #1a56db; }
 .btn.danger { background: #fff5f5; border-color: #fecaca; color: #b42318; }
 .btn-success { background: #e6f6e9; border-color: #b3e2be; color: #1b7f2a; }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 0 16px;
+}
+
 .section { margin: 16px 0; }
 
 /* Tables */
@@ -76,7 +83,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="da
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid #dfe3ea;
   border-radius: 10px;
   background: #ffffff;
@@ -97,6 +104,7 @@ textarea { resize: vertical; }
   position: relative;
   display: flex;
   align-items: center;
+  margin: 12px 0;
 }
 .search-box input {
   padding-left: 40px;
