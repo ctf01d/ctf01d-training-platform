@@ -6,7 +6,7 @@ require "zip"
 require "fileutils"
 require "tempfile"
 
-# Импорт сервиса из GitHub-репозитория: формирует отдельные zip для service/ и checker/
+# Импорт сервиса из GitHub-репозитория: формирует один zip (service/ + опционально checker/)
 class GithubImporter
   class Error < StandardError; end
 
@@ -29,8 +29,7 @@ class GithubImporter
     # Выделим корневую папку архива (<repo>-<ref>/)
     root_prefix = detect_root_prefix(zip_bytes)
 
-    service_zip = build_subdir_zip(zip_bytes, File.join(root_prefix, "service/"))
-    checker_zip = build_subdir_zip(zip_bytes, File.join(root_prefix, "checker/"))
+    bundle_zip = build_bundle_zip(zip_bytes, root_prefix: root_prefix)
 
     # Попробуем извлечь имя из первого заголовка README; автор — из пути (owner)
     repo_slug = repo.to_s
@@ -60,9 +59,9 @@ class GithubImporter
       public_description: public_desc,
       copyright: cr,
       license: lic,
+      archive_url: github_archive_url(owner: owner, repo: repo, ref: ref),
       archives: {
-        service: service_zip, # StringIO bytes
-        checker: checker_zip
+        bundle: bundle_zip
       }
     }
 
@@ -90,6 +89,12 @@ class GithubImporter
       ref = parts[3]
     end
     [ owner, repo, ref ]
+  end
+
+  def github_archive_url(owner:, repo:, ref:)
+    # GitHub обычно редиректит на codeload, но ссылка стабильная.
+    # Для веток это refs/heads/*, для тегов — refs/tags/*; здесь используем ветку по умолчанию.
+    "https://github.com/#{owner}/#{repo}/archive/refs/heads/#{ref}.zip"
   end
 
   def fetch_repo_zip(owner:, repo:, ref:)
@@ -168,6 +173,52 @@ class GithubImporter
     end
     buffer.rewind
     buffer.read
+  end
+
+  def build_bundle_zip(zip_bytes, root_prefix:)
+    buffer = StringIO.new
+    service_found = false
+    Zip::OutputStream.write_buffer(buffer) do |zos|
+      Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
+        service_prefix = File.join(root_prefix, "service/")
+        checker_prefix = File.join(root_prefix, "checker/")
+        has_service = zip.any? { |e| e.name.start_with?(service_prefix) }
+        has_checker = zip.any? { |e| e.name.start_with?(checker_prefix) }
+
+        if has_service
+          service_found = copy_tree(zip, zos, service_prefix, "service/")
+        else
+          # Fallback: весь репозиторий считаем service/ (но не дублируем checker/)
+          excludes = has_checker ? [ "checker/" ] : []
+          service_found = copy_tree(zip, zos, root_prefix, "service/", exclude_rel_prefixes: excludes)
+        end
+        copy_tree(zip, zos, checker_prefix, "checker/") if has_checker
+      end
+    end
+    buffer.rewind
+    bytes = buffer.read
+    raise Error, "в репозитории не найдено содержимое для service/" unless service_found
+    bytes
+  end
+
+  def copy_tree(zip, zos, from_prefix, to_prefix, exclude_rel_prefixes: [])
+    found = false
+    zip.each do |entry|
+      next unless entry.name.start_with?(from_prefix)
+      rel = entry.name.sub(from_prefix, "")
+      next if rel.empty?
+      next if exclude_rel_prefixes.any? { |p| rel.start_with?(p) }
+      next if rel.start_with?(".git/")
+      if entry.directory?
+        dir_rel = rel.end_with?("/") ? rel : "#{rel}/"
+        zos.put_next_entry(to_prefix + dir_rel)
+      else
+        zos.put_next_entry(to_prefix + rel)
+        zos.write(entry.get_input_stream.read)
+        found = true
+      end
+    end
+    found
   end
 
   def unpack_repo(zip_bytes, root_prefix:, dest_dir:)

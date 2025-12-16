@@ -2,10 +2,19 @@ class ApplicationController < ActionController::Base
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
+  before_action :consume_export_warnings_cookie
+
   helper_method :current_user, :user_signed_in?, :can_manage_team?
   helper_method :can_access_game?
 
   private
+  def consume_export_warnings_cookie
+    return unless request.format.html?
+    msg = cookies.signed[:ctf01d_export_warnings].to_s
+    return if msg.blank?
+    cookies.delete(:ctf01d_export_warnings)
+    flash.now[:warning] = msg
+  end
 
   def current_user
     return @current_user if defined?(@current_user)

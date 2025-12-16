@@ -60,64 +60,41 @@ class ServicesController < ApplicationController
 
   # POST /services/:id/check_checker
   def check_checker
-    unless @service.checker_archive_url.present?
-      return redirect_to @service, alert: "Не указан URL архива чекера."
+    unless @service.service_archive_url.present? || @service.service_local_path.present?
+      return redirect_to @service, alert: "Не указан URL архива."
     end
     # Заглушка: имитируем отправку задачи на проверку чекера
     @service.update(check_status: "queued", checked_at: Time.current)
-    redirect_to @service, notice: "Проверка чекера запущена (заглушка): статус queued."
+    redirect_to @service, notice: "Проверка запущена (заглушка): статус queued."
   end
 
   # POST /services/:id/redownload
   # Переcкачать архивы по указанным URL с валидацией zip
   def redownload
-    what = params[:what].to_s.presence || "both"
-    kind = case what
-    when "service" then :service
-    when "checker" then :checker
-    else :both
-    end
-    results = ServiceArchives.redownload(service: @service, kind: kind)
+    results = ServiceArchives.redownload(service: @service, kind: :service)
     if results.empty?
-      redirect_to @service, alert: "Нет URL для скачивания (service/checker)."
+      redirect_to @service, alert: "Нет URL для скачивания архива."
     else
-      redirect_to @service, notice: "Архивы перескачаны: #{results.keys.join(', ')}."
+      redirect_to @service, notice: "Архив перескачан."
     end
   rescue ArchiveDownloader::Error, ServiceArchives::Error => e
     redirect_to @service, alert: "Ошибка скачивания: #{e.message}"
   end
 
   # POST /services/:id/upload_archives
-  # Загрузка локальных zip файлов (service/checker)
+  # Загрузка локального zip архива (внутри service/ и опционально checker/)
   def upload_archives
-    uploaded = []
-    svc_file = params.dig(:service, :service_archive_file)
-    chk_file = params.dig(:service, :checker_archive_file)
-    if svc_file
-      ServiceArchives.save_uploaded(service: @service, kind: :service, uploaded_file: svc_file)
-      uploaded << "service"
-    end
-    if chk_file
-      ServiceArchives.save_uploaded(service: @service, kind: :checker, uploaded_file: chk_file)
-      uploaded << "checker"
-    end
-    if uploaded.empty?
-      redirect_to @service, alert: "Не выбраны файлы для загрузки."
-    else
-      redirect_to @service, notice: "Загружено: #{uploaded.join(', ')}."
-    end
+    archive_file = params.dig(:service, :archive_file)
+    return redirect_to @service, alert: "Не выбран файл для загрузки." unless archive_file
+    ServiceArchives.save_uploaded(service: @service, kind: :service, uploaded_file: archive_file)
+    redirect_to @service, notice: "Архив загружен."
   rescue ArchiveDownloader::Error, ServiceArchives::Error => e
     redirect_to @service, alert: "Ошибка загрузки: #{e.message}"
   end
 
   # GET /services/:id/download_local?what=service|checker
   def download_local
-    what = params[:what].to_s
-    path_rel = case what
-    when "service" then @service.service_local_path
-    when "checker" then @service.checker_local_path
-    else nil
-    end
+    path_rel = @service.service_local_path
     return redirect_to @service, alert: "Не найден локальный архив." if path_rel.blank?
     abs = path_rel.to_s.start_with?("/") ? path_rel.to_s : Rails.root.join(path_rel)
     unless File.file?(abs)
@@ -152,13 +129,12 @@ class ServicesController < ApplicationController
       )
       if svc.save
         # Сохраним сформированные архивы
-        if data[:archives][:service].present?
-          uploaded_like = uploaded_from_bytes(data[:archives][:service], "service.zip")
+        if data.dig(:archives, :bundle).present?
+          uploaded_like = uploaded_from_bytes(data[:archives][:bundle], "archive.zip")
           ServiceArchives.save_uploaded(service: svc, kind: :service, uploaded_file: uploaded_like)
         end
-        if data[:archives][:checker].present?
-          uploaded_like = uploaded_from_bytes(data[:archives][:checker], "checker.zip")
-          ServiceArchives.save_uploaded(service: svc, kind: :checker, uploaded_file: uploaded_like)
+        if data[:archive_url].present?
+          svc.update(service_archive_url: data[:archive_url])
         end
         redirect_to svc, notice: "Сервис импортирован из GitHub."
       else
@@ -184,9 +160,9 @@ class ServicesController < ApplicationController
     raise ArgumentError, "пустой файл" if data.blank?
 
     parts = split_zip(data)
-    service_zip = parts[:service]
-    checker_zip = parts[:checker]
-    raise ArgumentError, "не найден каталог service/ или содержимое архива" if service_zip.nil?
+    service_part = parts[:service]
+    checker_part = parts[:checker]
+    raise ArgumentError, "не найден каталог service/ или содержимое архива" if service_part.nil?
 
     name = params[:name].presence || File.basename(upload.original_filename.to_s, File.extname(upload.original_filename.to_s)).tr("_", " ").strip
     author = current_user&.display_name || "upload"
@@ -199,10 +175,8 @@ class ServicesController < ApplicationController
     )
 
     if svc.save
-      ServiceArchives.save_uploaded(service: svc, kind: :service, uploaded_file: uploaded_from_bytes(service_zip, "service.zip"))
-      if checker_zip
-        ServiceArchives.save_uploaded(service: svc, kind: :checker, uploaded_file: uploaded_from_bytes(checker_zip, "checker.zip"))
-      end
+      bundle = build_bundle_zip(service_part: service_part, checker_part: checker_part)
+      ServiceArchives.save_uploaded(service: svc, kind: :service, uploaded_file: uploaded_from_bytes(bundle, "archive.zip"))
       redirect_to svc, notice: "Сервис импортирован из ZIP."
     else
       @errors = svc.errors.full_messages
@@ -222,7 +196,7 @@ class ServicesController < ApplicationController
     # Only allow a list of trusted parameters through.
     def service_params
       params.expect(service: [ :name, :public_description, :private_description, :author, :copyright, :avatar_url, :public,
-                               :service_archive_url, :checker_archive_url, :writeup_url, :exploits_url ])
+                               :service_archive_url, :writeup_url, :exploits_url ])
     end
 
     def uploaded_from_bytes(bytes, filename)
@@ -257,6 +231,32 @@ class ServicesController < ApplicationController
       end
 
       { service: service_zip, checker: checker_zip }
+    end
+
+    def build_bundle_zip(service_part:, checker_part:)
+      buffer = StringIO.new
+      Zip::OutputStream.write_buffer(buffer) do |zos|
+        copy_zip_entries(zos, service_part, "service/")
+        copy_zip_entries(zos, checker_part, "checker/") if checker_part.present?
+      end
+      buffer.rewind
+      buffer.read
+    end
+
+    def copy_zip_entries(zos, zip_bytes, prefix)
+      Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
+        zip.each do |entry|
+          next if entry.name.to_s.strip.empty?
+          name = entry.name.to_s.sub(%r{\A/+}, "")
+          if entry.directory?
+            dir_name = name.end_with?("/") ? name : "#{name}/"
+            zos.put_next_entry(prefix + dir_name)
+          else
+            zos.put_next_entry(prefix + name)
+            zos.write(entry.get_input_stream.read)
+          end
+        end
+      end
     end
 
     def build_subzip(zip_bytes, subdir_prefix)

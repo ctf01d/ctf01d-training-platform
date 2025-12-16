@@ -4,6 +4,7 @@ require "net/http"
 require "uri"
 require "digest"
 require "fileutils"
+require "openssl"
 
 # Утилита для скачивания и проверки zip-архивов по URL или из загруженного файла
 class ArchiveDownloader
@@ -26,47 +27,68 @@ class ArchiveDownloader
     uri = URI.parse(url)
     raise Error, "поддерживаются только http(s)://" unless %w[http https].include?(uri.scheme)
 
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = (uri.scheme == "https")
-    http.open_timeout = open_timeout
-    http.read_timeout = read_timeout
+    redirects = 0
+    content_type = nil
 
-    # HEAD для быстрого определения типа/размера, если поддерживается
-    begin
-      head = Net::HTTP::Head.new(uri.request_uri)
-      head_res = http.request(head)
-    rescue StandardError
-      head_res = nil
-    end
+    loop do
+      raise Error, "слишком много редиректов" if redirects > 5
 
-    content_type = head_res&.[]("content-type")&.split(";")&.first
-    content_len = head_res&.[]("content-length")&.to_i
-    if content_len && content_len > 0 && content_len > max_bytes
-      raise Error, "слишком большой архив: #{content_len} байт"
-    end
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = (uri.scheme == "https")
+      http.open_timeout = open_timeout
+      http.read_timeout = read_timeout
+      configure_ssl!(http) if http.use_ssl?
 
-    # GET загрузка
-    req = Net::HTTP::Get.new(uri.request_uri)
-    res = http.request(req)
-    unless res.is_a?(Net::HTTPSuccess)
-      raise Error, "не удалось скачать: HTTP #{res.code}"
-    end
-    content_type ||= res["content-type"]&.split(";")&.first
+      # HEAD для быстрого определения типа/размера, если поддерживается
+      begin
+        head = Net::HTTP::Head.new(uri.request_uri)
+        head_res = http.request(head)
+      rescue OpenSSL::SSL::SSLError
+        head_res = nil
+      rescue StandardError
+        head_res = nil
+      end
 
-    # Проверка что это zip по типу/сигнатуре
-    body = res.body
-    if body.bytesize > max_bytes
-      raise Error, "слишком большой архив: > #{max_bytes} байт"
-    end
-    unless zip_payload?(body, content_type)
-      raise Error, "ожидался zip-архив, получен #{content_type || 'unknown'}"
-    end
+      content_type = head_res&.[]("content-type")&.split(";")&.first
+      content_len = head_res&.[]("content-length")&.to_i
+      if content_len && content_len > 0 && content_len > max_bytes
+        raise Error, "слишком большой архив: #{content_len} байт"
+      end
 
-    FileUtils.mkdir_p(dest_dir)
-    fname = filename || safe_filename_from(uri)
-    path = File.join(dest_dir, fname)
-    File.binwrite(path, body)
-    { path: path, size: File.size(path), sha256: Digest::SHA256.file(path).hexdigest, content_type: content_type }
+      # GET загрузка
+      req = Net::HTTP::Get.new(uri.request_uri)
+      res = http.request(req)
+      if res.is_a?(Net::HTTPRedirection)
+        location = res["location"].to_s
+        raise Error, "редирект без Location" if location.blank?
+        uri = URI.join(uri.to_s, location)
+        redirects += 1
+        next
+      end
+      unless res.is_a?(Net::HTTPSuccess)
+        raise Error, "не удалось скачать: HTTP #{res.code}"
+      end
+      content_type ||= res["content-type"]&.split(";")&.first
+
+      # Проверка что это zip по типу/сигнатуре
+      body = res.body
+      if body.bytesize > max_bytes
+        raise Error, "слишком большой архив: > #{max_bytes} байт"
+      end
+      unless zip_payload?(body, content_type)
+        raise Error, "ожидался zip-архив, получен #{content_type || 'unknown'}"
+      end
+
+      FileUtils.mkdir_p(dest_dir)
+      fname = filename || safe_filename_from(uri)
+      path = File.join(dest_dir, fname)
+      File.binwrite(path, body)
+      return { path: path, size: File.size(path), sha256: Digest::SHA256.file(path).hexdigest, content_type: content_type }
+    end
+  rescue OpenSSL::SSL::SSLError => e
+    raise Error, "SSL ошибка при скачивании: #{e.message}"
+  rescue Net::OpenTimeout, Net::ReadTimeout => e
+    raise Error, "таймаут при скачивании: #{e.message}"
   end
 
   def save_uploaded(uploaded_file:, dest_dir:, filename:, max_bytes:)
@@ -117,5 +139,16 @@ class ArchiveDownloader
     guess = File.basename(uri.path.presence || "archive.zip")
     guess = ensure_zip_ext(guess)
     sanitize_filename(guess)
+  end
+
+  def configure_ssl!(http)
+    store = OpenSSL::X509::Store.new
+    store.set_default_paths
+    # В некоторых окружениях включена проверка CRL на уровне openssl.cnf,
+    # что ломает скачивание с GitHub/внешних хостов ("unable to get certificate CRL").
+    # Сохраняем VERIFY_PEER, но отключаем требование CRL для данного запроса.
+    store.flags = 0 if store.respond_to?(:flags=)
+    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.cert_store = store
   end
 end

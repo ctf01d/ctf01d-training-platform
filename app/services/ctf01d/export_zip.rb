@@ -9,8 +9,6 @@ require "uri"
 require "base64"
 
 module Ctf01d
-  class ExportError < StandardError; end
-
   # Сервис: собрать архив с конфигом и ресурсами для ctf01d
   # Важно: сервис не берёт данные из БД напрямую — всё передаётся параметрами,
   # чтобы явно управлять матчингом id/ip/логотипов/скриптов.
@@ -54,6 +52,7 @@ module Ctf01d
     end
 
     def call
+      hydrate_checkers_from_bundles!
       validate_inputs!
 
       Dir.mktmpdir("ctf01d_export_") do |tmpdir|
@@ -78,9 +77,14 @@ module Ctf01d
         # 3) Чекеры (файлы + папки)
         materialize_checkers!(data_dir)
 
+        # 3.1) Архивы сервисов (bundle: service/ + checker/)
+        materialize_service_archives!(root)
+
         # 4) config.yml
         cfg_path = File.join(data_dir, "config.yml")
         File.write(cfg_path, build_yaml_config)
+
+        materialize_warnings!(root)
 
         # 5) docker-compose.yml (если включено)
         if @options[:include_compose]
@@ -94,6 +98,29 @@ module Ctf01d
     end
 
     private
+    def require_zip!
+      require "zip"
+    rescue LoadError
+      raise ExportError, "Гем rubyzip не установлен. Добавьте gem 'rubyzip' в Gemfile и выполните bundle install"
+    end
+
+    def hydrate_checkers_from_bundles!
+      @checkers.each do |c|
+        bundle_path = c[:bundle_path].to_s
+        next if bundle_path.blank?
+        unless File.file?(bundle_path)
+          raise ExportError, "bundle_path не найден: #{bundle_path}"
+        end
+        c[:script_wait] = 10 if c[:script_wait].to_i <= 0
+        c[:round_sleep] = [ c[:round_sleep].to_i, c[:script_wait].to_i * 3 ].max
+        if c[:checker_from_bundle]
+          c[:script_rel] = detect_checker_entrypoint(bundle_path).presence || "./checker.py" if c[:script_rel].to_s.strip.empty?
+        else
+          c[:script_rel] = "./checker.py" if c[:script_rel].to_s.strip.empty?
+        end
+      end
+    end
+
     def validate_inputs!
       # game
       gid = @game[:id].to_s
@@ -212,6 +239,48 @@ module Ctf01d
       [ header, "", YAML.dump(data) ].join("\n")
     end
 
+    def detect_checker_entrypoint(bundle_path)
+      require_zip!
+      rel_files = []
+      Zip::File.open(bundle_path) do |zip|
+        zip.each do |e|
+          next if e.name.to_s.end_with?("/")
+          name = e.name.to_s
+          next unless name =~ %r{(^|/)checker/}
+          rel = name.sub(%r{\A.*?checker/}, "")
+          next if rel.blank?
+          rel_files << rel
+        end
+      end
+      return nil if rel_files.empty?
+
+      candidates = %w[
+        checker.py checker.rb checker.pl checker.sh checker.php checker.go checker.cr checker.js checker.ts
+      ]
+
+      pick_by_basename = ->(basename) do
+        matches = rel_files.select { |rel| File.basename(rel) == basename }
+        matches.min_by { |rel| [ rel.count("/"), rel.length ] }
+      end
+
+      chosen = nil
+      candidates.each do |basename|
+        chosen = pick_by_basename.call(basename)
+        break if chosen
+      end
+
+      unless chosen
+        # Частый кейс: любой файл на верхнем уровне checker/
+        top_level = rel_files.select { |rel| !rel.include?("/") }
+        preferred = top_level.select { |rel| File.basename(rel).start_with?("checker.") || File.basename(rel) == "checker" }
+        chosen = (preferred.presence || top_level.presence || rel_files).first
+      end
+
+      "./#{chosen}"
+    rescue Zip::Error => e
+      raise ExportError, "не удалось прочитать zip #{File.basename(bundle_path)}: #{e.message}"
+    end
+
     def ensure_team_logos!(data_dir, downloads_dir)
       @teams.each do |t|
         # Подготовим относительный путь, если не задан
@@ -306,12 +375,24 @@ module Ctf01d
         cid = normalize_id(c[:id])
         dir = File.join(data_dir, "checker_#{cid}")
         FileUtils.mkdir_p(dir)
+
+        bundle_path = c[:bundle_path].to_s
+        if bundle_path.present? && c[:checker_from_bundle]
+          extracted = extract_checker_dir_from_bundle!(bundle_path: bundle_path, dest_dir: dir)
+          write_dummy_checker!(dest_dir: dir, cid: cid) unless extracted
+          next
+        end
+        if bundle_path.present? && !c[:checker_from_bundle]
+          write_dummy_checker!(dest_dir: dir, cid: cid)
+          next
+        end
+
         files = (c[:files] || [])
         files = [ { src: nil, rel: "checker.py" } ] if files.empty?
         files.each do |f|
           src = f[:src].to_s
           rel = f[:rel].presence || (File.file?(src) ? File.basename(src) : "checker.py")
-          dest = File.join(dir, rel)
+          dest = safe_join(dir, rel)
           FileUtils.mkdir_p(File.dirname(dest))
           if File.file?(src)
             FileUtils.cp(src, dest)
@@ -320,6 +401,60 @@ module Ctf01d
           end
         end
       end
+    end
+
+    def materialize_service_archives!(root_dir)
+      dir = File.join(root_dir, "archives", "services")
+      FileUtils.mkdir_p(dir)
+      @checkers.each do |c|
+        bundle_path = c[:bundle_path].to_s
+        next if bundle_path.blank?
+        next unless File.file?(bundle_path)
+        cid = normalize_id(c[:id])
+        FileUtils.cp(bundle_path, File.join(dir, "#{cid}.zip"))
+      end
+    end
+
+    def extract_checker_dir_from_bundle!(bundle_path:, dest_dir:)
+      require_zip!
+      extracted_any = false
+      Zip::File.open(bundle_path) do |zip|
+        zip.each do |e|
+          name = e.name.to_s
+          next unless name =~ %r{(^|/)checker/}
+          extracted_any = true
+          rel = name.sub(%r{\A.*?checker/}, "")
+          next if rel.blank?
+          target = safe_join(dest_dir, rel)
+          if name.end_with?("/")
+            FileUtils.mkdir_p(target)
+            next
+          end
+          FileUtils.mkdir_p(File.dirname(target))
+          e.extract(target) { true }
+        end
+      end
+      extracted_any
+    rescue Zip::Error => e
+      raise ExportError, "не удалось прочитать zip #{File.basename(bundle_path)}: #{e.message}"
+    end
+
+    def write_dummy_checker!(dest_dir:, cid:)
+      path = File.join(dest_dir, "checker.py")
+      return if File.file?(path)
+      File.write(path, "#!/usr/bin/env python3\nprint('dummy checker for #{cid}')\n")
+    end
+
+    def safe_join(base, rel)
+      clean = rel.to_s.tr("\\", "/").sub(%r{\A/+}, "")
+      raise ExportError, "некорректный путь в архиве: #{rel}" if clean.include?("..")
+      File.join(base, clean)
+    end
+
+    def materialize_warnings!(root_dir)
+      warnings = Array(@options[:warnings]).map(&:to_s).map(&:strip).reject(&:blank?)
+      return if warnings.empty?
+      File.write(File.join(root_dir, "EXPORT_WARNINGS.txt"), warnings.join("\n"))
     end
 
     def copy_tree!(src, dst, required: false)
@@ -394,11 +529,7 @@ module Ctf01d
     end
 
     def pack_zip(root_dir)
-      begin
-        require "zip"
-      rescue LoadError
-        raise ExportError, "Гем rubyzip не установлен. Добавьте gem 'rubyzip' в Gemfile и выполните bundle install"
-      end
+      require_zip!
       buffer = Zip::OutputStream.write_buffer do |zos|
         Dir.chdir(File.dirname(root_dir)) do
           base = File.basename(root_dir)

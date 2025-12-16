@@ -49,7 +49,7 @@
 
     <div class="container">
       <% flash.each do |key, message| %>
-        <p class="flash <%= 'alert' if key.to_s == 'alert' %>"><%= message %></p>
+        <p class="flash <%= key.to_s %>"><%= message %></p>
       <% end %>
 
       <%= yield %>

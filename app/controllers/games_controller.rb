@@ -221,19 +221,60 @@ class GamesController < ApplicationController
       id
     end
 
+    warnings = []
+    tmp_sources = nil
+
     if services.any?
-      checkers = services.each_with_index.map do |svc, idx|
-        cid = mk_id.call(svc.name, idx+1)
-        {
-          id: cid,
-          name: svc.name,
-          enabled: true,
-          script_wait: 5,
-          round_sleep: 15,
-          script_rel: "./checker.py",
-          files: [ { src: File.join(sample_checker_dir, "checker.py"), rel: "checker.py" } ]
-        }
+      Dir.mktmpdir("ctf01d_export_sources_") do |srcdir|
+        tmp_sources = srcdir
+        checkers = services.each_with_index.map do |svc, idx|
+          cid = mk_id.call(svc.name, idx + 1)
+          bundle_path = nil
+          checker_from_bundle = false
+          begin
+            bundle_path = ensure_service_bundle_path!(svc)
+            checker_from_bundle = bundle_has_dir?(bundle_path, "checker")
+            warnings << "Сервис '#{svc.name}': в архиве нет checker/ — добавлен заглушечный checker.py" unless checker_from_bundle
+          rescue Ctf01d::ExportError => e
+            warnings << "Сервис '#{svc.name}': #{e.message} — добавлен заглушечный архив"
+            bundle_path = build_placeholder_bundle_zip!(dir: srcdir, service_name: svc.name, service_id: cid)
+            checker_from_bundle = true
+          end
+
+          {
+            id: cid,
+            name: svc.name,
+            enabled: true,
+            script_wait: 10,
+            round_sleep: 30,
+            script_rel: nil,
+            bundle_path: bundle_path,
+            checker_from_bundle: checker_from_bundle
+          }
+        end
+
+        include_html = ActiveModel::Type::Boolean.new.cast(params[:include_html]).nil? ? true : ActiveModel::Type::Boolean.new.cast(params[:include_html])
+        include_compose = ActiveModel::Type::Boolean.new.cast(params[:include_compose]).nil? ? true : ActiveModel::Type::Boolean.new.cast(params[:include_compose])
+
+        result = Ctf01d::ExportZip.call(
+          game: game_payload,
+          scoreboard: scoreboard_payload,
+          teams: teams,
+          checkers: checkers,
+          options: {
+            prefix: "ctf01d_#{game_payload[:id]}",
+            include_html: include_html,
+            html_source_path: Rails.root.join("ctf01d", "data_sample", "html").to_s,
+            include_compose: include_compose,
+            compose_project: game_payload[:id],
+            warnings: warnings
+          }
+        )
+
+        cookies.signed[:ctf01d_export_warnings] = { value: warnings.join("\n"), expires: 5.minutes } if warnings.any?
+        send_data result[:data], filename: result[:filename], type: "application/zip"
       end
+      return
     else
       checkers = [
         { id: "example_service1", name: "Service1", enabled: true, script_wait: 5, round_sleep: 15,
@@ -254,7 +295,8 @@ class GamesController < ApplicationController
         include_html: include_html,
         html_source_path: Rails.root.join("ctf01d", "data_sample", "html").to_s,
         include_compose: include_compose,
-        compose_project: game_payload[:id]
+        compose_project: game_payload[:id],
+        warnings: warnings
       }
     )
 
@@ -394,5 +436,49 @@ class GamesController < ApplicationController
       candidates = Dir.glob(public_dir.join("#{slug}.*"))
       candidates = Dir.glob(public_dir.join("#{slug.tr('-', '_')}.*")) if candidates.empty?
       candidates.first&.sub(Rails.root.join("public").to_s, "")
+    end
+
+    def ensure_service_bundle_path!(service)
+      rel = service.service_local_path.to_s
+      abs = rel.present? ? Rails.root.join(rel).to_s : nil
+      return abs if abs && File.file?(abs)
+
+      if service.service_archive_url.present?
+        ServiceArchives.redownload(service: service, kind: :service)
+        rel = service.service_local_path.to_s
+        abs = rel.present? ? Rails.root.join(rel).to_s : nil
+        return abs if abs && File.file?(abs)
+      end
+
+      raise Ctf01d::ExportError, "у сервиса '#{service.name}' нет локального архива и отсутствует Archive URL"
+    rescue ServiceArchives::Error => e
+      raise Ctf01d::ExportError, "не удалось подготовить архив для сервиса '#{service.name}': #{e.message}"
+    end
+
+    def bundle_has_dir?(zip_path, dir_name)
+      require "zip"
+      want = %r{(^|/)#{Regexp.escape(dir_name)}/}
+      Zip::File.open(zip_path) do |zip|
+        zip.each do |e|
+          n = e.name.to_s
+          next if n.blank?
+          return true if n =~ want
+        end
+      end
+      false
+    rescue Zip::Error
+      false
+    end
+
+    def build_placeholder_bundle_zip!(dir:, service_name:, service_id:)
+      require "zip"
+      safe = service_id.to_s.downcase.gsub(/[^a-z0-9_]+/, "_").gsub(/\A_+|_+\z/, "")
+      safe = "service" if safe.blank?
+      path = File.join(dir, "#{safe}.zip")
+      Zip::File.open(path, create: true) do |zip|
+        zip.get_output_stream("service/README.md") { |f| f.write("placeholder for #{service_name}\n") }
+        zip.get_output_stream("checker/checker.py") { |f| f.write("#!/usr/bin/env python3\nprint('placeholder checker')\n") }
+      end
+      path
     end
 end

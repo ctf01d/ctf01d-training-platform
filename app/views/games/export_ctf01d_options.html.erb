@@ -1,6 +1,6 @@
 <div class="card" style="padding: 12px;">
   <h2 style="margin-top:0;">Экспорт архива ctf01d</h2>
-  <p class="muted">Собрать zip-архив с конфигом, html и чекерами-заглушками на основе текущей игры.</p>
+  <p class="muted">Собрать zip-архив с конфигом, html и чекерами из архивов сервисов (service/ + checker/) на основе текущей игры.</p>
 
   <%= form_with url: export_ctf01d_game_path(@game), method: :get, local: true do |f| %>
     <div class="row" style="gap:16px; align-items:flex-end;">
@@ -52,7 +52,8 @@
   <div class="muted" style="margin-top:12px;">
     Примечания:
     <ul>
-      <li>Чекеры — один на каждый сервис игры (шаблонный checker.py).</li>
+      <li>Чекеры — один на каждый сервис игры: берутся из архива сервиса (каталог <code>checker/</code>).</li>
+      <li>Архивы сервисов добавляются в <code>archives/services/&lt;service_id&gt;.zip</code>.</li>
       <li>Логотипы команд — берутся из avatar_url команды (http(s) или data:image). При отсутствии — из примеров.</li>
       <li>IP команд — берутся из настроек команд игры; при пустом IP подставляется 10.0.&lt;n&gt;.1.</li>
     </ul>

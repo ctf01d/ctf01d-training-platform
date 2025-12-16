@@ -15,7 +15,7 @@
                  when 'fail' then 'badge--red'
                  when 'queued' then 'badge--blue'
                  else 'badge--gray' end %>
-        <span class="badge <%= cls %>">checker: <%= service.check_status %></span>
+        <span class="badge <%= cls %>">check: <%= service.check_status %></span>
       <% end %>
     </div>
   </div>
@@ -34,10 +34,7 @@
   <% unless condensed %>
     <div style="margin-top:8px;">
       <% if service.service_archive_url.present? %>
-        <div>Service archive: <%= link_to service.service_archive_url, service.service_archive_url, target: '_blank', rel: 'noopener' %></div>
-      <% end %>
-      <% if service.checker_archive_url.present? %>
-        <div>Checker archive: <%= link_to service.checker_archive_url, service.checker_archive_url, target: '_blank', rel: 'noopener' %></div>
+        <div>Archive: <%= link_to service.service_archive_url, service.service_archive_url, target: '_blank', rel: 'noopener' %></div>
       <% end %>
       <% if service.writeup_url.present? %>
         <div>Writeup: <%= link_to service.writeup_url, service.writeup_url, target: '_blank', rel: 'noopener' %></div>
@@ -53,19 +50,11 @@
         <div class="muted">
           <% if service.service_local_path.present? %>
             <div>
-              service.zip — <%= number_to_human_size(service.service_local_size || 0) %>, <%= l(service.service_downloaded_at, format: :short) rescue service.service_downloaded_at %>
-              (<%= link_to 'скачать', download_local_service_path(service, what: 'service') %>)
+              archive.zip — <%= number_to_human_size(service.service_local_size || 0) %>, <%= l(service.service_downloaded_at, format: :short) rescue service.service_downloaded_at %>
+              (<%= link_to 'скачать', download_local_service_path(service) %>)
             </div>
           <% else %>
-            <div>service.zip — нет</div>
-          <% end %>
-          <% if service.checker_local_path.present? %>
-            <div>
-              checker.zip — <%= number_to_human_size(service.checker_local_size || 0) %>, <%= l(service.checker_downloaded_at, format: :short) rescue service.checker_downloaded_at %>
-              (<%= link_to 'скачать', download_local_service_path(service, what: 'checker') %>)
-            </div>
-          <% else %>
-            <div>checker.zip — нет</div>
+            <div>archive.zip — нет</div>
           <% end %>
         </div>
       </div>
@@ -79,18 +68,12 @@
       <% else %>
         <%= button_to 'Сделать публичным', toggle_public_service_path(service), method: :post, class: 'btn' %>
       <% end %>
-      <% if service.checker_archive_url.present? %>
-        <%= button_to 'Проверить чекер', check_checker_service_path(service), method: :post, form: { style: 'display:inline' }, class: 'btn' %>
-      <% end %>
 
-      <% if service.service_archive_url.present? || service.checker_archive_url.present? %>
-        <%= button_to 'Перескачать (оба)', redownload_service_path(service, what: 'both'), method: :post, class: 'btn' %>
+      <% if service.service_archive_url.present? || service.service_local_path.present? %>
+        <%= button_to 'Проверить', check_checker_service_path(service), method: :post, form: { style: 'display:inline' }, class: 'btn' %>
       <% end %>
       <% if service.service_archive_url.present? %>
-        <%= button_to 'Перескачать service.zip', redownload_service_path(service, what: 'service'), method: :post, class: 'btn' %>
-      <% end %>
-      <% if service.checker_archive_url.present? %>
-        <%= button_to 'Перескачать checker.zip', redownload_service_path(service, what: 'checker'), method: :post, class: 'btn' %>
+        <%= button_to 'Перескачать архив', redownload_service_path(service), method: :post, class: 'btn' %>
       <% end %>
     </div>
   <% end %>

@@ -13,15 +13,12 @@
 
 <% if user_signed_in? && current_user.role == 'admin' %>
   <div class="card" style="margin-top:10px;">
-    <h3>Загрузка локальных архивов</h3>
+    <h3>Загрузка локального архива</h3>
     <%= form_with url: upload_archives_service_path(@service), method: :post, html: { class: 'form', multipart: true } do |f| %>
       <div class="form-group">
-        <label for="service_service_archive_file">service.zip</label>
-        <%= file_field_tag 'service[service_archive_file]', accept: '.zip' %>
-      </div>
-      <div class="form-group">
-        <label for="service_checker_archive_file">checker.zip</label>
-        <%= file_field_tag 'service[checker_archive_file]', accept: '.zip' %>
+        <label for="service_archive_file">archive.zip</label>
+        <%= file_field_tag 'service[archive_file]', accept: '.zip' %>
+        <div class="muted" style="font-size:12px;">Внутри ожидаются папки service/ и (опционально) checker/.</div>
       </div>
       <div class="form-actions">
         <%= submit_tag 'Загрузить', class: 'btn primary' %>

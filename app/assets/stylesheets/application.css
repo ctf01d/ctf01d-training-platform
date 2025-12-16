@@ -16,6 +16,7 @@
 .spacer { flex: 1 1 auto; }
 .flash { border: 1px solid #e5e7eb; background: #e7f5ee; color: #2a7f4f; padding: 8px 12px; border-radius: 8px; margin: 12px 0; }
 .flash.alert { background: #fdecec; color: #b42318; }
+.flash.warning { background: #fff7e6; color: #8a5300; border-color: #ffd7a3; }
 
 body { background: #ffffff; color: #111827; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif; }
 a { color: #1a56db; }
@@ -35,7 +36,7 @@ a { color: #1a56db; }
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   background: #ffffff;

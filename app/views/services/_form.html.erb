@@ -50,12 +50,8 @@
 
     <h3>Архивы и ссылки</h3>
     <div class="form-group">
-      <%= form.label :service_archive_url, 'Service archive URL' %>
-      <%= form.text_field :service_archive_url, placeholder: 'https://…/service.zip' %>
-    </div>
-    <div class="form-group">
-      <%= form.label :checker_archive_url, 'Checker archive URL' %>
-      <%= form.text_field :checker_archive_url, placeholder: 'https://…/checker.zip' %>
+      <%= form.label :service_archive_url, 'Archive URL' %>
+      <%= form.text_field :service_archive_url, placeholder: 'https://…/archive.zip' %>
     </div>
     <div class="form-group">
       <%= form.label :writeup_url, 'Writeup URL' %>
@@ -67,7 +63,7 @@
     </div>
 
     <div class="form-actions" style="display:flex; gap:8px; align-items:center;">
-      <%= form.submit 'Создать', class: 'btn btn-success' %>
+      <%= form.submit(service.persisted? ? 'Сохранить' : 'Создать', class: 'btn btn-success') %>
       <%= link_to 'Назад', services_path, class: 'btn' %>
     </div>
   <% end %>
