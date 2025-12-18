@@ -11,11 +11,16 @@
       <% end %>
       <% if service.check_status.present? %>
         <% cls = case service.check_status
-                 when 'ok' then 'badge--green'
-                 when 'fail' then 'badge--red'
-                 when 'queued' then 'badge--blue'
+                 when 'codes', 'ok' then 'badge--green'
+                 when 'missing', 'fail', 'error' then 'badge--red'
+                 when 'present', 'queued' then 'badge--blue'
                  else 'badge--gray' end %>
-        <span class="badge <%= cls %>">check: <%= service.check_status %></span>
+        <% label = case service.check_status
+                   when 'missing' then 'checker: нет'
+                   when 'present' then 'checker: есть'
+                   when 'codes' then 'checker: 101..104'
+                   else "check: #{service.check_status}" end %>
+        <span class="badge <%= cls %>"><%= label %></span>
       <% end %>
     </div>
   </div>

@@ -63,9 +63,21 @@ class ServicesController < ApplicationController
     unless @service.service_archive_url.present? || @service.service_local_path.present?
       return redirect_to @service, alert: "Не указан URL архива."
     end
-    # Заглушка: имитируем отправку задачи на проверку чекера
-    @service.update(check_status: "queued", checked_at: Time.current)
-    redirect_to @service, notice: "Проверка запущена (заглушка): статус queued."
+
+    zip_path = ensure_service_bundle_path!(@service)
+    res = CheckerInspector.call(zip_path: zip_path)
+    @service.update(check_status: res[:status], checked_at: Time.current)
+
+    msg = case res[:status]
+    when "missing" then "Чекер: отсутствует."
+    when "present" then "Чекер: есть."
+    when "codes" then "Чекер: есть (найдены 101..104)."
+    else "Проверка выполнена: #{res[:status]}."
+    end
+    redirect_to @service, notice: msg
+  rescue CheckerInspector::Error, ServiceArchives::Error => e
+    @service.update(check_status: "error", checked_at: Time.current)
+    redirect_to @service, alert: "Ошибка проверки: #{e.message}"
   end
 
   # POST /services/:id/redownload
@@ -111,15 +123,17 @@ class ServicesController < ApplicationController
     else
       repo_url = params.expect(:repo_url)
       ref = params[:ref]
-      data = GithubImporter.import(repo_url: repo_url, ref: ref)
+      fetch = GithubImporter.fetch(repo_url: repo_url, ref: ref)
+      bundle = ServiceImport::BundleBuilder.call(zip_bytes: fetch[:zip_bytes])
+      meta = ServiceImport::MetadataExtractor.call(bundle_zip_bytes: bundle)
       svc = Service.new(
-        name: data[:name],
-        author: data[:author],
-        public_description: data[:public_description],
+        name: meta[:name].presence || fetch[:repo].to_s.tr("-", " ").strip,
+        author: fetch[:owner],
+        public_description: meta[:public_description],
         copyright: begin
-          cr = data[:copyright]
-          if data[:license].present?
-            suffix = "License: #{data[:license]}"
+          cr = meta[:copyright]
+          if meta[:license].present?
+            suffix = "License: #{meta[:license]}"
             cr.present? ? "#{cr} - #{suffix}" : suffix
           else
             cr
@@ -129,20 +143,16 @@ class ServicesController < ApplicationController
       )
       if svc.save
         # Сохраним сформированные архивы
-        if data.dig(:archives, :bundle).present?
-          uploaded_like = uploaded_from_bytes(data[:archives][:bundle], "archive.zip")
-          ServiceArchives.save_uploaded(service: svc, kind: :service, uploaded_file: uploaded_like)
-        end
-        if data[:archive_url].present?
-          svc.update(service_archive_url: data[:archive_url])
-        end
+        uploaded_like = uploaded_from_bytes(bundle, "archive.zip")
+        ServiceArchives.save_uploaded(service: svc, kind: :service, uploaded_file: uploaded_like)
+        svc.update(service_archive_url: fetch[:archive_url]) if fetch[:archive_url].present?
         redirect_to svc, notice: "Сервис импортирован из GitHub."
       else
         @errors = svc.errors.full_messages
         render :import_github, status: :unprocessable_content
       end
     end
-  rescue GithubImporter::Error, ArchiveDownloader::Error, ServiceArchives::Error => e
+  rescue GithubImporter::Error, ServiceImport::BundleBuilder::Error, ArchiveDownloader::Error, ServiceArchives::Error => e
     @errors = [ e.message ]
     render :import_github, status: :unprocessable_content
   end
@@ -159,30 +169,37 @@ class ServicesController < ApplicationController
     data = upload.read
     raise ArgumentError, "пустой файл" if data.blank?
 
-    parts = split_zip(data)
-    service_part = parts[:service]
-    checker_part = parts[:checker]
-    raise ArgumentError, "не найден каталог service/ или содержимое архива" if service_part.nil?
+    bundle = ServiceImport::BundleBuilder.call(zip_bytes: data)
+    meta = ServiceImport::MetadataExtractor.call(bundle_zip_bytes: bundle)
 
-    name = params[:name].presence || File.basename(upload.original_filename.to_s, File.extname(upload.original_filename.to_s)).tr("_", " ").strip
+    name = params[:name].presence ||
+      meta[:name].presence ||
+      File.basename(upload.original_filename.to_s, File.extname(upload.original_filename.to_s)).tr("_", " ").strip
     author = current_user&.display_name || "upload"
-
     svc = Service.new(
       name: name.presence || "Uploaded service",
       author: author,
-      public_description: params[:description],
+      public_description: params[:description].presence || meta[:public_description],
+      copyright: begin
+        cr = meta[:copyright]
+        if meta[:license].present?
+          suffix = "License: #{meta[:license]}"
+          cr.present? ? "#{cr} - #{suffix}" : suffix
+        else
+          cr
+        end
+      end,
       public: false
     )
 
     if svc.save
-      bundle = build_bundle_zip(service_part: service_part, checker_part: checker_part)
       ServiceArchives.save_uploaded(service: svc, kind: :service, uploaded_file: uploaded_from_bytes(bundle, "archive.zip"))
       redirect_to svc, notice: "Сервис импортирован из ZIP."
     else
       @errors = svc.errors.full_messages
       render :import_zip, status: :unprocessable_content
     end
-  rescue Zip::Error, ArgumentError, ArchiveDownloader::Error, ServiceArchives::Error => e
+  rescue ServiceImport::BundleBuilder::Error, Zip::Error, ArgumentError, ArchiveDownloader::Error, ServiceArchives::Error => e
     @errors = [ e.message ]
     render :import_zip, status: :unprocessable_content
   end
@@ -208,75 +225,22 @@ class ServicesController < ApplicationController
       end
     end
 
-    def split_zip(zip_bytes)
-      buffer = StringIO.new(zip_bytes)
-      service_zip = nil
-      checker_zip = nil
-      root_prefix = nil
+    def ensure_service_bundle_path!(service)
+      rel = service.service_local_path.to_s
+      abs = if rel.present?
+        rel.start_with?("/") ? rel : Rails.root.join(rel).to_s
+      else
+        nil
+      end
+      return abs if abs && File.file?(abs)
 
-      Zip::File.open_buffer(buffer) do |zip|
-        first = zip.first
-        root_prefix = if first&.name&.include?("/")
-          first.name.split("/").first + "/"
-        else
-          ""
-        end
-
-        # если есть каталоги service/ и checker/
-        has_service = zip.any? { |e| e.name.start_with?(File.join(root_prefix, "service/")) }
-        has_checker = zip.any? { |e| e.name.start_with?(File.join(root_prefix, "checker/")) }
-
-        service_zip = build_subzip(zip_bytes, File.join(root_prefix, has_service ? "service/" : ""))
-        checker_zip = build_subzip(zip_bytes, File.join(root_prefix, "checker/")) if has_checker
+      if service.service_archive_url.present?
+        ServiceArchives.redownload(service: service, kind: :service)
+        rel = service.service_local_path.to_s
+        abs = rel.present? ? Rails.root.join(rel).to_s : nil
+        return abs if abs && File.file?(abs)
       end
 
-      { service: service_zip, checker: checker_zip }
-    end
-
-    def build_bundle_zip(service_part:, checker_part:)
-      buffer = StringIO.new
-      Zip::OutputStream.write_buffer(buffer) do |zos|
-        copy_zip_entries(zos, service_part, "service/")
-        copy_zip_entries(zos, checker_part, "checker/") if checker_part.present?
-      end
-      buffer.rewind
-      buffer.read
-    end
-
-    def copy_zip_entries(zos, zip_bytes, prefix)
-      Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
-        zip.each do |entry|
-          next if entry.name.to_s.strip.empty?
-          name = entry.name.to_s.sub(%r{\A/+}, "")
-          if entry.directory?
-            dir_name = name.end_with?("/") ? name : "#{name}/"
-            zos.put_next_entry(prefix + dir_name)
-          else
-            zos.put_next_entry(prefix + name)
-            zos.write(entry.get_input_stream.read)
-          end
-        end
-      end
-    end
-
-    def build_subzip(zip_bytes, subdir_prefix)
-      buffer = StringIO.new
-      Zip::OutputStream.write_buffer(buffer) do |zos|
-        Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
-          zip.each do |entry|
-            next unless entry.name.start_with?(subdir_prefix)
-            rel = entry.name.sub(subdir_prefix, "")
-            next if rel.empty?
-            if entry.name.end_with?("/")
-              zos.put_next_entry(rel + "/")
-            else
-              zos.put_next_entry(rel)
-              zos.write(entry.get_input_stream.read)
-            end
-          end
-        end
-      end
-      buffer.rewind
-      buffer.read
+      raise ServiceArchives::Error, "не найден локальный архив и отсутствует Archive URL"
     end
 end

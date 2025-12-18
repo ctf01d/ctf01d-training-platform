@@ -13,12 +13,18 @@
   status_badge = ->(service) do
     next nil unless service.check_status.present?
     cls = case service.check_status
-    when 'ok' then 'badge--green'
-    when 'fail' then 'badge--red'
-    when 'queued' then 'badge--blue'
+    when 'codes', 'ok' then 'badge--green'
+    when 'missing', 'fail', 'error' then 'badge--red'
+    when 'present', 'queued' then 'badge--blue'
     else 'badge--gray'
     end
-    content_tag(:span, "checker: #{service.check_status}", class: "badge #{cls}", style: "margin-left:6px;")
+    label = case service.check_status
+            when 'missing' then 'checker: нет'
+            when 'present' then 'checker: есть'
+            when 'codes' then 'checker: 101..104'
+            else "checker: #{service.check_status}"
+            end
+    content_tag(:span, label, class: "badge #{cls}", style: "margin-left:6px;")
   end
 %>
 
