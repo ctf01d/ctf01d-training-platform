@@ -135,6 +135,12 @@ textarea { resize: vertical; }
 .form-actions { margin-top: 4px; }
 .form-errors { border: 1px solid #fecaca; background: #fff5f5; color: #b42318; padding: 8px 10px; border-radius: 8px; }
 
+/* Auth */
+.auth { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 72px); padding: 24px 0; }
+.auth-card { width: 100%; max-width: 520px; margin: 0; padding: 18px; }
+.auth-title { margin: 0; font-size: 24px; line-height: 1.2; }
+.auth-subtitle { margin: 6px 0 14px; font-size: 14px; }
+
 .search-box {
   position: relative;
   display: flex;
