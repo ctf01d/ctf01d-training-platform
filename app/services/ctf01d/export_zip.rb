@@ -290,6 +290,15 @@ module Ctf01d
 
         # Определим источник: локальный файл, URL, data:image, либо сгенерируем SVG аватар
         src = t[:logo_src]
+        # 0) Если logo_url указывает на локальный путь в приложении (/uploads/..., /img/...)
+        unless src && File.file?(src)
+          local = t[:logo_url].to_s
+          if local.present? && !local.start_with?("http://", "https://", "data:image")
+            rel = local.sub(%r{\A/+}, "")
+            candidate = Rails.root.join("public", rel).to_s
+            src = candidate if File.file?(candidate)
+          end
+        end
         unless src && File.file?(src)
           if t[:logo_url].to_s.start_with?("http://", "https://")
             src = download_url_to_file(t[:logo_url].to_s, downloads_dir, prefer_name: safe_team_id(t[:id]))
@@ -303,6 +312,12 @@ module Ctf01d
               t[:logo_rel] = t[:logo_rel].to_s.sub(/\.png\z/i, ".svg")
             end
           end
+        end
+
+        # Если расширение у logo_rel не совпадает с реальным файлом — приведём к расширению файла.
+        src_ext = File.extname(src.to_s).downcase
+        if src_ext.present? && File.extname(t[:logo_rel].to_s).downcase != src_ext
+          t[:logo_rel] = t[:logo_rel].to_s.sub(/\.[a-z0-9]+\z/i, src_ext)
         end
 
         target = File.join(data_dir, t[:logo_rel].to_s)
@@ -340,18 +355,42 @@ module Ctf01d
 
     def download_url_to_file(url, dir, prefer_name: "logo")
       uri = URI.parse(url)
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = (uri.scheme == "https")
-      http.open_timeout = 5
-      http.read_timeout = 10
-      req = Net::HTTP::Get.new(uri.request_uri)
-      res = http.request(req)
+      redirects = 0
+      res = nil
+      loop do
+        raise ExportError, "слишком много редиректов при скачивании logo" if redirects > 5
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = (uri.scheme == "https")
+        http.open_timeout = 5
+        http.read_timeout = 10
+        configure_ssl!(http) if http.use_ssl?
+        req = Net::HTTP::Get.new(uri.request_uri)
+        res = http.request(req)
+        if res.is_a?(Net::HTTPRedirection)
+          location = res["location"].to_s
+          raise ExportError, "редирект без Location при скачивании logo" if location.blank?
+          uri = URI.join(uri.to_s, location)
+          redirects += 1
+          next
+        end
+        break
+      end
       raise ExportError, "не удалось скачать logo: HTTP #{res.code}" unless res.is_a?(Net::HTTPSuccess)
       mime = res["content-type"].to_s.split(";").first
       ext = ext_from_mime(mime)
       path = File.join(dir, "#{prefer_name}#{ext}")
       File.binwrite(path, res.body)
       path
+    rescue OpenSSL::SSL::SSLError => e
+      raise ExportError, "SSL ошибка при скачивании logo: #{e.message}"
+    end
+
+    def configure_ssl!(http)
+      store = OpenSSL::X509::Store.new
+      store.set_default_paths
+      store.flags = 0 if store.respond_to?(:flags=)
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      http.cert_store = store
     end
 
     def ext_from_mime(mime)

@@ -1,7 +1,5 @@
 # Seed: users
-require 'set'
 require 'erb'
-require 'zlib'
 require 'time'
 require 'fileutils'
 
@@ -94,45 +92,6 @@ admin.password = 'admin'
 admin.password_confirmation = 'admin'
 admin.save!
 
-users_data = %w[
-  r3v
-  heap_wizard
-  crypto_kid
-  nullbyte
-  segfault
-  pwnicorn
-  xssninja
-  forensic_fox
-  overflower
-  rootkitten
-  packet_pirate
-  shellsamurai
-  bufferbuddha
-  crypto_owl
-  sqli_master
-  ssti_sniffer
-  des3
-  vmwizard
-  sigsegv
-  oob_read
-  sandboxer
-  botnet_bob
-  z3solver
-  regexploit
-]
-
-users = users_data.map do |login|
-  u = User.find_or_initialize_by(user_name: login)
-  u.display_name = login.tr('_', ' ').split.map(&:capitalize).join(' ')
-  u.role = 'player'
-  u.rating ||= rand(0..200)
-  u.password = 'password'
-  u.password_confirmation = 'password'
-  u.avatar_url = svg_data_avatar(u.display_name, PALETTE.sample)
-  u.save!
-  u
-end
-
 # Seed: universities (subset from Go migrations)
 university_names = [
   'Московский государственный университет имени М.В. Ломоносова',
@@ -163,7 +122,7 @@ end
 
 teams = []
 
-# Seed: CyberSibir 2025 teams (ctf01d config)
+# Seed: CyberSibir 2025 teams (CTFtime scoreboard)
 cybersibir_teams_data = [
   { config_id: 't01', name: 'QarabagTeam',      ip_address: '10.10.1.3',  logo: './html/images/teams/team01.png', active: true },
   { config_id: 't02', name: 'W@zz4b1',          ip_address: '10.10.2.3',  logo: './html/images/teams/team02.png', active: true },
@@ -177,7 +136,6 @@ cybersibir_teams_data = [
   { config_id: 't10', name: 'SharLike',         ip_address: '10.10.10.3', logo: './html/images/teams/team10.png', active: true },
   { config_id: 't11', name: 'ScareCrow',        ip_address: '10.10.11.3', logo: './html/images/teams/team11.png', active: true },
   { config_id: 't12', name: 'd34dl1n3',         ip_address: '10.10.12.3', logo: './html/images/teams/team12.png', active: true },
-  { config_id: 't13', name: 'Keva',             ip_address: '10.10.13.3', logo: './html/images/teams/team13.png', active: true },
   { config_id: 't14', name: '4Ray',             ip_address: '10.10.14.3', logo: './html/images/teams/team14.png', active: true },
   { config_id: 't15', name: 'N0N@me13',         ip_address: '10.10.15.3', logo: './html/images/teams/team15.png', active: true },
   { config_id: 't16', name: 'XAKCET',           ip_address: '10.10.16.3', logo: './html/images/teams/team16.png', active: true },
@@ -189,11 +147,7 @@ cybersibir_teams_data = [
   { config_id: 't22', name: 'o1d_bu7_go1d',     ip_address: '10.10.22.3', logo: './html/images/teams/team22.png', active: true },
   { config_id: 't23', name: 'CyberPatriots',    ip_address: '10.10.23.3', logo: './html/images/teams/team23.png', active: true },
   { config_id: 't24', name: 'vim>nano',         ip_address: '10.10.24.3', logo: './html/images/teams/team24.png', active: true },
-  { config_id: 't25', name: 'ГостиИзБудущего',  ip_address: '10.10.25.3', logo: './html/images/teams/team25.png', active: true },
-  { config_id: 't26', name: 'Циферки',          ip_address: '10.10.26.3', logo: './html/images/teams/team26.png', active: true },
-  { config_id: 't27', name: 'Team #27',         ip_address: '10.10.27.3', logo: './html/images/teams/team27.png', active: true },
-  { config_id: 't28', name: 'Team #28',         ip_address: '10.10.28.3', logo: './html/images/teams/team28.png', active: true },
-  { config_id: 't29', name: 'Team #29',         ip_address: '10.10.29.3', logo: './html/images/teams/team29.png', active: true }
+  { config_id: 't26', name: 'Циферки',          ip_address: '10.10.26.3', logo: './html/images/teams/team26.png', active: true }
 ]
 
 cybersibir_teams = cybersibir_teams_data.map do |attrs|
@@ -205,15 +159,12 @@ cybersibir_teams = cybersibir_teams_data.map do |attrs|
     ("Лого: #{attrs[:logo]}" if attrs[:logo]),
     ("Активна: #{attrs[:active] ? 'yes' : 'no'}")
   ].compact.join(' · ')
-  t.website = nil
-  t.university = nil
   t.avatar_url ||= pick_placeholder_path(t.name, "team-logos") || svg_data_avatar(t.name, PALETTE.sample)
   t.save!
   t
 end
 
 teams += cybersibir_teams
-cybersibir_team_ids = cybersibir_teams.map(&:id)
 
 # SibirCTF 2018 roster (из jury config)
 sibir2018_teams_data = [
@@ -252,7 +203,6 @@ sibir2018_teams = sibir2018_teams_data.filter { |t| t[:name].present? }.map do |
 end
 
 teams += sibir2018_teams
-sibir2018_team_ids = sibir2018_teams.map(&:id)
 
 # SibirCTF 2015 roster (по итогам статьи)
 sibir2015_team_names = [
@@ -281,7 +231,6 @@ sibir2015_teams = sibir2015_team_names.map do |name|
 end
 
 teams += sibir2015_teams
-sibir2015_team_ids = sibir2015_teams.map(&:id)
 
 # SibirCTF 2014 roster (по графику флагов)
 sibir2014_teams_data = [
@@ -302,7 +251,6 @@ sibir2014_teams = sibir2014_teams_data.map do |attrs|
 end
 
 teams += sibir2014_teams
-sibir2014_team_ids = sibir2014_teams.map(&:id)
 
 # Маппинг метаданных ctf01d (id/ip) по имени команды
 ctf_team_meta = {}
@@ -368,49 +316,11 @@ if nsu
   end
 end
 
-# Assign memberships, roles, and captains
-used_captain_user_ids = Team.where.not(captain_id: nil).pluck(:captain_id).to_set
-
-teams.each_with_index do |team, idx|
-  next if cybersibir_team_ids.include?(team.id) || sibir2018_team_ids.include?(team.id) || sibir2015_team_ids.include?(team.id) || sibir2014_team_ids.include?(team.id) # не добавляем фейковых игроков в предзаполненные ростеры
-
-  # Pick 4-6 distinct users for the team
-  members = users.sample(4 + (idx % 3))
-
-  # Ensure owner
-  owner = members.first
-  m_owner = TeamMembership.find_or_initialize_by(team_id: team.id, user_id: owner.id)
-  m_owner.role = TeamMembership::ROLE_OWNER
-  m_owner.status = TeamMembership::STATUS_APPROVED
-  m_owner.save!
-
-  # Other members as players or vice_captain
-  members[1..].each_with_index do |u, i|
-    m = TeamMembership.find_or_initialize_by(team_id: team.id, user_id: u.id)
-    m.role = (i.zero? ? TeamMembership::ROLE_VICE_CAPTAIN : TeamMembership::ROLE_PLAYER)
-    m.status = TeamMembership::STATUS_APPROVED
-    m.save!
-  end
-
-  # Pick captain: prefer someone not already a captain elsewhere
-  candidate = (members.find { |u| !used_captain_user_ids.include?(u.id) } || owner)
-  unless Team.exists?(captain_id: candidate.id)
-    team.update!(captain_id: candidate.id)
-    used_captain_user_ids.add(candidate.id)
-    # Ensure captain has membership and role updated
-    cap_m = TeamMembership.find_or_initialize_by(team_id: team.id, user_id: candidate.id)
-    cap_m.role = TeamMembership::ROLE_CAPTAIN
-    cap_m.status = TeamMembership::STATUS_APPROVED
-    cap_m.save!
-  end
-end
-
 # Seed: games (past, ongoing, upcoming)
 games_data = [
   { name: 'SibirCTF 2014',   organizer: 'keva',    starts_at: Time.utc(2014, 4, 19, 6, 0, 0),  ends_at: Time.utc(2014, 4, 19, 14, 0, 0), site_url: 'https://sibirctf.org/' },
   { name: 'SibirCTF 2015',   organizer: 'keva',    starts_at: Time.utc(2015, 4, 18, 6, 0, 0),  ends_at: Time.utc(2015, 4, 18, 14, 0, 0), site_url: 'https://sibirctf.org/', logo_url: 'https://sun9-29.userapi.com/s/v1/ig1/YxcZz4g9cU0748u9NKGxsxJPwdJ7j6mRYNpsHKZwrYuncf_UVOtVmPPVgkH7SGOgFyluzE5c.jpg?quality=96&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,534x534&from=bu&cs=534x0' },
   { name: 'SibirCTF 2016',   organizer: 'keva',    starts_at: Time.utc(2016, 4, 23, 6, 0, 0),  ends_at: Time.utc(2016, 4, 23, 14, 0, 0), site_url: 'https://sibirctf.org/', ctftime_url: 'https://ctftime.org/event/362/' },
-  { name: 'SibirCTF 2017',   organizer: 'keva',    starts_at: Time.utc(2017, 4, 22, 6, 0, 0),  ends_at: Time.utc(2017, 4, 22, 14, 0, 0), site_url: 'https://sibirctf.org/' },
   { name: 'SibirCTF 2018',   organizer: 'keva',    starts_at: Time.utc(2018, 10, 21, 4, 0, 0), ends_at: Time.utc(2018, 10, 21, 12, 30, 0), site_url: 'https://sibirctf.org/' },
   { name: 'SibirCTF 2019',   organizer: 'keva',    starts_at: Time.iso8601('2019-11-01T02:00:00Z'), ends_at: Time.iso8601('2019-11-01T12:00:00Z'), site_url: 'https://sibirctf.org/', ctftime_url: 'https://ctftime.org/event/889/', logo_url: 'https://ctftime.org/media/events/sibir_logo.png' },
   { name: 'SibirCTF 2023',   organizer: 'keva',    starts_at: Time.utc(2023, 11, 19, 5, 45, 0), ends_at: Time.utc(2023, 11, 19, 13, 0, 0), site_url: 'https://vk.com/sibirctf', ctftime_url: 'https://ctftime.org/event/2132/', logo_url: 'https://ctftime.org/media/events/glaz2023.jpg' },
@@ -426,33 +336,6 @@ games = games_data.map do |attrs|
   g.site_url = attrs[:site_url] if attrs[:site_url]
   g.ctftime_url = attrs[:ctftime_url] if attrs[:ctftime_url]
   g.avatar_url = attrs[:logo_url] || pick_placeholder_path(g.name, "game-logos") || g.avatar_url || svg_data_avatar(g.name, PALETTE.sample)
-  # access/networks demo (публикуем для прошедших и идущих игр; для далёких будущих — оставим пустым)
-  if g.ends_at && g.ends_at < Time.now || (g.starts_at && g.starts_at <= Time.now + 2.days)
-    slug = g.name.parameterize
-    seed_n = Zlib.crc32(slug)
-    net_a = 10 + (seed_n % 10)
-    net_b = 10 + (seed_n % 200)
-    subnet = "10.#{net_a}.#{net_b}.0/24"
-    g.vpn_url = "https://vpn.ctf01d.local/#{slug}/connect"
-    g.vpn_config_url = "https://vpn.ctf01d.local/#{slug}/#{slug}.ovpn"
-    g.access_secret = "DEMO-#{slug.upcase}-#{(seed_n % 1000).to_s.rjust(3, '0')}"
-    g.access_instructions = <<~TXT
-      Подключитесь к VPN перед атакой на сервисы.
-
-      Вариант 1 — OpenVPN:
-      1) Скачайте конфиг: #{g.vpn_config_url}
-      2) Импортируйте в OpenVPN и подключитесь.
-
-      Вариант 2 — WireGuard:
-      1) Скачайте профиль: https://vpn.ctf01d.local/#{slug}/#{slug}.conf
-      2) Импортируйте в WireGuard и подключитесь.
-
-      Логин: team-<team_id>
-      Пароль/ключ: узнавайте у капитана или организаторов (секрет: #{g.access_secret}).
-
-      Внутренняя сеть игры: #{subnet}
-    TXT
-  end
   # планирование
   if g.starts_at && g.ends_at
     g.registration_opens_at = g.starts_at - 7.days
@@ -833,21 +716,4 @@ Game.where('ends_at < ?', Time.now).find_each do |g|
   g.update!(finalized: true, finalized_at: Time.now)
 end
 
-# Seed: writeups for past games (random teams)
-past_games = Game.where('ends_at < ?', Time.now).to_a
-titles = [
-  'How we pwned Baby Heap',
-  'Bypassing CSP in Cookie Monster',
-  'ECB Oracle Walkthrough',
-  'Reversing CrackMe Deluxe',
-  'Forensics PCAP Tips',
-  'ROP the Planet'
-]
-past_games.each do |g|
-  teams.sample(2).each_with_index do |t, i|
-    Writeup.find_or_create_by!(game: g, team: t, title: titles.sample) do |w|
-      w.url = "https://writeups.example/#{t.name.parameterize}-#{g.name.parameterize}-#{i+1}"
-    end
-  end
-end
 # end of seeds
