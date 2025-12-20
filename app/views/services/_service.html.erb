@@ -18,7 +18,7 @@
         <% label = case service.check_status
                    when 'missing' then 'checker: нет'
                    when 'present' then 'checker: есть'
-                   when 'codes' then 'checker: 101..104'
+                   when 'codes' then 'checker: валидный'
                    else "check: #{service.check_status}" end %>
         <span class="badge <%= cls %>"><%= label %></span>
       <% end %>

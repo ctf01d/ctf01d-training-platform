@@ -71,7 +71,7 @@ class ServicesController < ApplicationController
     msg = case res[:status]
     when "missing" then "Чекер: отсутствует."
     when "present" then "Чекер: есть."
-    when "codes" then "Чекер: есть (найдены 101..104)."
+    when "codes" then "Чекер: есть, (присутствуют коды ответа 101-104)."
     else "Проверка выполнена: #{res[:status]}."
     end
     redirect_to @service, notice: msg

@@ -21,7 +21,7 @@
     label = case service.check_status
             when 'missing' then 'checker: нет'
             when 'present' then 'checker: есть'
-            when 'codes' then 'checker: 101..104'
+            when 'codes' then 'checker: валидный'
             else "checker: #{service.check_status}"
             end
     content_tag(:span, label, class: "badge #{cls}", style: "margin-left:6px;")

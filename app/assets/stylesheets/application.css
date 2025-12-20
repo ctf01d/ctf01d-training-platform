@@ -106,6 +106,12 @@ a { color: #1a56db; }
   font-size: 18px;
   line-height: 1;
 }
+.btn.btn-icon.btn-icon--sm {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
 
 /* Navbar auth compact spacing */
 .navbar-auth { display: inline-flex; align-items: center; gap: 4px; }
@@ -289,3 +295,79 @@ textarea { resize: vertical; }
 .dropdown-menu a:hover,
 .dropdown-menu button:hover { background: #f8fafc; }
 .dropdown-caret { margin-left: 6px; font-size: 12px; }
+
+/* Theme toggle */
+.theme-toggle { color: #6b7280; }
+.theme-toggle__icon { width: 18px; height: 18px; }
+.theme-toggle__icon--moon { display: none; }
+
+html[data-theme="dark"] .theme-toggle { color: #cbd5e1; }
+html[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
+html[data-theme="dark"] .theme-toggle__icon--moon { display: inline; }
+
+/* Dark theme */
+html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="dark"] body { background: #0b1220; color: #e5e7eb; }
+html[data-theme="dark"] a { color: #93c5fd; }
+html[data-theme="dark"] .muted { color: #9ca3af; }
+
+html[data-theme="dark"] .navbar { background: #0f172a; border-bottom-color: #1f2937; }
+
+html[data-theme="dark"] .flash { border-color: #1f2937; background: #064e3b; color: #d1fae5; }
+html[data-theme="dark"] .flash.alert { background: #3b0a0a; color: #fecaca; border-color: #7f1d1d; }
+html[data-theme="dark"] .flash.warning { background: #3a2a08; color: #fde68a; border-color: #6b4f12; }
+
+html[data-theme="dark"] .card { background: #0f172a; border-color: #1f2937; }
+html[data-theme="dark"] .game-banner { background: #0f172a; border-color: #1f2937; }
+html[data-theme="dark"] .game-card { background: #0f172a; border-color: #1f2937; }
+html[data-theme="dark"] .game-card__access { background: #0b1220; border-color: #1f2937; }
+html[data-theme="dark"] .game-banner__time-title { color: #cbd5e1; }
+html[data-theme="dark"] .game-banner__time-value { color: #e5e7eb; }
+html[data-theme="dark"] .game-banner__icon { color: #9ca3af; }
+html[data-theme="dark"] .game-card__label { color: #cbd5e1; }
+html[data-theme="dark"] .game-card__value { color: #e5e7eb; }
+html[data-theme="dark"] .game-card__icon { color: #9ca3af; }
+
+html[data-theme="dark"] .btn { background: #0b1220; border-color: #1f2937; color: #e5e7eb; }
+html[data-theme="dark"] .btn:hover { background: #111827; }
+html[data-theme="dark"] .btn.primary { background: #0b2a55; border-color: #1d4ed8; color: #bfdbfe; }
+html[data-theme="dark"] .btn.danger { background: #3b0a0a; border-color: #7f1d1d; color: #fecaca; }
+html[data-theme="dark"] .btn-success { background: #064e3b; border-color: #065f46; color: #d1fae5; }
+
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="password"],
+html[data-theme="dark"] input[type="datetime-local"],
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background: #0b1220;
+  color: #e5e7eb;
+  border-color: #334155;
+}
+html[data-theme="dark"] input[type="text"]:focus,
+html[data-theme="dark"] input[type="number"]:focus,
+html[data-theme="dark"] input[type="password"]:focus,
+html[data-theme="dark"] input[type="datetime-local"]:focus,
+html[data-theme="dark"] textarea:focus,
+html[data-theme="dark"] select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+html[data-theme="dark"] .table th,
+html[data-theme="dark"] .table td { border-bottom-color: #1f2937; }
+html[data-theme="dark"] .table thead th { background: #0b1220; color: #cbd5e1; }
+html[data-theme="dark"] .table-striped tbody tr:nth-child(even) { background: #0e1628; }
+
+html[data-theme="dark"] .badge--green { background: #064e3b; color: #d1fae5; }
+html[data-theme="dark"] .badge--gray { background: #1f2937; color: #cbd5e1; }
+html[data-theme="dark"] .badge--blue { background: #0b2a55; color: #bfdbfe; }
+html[data-theme="dark"] .badge--red { background: #3b0a0a; color: #fecaca; }
+
+html[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.55); }
+html[data-theme="dark"] .modal-card { background: #0f172a; }
+html[data-theme="dark"] .dropdown-menu { background: #0f172a; border-color: #1f2937; }
+html[data-theme="dark"] .dropdown-menu a,
+html[data-theme="dark"] .dropdown-menu button { color: #e5e7eb; }
+html[data-theme="dark"] .dropdown-menu a:hover,
+html[data-theme="dark"] .dropdown-menu button:hover { background: #111827; }
