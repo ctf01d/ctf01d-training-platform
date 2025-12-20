@@ -39,6 +39,7 @@ services:
       - "80"
     volumes:
       - services-data:/data/services
+      - uploads-data:/rails/public/uploads
     # Default CMD in Dockerfile uses thruster and runs db:prepare via entrypoint
 
   reverse-proxy:
@@ -61,3 +62,4 @@ volumes:
   caddy-data:
   caddy-config:
   services-data:
+  uploads-data:
