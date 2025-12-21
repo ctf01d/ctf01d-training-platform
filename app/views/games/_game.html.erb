@@ -20,10 +20,14 @@
               <span><%= game.organizer %></span>
             <% end %>
             <% if game.site_url.present? %>
-              <span>• <%= link_to 'Сайт', game.site_url, target: '_blank', rel: 'noopener' %></span>
+              <% if (u = safe_http_url(game.site_url)) %>
+                <span>• <%= link_to 'Сайт', u, target: '_blank', rel: 'noopener' %></span>
+              <% end %>
             <% end %>
             <% if game.ctftime_url.present? %>
-              <span>• <%= link_to 'CTFtime', game.ctftime_url, target: '_blank', rel: 'noopener' %></span>
+              <% if (u = safe_http_url(game.ctftime_url)) %>
+                <span>• <%= link_to 'CTFtime', u, target: '_blank', rel: 'noopener' %></span>
+              <% end %>
             <% end %>
           </div>
         <% end %>
@@ -80,7 +84,7 @@
           <div class="game-card__services">
             <strong>Сервисы (<%= game.services.count %>):</strong>
             <span class="game-card__services-list">
-              <%= game.services.order(:name).map { |s| link_to s.name, s }.join(' • ').html_safe %>
+              <%= safe_join(game.services.order(:name).map { |s| link_to s.name, s }, ' • ') %>
             </span>
           </div>
         <% end %>
@@ -95,10 +99,14 @@
   <% if game.vpn_url.present? || game.vpn_config_url.present? || game.access_secret.present? %>
     <div class="game-card__access" style="margin-top:12px;">
       <% if game.vpn_url.present? %>
-        <div><strong>VPN:</strong> <%= link_to game.vpn_url, game.vpn_url, target: '_blank', rel: 'noopener' %></div>
+        <% if (u = safe_http_url(game.vpn_url)) %>
+          <div><strong>VPN:</strong> <%= link_to u, u, target: '_blank', rel: 'noopener' %></div>
+        <% end %>
       <% end %>
       <% if game.vpn_config_url.present? %>
-        <div><strong>Config:</strong> <%= link_to game.vpn_config_url, game.vpn_config_url, target: '_blank', rel: 'noopener' %></div>
+        <% if (u = safe_http_url(game.vpn_config_url)) %>
+          <div><strong>Config:</strong> <%= link_to u, u, target: '_blank', rel: 'noopener' %></div>
+        <% end %>
       <% end %>
       <% if game.access_secret.present? %>
         <div><strong>Секрет:</strong> <code><%= game.access_secret %></code></div>

@@ -106,24 +106,28 @@ class ServicesController < ApplicationController
 
   # GET /services/:id/download_local?what=service|checker
   def download_local
-    path_rel = @service.service_local_path
-    return redirect_to @service, alert: "Не найден локальный архив." if path_rel.blank?
-    abs = path_rel.to_s.start_with?("/") ? path_rel.to_s : Rails.root.join(path_rel)
-    unless File.file?(abs)
-      return redirect_to @service, alert: "Файл отсутствует на диске."
-    end
+    store_dir = File.join(ServiceArchives::ROOT_DIR, @service.id.to_s)
+    candidates = Dir.glob(File.join(store_dir, "*.zip"))
+    return redirect_to @service, alert: "Не найден локальный архив." if candidates.empty?
+
+    abs = candidates.max_by { |p| File.mtime(p) }
+    return redirect_to @service, alert: "Файл отсутствует на диске." unless abs && File.file?(abs)
+
     send_file abs, filename: File.basename(abs), type: "application/zip"
   end
 
   # GET /services/import_github
   def import_github
     require_admin
-    if request.get?
+    if request.get? || request.head?
       # форма импорта
     else
       repo_url = params.expect(:repo_url)
       ref = params[:ref]
       fetch = GithubImporter.fetch(repo_url: repo_url, ref: ref)
+      if fetch[:zip_bytes].bytesize > 120 * 1024 * 1024
+        raise GithubImporter::Error, "архив репозитория слишком большой"
+      end
       bundle = ServiceImport::BundleBuilder.call(zip_bytes: fetch[:zip_bytes])
       meta = ServiceImport::MetadataExtractor.call(bundle_zip_bytes: bundle)
       svc = Service.new(
@@ -160,13 +164,18 @@ class ServicesController < ApplicationController
   # GET/POST /services/import_zip
   def import_zip
     require_admin
-    if request.get?
+    if request.get? || request.head?
       return
     end
 
     upload = params[:archive]
     raise ArgumentError, "файл не выбран" unless upload.respond_to?(:read)
-    data = upload.read
+    max_bytes = 120 * 1024 * 1024
+    if upload.respond_to?(:size) && upload.size.to_i > max_bytes
+      raise ArgumentError, "архив слишком большой"
+    end
+    data = upload.read(max_bytes + 1)
+    raise ArgumentError, "архив слишком большой" if data.bytesize > max_bytes
     raise ArgumentError, "пустой файл" if data.blank?
 
     bundle = ServiceImport::BundleBuilder.call(zip_bytes: data)

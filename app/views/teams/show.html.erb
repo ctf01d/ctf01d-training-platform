@@ -10,7 +10,9 @@
         • Соревнований: <%= @team.results.count %>
       </p>
       <% if @team.website.present? %>
-        <p class="muted"><%= link_to @team.website, @team.website, target: '_blank', rel: 'noopener' %></p>
+        <% if (u = safe_http_url(@team.website)) %>
+          <p class="muted"><%= link_to u, u, target: '_blank', rel: 'noopener' %></p>
+        <% end %>
       <% end %>
     </div>
   </div>
@@ -180,7 +182,11 @@
   <ul>
     <% writeups.each do |w| %>
       <li>
-        <%= link_to(w.title, w.url, target: '_blank', rel: 'noopener') %>
+        <% if (u = safe_http_url(w.url)) %>
+          <%= link_to(w.title, u, target: '_blank', rel: 'noopener') %>
+        <% else %>
+          <%= w.title %>
+        <% end %>
         <span class="muted">— <%= link_to w.game.name, w.game %></span>
         <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(@team)) %>
           | <%= button_to 'Удалить', writeup_path(w), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить writeup?' } } %>

@@ -5,6 +5,8 @@ require "zip"
 module ServiceImport
   # Сервис: извлечь метаданные (name/description/license) из bundle.zip (service/ + checker/).
   class MetadataExtractor
+    MAX_TEXT_BYTES = 512 * 1024
+
     def self.call(bundle_zip_bytes:)
       new(bundle_zip_bytes).call
     end
@@ -39,7 +41,7 @@ module ServiceImport
     def read_entry(zip_bytes, entry_name)
       Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
         entry = zip.find_entry(entry_name)
-        return entry.get_input_stream.read if entry
+        return read_small_entry(entry) if entry
       end
       nil
     rescue Zip::Error
@@ -55,12 +57,25 @@ module ServiceImport
       Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
         candidates.each do |p|
           entry = zip.find_entry(p)
-          return entry.get_input_stream.read if entry
+          return read_small_entry(entry) if entry
         end
       end
       nil
     rescue Zip::Error
       nil
+    end
+
+    def read_small_entry(entry)
+      return nil unless entry
+      data = +""
+      entry.get_input_stream do |io|
+        while (chunk = io.read(16 * 1024))
+          break if chunk.empty?
+          data << chunk
+          break if data.bytesize >= MAX_TEXT_BYTES
+        end
+      end
+      data.byteslice(0, MAX_TEXT_BYTES)
     end
 
     def summarize_markdown(md)

@@ -4,7 +4,9 @@
     <div>
       <p><strong><%= university.name %></strong></p>
       <% if university.site_url.present? %>
-        <p class="muted"><%= link_to university.site_url, university.site_url, target: '_blank', rel: 'noopener' %></p>
+        <% if (u = safe_http_url(university.site_url)) %>
+          <p class="muted"><%= link_to u, u, target: '_blank', rel: 'noopener' %></p>
+        <% end %>
       <% end %>
     </div>
   </div>

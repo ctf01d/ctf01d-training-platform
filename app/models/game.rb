@@ -1,4 +1,6 @@
 class Game < ApplicationRecord
+  require "uri"
+
   has_many :results, dependent: :destroy
   has_many :game_teams, -> { order(:order, :id) }, dependent: :destroy
   has_many :teams, through: :game_teams
@@ -51,11 +53,20 @@ class Game < ApplicationRecord
   end
 
   def validate_urls
-    { vpn_url: vpn_url, vpn_config_url: vpn_config_url }.each do |field, value|
+    { site_url: site_url, ctftime_url: ctftime_url, vpn_url: vpn_url, vpn_config_url: vpn_config_url }.each do |field, value|
       v = value.to_s.strip
       next if v.blank?
-      next if v =~ /\Ahttps?:\/\//i
-      errors.add(field, "должен начинаться с http(s)://")
+      next if valid_http_url?(v)
+      errors.add(field, "должен быть валидным http(s):// URL")
     end
+  end
+
+  def valid_http_url?(value)
+    uri = URI.parse(value.to_s)
+    return false unless uri.is_a?(URI::HTTP)
+    return false if uri.host.blank?
+    %w[http https].include?(uri.scheme)
+  rescue URI::InvalidURIError
+    false
   end
 end

@@ -21,18 +21,22 @@
             <span><%= game.organizer %></span>
           <% end %>
           <% if game.ctftime_url.present? %>
-            <span>• <%= link_to 'CTFtime', game.ctftime_url, target: '_blank', rel: 'noopener' %></span>
+            <% if (u = safe_http_url(game.ctftime_url)) %>
+              <span>• <%= link_to 'CTFtime', u, target: '_blank', rel: 'noopener' %></span>
+            <% end %>
           <% end %>
           <% if game.site_url.present? %>
-            <span>• <%= link_to 'Сайт', game.site_url, target: '_blank', rel: 'noopener' %></span>
+            <% if (u = safe_http_url(game.site_url)) %>
+              <span>• <%= link_to 'Сайт', u, target: '_blank', rel: 'noopener' %></span>
+            <% end %>
           <% end %>
         </div>
 
-        <% if game.services.any? %>
+          <% if game.services.any? %>
           <div class="game-banner__services">
             <strong>Сервисы (<%= game.services.count %>):</strong>
             <% svc_list = game.services.order(:name).map { |s| link_to s.name, s } %>
-            <span class="game-banner__services-list"><%= svc_list.join(' • ').html_safe %></span>
+            <span class="game-banner__services-list"><%= safe_join(svc_list, ' • ') %></span>
             <span class="muted" style="margin-left:8px; font-size:13px;">
               <%= link_to 'Управлять', manage_services_game_path(game) %>
             </span>

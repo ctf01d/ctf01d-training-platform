@@ -22,7 +22,9 @@
         <div>
           <div><strong><%= link_to university.name, university %></strong></div>
           <% if university.site_url.present? %>
-            <div class="muted"><%= link_to university.site_url, university.site_url, target: '_blank', rel: 'noopener' %></div>
+            <% if (u = safe_http_url(university.site_url)) %>
+              <div class="muted"><%= link_to u, u, target: '_blank', rel: 'noopener' %></div>
+            <% end %>
           <% end %>
         </div>
       </div>

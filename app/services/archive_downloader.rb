@@ -39,51 +39,69 @@ class ArchiveDownloader
       http.read_timeout = read_timeout
       configure_ssl!(http) if http.use_ssl?
 
-      # HEAD для быстрого определения типа/размера, если поддерживается
-      begin
-        head = Net::HTTP::Head.new(uri.request_uri)
-        head_res = http.request(head)
-      rescue OpenSSL::SSL::SSLError
-        head_res = nil
-      rescue StandardError
-        head_res = nil
-      end
-
-      content_type = head_res&.[]("content-type")&.split(";")&.first
-      content_len = head_res&.[]("content-length")&.to_i
-      if content_len && content_len > 0 && content_len > max_bytes
-        raise Error, "слишком большой архив: #{content_len} байт"
-      end
-
-      # GET загрузка
       req = Net::HTTP::Get.new(uri.request_uri)
-      res = http.request(req)
-      if res.is_a?(Net::HTTPRedirection)
-        location = res["location"].to_s
-        raise Error, "редирект без Location" if location.blank?
-        uri = URI.join(uri.to_s, location)
-        redirects += 1
-        next
-      end
-      unless res.is_a?(Net::HTTPSuccess)
-        raise Error, "не удалось скачать: HTTP #{res.code}"
-      end
-      content_type ||= res["content-type"]&.split(";")&.first
-
-      # Проверка что это zip по типу/сигнатуре
-      body = res.body
-      if body.bytesize > max_bytes
-        raise Error, "слишком большой архив: > #{max_bytes} байт"
-      end
-      unless zip_payload?(body, content_type)
-        raise Error, "ожидался zip-архив, получен #{content_type || 'unknown'}"
-      end
-
       FileUtils.mkdir_p(dest_dir)
       fname = filename || safe_filename_from(uri)
       path = File.join(dest_dir, fname)
-      File.binwrite(path, body)
-      return { path: path, size: File.size(path), sha256: Digest::SHA256.file(path).hexdigest, content_type: content_type }
+
+      tmp = "#{path}.part"
+      FileUtils.rm_f(tmp)
+
+      redirect_location = nil
+      sha256 = nil
+      size = nil
+
+      begin
+        http.request(req) do |res|
+          if res.is_a?(Net::HTTPRedirection)
+            redirect_location = res["location"].to_s
+            raise Error, "редирект без Location" if redirect_location.blank?
+            next
+          end
+          unless res.is_a?(Net::HTTPSuccess)
+            raise Error, "не удалось скачать: HTTP #{res.code}"
+          end
+
+          content_type = res["content-type"]&.split(";")&.first
+          first_bytes = +""
+          digest = Digest::SHA256.new
+          size = 0
+
+          File.open(tmp, "wb") do |f|
+            res.read_body do |chunk|
+              next if chunk.nil? || chunk.empty?
+              size += chunk.bytesize
+              raise Error, "слишком большой архив: > #{max_bytes} байт" if size > max_bytes
+              if first_bytes.bytesize < 4
+                need = 4 - first_bytes.bytesize
+                first_bytes << chunk.byteslice(0, need)
+              end
+              digest.update(chunk)
+              f.write(chunk)
+            end
+          end
+
+          unless zip_magic?(first_bytes)
+            FileUtils.rm_f(tmp)
+            raise Error, "ожидался zip-архив, получен #{content_type || 'unknown'}"
+          end
+
+          sha256 = digest.hexdigest
+        end
+      ensure
+        if redirect_location.present?
+          FileUtils.rm_f(tmp)
+        end
+      end
+
+      if redirect_location.present?
+        uri = URI.join(uri.to_s, redirect_location)
+        redirects += 1
+        next
+      end
+
+      FileUtils.mv(tmp, path)
+      return { path: path, size: size || File.size(path), sha256: sha256 || Digest::SHA256.file(path).hexdigest, content_type: content_type }
     end
   rescue OpenSSL::SSL::SSLError => e
     raise Error, "SSL ошибка при скачивании: #{e.message}"
@@ -96,34 +114,51 @@ class ArchiveDownloader
     io = uploaded_file.respond_to?(:read) ? uploaded_file : nil
     raise Error, "неподдерживаемый тип файла" unless io
 
-    # Прочитаем в память до лимита (или используем tempfile.path если есть)
     if uploaded_file.respond_to?(:size) && uploaded_file.size.to_i > max_bytes
       raise Error, "слишком большой архив: > #{max_bytes} байт"
     end
 
     content_type = (uploaded_file.respond_to?(:content_type) && uploaded_file.content_type).to_s.split(";").first
-    raw = io.read
-    unless zip_payload?(raw, content_type)
-      raise Error, "ожидался zip-архив, получен #{content_type.presence || 'unknown'}"
-    end
 
     FileUtils.mkdir_p(dest_dir)
     fname = filename || sanitize_filename(uploaded_file.respond_to?(:original_filename) ? uploaded_file.original_filename : "archive.zip")
     fname = ensure_zip_ext(fname)
     path = File.join(dest_dir, fname)
-    File.binwrite(path, raw)
-    { path: path, size: File.size(path), sha256: Digest::SHA256.file(path).hexdigest, content_type: content_type }
+
+    tmp = "#{path}.part"
+    FileUtils.rm_f(tmp)
+    first_bytes = +""
+    digest = Digest::SHA256.new
+    size = 0
+
+    File.open(tmp, "wb") do |f|
+      io.rewind if io.respond_to?(:rewind)
+      while (chunk = io.read(16 * 1024))
+        next if chunk.empty?
+        size += chunk.bytesize
+        raise Error, "слишком большой архив: > #{max_bytes} байт" if size > max_bytes
+        if first_bytes.bytesize < 4
+          need = 4 - first_bytes.bytesize
+          first_bytes << chunk.byteslice(0, need)
+        end
+        digest.update(chunk)
+        f.write(chunk)
+      end
+    end
+
+    unless zip_magic?(first_bytes)
+      FileUtils.rm_f(tmp)
+      raise Error, "ожидался zip-архив, получен #{content_type.presence || 'unknown'}"
+    end
+
+    FileUtils.mv(tmp, path)
+    { path: path, size: size, sha256: digest.hexdigest, content_type: content_type }
   end
 
   private
-  def zip_payload?(bytes, content_type)
-    return false unless bytes && bytes.bytesize >= 4
-    # ZIP magic: PK\x03\x04, PK\x05\x06 (empty), PK\x07\x08
-    sig = bytes.bytes.first(4)
-    is_zip_magic = sig[0] == 0x50 && sig[1] == 0x4B
-    return true if is_zip_magic
-    # иногда сервер ставит generic octet-stream
-    %w[application/zip application/x-zip-compressed application/octet-stream].include?(content_type.to_s)
+  def zip_magic?(bytes)
+    return false unless bytes && bytes.bytesize >= 2
+    bytes.bytes[0] == 0x50 && bytes.bytes[1] == 0x4B
   end
 
   def sanitize_filename(name)

@@ -3,6 +3,7 @@
 require "net/http"
 require "uri"
 require "zip"
+require "tmpdir"
 
 # Импорт сервиса из GitHub-репозитория: скачивает zip репозитория и отдаёт bytes.
 class GithubImporter
@@ -58,21 +59,18 @@ class GithubImporter
     # Порядок попыток: heads -> tags
     [ "refs/heads/#{ref}", "refs/tags/#{ref}", ref ].each do |ref_path|
       path = "/#{owner}/#{repo}/zip/#{ref_path}"
-      bytes = http_get(CodeloadHost, path)
+      bytes = download_zip_to_bytes("https://#{CodeloadHost}#{path}")
       return bytes if bytes
     end
     raise Error, "не удалось скачать архив репозитория #{owner}/#{repo}@#{ref}"
   end
 
-  def http_get(host, path)
-    http = Net::HTTP.new(host, 443)
-    http.use_ssl = true
-    http.open_timeout = 5
-    http.read_timeout = 60
-    res = http.get(path)
-    return nil unless res.is_a?(Net::HTTPSuccess)
-    res.body
-  rescue StandardError
+  def download_zip_to_bytes(url)
+    Dir.mktmpdir("github_import_") do |dir|
+      res = ArchiveDownloader.download_url(url: url, dest_dir: dir, filename: "repo.zip", max_bytes: 120 * 1024 * 1024)
+      return File.binread(res[:path])
+    end
+  rescue ArchiveDownloader::Error
     nil
   end
 end

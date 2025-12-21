@@ -9,6 +9,8 @@ require "uri"
 require "base64"
 
 module Ctf01d
+  class ExportError < StandardError; end
+
   # Сервис: собрать архив с конфигом и ресурсами для ctf01d
   # Важно: сервис не берёт данные из БД напрямую — всё передаётся параметрами,
   # чтобы явно управлять матчингом id/ip/логотипов/скриптов.
@@ -294,9 +296,8 @@ module Ctf01d
         unless src && File.file?(src)
           local = t[:logo_url].to_s
           if local.present? && !local.start_with?("http://", "https://", "data:image")
-            rel = local.sub(%r{\A/+}, "")
-            candidate = Rails.root.join("public", rel).to_s
-            src = candidate if File.file?(candidate)
+            candidate = safe_public_asset_path(local)
+            src = candidate if candidate
           end
         end
         unless src && File.file?(src)
@@ -330,6 +331,19 @@ module Ctf01d
       val.to_s.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/\A_+|_+\z/, "")
     end
 
+    def safe_public_asset_path(urlish)
+      rel = urlish.to_s.tr("\\", "/").sub(%r{\A/+}, "")
+      return nil if rel.blank?
+      return nil if rel.include?("\0")
+      return nil unless rel.start_with?("uploads/", "img/")
+
+      public_root = Rails.root.join("public").cleanpath
+      path = Rails.root.join("public", rel).cleanpath
+      return nil unless path.to_s.start_with?(public_root.to_s + File::SEPARATOR)
+      return nil unless File.file?(path)
+      path.to_s
+    end
+
     def write_data_url_to_file(data_url, dir, prefer_name: "logo")
       # Поддержка base64 и utf8 (url-encoded) вариантов
       if (m = data_url.match(/\Adata:(image\/[a-zA-Z0-9.+-]+);base64,(.+)\z/))
@@ -357,6 +371,7 @@ module Ctf01d
       uri = URI.parse(url)
       redirects = 0
       res = nil
+      max_bytes = 5 * 1024 * 1024
       loop do
         raise ExportError, "слишком много редиректов при скачивании logo" if redirects > 5
         http = Net::HTTP.new(uri.host, uri.port)
@@ -365,21 +380,41 @@ module Ctf01d
         http.read_timeout = 10
         configure_ssl!(http) if http.use_ssl?
         req = Net::HTTP::Get.new(uri.request_uri)
-        res = http.request(req)
-        if res.is_a?(Net::HTTPRedirection)
-          location = res["location"].to_s
-          raise ExportError, "редирект без Location при скачивании logo" if location.blank?
-          uri = URI.join(uri.to_s, location)
+        redirect_location = nil
+        tmp = File.join(dir, "#{prefer_name}.part")
+        FileUtils.rm_f(tmp)
+        http.request(req) do |r|
+          res = r
+          if r.is_a?(Net::HTTPRedirection)
+            redirect_location = r["location"].to_s
+            next
+          end
+          next unless r.is_a?(Net::HTTPSuccess)
+          bytes = 0
+          File.open(tmp, "wb") do |f|
+            r.read_body do |chunk|
+              next if chunk.nil? || chunk.empty?
+              bytes += chunk.bytesize
+              raise ExportError, "logo слишком большой" if bytes > max_bytes
+              f.write(chunk)
+            end
+          end
+        end
+        if redirect_location.present?
+          FileUtils.rm_f(tmp)
+          raise ExportError, "редирект без Location при скачивании logo" if redirect_location.blank?
+          uri = URI.join(uri.to_s, redirect_location)
           redirects += 1
           next
         end
-        break
+        break if res
       end
       raise ExportError, "не удалось скачать logo: HTTP #{res.code}" unless res.is_a?(Net::HTTPSuccess)
       mime = res["content-type"].to_s.split(";").first
       ext = ext_from_mime(mime)
       path = File.join(dir, "#{prefer_name}#{ext}")
-      File.binwrite(path, res.body)
+      tmp = File.join(dir, "#{prefer_name}.part")
+      FileUtils.mv(tmp, path) if File.file?(tmp)
       path
     rescue OpenSSL::SSL::SSLError => e
       raise ExportError, "SSL ошибка при скачивании logo: #{e.message}"
@@ -486,8 +521,14 @@ module Ctf01d
 
     def safe_join(base, rel)
       clean = rel.to_s.tr("\\", "/").sub(%r{\A/+}, "")
-      raise ExportError, "некорректный путь в архиве: #{rel}" if clean.include?("..")
-      File.join(base, clean)
+      raise ExportError, "некорректный путь в архиве: #{rel}" if clean.blank?
+      raise ExportError, "некорректный путь в архиве: #{rel}" if clean.include?("\0")
+
+      segments = clean.split("/")
+      raise ExportError, "некорректный путь в архиве: #{rel}" if segments.any?(&:blank?)
+      raise ExportError, "некорректный путь в архиве: #{rel}" if segments.any? { |s| s == "." || s == ".." }
+
+      File.join(base, segments.join("/"))
     end
 
     def materialize_warnings!(root_dir)

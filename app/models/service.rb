@@ -1,4 +1,6 @@
 class Service < ApplicationRecord
+  require "uri"
+
   has_and_belongs_to_many :games
 
   URL_FIELDS = %i[
@@ -16,11 +18,21 @@ class Service < ApplicationRecord
       val = self.send(field).to_s.strip
       next if val.blank?
       if field == :avatar_url
-        next if val =~ %r{\A(data:image|https?://)}i
+        next if val =~ %r{\Adata:image}i
+        next if valid_http_url?(val)
       else
-        next if val =~ %r{\Ahttps?://}i
+        next if valid_http_url?(val)
       end
-      errors.add(field, "должен начинаться с http(s)://")
+      errors.add(field, "должен быть валидным http(s):// URL")
     end
+  end
+
+  def valid_http_url?(value)
+    uri = URI.parse(value.to_s)
+    return false unless uri.is_a?(URI::HTTP)
+    return false if uri.host.blank?
+    %w[http https].include?(uri.scheme)
+  rescue URI::InvalidURIError
+    false
   end
 end

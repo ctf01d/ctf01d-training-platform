@@ -8,6 +8,8 @@ require "digest"
 # Управление локальными архивами сервисов (скачивание по URL, сохранение загруженных файлов)
 class ServiceArchives
   class Error < StandardError; end
+  MAX_ENTRY_BYTES = 200 * 1024 * 1024
+  MAX_TOTAL_BYTES = 500 * 1024 * 1024
 
   # Базовая директория хранения архивов сервисов.
   # Можно переопределить через ENV["SERVICES_STORAGE_DIR"] (например, на проде смонтировать volume).
@@ -116,6 +118,7 @@ class ServiceArchives
   end
 
   def normalize_bundle_zip!(path)
+    total = 0
     entries = []
     Zip::File.open(path) do |zip|
       zip.each do |e|
@@ -141,11 +144,10 @@ class ServiceArchives
           name = e.name.to_s
           next if name.blank?
           rel = prefix.present? ? name.sub(/\A#{Regexp.escape(prefix)}/, "") : name.dup
-          rel = rel.sub(%r{\A/+}, "")
+          rel = safe_rel_path(rel)
           next if rel.blank?
-          next if rel == "." || rel == ".."
 
-          dest_name = if rel.start_with?("checker/")
+          dest_name = if rel == "checker" || rel.start_with?("checker/")
             rel
           else
             "service/#{rel}"
@@ -155,7 +157,23 @@ class ServiceArchives
             dst.mkdir(dest_name) unless dst.find_entry(dest_name)
             next
           end
-          dst.get_output_stream(dest_name) { |f| f.write(e.get_input_stream.read) }
+
+          est = e.size.to_i
+          raise Error, "файл в архиве слишком большой (#{est} байт)" if est > MAX_ENTRY_BYTES
+          total += est
+          raise Error, "архив слишком большой (суммарно #{total} байт)" if total > MAX_TOTAL_BYTES
+
+          dst.get_output_stream(dest_name) do |f|
+            written = 0
+            e.get_input_stream do |io|
+              while (chunk = io.read(16 * 1024))
+                break if chunk.empty?
+                written += chunk.bytesize
+                raise Error, "файл в архиве слишком большой" if written > MAX_ENTRY_BYTES
+                f.write(chunk)
+              end
+            end
+          end
         end
       end
     end
@@ -163,6 +181,19 @@ class ServiceArchives
   rescue Zip::Error, SystemCallError => e
     FileUtils.rm_f(tmp) if tmp
     raise Error, "не удалось нормализовать zip: #{e.message}"
+  end
+
+  def safe_rel_path(rel)
+    s = rel.to_s.tr("\\", "/")
+    return nil if s.empty?
+    return nil if s.include?("\0")
+    s = s.sub(%r{\A/+}, "")
+    s = s.sub(%r{/+\z}, "")
+    return nil if s.empty?
+    segments = s.split("/")
+    return nil if segments.any?(&:blank?)
+    return nil if segments.any? { |seg| seg == "." || seg == ".." }
+    segments.join("/")
   end
 
   def apply_meta(kind, res)

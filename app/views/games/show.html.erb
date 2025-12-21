@@ -188,10 +188,14 @@
   <% if @can_access %>
     <div>
       <% if @game.vpn_url.present? %>
-        <div><strong>VPN URL:</strong> <%= link_to @game.vpn_url, @game.vpn_url, target: '_blank', rel: 'noopener' %></div>
+        <% if (u = safe_http_url(@game.vpn_url)) %>
+          <div><strong>VPN URL:</strong> <%= link_to u, u, target: '_blank', rel: 'noopener' %></div>
+        <% end %>
       <% end %>
       <% if @game.vpn_config_url.present? %>
-        <div><strong>VPN config:</strong> <%= link_to @game.vpn_config_url, @game.vpn_config_url, target: '_blank', rel: 'noopener' %></div>
+        <% if (u = safe_http_url(@game.vpn_config_url)) %>
+          <div><strong>VPN config:</strong> <%= link_to u, u, target: '_blank', rel: 'noopener' %></div>
+        <% end %>
       <% end %>
       <% if @game.access_secret.present? %>
         <div><strong>Секрет/ключ:</strong> <code><%= @game.access_secret %></code></div>
@@ -230,7 +234,11 @@
         <% end %>
       </td>
       <td><%= w.title %></td>
-      <td><%= link_to w.url, w.url, target: '_blank', rel: 'noopener' %></td>
+      <td>
+        <% if (u = safe_http_url(w.url)) %>
+          <%= link_to u, u, target: '_blank', rel: 'noopener' %>
+        <% end %>
+      </td>
       <td>
           <% if user_signed_in? && (current_user.role == 'admin' || can_manage_team?(w.team)) %>
             <%= button_to 'Удалить', writeup_path(w), method: :delete, form: { style: 'display:inline', data: { turbo_confirm: 'Удалить writeup?' } } %>

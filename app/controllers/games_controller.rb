@@ -2,10 +2,12 @@ require "set"
 
 class GamesController < ApplicationController
   require "securerandom"
+  require "marcel"
   before_action :require_admin, except: %i[index show]
   before_action :set_game, only: %i[ show edit update destroy ]
   before_action :set_game_for_manage, only: %i[ manage_services add_service remove_service ]
   before_action :require_admin, only: %i[ export_ctf01d export_ctf01d_options ]
+  AvatarUploadError = Class.new(StandardError)
 
   # GET /games
   def index
@@ -323,7 +325,12 @@ class GamesController < ApplicationController
     attrs = game_params
     upload = attrs.delete(:avatar_upload)
     @game = Game.new(attrs)
-    apply_avatar(@game, upload, placeholder_dir: "game-logos")
+    begin
+      apply_avatar(@game, upload, placeholder_dir: "game-logos")
+    rescue AvatarUploadError => e
+      @game.errors.add(:avatar_url, e.message)
+      return render :new, status: :unprocessable_content
+    end
 
     if @game.save
       redirect_to @game, notice: "Игра создана."
@@ -337,7 +344,12 @@ class GamesController < ApplicationController
     attrs = game_params
     upload = attrs.delete(:avatar_upload)
     @game.assign_attributes(attrs)
-    apply_avatar(@game, upload, placeholder_dir: "game-logos")
+    begin
+      apply_avatar(@game, upload, placeholder_dir: "game-logos")
+    rescue AvatarUploadError => e
+      @game.errors.add(:avatar_url, e.message)
+      return render :edit, status: :unprocessable_content
+    end
 
     if @game.save
       redirect_to @game, notice: "Игра обновлена.", status: :see_other
@@ -415,12 +427,32 @@ class GamesController < ApplicationController
     end
 
     def save_avatar_file(upload, folder:)
-      ext = File.extname(upload.original_filename.to_s)
-      ext = ".png" if ext.blank?
+      max_bytes = 2.megabytes
+      size = upload.respond_to?(:size) ? upload.size.to_i : nil
+      raise AvatarUploadError, "слишком большой файл (макс #{max_bytes / 1024 / 1024} МБ)" if size && size > max_bytes
+
+      detected = Marcel::MimeType.for(upload, name: upload.original_filename.to_s, declared_type: upload.content_type)
+      ext = {
+        "image/png" => ".png",
+        "image/jpeg" => ".jpg",
+        "image/webp" => ".webp",
+        "image/gif" => ".gif"
+      }[detected.to_s]
+      raise AvatarUploadError, "поддерживаются только PNG/JPEG/WebP/GIF" if ext.blank?
+
       fname = "#{Time.now.utc.strftime('%Y%m%d')}-#{SecureRandom.hex(6)}#{ext}"
       dir = Rails.root.join("public", "uploads", folder)
       FileUtils.mkdir_p(dir)
-      File.open(dir.join(fname), "wb") { |f| f.write(upload.read) }
+      written = 0
+      File.open(dir.join(fname), "wb") do |f|
+        upload.rewind if upload.respond_to?(:rewind)
+        while (chunk = upload.read(16 * 1024))
+          break if chunk.empty?
+          written += chunk.bytesize
+          raise AvatarUploadError, "слишком большой файл (макс #{max_bytes / 1024 / 1024} МБ)" if written > max_bytes
+          f.write(chunk)
+        end
+      end
       "/uploads/#{folder}/#{fname}"
     end
 
