@@ -22,7 +22,7 @@
 
 ## Технологический стек
 
-- **Backend:** Go
+- **Backend:** Ruby
 - **Database:** PostgreSQL
 - **Frontend:** Vanilla JS + jQuery
 
