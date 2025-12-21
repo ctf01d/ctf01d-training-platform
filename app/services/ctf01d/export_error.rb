@@ -3,4 +3,3 @@
 module Ctf01d
   class ExportError < StandardError; end
 end
-

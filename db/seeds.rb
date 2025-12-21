@@ -28,7 +28,7 @@ PLACEHOLDER_ALIASES = {
     "w-zz4b1" => "wazz4b1",
     "n0nme13" => "noname13",
     "n0n@me13" => "noname13",
-    "non@me13" => "noname13",
+    "non@me13" => "noname13"
   }
 }
 
@@ -51,7 +51,7 @@ def placeholder_index(kind)
     next if File.directory?(p)
     base = File.basename(p, ".*")
     slug = base.parameterize
-    key_variants = [slug, slug.delete("-"), slug.tr("-", "_")]
+    key_variants = [ slug, slug.delete("-"), slug.tr("-", "_") ]
     key_variants.each do |k|
       map[k] ||= p.sub(Rails.root.join("public").to_s, "")
     end
@@ -64,7 +64,7 @@ def pick_placeholder_path(name, kind)
   slug = name.to_s.parameterize
   alias_map = PLACEHOLDER_ALIASES[kind] || {}
   return nil if slug.blank?
-  slug_variants = [slug, slug.delete("-"), slug.tr("-", "_")]
+  slug_variants = [ slug, slug.delete("-"), slug.tr("-", "_") ]
   # прямое совпадение
   slug_variants.each do |s|
     return idx[s] if idx[s]

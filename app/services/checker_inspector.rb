@@ -61,4 +61,3 @@ class CheckerInspector
     false
   end
 end
-

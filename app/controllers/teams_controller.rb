@@ -152,7 +152,7 @@ class TeamsController < ApplicationController
       @team = Team.find(params.expect(:id))
     end
 
-    # Only allow a list of trusted parameters through.
+  # Only allow a list of trusted parameters through.
   def team_params
       params.expect(team: [ :name, :university_id, :description, :website, :avatar_url, :avatar_upload, :captain_id ])
     end
