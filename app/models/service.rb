@@ -12,6 +12,20 @@ class Service < ApplicationRecord
 
   scope :publicly_visible, -> { where(public: true) }
 
+  def training?
+    ctf01d_training.present?
+  end
+
+  def training_display_name
+    v = ctf01d_training.is_a?(Hash) ? ctf01d_training["display_name"] : nil
+    v.to_s.strip.presence
+  end
+
+  def training_description
+    v = ctf01d_training.is_a?(Hash) ? ctf01d_training["description"] : nil
+    v.to_s.strip.presence
+  end
+
   private
   def validate_urls
     URL_FIELDS.each do |field|

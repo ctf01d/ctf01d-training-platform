@@ -10,13 +10,14 @@ module ServiceImport
     MAX_ENTRY_BYTES = 50 * 1024 * 1024
     MAX_TOTAL_BYTES = 200 * 1024 * 1024
     MAX_FILES = 10_000
+    MAX_META_BYTES = 512 * 1024
 
     def self.call(zip_bytes:)
       new(zip_bytes).call
     end
 
     def initialize(zip_bytes)
-      @zip_bytes = zip_bytes
+      @zip_bytes = normalize_bytes(zip_bytes)
       @total_bytes = 0
       @files = 0
     end
@@ -25,6 +26,7 @@ module ServiceImport
       raise Error, "пустой zip" if @zip_bytes.blank?
 
       root_prefix = detect_root_prefix(@zip_bytes)
+      root_prefix = "" unless root_prefix.is_a?(String)
 
       service_prefix = File.join(root_prefix, "service/")
       checker_prefix = File.join(root_prefix, "checker/")
@@ -38,6 +40,9 @@ module ServiceImport
       root_license_name = nil
       service_has_readme = false
       service_has_license = false
+      service_has_training_json = false
+      root_training_json = nil
+      root_training_json_name = nil
 
       Zip::OutputStream.write_buffer(buffer) do |zos|
         Zip::File.open_buffer(StringIO.new(@zip_bytes)) do |zip|
@@ -46,17 +51,20 @@ module ServiceImport
 
           root_readme_name, root_readme = read_first(zip, root_prefix, readme_candidates)
           root_license_name, root_license = read_first(zip, root_prefix, license_candidates)
+          root_training_json_name, root_training_json = read_first(zip, root_prefix, training_json_candidates)
 
           if has_service
             service_found = copy_tree(zip, zos, service_prefix, "service/") do |rel|
               service_has_readme ||= readme_candidates.any? { |n| rel.casecmp?(n) }
               service_has_license ||= license_candidates.any? { |n| rel.casecmp?(n) }
+              service_has_training_json ||= training_json_candidates.any? { |n| rel.casecmp?(n) }
             end
           else
             excludes = has_checker ? [ "checker/" ] : []
             service_found = copy_tree(zip, zos, root_prefix, "service/", exclude_rel_prefixes: excludes) do |rel|
               service_has_readme ||= readme_candidates.any? { |n| rel.casecmp?(n) }
               service_has_license ||= license_candidates.any? { |n| rel.casecmp?(n) }
+              service_has_training_json ||= training_json_candidates.any? { |n| rel.casecmp?(n) }
             end
           end
 
@@ -73,6 +81,11 @@ module ServiceImport
             zos.put_next_entry(dest)
             zos.write(root_license)
           end
+
+          if root_training_json.present? && !service_has_training_json
+            zos.put_next_entry("service/ctf01d-training.json")
+            zos.write(root_training_json.byteslice(0, MAX_META_BYTES))
+          end
         end
       end
 
@@ -86,6 +99,7 @@ module ServiceImport
 
     private
     def detect_root_prefix(zip_bytes)
+      zip_bytes = normalize_bytes(zip_bytes)
       buffer = StringIO.new(zip_bytes)
       Zip::File.open_buffer(buffer) do |zip|
         segments = zip.filter_map do |e|
@@ -104,6 +118,19 @@ module ServiceImport
       ""
     end
 
+    def normalize_bytes(value)
+      return value if value.is_a?(String)
+      return "" if value.nil?
+
+      if value.respond_to?(:read)
+        data = value.read.to_s
+        value.rewind if value.respond_to?(:rewind)
+        return data
+      end
+
+      value.to_s
+    end
+
     def readme_candidates
       [ "README.md", "readme.md", "README", "readme" ]
     end
@@ -112,11 +139,15 @@ module ServiceImport
       [ "LICENSE", "LICENSE.txt", "LICENSE.md", "LICENCE", "LICENCE.txt", "COPYING", "COPYING.txt" ]
     end
 
+    def training_json_candidates
+      [ "ctf01d-training.json" ]
+    end
+
     def read_first(zip, root_prefix, candidates)
       candidates.each do |name|
         entry = zip.find_entry(File.join(root_prefix, name))
         next unless entry
-        return [ name, read_small_entry(entry, max_bytes: 512 * 1024) ]
+        return [ name, read_small_entry(entry, max_bytes: MAX_META_BYTES) ]
       end
       [ nil, nil ]
     end

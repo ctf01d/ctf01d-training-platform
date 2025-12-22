@@ -87,6 +87,7 @@ class ServicesController < ApplicationController
     if results.empty?
       redirect_to @service, alert: "Нет URL для скачивания архива."
     else
+      refresh_training_from_local!(@service)
       redirect_to @service, notice: "Архив перескачан."
     end
   rescue ArchiveDownloader::Error, ServiceArchives::Error => e
@@ -99,6 +100,7 @@ class ServicesController < ApplicationController
     archive_file = params.dig(:service, :archive_file)
     return redirect_to @service, alert: "Не выбран файл для загрузки." unless archive_file
     ServiceArchives.save_uploaded(service: @service, kind: :service, uploaded_file: archive_file)
+    refresh_training_from_local!(@service)
     redirect_to @service, notice: "Архив загружен."
   rescue ArchiveDownloader::Error, ServiceArchives::Error => e
     redirect_to @service, alert: "Ошибка загрузки: #{e.message}"
@@ -130,10 +132,13 @@ class ServicesController < ApplicationController
       end
       bundle = ServiceImport::BundleBuilder.call(zip_bytes: fetch[:zip_bytes])
       meta = ServiceImport::MetadataExtractor.call(bundle_zip_bytes: bundle)
+      training = meta[:ctf01d_training].is_a?(Hash) ? meta[:ctf01d_training] : nil
       svc = Service.new(
-        name: meta[:name].presence || fetch[:repo].to_s.tr("-", " ").strip,
-        author: fetch[:owner],
-        public_description: meta[:public_description],
+        name: training&.dig("display_name").to_s.strip.presence ||
+              meta[:name].presence ||
+              fetch[:repo].to_s.tr("-", " ").strip,
+        author: training&.dig("author").to_s.strip.presence || fetch[:owner],
+        public_description: training&.dig("description").to_s.strip.presence || meta[:public_description],
         copyright: begin
           cr = meta[:copyright]
           if meta[:license].present?
@@ -143,6 +148,7 @@ class ServicesController < ApplicationController
             cr
           end
         end,
+        ctf01d_training: training || {},
         public: false
       )
       if svc.save
@@ -180,15 +186,17 @@ class ServicesController < ApplicationController
 
     bundle = ServiceImport::BundleBuilder.call(zip_bytes: data)
     meta = ServiceImport::MetadataExtractor.call(bundle_zip_bytes: bundle)
+    training = meta[:ctf01d_training].is_a?(Hash) ? meta[:ctf01d_training] : nil
 
     name = params[:name].presence ||
+      training&.dig("display_name").to_s.strip.presence ||
       meta[:name].presence ||
       File.basename(upload.original_filename.to_s, File.extname(upload.original_filename.to_s)).tr("_", " ").strip
     author = current_user&.display_name || "upload"
     svc = Service.new(
       name: name.presence || "Uploaded service",
-      author: author,
-      public_description: params[:description].presence || meta[:public_description],
+      author: training&.dig("author").to_s.strip.presence || author,
+      public_description: params[:description].presence || training&.dig("description").to_s.strip.presence || meta[:public_description],
       copyright: begin
         cr = meta[:copyright]
         if meta[:license].present?
@@ -198,6 +206,7 @@ class ServicesController < ApplicationController
           cr
         end
       end,
+      ctf01d_training: training || {},
       public: false
     )
 
@@ -251,5 +260,19 @@ class ServicesController < ApplicationController
       end
 
       raise ServiceArchives::Error, "не найден локальный архив и отсутствует Archive URL"
+    end
+
+    def refresh_training_from_local!(service)
+      rel = service.service_local_path.to_s
+      return if rel.blank?
+      abs = rel.start_with?("/") ? rel : Rails.root.join(rel).to_s
+      return unless File.file?(abs)
+
+      meta = ServiceImport::MetadataExtractor.call(bundle_zip_bytes: File.binread(abs))
+      training = meta[:ctf01d_training].is_a?(Hash) ? meta[:ctf01d_training] : nil
+      return if training.blank?
+      service.update(ctf01d_training: training)
+    rescue StandardError => e
+      Rails.logger.warn("[services] training metadata refresh failed: #{e.class}: #{e.message}")
     end
 end

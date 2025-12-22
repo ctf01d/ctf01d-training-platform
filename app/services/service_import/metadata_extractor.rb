@@ -1,18 +1,20 @@
 # frozen_string_literal: true
 
 require "zip"
+require "json"
 
 module ServiceImport
   # Сервис: извлечь метаданные (name/description/license) из bundle.zip (service/ + checker/).
   class MetadataExtractor
     MAX_TEXT_BYTES = 512 * 1024
+    TRAINING_JSON_MAX_BYTES = 512 * 1024
 
     def self.call(bundle_zip_bytes:)
       new(bundle_zip_bytes).call
     end
 
     def initialize(bundle_zip_bytes)
-      @bundle_zip_bytes = bundle_zip_bytes
+      @bundle_zip_bytes = normalize_bytes(bundle_zip_bytes)
     end
 
     def call
@@ -22,9 +24,11 @@ module ServiceImport
                read_entry(@bundle_zip_bytes, "service/readme")
 
       license_text = read_license(@bundle_zip_bytes)
+      training_json = read_training_json(@bundle_zip_bytes)
+      training = parse_training_json(training_json) if training_json.present?
 
-      title = extract_title(readme) if readme.present?
-      public_desc = summarize_markdown(readme) if readme.present?
+      title = training&.dig("display_name").to_s.strip.presence || (extract_title(readme) if readme.present?)
+      public_desc = training&.dig("description").to_s.strip.presence || (summarize_markdown(readme) if readme.present?)
 
       lic = detect_license(license_text) if license_text.present?
       cr = extract_copyright(license_text) if license_text.present?
@@ -33,7 +37,8 @@ module ServiceImport
         name: title,
         public_description: public_desc,
         copyright: cr,
-        license: lic
+        license: lic,
+        ctf01d_training: training
       }
     end
 
@@ -65,17 +70,54 @@ module ServiceImport
       nil
     end
 
-    def read_small_entry(entry)
+    def read_training_json(zip_bytes)
+      Zip::File.open_buffer(StringIO.new(zip_bytes)) do |zip|
+        entry = zip.find_entry("service/ctf01d-training.json")
+        return read_small_entry(entry, max_bytes: TRAINING_JSON_MAX_BYTES) if entry
+
+        fallback = zip.find_all do |e|
+          name = e.name.to_s
+          name.end_with?("ctf01d-training.json") && !name.start_with?("checker/")
+        end.min_by { |e| e.name.to_s.length }
+        return read_small_entry(fallback, max_bytes: TRAINING_JSON_MAX_BYTES) if fallback
+      end
+      nil
+    rescue Zip::Error
+      nil
+    end
+
+    def parse_training_json(text)
+      obj = JSON.parse(text.to_s)
+      return nil unless obj.is_a?(Hash)
+      obj
+    rescue JSON::ParserError
+      nil
+    end
+
+    def normalize_bytes(value)
+      return value if value.is_a?(String)
+      return "" if value.nil?
+
+      if value.respond_to?(:read)
+        data = value.read.to_s
+        value.rewind if value.respond_to?(:rewind)
+        return data
+      end
+
+      value.to_s
+    end
+
+    def read_small_entry(entry, max_bytes: MAX_TEXT_BYTES)
       return nil unless entry
       data = +""
       entry.get_input_stream do |io|
         while (chunk = io.read(16 * 1024))
           break if chunk.empty?
           data << chunk
-          break if data.bytesize >= MAX_TEXT_BYTES
+          break if data.bytesize >= max_bytes
         end
       end
-      data.byteslice(0, MAX_TEXT_BYTES)
+      data.byteslice(0, max_bytes)
     end
 
     def summarize_markdown(md)

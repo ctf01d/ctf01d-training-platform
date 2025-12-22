@@ -1,13 +1,44 @@
 <% condensed = local_assigns[:condensed] %>
-<div id="<%= dom_id service %>" class="card js-search-item" data-search="<%= [service.name, service.author, service.public_description].compact.join(' ').downcase %>">
+  <% training = service.ctf01d_training.presence %>
+  <% training_meta = training.is_a?(Hash) && training["metadata"].is_a?(Hash) ? training["metadata"] : {} %>
+  <% raw_langs = training.is_a?(Hash) ? training["languages"] : nil %>
+  <% languages = if raw_langs.is_a?(Hash)
+    raw_langs.keys
+  elsif raw_langs.is_a?(Array)
+    raw_langs
+  else
+    []
+  end %>
+  <% languages = languages.map { |v| v.to_s.strip }.reject(&:blank?).uniq %>
+  <% tech = training.is_a?(Hash) && training["tech_stack"].is_a?(Array) ? training["tech_stack"] : [] %>
+  <% tech = tech.map { |v| v.to_s.strip }.reject(&:blank?).uniq %>
+  <% tech = tech.reject { |t| languages.any? { |l| l.casecmp(t) == 0 } } %>
+  <% vulns = training.is_a?(Hash) && training["vulnerabilities"].is_a?(Array) ? training["vulnerabilities"] : [] %>
+  <% vuln_summary = vulns.filter_map do |v|
+    next unless v.is_a?(Hash)
+    v["type"].to_s.strip.presence
+  end.uniq.first(3) %>
+  <% vuln_more = vulns.size - vuln_summary.size %>
+  <% search_terms = [
+    service.name,
+    service.author,
+    service.public_description,
+    service.training_display_name,
+    service.training_description,
+    languages.join(" "),
+    tech.join(" "),
+    vulns.filter_map { |v| v.is_a?(Hash) ? v["type"].to_s.strip.presence : nil }.join(" ")
+  ].compact.join(" ").downcase %>
+<div id="<%= dom_id service %>" class="card js-search-item" data-search="<%= search_terms %>">
   <div style="display:flex; align-items:center; gap:10px;" class="row">
     <%= avatar_image_tag(service.name, url: service.avatar_url) %>
     <div>
       <strong><%= link_to service.name, service %></strong>
-      <% if service.public %>
-        <span class="badge badge--green">public</span>
-      <% else %>
-        <span class="badge badge--gray">private</span>
+      <% if training_meta["category"].to_s.strip.present? %>
+        <span class="badge badge--blue"><%= training_meta["category"].to_s.strip %></span>
+      <% end %>
+      <% if training_meta["difficulty"].to_s.strip.present? %>
+        <span class="badge badge--gray"><%= training_meta["difficulty"].to_s.strip %></span>
       <% end %>
       <% if service.check_status.present? %>
         <% cls = case service.check_status
@@ -27,16 +58,54 @@
 
   <p style="margin: 6px 0 0 0;" class="muted">
     <em><%= service.author %></em>
-  </p>
+      </p>
 
   <div style="margin-top:8px;">
-    <div><strong>Public description:</strong> <%= service.public_description %></div>
-    <% if user_signed_in? && current_user.role == 'admin' %>
+    <div> <%= service.public_description %></div>
+    <% if user_signed_in? && current_user.role == 'admin' && service.private_description != ''  %>
       <div style="margin-top:4px;" class="muted"><strong>Private:</strong> <%= service.private_description %></div>
     <% end %>
   </div>
 
-    <% unless condensed %>
+    <% if condensed %>
+      <% if languages.any? || tech.any? || vuln_summary.any? %>
+        <div class="service-meta">
+          <% if languages.any? %>
+            <div class="service-meta__item">
+              <div class="service-meta__label">Lang</div>
+              <div class="service-meta__value">
+                <% languages.first(3).each do |t| %>
+                  <span class="badge badge--blue"><%= t %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <% if tech.any? %>
+            <div class="service-meta__item">
+              <div class="service-meta__label">Stack</div>
+              <div class="service-meta__value">
+                <% tech.first(4).each do |t| %>
+                  <span class="badge badge--blue"><%= t %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <% if vuln_summary.any? %>
+            <div class="service-meta__item">
+              <div class="service-meta__label">Уязвимости</div>
+              <div class="service-meta__value">
+                <% vuln_summary.each do |t| %>
+                  <span class="badge badge--red"><%= t %></span>
+                <% end %>
+                <% if vuln_more.positive? %>
+                  <span class="badge badge--gray">+<%= vuln_more %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
       <div style="margin-top:8px;">
         <% if service.service_archive_url.present? %>
           <% if (u = safe_http_url(service.service_archive_url)) %>
@@ -81,11 +150,13 @@
       <% end %>
 
       <% if service.service_archive_url.present? || service.service_local_path.present? %>
-        <%= button_to 'Проверить', check_checker_service_path(service), method: :post, form: { style: 'display:inline' }, class: 'btn' %>
+        <%= button_to 'Проверить чекер', check_checker_service_path(service), method: :post, form: { style: 'display:inline' }, class: 'btn' %>
       <% end %>
       <% if service.service_archive_url.present? %>
         <%= button_to 'Перескачать архив', redownload_service_path(service), method: :post, class: 'btn' %>
       <% end %>
+      <%= button_to "Редактировать", edit_service_path(service), method: :get, class: "btn", form: { style: "display:inline" } %>
+      <%= button_to "Удалить сервис", service, method: :delete, class: "btn danger", form: { style: "display:inline" } %>
     </div>
   <% end %>
 

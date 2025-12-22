@@ -31,6 +31,23 @@ a { color: #1a56db; }
 .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
 .row { display: flex; align-items: center; gap: 10px; }
 
+.meta-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 12px; }
+.meta-card { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; }
+.meta-card__title { font-weight: 600; margin-bottom: 6px; }
+.meta-card__body { display: flex; flex-wrap: wrap; gap: 6px; }
+.meta-card__text { font-size: 13px; color: #6b7280; display: grid; gap: 4px; }
+.vuln-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 10px; }
+.vuln-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; }
+.vuln-card__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vuln-card__title { font-weight: 600; }
+.vuln-card__meta { font-size: 12px; color: #6b7280; margin-top: 6px; }
+.vuln-card__desc { margin-top: 6px; }
+
+.service-meta { display: grid; gap: 8px; margin-top: 10px; }
+.service-meta__item { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.service-meta__label { font-weight: 600; color: #6b7280; min-width: 84px; }
+.service-meta__value { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -318,6 +335,8 @@ html[data-theme="dark"] .flash.alert { background: #3b0a0a; color: #fecaca; bord
 html[data-theme="dark"] .flash.warning { background: #3a2a08; color: #fde68a; border-color: #6b4f12; }
 
 html[data-theme="dark"] .card { background: #0f172a; border-color: #1f2937; }
+html[data-theme="dark"] .meta-card { background: #0b1220; border-color: #1f2937; }
+html[data-theme="dark"] .vuln-card { background: #0b1220; border-color: #1f2937; }
 html[data-theme="dark"] .game-banner { background: #0f172a; border-color: #1f2937; }
 html[data-theme="dark"] .game-card { background: #0f172a; border-color: #1f2937; }
 html[data-theme="dark"] .game-card__access { background: #0b1220; border-color: #1f2937; }

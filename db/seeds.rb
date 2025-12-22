@@ -647,33 +647,32 @@ end
 # Seed: services (SibirCTF/CyberSibir)
 services_data = [
   # CyberSibir 2025
-  { name: 'EyeSee',       public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-eyesee', language: 'Python', games: [ 'CyberSibir 2025' ] },
-  { name: 'MSPD',         public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-mspd', language: 'Go', games: [ 'CyberSibir 2025' ] },
-  { name: 'NcDEx',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-ncdex', language: 'Crystal', games: [ 'CyberSibir 2025' ] },
-  { name: 'Unpleasant',   public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-unpleasant', language: 'HTML', games: [ 'CyberSibir 2025' ] },
-  { name: 'WrNum',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-wrnum', language: 'Python', games: [ 'CyberSibir 2025' ] },
-  { name: 'CyberBank',    public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-bank', language: 'JavaScript', games: [ 'CyberSibir 2025' ] },
-  { name: 'NeuroLink234', public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-neLi234', language: 'C', games: [ 'CyberSibir 2025' ] },
-  { name: 'BioGuard',     public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', repo: '2025-cybersibir-service-BioGuard', language: 'Python', games: [ 'CyberSibir 2025' ] },
+  { name: 'EyeSee',       public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'main', repo: '2025-cybersibir-service-eyesee', language: 'Python', games: [ 'CyberSibir 2025' ] },
+  { name: 'MSPD',         public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'main', repo: '2025-cybersibir-service-mspd', language: 'Go', games: [ 'CyberSibir 2025' ] },
+  { name: 'NcDEx',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'main', repo: '2025-cybersibir-service-ncdex', language: 'Crystal', games: [ 'CyberSibir 2025' ] },
+  { name: 'Unpleasant',   public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'master', repo: '2025-cybersibir-service-unpleasant', language: 'HTML', games: [ 'CyberSibir 2025' ] },
+  { name: 'WrNum',        public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'main', repo: '2025-cybersibir-service-wrnum', language: 'Python', games: [ 'CyberSibir 2025' ] },
+  { name: 'CyberBank',    public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'main', repo: '2025-cybersibir-service-bank', language: 'JavaScript', games: [ 'CyberSibir 2025' ] },
+  { name: 'NeuroLink234', public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'main', repo: '2025-cybersibir-service-neLi234', language: 'C', games: [ 'CyberSibir 2025' ] },
+  { name: 'BioGuard',     public_description: 'Service with vulnerabilities for CyberSibir 2025', author: 'CyberSibir', branch: 'main', repo: '2025-cybersibir-service-BioGuard', language: 'Python', games: [ 'CyberSibir 2025' ] },
   # SibirCTF 2023
-  { name: 'StickMarket',    public_description: 'SibirCTF 2023 service (StickMarket)', author: 'SibirCTF', repo: '2023-service-sibirctf-stickmarket', language: 'CSS', games: [ 'SibirCTF 2023' ] },
-  { name: 'SouthParkChat',  public_description: 'SibirCTF 2023 service (SouthParkChat)', author: 'SibirCTF', repo: '2023-service-sibirctf-southparkchat', language: 'Go', games: [ 'SibirCTF 2023' ] },
-  { name: 'SX',             public_description: 'SibirCTF 2023 service (SX)', author: 'SibirCTF', repo: '2023-service-sibirctf-sx', language: 'Python', games: [ 'SibirCTF 2023' ] },
-  { name: 'Chef',           public_description: 'SibirCTF 2023 service (Chef)', author: 'SibirCTF', repo: '2023-service-sibirctf-chef', language: 'C', games: [ 'SibirCTF 2023' ] },
-  { name: 'Card Vault',     public_description: 'SibirCTF 2023 CardVault service', author: 'SibirCTF', repo: '2023-service-sibirctf-cardvault', language: 'Elixir', games: [ 'SibirCTF 2023' ] },
+  { name: 'StickMarket',    public_description: 'SibirCTF 2023 service (StickMarket)', author: 'SibirCTF', branch: 'main', repo: '2023-service-sibirctf-stickmarket', language: 'CSS', games: [ 'SibirCTF 2023' ] },
+  { name: 'SouthParkChat',  public_description: 'SibirCTF 2023 service (SouthParkChat)', author: 'SibirCTF', branch: 'main', repo: '2023-service-sibirctf-southparkchat', language: 'Go', games: [ 'SibirCTF 2023' ] },
+  { name: 'SX',             public_description: 'SibirCTF 2023 service (SX)', author: 'SibirCTF', branch: 'main', repo: '2023-service-sibirctf-sx', language: 'Python', games: [ 'SibirCTF 2023' ] },
+  { name: 'Chef',           public_description: 'SibirCTF 2023 service (Chef)', author: 'SibirCTF', branch: 'main', repo: '2023-service-sibirctf-chef', language: 'C', games: [ 'SibirCTF 2023' ] },
+  { name: 'Card Vault',     public_description: 'SibirCTF 2023 CardVault service', author: 'SibirCTF', branch: 'main', repo: '2023-service-sibirctf-cardvault', language: 'Elixir', games: [ 'SibirCTF 2023' ] },
   # SibirCTF 2018
-  { name: 'maxigram',       public_description: 'SibirCTF 2018 service (maxigram)', author: 'SibirCTF', repo: '2018-service-maxigram', language: 'Python', games: [ 'SibirCTF 2018' ] },
-  { name: 'The Fakebook',   public_description: 'SibirCTF 2018 service (The Fakebook)', author: 'SibirCTF', repo: '2018-service-thefakebook', language: 'HTML', games: [ 'SibirCTF 2018' ] },
-  { name: 'The Hole',       public_description: 'SibirCTF 2018 service (The Hole)', author: 'SibirCTF', repo: '2018-service-the-hole', language: 'C++', games: [ 'SibirCTF 2018' ] },
-  { name: 'Legacy News',    public_description: 'SibirCTF 2018 service (Legacy News)', author: 'SibirCTF', repo: nil, language: nil, games: [ 'SibirCTF 2018' ] },
-  { name: 'Mirai',          public_description: 'SibirCTF 2018 service (Mirai)', author: 'SibirCTF', repo: '2018-service-mirai', language: 'PHP', games: [ 'SibirCTF 2018' ] },
-  { name: 'LNKS',           public_description: 'SibirCTF 2018 service (LNKS)', author: 'SibirCTF', repo: '2018-service-lnks', language: 'PHP', games: [ 'SibirCTF 2018' ] },
-  { name: 'Lie2Me',         public_description: 'SibirCTF 2018 service (Lie2Me)', author: 'SibirCTF', repo: '2018-service-lie-to-me', language: 'Perl', games: [ 'SibirCTF 2018' ] },
+  { name: 'maxigram',       public_description: 'SibirCTF 2018 service (maxigram)', author: 'SibirCTF', branch: 'master', repo: '2018-service-maxigram', language: 'Python', games: [ 'SibirCTF 2018' ] },
+  { name: 'The Fakebook',   public_description: 'SibirCTF 2018 service (The Fakebook)', author: 'SibirCTF', branch: 'master', repo: '2018-service-thefakebook', language: 'HTML', games: [ 'SibirCTF 2018' ] },
+  { name: 'The Hole',       public_description: 'SibirCTF 2018 service (The Hole)', author: 'SibirCTF', branch: 'master', repo: '2018-service-the-hole', language: 'C++', games: [ 'SibirCTF 2018' ] },
+  { name: 'Mirai',          public_description: 'SibirCTF 2018 service (Mirai)', author: 'SibirCTF', branch: 'master', repo: '2018-service-mirai', language: 'PHP', games: [ 'SibirCTF 2018' ] },
+  { name: 'LNKS',           public_description: 'SibirCTF 2018 service (LNKS)', author: 'SibirCTF', branch: 'master', repo: '2018-service-lnks', language: 'PHP', games: [ 'SibirCTF 2018' ] },
+  { name: 'Lie2Me',         public_description: 'SibirCTF 2018 service (Lie2Me)', author: 'SibirCTF', branch: 'master', repo: '2018-service-lie-to-me', language: 'Perl', games: [ 'SibirCTF 2018' ] },
   # SibirCTF 2015
-  { name: 'CryChat',        public_description: 'SibirCTF 2015 service (CryChat)', author: 'SibirCTF', repo: '2015-crychat', language: 'PHP', games: [ 'SibirCTF 2015' ] },
-  { name: "O'Foody",        public_description: 'SibirCTF 2015 service (O’Foody)', author: 'SibirCTF', repo: '2015-ofoody', language: 'Perl', games: [ 'SibirCTF 2015' ] },
-  { name: 'CTFGram',        public_description: 'SibirCTF 2015 service (CTFGram)', author: 'SibirCTF', repo: '2015-ctfgram', language: 'JavaScript', games: [ 'SibirCTF 2015' ] },
-  { name: 'EasyAs',         public_description: 'SibirCTF 2015 service (EasyAs)', author: 'SibirCTF', repo: '2015-easyas', language: 'Python', games: [ 'SibirCTF 2015' ] }
+  { name: 'CryChat',        public_description: 'SibirCTF 2015 service (CryChat)', author: 'SibirCTF', branch: 'master', repo: '2015-crychat', language: 'PHP', games: [ 'SibirCTF 2015' ] },
+  { name: "O'Foody",        public_description: 'SibirCTF 2015 service (O’Foody)', author: 'SibirCTF', branch: 'master', repo: '2015-ofoody', language: 'Perl', games: [ 'SibirCTF 2015' ] },
+  { name: 'CTFGram',        public_description: 'SibirCTF 2015 service (CTFGram)', author: 'SibirCTF', branch: 'master', repo: '2015-ctfgram', language: 'JavaScript', games: [ 'SibirCTF 2015' ] },
+  { name: 'EasyAs',         public_description: 'SibirCTF 2015 service (EasyAs)', author: 'SibirCTF', branch: 'master', repo: '2015-easyas', language: 'Python', games: [ 'SibirCTF 2015' ] }
 ]
 
 services = services_data.map do |attrs|
@@ -683,7 +682,7 @@ services = services_data.map do |attrs|
     s.author = attrs[:author]
     s.avatar_url = svg_data_avatar(attrs[:name], PALETTE.sample)
     s.public = true
-    s.service_archive_url = attrs[:repo] ? "https://github.com/SibirCTF/#{attrs[:repo]}/archive/refs/heads/main.zip" : nil
+    s.service_archive_url = attrs[:repo] ? "https://github.com/SibirCTF/#{attrs[:repo]}/archive/refs/heads/#{attrs[:branch]}.zip" : nil
     s.checker_archive_url = nil
     s.writeup_url = nil
     s.exploits_url = nil

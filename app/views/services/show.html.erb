@@ -1,15 +1,12 @@
 <%= render @service %>
 
-<div style="margin-top:8px;">
-  <% if user_signed_in? && current_user.role == 'admin' %>
-    <%= link_to "Редактировать", edit_service_path(@service) %> |
-    <%= link_to "Назад к сервисам", services_path %> |
-    <%= button_to "Удалить сервис", @service, method: :delete, form: { style: 'display:inline' } %>
-  <% else %>
+<%= render partial: "services/training_metadata", locals: { service: @service } %>
+
+<% unless user_signed_in? && current_user.role == 'admin' %>
+  <div style="margin-top:8px;">
     <%= link_to "Назад к сервисам", services_path %>
-  <% end %>
-  
-</div>
+  </div>
+<% end %>
 
 <% if user_signed_in? && current_user.role == 'admin' %>
   <div class="card" style="margin-top:10px;">

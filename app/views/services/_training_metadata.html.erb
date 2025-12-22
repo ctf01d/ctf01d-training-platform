@@ -1,0 +1,158 @@
+<% training = service.ctf01d_training.presence %>
+<% return unless training.present? %>
+
+<% meta = training["metadata"].is_a?(Hash) ? training["metadata"] : {} %>
+<% tags = meta["tags"].is_a?(Array) ? meta["tags"] : [] %>
+<% raw_tech = training["tech_stack"].is_a?(Array) ? training["tech_stack"] : [] %>
+<% raw_langs = training["languages"] %>
+<% languages = if raw_langs.is_a?(Hash)
+  raw_langs.keys
+elsif raw_langs.is_a?(Array)
+  raw_langs
+else
+  []
+end %>
+<% languages = languages.map { |v| v.to_s.strip }.reject(&:blank?).uniq %>
+<% tech = raw_tech.map { |v| v.to_s.strip }.reject(&:blank?).uniq %>
+<% tech = tech.reject { |t| languages.any? { |l| l.casecmp?(t) == 0 } } %>
+<% vulns = training["vulnerabilities"].is_a?(Array) ? training["vulnerabilities"] : [] %>
+<% deps = training["dependencies"].is_a?(Hash) ? training["dependencies"] : {} %>
+<% deps_runtime = deps["runtime"].is_a?(Array) ? deps["runtime"] : [] %>
+<% deps_dev = deps["development"].is_a?(Array) ? deps["development"] : [] %>
+<% deps_system = deps["system"].is_a?(Array) ? deps["system"] : [] %>
+
+<div class="card" style="margin-top:10px;">
+  <div class="row" style="justify-content:space-between;">
+    <div>
+      <h3 style="margin:0;">Метаданные</h3>
+    </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+      <% if meta["category"].to_s.strip.present? %>
+        <span class="badge badge--blue"><%= meta["category"].to_s.strip %></span>
+      <% end %>
+      <% if meta["difficulty"].to_s.strip.present? %>
+        <span class="badge badge--gray"><%= meta["difficulty"].to_s.strip %></span>
+      <% end %>
+      <% if training["ctf_event"].to_s.strip.present? %>
+        <span class="badge badge--gray"><%= training["ctf_event"].to_s.strip %></span>
+      <% end %>
+      <% if training["year"].to_s.strip.present? %>
+        <span class="badge badge--gray"><%= training["year"].to_s.strip %></span>
+      <% end %>
+      <% if training["service_port"].to_s.strip.present? %>
+        <span class="badge badge--gray">port: <%= training["service_port"].to_s.strip %></span>
+      <% end %>
+    </div>
+  </div>
+
+  <div style="margin-top:10px;">
+    <% if (dn = training["display_name"].to_s.strip.presence) && dn != service.name %>
+      <div><strong>Название:</strong> <%= dn %></div>
+    <% end %>
+
+    <% desc = training["description"].to_s.strip.presence %>
+    <% if desc.present? && desc != service.public_description.to_s.strip %>
+      <div style="margin-top:8px;"><strong>Описание:</strong> <%= desc %></div>
+    <% end %>
+
+    <% if (author = training["author"].to_s.strip.presence) && author != service.author.to_s.strip %>
+      <div style="margin-top:8px;"><strong>Автор:</strong> <%= author %></div>
+    <% end %>
+  </div>
+
+  <% if languages.any? || tech.any? || tags.any? || deps_runtime.any? || deps_dev.any? || deps_system.any? %>
+    <div class="meta-grid">
+      <% if languages.any? %>
+        <div class="meta-card">
+          <div class="meta-card__title">Languages</div>
+          <div class="meta-card__body">
+            <% languages.first(12).each do |t| %>
+              <span class="badge badge--blue"><%= t %></span>
+            <% end %>
+            <% if languages.size > 12 %>
+              <span class="badge badge--gray">+<%= languages.size - 12 %></span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if tech.any? %>
+        <div class="meta-card">
+          <div class="meta-card__title">Tech stack</div>
+          <div class="meta-card__body">
+            <% tech.first(18).each do |t| %>
+              <span class="badge badge--blue"><%= t %></span>
+            <% end %>
+            <% if tech.size > 18 %>
+              <span class="badge badge--gray">+<%= tech.size - 18 %></span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if tags.any? %>
+        <div class="meta-card">
+          <div class="meta-card__title">Tags</div>
+          <div class="meta-card__body">
+            <% tags.first(24).each do |t| %>
+              <span class="badge badge--gray"><%= t.to_s %></span>
+            <% end %>
+            <% if tags.size > 24 %>
+              <span class="badge badge--gray">+<%= tags.size - 24 %></span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if deps_runtime.any? || deps_dev.any? || deps_system.any? %>
+        <div class="meta-card">
+          <div class="meta-card__title">Dependencies</div>
+          <div class="meta-card__text">
+            <% if deps_runtime.any? %>
+              <div><strong>runtime:</strong> <%= deps_runtime.map { |v| v.to_s }.reject(&:blank?).join(", ") %></div>
+            <% end %>
+            <% if deps_dev.any? %>
+              <div><strong>development:</strong> <%= deps_dev.map { |v| v.to_s }.reject(&:blank?).join(", ") %></div>
+            <% end %>
+            <% if deps_system.any? %>
+              <div><strong>system:</strong> <%= deps_system.map { |v| v.to_s }.reject(&:blank?).join(", ") %></div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if vulns.any? %>
+    <div style="margin-top:16px;">
+      <strong>Уязвимости:</strong>
+      <div class="vuln-grid">
+        <% vulns.each do |v| %>
+          <% next unless v.is_a?(Hash) %>
+          <% sev = v["severity"].to_s.strip %>
+          <% sev_cls = case sev.downcase
+            when "critical", "high" then "badge--red"
+            when "medium" then "badge--blue"
+            when "low" then "badge--gray"
+            else "badge--gray"
+          end %>
+          <div class="vuln-card">
+            <div class="vuln-card__header">
+              <div class="vuln-card__title"><%= v["type"].to_s.strip.presence || "—" %></div>
+              <span class="badge <%= sev_cls %>"><%= sev.presence || "—" %></span>
+            </div>
+            <% if v["attack_vector"].to_s.strip.present? %>
+              <div class="vuln-card__meta">Vector: <%= v["attack_vector"].to_s.strip %></div>
+            <% end %>
+            <% if v["description"].to_s.strip.present? %>
+              <div class="vuln-card__desc"><%= v["description"].to_s.strip %></div>
+            <% end %>
+            <% if v["cve"].to_s.strip.present? %>
+              <div class="vuln-card__meta">CVE: <%= v["cve"].to_s.strip %></div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
