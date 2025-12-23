@@ -109,6 +109,29 @@
 - Для локального запуска: оформить docker compose так, чтобы сохранялся стейт между рестартами, и добавить .gitignore/.dockerignore для локальных данных; локально HTTPS
 не нужен.
 
+# Безопасность
+
+Аудит безопасности (bundle audit, brakeman, code review) — **в целом хорошо**, но есть улучшения:
+
+**Высокий приоритет:**
+- [ ] Rate limiting на логин (защита от brute force)
+- [ ] Усилить валидацию GitHub URL в `GithubImporter` (текущая проверка `end_with?("github.com")` уязвима)
+
+**Средний приоритет:**
+- [ ] Timing attack на логине: `User.find_by(...)&.authenticate` — быстрее отвечает для несуществующих юзеров
+- [ ] Явная CSRF защита: добавить `protect_from_forgery` в `ApplicationController`
+
+**Низкий приоритет:**
+- [ ] Включить Content Security Policy (сейчас закомментирован)
+- [ ] Ограничить время жизни сессии (`expire_after`)
+
+**Уже защищено:**
+- SQL-инъекции (ActiveRecord + strong parameters)
+- XSS (Rails default escaping)
+- Mass Assignment (`params.expect()`)
+- Open Redirect
+- SSL в production (`force_ssl = true`)
+
 
 # MVP - версия #1 (версия на go - не реализованная)
 
