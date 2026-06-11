@@ -207,6 +207,9 @@ func (s *Service) CanManage(ctx context.Context, teamID, userID int64, globalRol
 }
 
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*Team, error) {
+	if params.Name != nil && *params.Name == "" {
+		return nil, errs.NewValidationError(map[string]string{"name": "must be non-empty"})
+	}
 	name := ""
 	if params.Name != nil {
 		name = *params.Name

@@ -169,6 +169,9 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*Game, error
 	}); err != nil {
 		return nil, err
 	}
+	if params.StartsAt != nil && params.EndsAt != nil && !params.EndsAt.After(*params.StartsAt) {
+		return nil, errs.NewValidationError(map[string]string{"ends_at": "must be after starts_at"})
+	}
 
 	dbGame, err := s.games.CreateGame(ctx, db.CreateGameParams{
 		Name:                 params.Name,
@@ -246,6 +249,9 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*G
 		vpnConfigUrl: params.VpnConfigUrl,
 	}); err != nil {
 		return nil, err
+	}
+	if params.StartsAt != nil && params.EndsAt != nil && !params.EndsAt.After(*params.StartsAt) {
+		return nil, errs.NewValidationError(map[string]string{"ends_at": "must be after starts_at"})
 	}
 
 	dbGame, err := s.games.UpdateGame(ctx, db.UpdateGameParams{

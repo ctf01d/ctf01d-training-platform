@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -171,7 +172,56 @@ func (s *ArchiveService) OpenLocal(ctx context.Context, id int64, kind string) (
 	return rc, filename, nil
 }
 
+var errBlockedHost = fmt.Errorf("URL resolves to a blocked or private address")
+
+var ssrfCheckHost = checkURLHost
+
+func isBlockedIP(ip net.IP) bool {
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		return true
+	}
+	if ip4 := ip.To4(); ip4 != nil {
+		if ip4[0] == 10 || (ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31) || (ip4[0] == 192 && ip4[1] == 168) {
+			return true
+		}
+		if ip4[0] == 169 && ip4[1] == 254 {
+			return true
+		}
+		if ip4[0] == 127 {
+			return true
+		}
+		if ip4[0] == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func checkURLHost(rawURL string) error {
+	host := strings.TrimPrefix(rawURL, "http://")
+	host = strings.TrimPrefix(host, "https://")
+	if idx := strings.Index(host, "/"); idx >= 0 {
+		host = host[:idx]
+	}
+	if idx := strings.Index(host, ":"); idx >= 0 {
+		host = host[:idx]
+	}
+	ips, err := net.LookupIP(host)
+	if err != nil {
+		return fmt.Errorf("resolving host: %w", err)
+	}
+	for _, ip := range ips {
+		if isBlockedIP(ip) {
+			return errBlockedHost
+		}
+	}
+	return nil
+}
+
 func (s *ArchiveService) downloadAndSave(ctx context.Context, archiveURL, key string) (storage.FileInfo, error) {
+	if err := ssrfCheckHost(archiveURL); err != nil {
+		return storage.FileInfo{}, fmt.Errorf("checking URL: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, archiveURL, nil)
 	if err != nil {
 		return storage.FileInfo{}, fmt.Errorf("creating request: %w", err)

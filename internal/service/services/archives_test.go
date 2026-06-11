@@ -20,6 +20,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+func init() {
+	ssrfCheckHost = func(string) error { return nil }
+}
+
 type mockArchiveQuerier struct {
 	services map[int64]*db.Service
 	nextID   int64
@@ -475,4 +479,28 @@ func TestPgtypeTz(t *testing.T) {
 
 	var zeroPgtype pgtype.Timestamptz = pgtype.Timestamptz{}
 	_ = zeroPgtype
+}
+
+func TestCheckURLHost_Blocked(t *testing.T) {
+	cases := []struct {
+		url string
+		ok  bool
+	}{
+		{"http://127.0.0.1/secret", false},
+		{"http://localhost/secret", false},
+		{"http://10.0.0.1/secret", false},
+		{"http://192.168.1.1/secret", false},
+		{"http://172.16.0.1/secret", false},
+		{"http://169.254.169.254/metadata", false},
+		{"http://example.com/file.zip", true},
+	}
+	for _, tc := range cases {
+		err := checkURLHost(tc.url)
+		if tc.ok && err != nil {
+			t.Errorf("checkURLHost(%q): unexpected error: %v", tc.url, err)
+		}
+		if !tc.ok && err == nil {
+			t.Errorf("checkURLHost(%q): expected blocked, got nil", tc.url)
+		}
+	}
 }

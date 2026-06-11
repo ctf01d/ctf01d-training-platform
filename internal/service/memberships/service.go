@@ -73,6 +73,7 @@ type EventQuerier interface {
 	CreateEvent(ctx context.Context, arg db.CreateEventParams) (db.TeamMembershipEvent, error)
 	ListEventsByTeam(ctx context.Context, arg db.ListEventsByTeamParams) ([]db.TeamMembershipEvent, error)
 	CountEventsByTeam(ctx context.Context, teamID int64) (int64, error)
+	GetLatestEventForMember(ctx context.Context, arg db.GetLatestEventForMemberParams) (db.TeamMembershipEvent, error)
 }
 
 type TeamQuerier interface {
@@ -316,6 +317,17 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 		}
 		if mem.Status == nil || *mem.Status != "pending" {
 			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
+		}
+
+		evt, err := s.events.GetLatestEventForMember(ctx, db.GetLatestEventForMemberParams{
+			TeamID: mem.TeamID,
+			UserID: mem.UserID,
+		})
+		if err != nil {
+			return fmt.Errorf("checking membership source: %w", err)
+		}
+		if evt.Action != "invite" {
+			return errs.ErrForbidden
 		}
 
 		approved := "approved"

@@ -600,6 +600,11 @@ func (h *Handler) HandleListServices(c *gin.Context) {
 	role, hasRole := middleware.CurrentRole(c)
 	isAdmin := hasRole && role == "admin"
 
+	if publicFilter == nil && !isAdmin {
+		b := true
+		publicFilter = &b
+	}
+
 	result, err := h.svcService.List(c.Request.Context(), page, perPage, publicFilter, q, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -872,7 +877,7 @@ func (h *Handler) HandleImportServiceFromGithub(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, importResultToHTTP(result))
+	c.JSON(http.StatusCreated, importResultToHTTP(result))
 }
 
 func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
@@ -903,7 +908,7 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, importResultToHTTP(result))
+	c.JSON(http.StatusCreated, importResultToHTTP(result))
 }
 
 func (h *Handler) ListServices(c *gin.Context, params httpserver.ListServicesParams) {

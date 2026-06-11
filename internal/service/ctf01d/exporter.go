@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -595,7 +596,39 @@ func writeDataURLToFile(dataURL string, dir string, preferName string) (string, 
 	return "", fmt.Errorf("invalid data:image URL")
 }
 
+func checkDownloadURL(rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("parsing URL: %w", err)
+	}
+	host := u.Hostname()
+	ips, err := net.LookupIP(host)
+	if err != nil {
+		return fmt.Errorf("resolving host: %w", err)
+	}
+	for _, ip := range ips {
+		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+			return fmt.Errorf("blocked address: %s", ip)
+		}
+		if ip4 := ip.To4(); ip4 != nil {
+			if ip4[0] == 10 || (ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31) || (ip4[0] == 192 && ip4[1] == 168) {
+				return fmt.Errorf("blocked private address: %s", ip)
+			}
+			if ip4[0] == 169 && ip4[1] == 254 {
+				return fmt.Errorf("blocked link-local address: %s", ip)
+			}
+			if ip4[0] == 0 {
+				return fmt.Errorf("blocked address: %s", ip)
+			}
+		}
+	}
+	return nil
+}
+
 func downloadURLToFile(rawURL string, dir string, preferName string) (string, error) {
+	if err := checkDownloadURL(rawURL); err != nil {
+		return "", fmt.Errorf("blocked URL: %w", err)
+	}
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Get(rawURL)
 	if err != nil {

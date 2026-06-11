@@ -208,6 +208,22 @@ func (m *mockEventQuerier) CountEventsByTeam(_ context.Context, teamID int64) (i
 	return count, nil
 }
 
+func (m *mockEventQuerier) GetLatestEventForMember(_ context.Context, arg db.GetLatestEventForMemberParams) (db.TeamMembershipEvent, error) {
+	var latest *db.TeamMembershipEvent
+	for i := range m.events {
+		e := &m.events[i]
+		if e.TeamID == arg.TeamID && e.UserID == arg.UserID {
+			if latest == nil || e.CreatedAt.After(latest.CreatedAt) {
+				latest = e
+			}
+		}
+	}
+	if latest == nil {
+		return db.TeamMembershipEvent{}, pgx.ErrNoRows
+	}
+	return *latest, nil
+}
+
 func (m *mockTeamQuerier) GetTeamByID(_ context.Context, id int64) (db.Team, error) {
 	t, ok := m.teams[id]
 	if !ok {
@@ -268,6 +284,22 @@ func seedPendingMember(mq *mockQuerier, eq *mockEventQuerier, teamID, userID int
 	status := "pending"
 	mem, _ := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: teamID, UserID: userID, Role: &role, Status: &status,
+	})
+	eq.CreateEvent(context.Background(), db.CreateEventParams{
+		TeamID: teamID, UserID: userID, ActorID: int32Ptr(999), Action: "invite",
+		ToRole: &role, ToStatus: &status,
+	})
+	return mem.ID
+}
+
+func seedPendingJoinRequest(mq *mockQuerier, eq *mockEventQuerier, teamID, userID int64, role string) int64 {
+	status := "pending"
+	mem, _ := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+		TeamID: teamID, UserID: userID, Role: &role, Status: &status,
+	})
+	eq.CreateEvent(context.Background(), db.CreateEventParams{
+		TeamID: teamID, UserID: userID, ActorID: int32Ptr(userID), Action: "join_request",
+		ToRole: &role, ToStatus: &status,
 	})
 	return mem.ID
 }
@@ -400,6 +432,18 @@ func TestAccept_WrongUser(t *testing.T) {
 	err := svc.Accept(context.Background(), pendingMemID, 99)
 	if err != errs.ErrForbidden {
 		t.Errorf("expected ErrForbidden, got %v", err)
+	}
+}
+
+func TestAccept_SelfApprovalRejected(t *testing.T) {
+	mq, eq, tq, tx := newMocks()
+	svc := NewService(mq, eq, tq, tx)
+
+	pendingMemID := seedPendingJoinRequest(mq, eq, 1, 20, "guest")
+
+	err := svc.Accept(context.Background(), pendingMemID, 20)
+	if err != errs.ErrForbidden {
+		t.Errorf("expected ErrForbidden for self-approval of join request, got %v", err)
 	}
 }
 
@@ -549,11 +593,20 @@ func TestListEvents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListEvents: %v", err)
 	}
-	if len(result.Items) != 1 {
-		t.Errorf("len(items) = %d, want 1", len(result.Items))
+	if len(result.Items) != 2 {
+		t.Errorf("len(items) = %d, want 2", len(result.Items))
 	}
-	if result.Items[0].Action != "approved" {
-		t.Errorf("action = %q, want approved", result.Items[0].Action)
+	if result.Items[0].Action != "approved" && result.Items[1].Action != "approved" {
+		t.Errorf("no approved event found")
+	}
+	var approvedAction string
+	for _, item := range result.Items {
+		if item.Action == "approved" {
+			approvedAction = "approved"
+		}
+	}
+	if approvedAction != "approved" {
+		t.Errorf("no approved event found in list")
 	}
 }
 

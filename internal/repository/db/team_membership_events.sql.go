@@ -65,6 +65,36 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (TeamM
 	return i, err
 }
 
+const getLatestEventForMember = `-- name: GetLatestEventForMember :one
+SELECT id, team_id, user_id, actor_id, action, from_role, to_role, from_status, to_status, created_at, updated_at FROM team_membership_events
+WHERE team_id = $1 AND user_id = $2
+ORDER BY created_at DESC LIMIT 1
+`
+
+type GetLatestEventForMemberParams struct {
+	TeamID int64 `json:"team_id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) GetLatestEventForMember(ctx context.Context, arg GetLatestEventForMemberParams) (TeamMembershipEvent, error) {
+	row := q.db.QueryRow(ctx, getLatestEventForMember, arg.TeamID, arg.UserID)
+	var i TeamMembershipEvent
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.UserID,
+		&i.ActorID,
+		&i.Action,
+		&i.FromRole,
+		&i.ToRole,
+		&i.FromStatus,
+		&i.ToStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listEventsByTeam = `-- name: ListEventsByTeam :many
 SELECT id, team_id, user_id, actor_id, action, from_role, to_role, from_status, to_status, created_at, updated_at FROM team_membership_events WHERE team_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3
 `
