@@ -44,6 +44,7 @@ type Handler struct {
 	svcImport     *svcsvc.ImportService
 	ctf01dBuilder *ctf01dsvc.Builder
 	maxUploadBytes int64
+	storageDir    string
 }
 
 func New(
@@ -64,6 +65,7 @@ func New(
 	svcImport *svcsvc.ImportService,
 	ctf01dBuilder *ctf01dsvc.Builder,
 	maxUploadBytes int64,
+	storageDir string,
 ) *Handler {
 	return &Handler{
 		users:         users,
@@ -83,6 +85,7 @@ func New(
 		svcImport:     svcImport,
 		ctf01dBuilder: ctf01dBuilder,
 		maxUploadBytes: maxUploadBytes,
+		storageDir:    storageDir,
 	}
 }
 
@@ -820,7 +823,8 @@ func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
 	defer rc.Close()
 
 	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	safeName := sanitizeFilename(filename)
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, safeName))
 	c.Status(http.StatusOK)
 	io.Copy(c.Writer, rc)
 }
@@ -945,6 +949,19 @@ func (h *Handler) GetCtf01dExportOptions(c *gin.Context, id int64) {
 func (h *Handler) ExportCtf01d(c *gin.Context, id int64) {
 	c.Set("id", id)
 	h.HandleExportCtf01d(c)
+}
+
+func sanitizeFilename(name string) string {
+	r := make([]byte, 0, len(name))
+	for i := 0; i < len(name); i++ {
+		b := name[i]
+		if b == '"' || b == '\\' || b == '\n' || b == '\r' {
+			r = append(r, '_')
+			continue
+		}
+		r = append(r, b)
+	}
+	return string(r)
 }
 
 var _ httpserver.ServerInterface = (*Handler)(nil)

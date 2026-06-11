@@ -2,6 +2,7 @@ package universities
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
@@ -55,6 +56,9 @@ func NewService(q Querier) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams) (*University, error) {
+	if err := validateURLs(params.SiteUrl, params.AvatarUrl); err != nil {
+		return nil, err
+	}
 	dbUni, err := s.q.CreateUniversity(ctx, db.CreateUniversityParams{
 		Name:      params.Name,
 		SiteUrl:   params.SiteUrl,
@@ -114,6 +118,9 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*UniversityListR
 }
 
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*University, error) {
+	if err := validateURLs(params.SiteUrl, params.AvatarUrl); err != nil {
+		return nil, err
+	}
 	dbUni, err := s.q.UpdateUniversity(ctx, db.UpdateUniversityParams{
 		ID:        id,
 		Name:      params.Name,
@@ -154,4 +161,20 @@ func mapDBError(err error) error {
 		return errs.ErrConflict
 	}
 	return err
+}
+
+func validateURLs(urls ...*string) error {
+	for _, u := range urls {
+		if u == nil || *u == "" {
+			continue
+		}
+		parsed, err := url.Parse(*u)
+		if err != nil {
+			return errs.NewValidationError(map[string]string{"url": "invalid URL format"})
+		}
+		if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			return errs.NewValidationError(map[string]string{"url": "URL must use http or https scheme"})
+		}
+	}
+	return nil
 }

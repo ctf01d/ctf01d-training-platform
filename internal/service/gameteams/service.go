@@ -133,7 +133,18 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 
 func (s *Service) Reorder(ctx context.Context, gameID int64, items []ReorderItem) error {
 	return s.tx.RunInTx(ctx, func() error {
+		existing, err := s.q.ListGameTeamsByGame(ctx, gameID)
+		if err != nil {
+			return err
+		}
+		allowed := make(map[int64]bool, len(existing))
+		for _, gt := range existing {
+			allowed[gt.ID] = true
+		}
 		for _, item := range items {
+			if !allowed[item.ID] {
+				return errs.ErrForbidden
+			}
 			if err := s.q.UpdateGameTeamOrder(ctx, db.UpdateGameTeamOrderParams{
 				ID:    item.ID,
 				Order: int32(item.Order),

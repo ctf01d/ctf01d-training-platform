@@ -314,12 +314,18 @@ func (s *Service) Finalize(ctx context.Context, gameID int64) (*Game, error) {
 			return err
 		}
 
+		curRank := int32(1)
+		var prevScore int32
 		for i, r := range results {
-			pos := int32(i + 1)
 			score := int32(0)
 			if r.Score != nil {
 				score = *r.Score
 			}
+			if i > 0 && score != prevScore {
+				curRank = int32(i + 1)
+			}
+			prevScore = score
+			pos := curRank
 			_, err := s.finalResults.InsertFinalResult(ctx, db.InsertFinalResultParams{
 				GameID:   gameID,
 				TeamID:   r.TeamID,

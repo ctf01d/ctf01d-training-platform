@@ -69,11 +69,22 @@ export default function UniversitiesPage() {
     await fetchUniversities()
   }
 
+  const safeUrl = (u: string | undefined | null) => {
+    if (!u) return null
+    try {
+      const parsed = new URL(u)
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+      return u
+    } catch {
+      return null
+    }
+  }
+
   const columns = [
     { header: 'ID', render: (u: University) => u.id },
     { header: 'Name', render: (u: University) => u.name ?? '—' },
-    { header: 'Site URL', render: (u: University) => u.site_url ? <a href={u.site_url} target="_blank" rel="noreferrer">{u.site_url}</a> : '—' },
-    { header: 'Avatar', render: (u: University) => u.avatar_url ? <a href={u.avatar_url} target="_blank" rel="noreferrer">Link</a> : '—' },
+    { header: 'Site URL', render: (u: University) => safeUrl(u.site_url) ? <a href={u.site_url!} target="_blank" rel="noreferrer">{u.site_url}</a> : (u.site_url ?? '—') },
+    { header: 'Avatar', render: (u: University) => safeUrl(u.avatar_url) ? <a href={u.avatar_url!} target="_blank" rel="noreferrer">Link</a> : (u.avatar_url ?? '—') },
   ]
 
   return (

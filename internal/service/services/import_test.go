@@ -592,7 +592,7 @@ func TestCheckerService_CheckChecker_NoArchive(t *testing.T) {
 	q.services[id] = &db.Service{ID: id, Name: "test", CheckStatus: "unknown"}
 	q.byName["test"] = id
 
-	cs := NewCheckerService(q)
+	cs := NewCheckerService(q, nil)
 	result, err := cs.CheckChecker(context.Background(), id, true)
 	if err != nil {
 		t.Fatalf("CheckChecker: %v", err)
@@ -604,7 +604,7 @@ func TestCheckerService_CheckChecker_NoArchive(t *testing.T) {
 
 func TestCheckerService_CheckChecker_NotFound(t *testing.T) {
 	q := newMockImportQuerier()
-	cs := NewCheckerService(q)
+	cs := NewCheckerService(q, nil)
 	_, err := cs.CheckChecker(context.Background(), 999, true)
 	if err == nil {
 		t.Fatal("expected error for not found service")
@@ -1051,7 +1051,7 @@ func TestCheckerService_WithLocalArchive(t *testing.T) {
 	}
 	q.byName["test"] = id
 
-	cs := NewCheckerService(q)
+	cs := NewCheckerService(q, nil)
 
 	svc, err := cs.CheckChecker(context.Background(), id, true)
 	if err != nil {

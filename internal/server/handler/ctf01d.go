@@ -3,6 +3,8 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	ctf01dsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/ctf01d"
@@ -59,6 +61,21 @@ func (h *Handler) HandleExportCtf01d(c *gin.Context) {
 		return
 	}
 
+	if req.HtmlSourcePath != nil && *req.HtmlSourcePath != "" {
+		abs, err := filepath.Abs(*req.HtmlSourcePath)
+		if err != nil {
+			respondError(c, fmt.Errorf("invalid html_source_path"))
+			return
+		}
+		abs = filepath.Clean(abs)
+		allowedBase, _ := filepath.Abs(h.storageDir)
+		if !strings.HasPrefix(abs, allowedBase+string(filepath.Separator)) && abs != allowedBase {
+			respondError(c, fmt.Errorf("html_source_path must be within the storage directory"))
+			return
+		}
+		*req.HtmlSourcePath = abs
+	}
+
 	builderReq := ctf01dsvc.Ctf01dExportRequest{
 		Prefix:           req.Prefix,
 		IncludeHtml:      req.IncludeHtml,
@@ -102,7 +119,8 @@ func (h *Handler) HandleExportCtf01d(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, exportResult.Filename))
+	safeName := sanitizeFilename(exportResult.Filename)
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, safeName))
 	c.Header("Content-Length", fmt.Sprintf("%d", len(exportResult.Data)))
 	c.Data(http.StatusOK, "application/zip", exportResult.Data)
 }

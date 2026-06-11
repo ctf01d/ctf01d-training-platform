@@ -5,10 +5,24 @@ import (
 	"strconv"
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	"github.com/gin-gonic/gin"
 )
+
+func parseIDQuery(c *gin.Context, key string) (int64, bool) {
+	s := c.Query(key)
+	if s == "" {
+		return 0, false
+	}
+	id, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		respondError(c, errs.NewValidationError(map[string]string{key: "must be a valid integer"}))
+		return 0, false
+	}
+	return id, true
+}
 
 func (h *Handler) HandleListResults(c *gin.Context) {
 	gameIDStr := c.Query("game_id")
@@ -19,14 +33,26 @@ func (h *Handler) HandleListResults(c *gin.Context) {
 
 	switch {
 	case gameIDStr != "" && teamIDStr != "":
-		gameID, _ := strconv.ParseInt(gameIDStr, 10, 64)
-		teamID, _ := strconv.ParseInt(teamIDStr, 10, 64)
+		gameID, ok := parseIDQuery(c, "game_id")
+		if !ok {
+			return
+		}
+		teamID, ok := parseIDQuery(c, "team_id")
+		if !ok {
+			return
+		}
 		results, err = h.results.ListByGameAndTeam(c.Request.Context(), gameID, teamID)
 	case gameIDStr != "":
-		gameID, _ := strconv.ParseInt(gameIDStr, 10, 64)
+		gameID, ok := parseIDQuery(c, "game_id")
+		if !ok {
+			return
+		}
 		results, err = h.results.ListByGame(c.Request.Context(), gameID)
 	case teamIDStr != "":
-		teamID, _ := strconv.ParseInt(teamIDStr, 10, 64)
+		teamID, ok := parseIDQuery(c, "team_id")
+		if !ok {
+			return
+		}
 		results, err = h.results.ListByTeam(c.Request.Context(), teamID)
 	default:
 		results, err = h.results.ListAll(c.Request.Context())

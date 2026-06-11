@@ -69,10 +69,14 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 			htmlSource = buildFallbackHTML(tmpDir)
 		} else {
 			abs, err := filepath.Abs(htmlSource)
-			if err != nil || strings.HasPrefix(abs, "..") {
-				return nil, fmt.Errorf("invalid html_source_path: must be an absolute path within allowed directories")
+			if err != nil {
+				return nil, fmt.Errorf("invalid html_source_path: %w", err)
 			}
-			htmlSource = abs
+			clean := filepath.Clean(abs)
+			if strings.Contains(clean, "..") {
+				return nil, fmt.Errorf("invalid html_source_path: must not contain '..' components")
+			}
+			htmlSource = clean
 		}
 		copyTree(htmlSource, path.Join(dataDir, "html"))
 	}

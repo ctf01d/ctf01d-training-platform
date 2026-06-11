@@ -5,10 +5,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 )
 
 var requiredCodes = []string{"101", "102", "103", "104"}
@@ -21,11 +23,12 @@ type CheckerQuerier interface {
 }
 
 type CheckerService struct {
-	q CheckerQuerier
+	q   CheckerQuerier
+	st  storage.Storage
 }
 
-func NewCheckerService(q CheckerQuerier) *CheckerService {
-	return &CheckerService{q: q}
+func NewCheckerService(q CheckerQuerier, st storage.Storage) *CheckerService {
+	return &CheckerService{q: q, st: st}
 }
 
 func (cs *CheckerService) CheckChecker(ctx context.Context, id int64, isAdmin bool) (*ServiceModel, error) {
@@ -48,7 +51,7 @@ func (cs *CheckerService) CheckChecker(ctx context.Context, id int64, isAdmin bo
 		return &result, nil
 	}
 
-	result := inspectCheckerArchive(svc.CheckerLocalPath)
+	result := cs.inspectCheckerArchive(*svc.CheckerLocalPath)
 	status := result.Status
 
 	svc, err = cs.q.SetCheckStatus(ctx, db.SetCheckStatusParams{
@@ -64,11 +67,20 @@ func (cs *CheckerService) CheckChecker(ctx context.Context, id int64, isAdmin bo
 	return &model, nil
 }
 
-func inspectCheckerArchive(checkerPath *string) CheckerInspectionResult {
-	return CheckerInspectionResult{
-		Status:     "unknown",
-		FoundCodes: nil,
+func (cs *CheckerService) inspectCheckerArchive(checkerPath string) CheckerInspectionResult {
+	if cs.st == nil {
+		return CheckerInspectionResult{Status: "unknown"}
 	}
+	rc, err := cs.st.Open(context.Background(), checkerPath)
+	if err != nil {
+		return CheckerInspectionResult{Status: "unknown"}
+	}
+	defer rc.Close()
+	data, err := io.ReadAll(io.LimitReader(rc, maxCheckerEntryBytes))
+	if err != nil {
+		return CheckerInspectionResult{Status: "unknown"}
+	}
+	return InspectCheckerFromBytes(data)
 }
 
 func InspectCheckerFromBytes(data []byte) CheckerInspectionResult {

@@ -436,7 +436,7 @@ func extractCheckerFromBundle(bundleBytes []byte) []byte {
 		if err != nil {
 			return nil
 		}
-		data, err := io.ReadAll(rc)
+		data, err := io.ReadAll(io.LimitReader(rc, maxCheckerEntryBytes))
 		rc.Close()
 		if err != nil {
 			return nil
