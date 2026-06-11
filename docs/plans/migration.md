@@ -381,10 +381,10 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       overrides/training и warnings.
 
 ### Task 27: Seeds and optional data import
-- [ ] `cmd/seed/main.go`: создать admin (user_name=admin, пароль из SEED_ADMIN_PASSWORD или admin12345,
+- [x] `cmd/seed/main.go`: создать admin (user_name=admin, пароль из SEED_ADMIN_PASSWORD или admin12345,
       role=admin, bcrypt cost 12), тестовые вузы/команды/игру; идемпотентно (ON CONFLICT DO NOTHING).
       Makefile-таргет `seed` (`go run ./cmd/seed`).
-- [ ] `cmd/import-rails/main.go` — заготовка переноса из старой Rails-БД (RAILS_DATABASE_URL→DATABASE_URL):
+- [x] `cmd/import-rails/main.go` — заготовка переноса из старой Rails-БД (RAILS_DATABASE_URL→DATABASE_URL):
       реализовать users (password_digest как есть — bcrypt совместим), остальные таблицы — TODO. Тест на
       чистую функцию маппинга row→params.
 

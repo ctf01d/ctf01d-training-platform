@@ -3,7 +3,7 @@
 	go-build go-run go-test go-vet go-fmt go-tidy \
 	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
 	migrate-up migrate-down migrate-status migrate-new \
-	sqlc-gen sqlc-vet
+	sqlc-gen sqlc-vet seed
 # -----------------------------------------------------------------------------
 # Docker images (production)
 
@@ -140,3 +140,7 @@ sqlc-gen:
 ## sqlc-vet: Vet SQL queries and generated code
 sqlc-vet:
 	$(SQLC) vet
+
+## seed: Populate database with test data (idempotent)
+seed:
+	go run ./cmd/seed
