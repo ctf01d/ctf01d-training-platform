@@ -1,7 +1,8 @@
 .PHONY: codegen database-attach database-remove database-reset database-run database-stop fmt install lint server-build server-run test \
 	web-rails-image-build web-rails-image-save web-rails-image-build-and-save deploy \
 	go-build go-run go-test go-vet go-fmt go-tidy \
-	openapi-merge openapi-codegen openapi-ts openapi openapi-lint
+	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
+	migrate-up migrate-down migrate-status migrate-new
 # -----------------------------------------------------------------------------
 # Docker images (production)
 
@@ -103,3 +104,25 @@ openapi: openapi-merge openapi-codegen openapi-ts
 ## openapi-lint: Validate OpenAPI specification with Spectral
 openapi-lint:
 	npx @stoplight/spectral-cli lint $(OPENAPI_FILE) --ruleset configs/spectral.yaml
+
+# -----------------------------------------------------------------------------
+# Database migrations (goose)
+
+GOOSE := go run github.com/pressly/goose/v3/cmd/goose
+MIGRATIONS_DIR := migrations
+
+## migrate-up: Apply all pending database migrations
+migrate-up:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$$DATABASE_URL" up
+
+## migrate-down: Rollback the last database migration
+migrate-down:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$$DATABASE_URL" down
+
+## migrate-status: Show current migration status
+migrate-status:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$$DATABASE_URL" status
+
+## migrate-new: Create a new empty migration (usage: make migrate-new name=add_users)
+migrate-new:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) create $(name) sql

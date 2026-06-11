@@ -127,10 +127,10 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       прочее → 500, тело Error), `bindJSON[T](c) (T, bool)` (422 при ошибке). Unit-тест на каждый класс.
 
 ### Task 10: goose migrations setup
-- [ ] `go get github.com/pressly/goose/v3`. Makefile-таргеты: `migrate-up`
+- [x] `go get github.com/pressly/goose/v3`. Makefile-таргеты: `migrate-up`
       (`goose -dir migrations postgres "$$DATABASE_URL" up`), `migrate-down`, `migrate-status`,
       `migrate-new name=...` (`goose -dir migrations create $(name) sql`).
-- [ ] `migrations/README.md` с правилами именования.
+- [x] `migrations/README.md` с правилами именования.
 
 ### Task 11: Schema migration from schema.rb
 Воспроизвести `db/schema.rb` в goose-миграции (`-- +goose Up`/`Down`; ID bigserial; timestamps
