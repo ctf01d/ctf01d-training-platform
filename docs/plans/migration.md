@@ -183,16 +183,16 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       применение goose-миграций programmatically, очистка `TRUNCATE ... RESTART IDENTITY CASCADE`.
 
 ### Task 13: Users queries, service and JWT/bcrypt
-- [ ] `internal/repository/queries/users.sql` (аннотации sqlc): CreateUser, GetUserByID,
+- [x] `internal/repository/queries/users.sql` (аннотации sqlc): CreateUser, GetUserByID,
       GetUserByUserName, ListUsers(limit,offset), CountUsers, UpdateUserProfile (display_name,
       avatar_url, password_digest nullable через COALESCE), UpdateUserRole, UpdateUserRating, DeleteUser.
       `make sqlc-gen`.
-- [ ] `go get golang.org/x/crypto/bcrypt github.com/golang-jwt/jwt/v5`.
-- [ ] `internal/auth/password.go`: `HashPassword(plain)` (bcrypt cost 12), `CheckPassword(hash, plain) bool`.
-- [ ] `internal/auth/jwt.go`: `Claims` (jwt.RegisteredClaims + Role, UserName), `Manager{secret, ttl}`,
+- [x] `go get golang.org/x/crypto/bcrypt github.com/golang-jwt/jwt/v5`.
+- [x] `internal/auth/password.go`: `HashPassword(plain)` (bcrypt cost 12), `CheckPassword(hash, plain) bool`.
+- [x] `internal/auth/jwt.go`: `Claims` (jwt.RegisteredClaims + Role, UserName), `Manager{secret, ttl}`,
       `NewManager(secret, ttl)`, `Generate(userID, role, userName) (string, error)`,
       `Parse(token) (*Claims, error)` (HS256, валидация подписи и exp). Тесты round-trip + протухший/битый.
-- [ ] `internal/service/users/service.go`: `Service{q, store}`; методы Create (валидация user_name regex,
+- [x] `internal/service/users/service.go`: `Service{q, store}`; методы Create (валидация user_name regex,
       хеш пароля, uniqueness→ErrConflict), GetByID, List(page,perPage)→(items,total), Update, UpdateRole,
       Delete. Доменный тип `User` (password_digest наружу не отдавать). Unit-тесты с мок-Querier.
 

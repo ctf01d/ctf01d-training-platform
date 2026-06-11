@@ -1,0 +1,407 @@
+package users
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+)
+
+type mockQuerier struct {
+	users   map[int64]db.User
+	nextID  int64
+	byName  map[string]int64
+}
+
+func newMockQuerier() *mockQuerier {
+	return &mockQuerier{
+		users:  make(map[int64]db.User),
+		nextID: 1,
+		byName: make(map[string]int64),
+	}
+}
+
+func (m *mockQuerier) CreateUser(_ context.Context, arg db.CreateUserParams) (db.User, error) {
+	if _, exists := m.byName[arg.UserName]; exists {
+		return db.User{}, &duplicateKeyError{}
+	}
+	id := m.nextID
+	m.nextID++
+	now := time.Now()
+	u := db.User{
+		ID:             id,
+		UserName:       arg.UserName,
+		DisplayName:    arg.DisplayName,
+		Role:           arg.Role,
+		Rating:         arg.Rating,
+		AvatarUrl:      arg.AvatarUrl,
+		PasswordDigest: arg.PasswordDigest,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+	m.users[id] = u
+	m.byName[arg.UserName] = id
+	return u, nil
+}
+
+func (m *mockQuerier) GetUserByID(_ context.Context, id int64) (db.User, error) {
+	u, ok := m.users[id]
+	if !ok {
+		return db.User{}, &noRowsError{}
+	}
+	return u, nil
+}
+
+func (m *mockQuerier) GetUserByUserName(_ context.Context, userName string) (db.User, error) {
+	id, ok := m.byName[userName]
+	if !ok {
+		return db.User{}, &noRowsError{}
+	}
+	return m.users[id], nil
+}
+
+func (m *mockQuerier) ListUsers(_ context.Context, arg db.ListUsersParams) ([]db.User, error) {
+	var result []db.User
+	for i := int32(0); i < arg.Limit; i++ {
+		idx := arg.Offset + i + 1
+		if u, ok := m.users[int64(idx)]; ok {
+			result = append(result, u)
+		}
+	}
+	return result, nil
+}
+
+func (m *mockQuerier) CountUsers(_ context.Context) (int64, error) {
+	return int64(len(m.users)), nil
+}
+
+func (m *mockQuerier) UpdateUserProfile(_ context.Context, arg db.UpdateUserProfileParams) (db.User, error) {
+	u, ok := m.users[arg.ID]
+	if !ok {
+		return db.User{}, &noRowsError{}
+	}
+	u.DisplayName = arg.DisplayName
+	if arg.AvatarUrl != nil {
+		u.AvatarUrl = arg.AvatarUrl
+	}
+	if arg.PasswordDigest != nil {
+		u.PasswordDigest = arg.PasswordDigest
+	}
+	u.UpdatedAt = time.Now()
+	m.users[arg.ID] = u
+	return u, nil
+}
+
+func (m *mockQuerier) UpdateUserRole(_ context.Context, arg db.UpdateUserRoleParams) (db.User, error) {
+	u, ok := m.users[arg.ID]
+	if !ok {
+		return db.User{}, &noRowsError{}
+	}
+	u.Role = arg.Role
+	u.UpdatedAt = time.Now()
+	m.users[arg.ID] = u
+	return u, nil
+}
+
+func (m *mockQuerier) UpdateUserRating(_ context.Context, arg db.UpdateUserRatingParams) (db.User, error) {
+	u, ok := m.users[arg.ID]
+	if !ok {
+		return db.User{}, &noRowsError{}
+	}
+	u.Rating = arg.Rating
+	u.UpdatedAt = time.Now()
+	m.users[arg.ID] = u
+	return u, nil
+}
+
+func (m *mockQuerier) DeleteUser(_ context.Context, id int64) error {
+	if u, ok := m.users[id]; ok {
+		delete(m.byName, u.UserName)
+		delete(m.users, id)
+	}
+	return nil
+}
+
+type duplicateKeyError struct{}
+
+func (e *duplicateKeyError) Error() string { return "duplicate key value violates unique constraint" }
+
+type noRowsError struct{}
+
+func (e *noRowsError) Error() string { return "no rows in result set" }
+
+func TestCreate_Success(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	avatar := "https://example.com/avatar.png"
+	u, err := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test User",
+		Password:    "secret123",
+		Role:        "guest",
+		AvatarUrl:   &avatar,
+	})
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if u.ID != 1 {
+		t.Errorf("ID = %d, want 1", u.ID)
+	}
+	if u.UserName != "testuser" {
+		t.Errorf("UserName = %q, want %q", u.UserName, "testuser")
+	}
+	if u.Role != "guest" {
+		t.Errorf("Role = %q, want %q", u.Role, "guest")
+	}
+}
+
+func TestCreate_DuplicateUserName(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	_, err := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test User",
+		Password:    "secret123",
+	})
+	if err != nil {
+		t.Fatalf("first Create: %v", err)
+	}
+
+	_, err = svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Another User",
+		Password:    "secret456",
+	})
+	if !isErr(err, errs.ErrConflict) {
+		t.Errorf("expected ErrConflict, got %v", err)
+	}
+}
+
+func TestCreate_InvalidUserName(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	_, err := svc.Create(context.Background(), CreateParams{
+		UserName:    "invalid user!",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+	var ve *errs.ValidationError
+	if !isValidation(err) {
+		t.Errorf("expected ValidationError, got %v", err)
+	}
+	_ = ve
+}
+
+func TestCreate_ShortPassword(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	_, err := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "abc",
+	})
+	if !isValidation(err) {
+		t.Errorf("expected ValidationError, got %v", err)
+	}
+}
+
+func TestCreate_DefaultRole(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	u, err := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if u.Role != "guest" {
+		t.Errorf("Role = %q, want %q", u.Role, "guest")
+	}
+}
+
+func TestGetByID_Success(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created, _ := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	u, err := svc.GetByID(context.Background(), created.ID)
+	if err != nil {
+		t.Fatalf("GetByID: %v", err)
+	}
+	if u.UserName != "testuser" {
+		t.Errorf("UserName = %q, want %q", u.UserName, "testuser")
+	}
+}
+
+func TestGetByID_NotFound(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	_, err := svc.GetByID(context.Background(), 999)
+	if !isErr(err, errs.ErrNotFound) {
+		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestGetByUserName_Success(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	u, err := svc.GetByUserName(context.Background(), "testuser")
+	if err != nil {
+		t.Fatalf("GetByUserName: %v", err)
+	}
+	if u.UserName != "testuser" {
+		t.Errorf("UserName = %q, want %q", u.UserName, "testuser")
+	}
+}
+
+func TestList(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	for i := 0; i < 5; i++ {
+		svc.Create(context.Background(), CreateParams{
+			UserName:    "user" + string(rune('0'+i)),
+			DisplayName: "User " + string(rune('0'+i)),
+			Password:    "secret123",
+		})
+	}
+
+	result, err := svc.List(context.Background(), 1, 3)
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	if len(result.Items) != 3 {
+		t.Errorf("len(Items) = %d, want 3", len(result.Items))
+	}
+	if result.Total != 5 {
+		t.Errorf("Total = %d, want 5", result.Total)
+	}
+	if result.Page != 1 || result.PerPage != 3 {
+		t.Errorf("Page=%d PerPage=%d", result.Page, result.PerPage)
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created, _ := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Old Name",
+		Password:    "secret123",
+	})
+
+	newName := "New Name"
+	u, err := svc.Update(context.Background(), created.ID, UpdateParams{
+		DisplayName: &newName,
+	})
+	if err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+	if u.DisplayName != "New Name" {
+		t.Errorf("DisplayName = %q, want %q", u.DisplayName, "New Name")
+	}
+}
+
+func TestUpdate_NotFound(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	newName := "New Name"
+	_, err := svc.Update(context.Background(), 999, UpdateParams{
+		DisplayName: &newName,
+	})
+	if !isErr(err, errs.ErrNotFound) {
+		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestUpdateRole(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created, _ := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	u, err := svc.UpdateRole(context.Background(), created.ID, "admin")
+	if err != nil {
+		t.Fatalf("UpdateRole: %v", err)
+	}
+	if u.Role != "admin" {
+		t.Errorf("Role = %q, want %q", u.Role, "admin")
+	}
+}
+
+func TestDelete(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created, _ := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	err := svc.Delete(context.Background(), created.ID)
+	if err != nil {
+		t.Fatalf("Delete: %v", err)
+	}
+
+	_, err = svc.GetByID(context.Background(), created.ID)
+	if !isErr(err, errs.ErrNotFound) {
+		t.Errorf("expected ErrNotFound after delete, got %v", err)
+	}
+}
+
+func TestUpdate_PasswordChange(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created, _ := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	newPass := "newpassword"
+	_, err := svc.Update(context.Background(), created.ID, UpdateParams{
+		Password: &newPass,
+	})
+	if err != nil {
+		t.Fatalf("Update password: %v", err)
+	}
+}
+
+func isErr(err error, target error) bool {
+	return err != nil && err.Error() == target.Error()
+}
+
+func isValidation(err error) bool {
+	_, ok := err.(*errs.ValidationError)
+	return ok
+}
