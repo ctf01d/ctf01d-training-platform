@@ -75,7 +75,7 @@ type EventQuerier interface {
 }
 
 type TxRunner interface {
-	RunInTx(ctx context.Context, fn func() error) error
+	RunInTx(ctx context.Context, fn func(queries *db.Queries) error) error
 }
 
 type Service struct {
@@ -89,14 +89,28 @@ func NewService(teams TeamQuerier, members MembershipQuerier, events EventQuerie
 	return &Service{teams: teams, members: members, events: events, tx: tx}
 }
 
+type txQueriers struct {
+	teams   TeamQuerier
+	members MembershipQuerier
+	events  EventQuerier
+}
+
+func (s *Service) txQ(q *db.Queries) *txQueriers {
+	if q == nil {
+		return &txQueriers{teams: s.teams, members: s.members, events: s.events}
+	}
+	return &txQueriers{teams: q, members: q, events: q}
+}
+
 func (s *Service) Create(ctx context.Context, creatorID int64, params CreateParams) (*Team, error) {
 	if params.Name == "" {
 		return nil, errs.NewValidationError(map[string]string{"name": "is required"})
 	}
 
 	var result *Team
-	err := s.tx.RunInTx(ctx, func() error {
-		team, err := s.teams.CreateTeam(ctx, db.CreateTeamParams{
+	err := s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		team, err := tq.teams.CreateTeam(ctx, db.CreateTeamParams{
 			Name:         params.Name,
 			Description:  params.Description,
 			Website:      params.Website,
@@ -109,7 +123,7 @@ func (s *Service) Create(ctx context.Context, creatorID int64, params CreatePara
 
 		ownerRole := "owner"
 		approved := "approved"
-		_, err = s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+		_, err = tq.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
 			TeamID: team.ID,
 			UserID: creatorID,
 			Role:   &ownerRole,
@@ -120,7 +134,7 @@ func (s *Service) Create(ctx context.Context, creatorID int64, params CreatePara
 		}
 
 		action := "created"
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:     team.ID,
 			UserID:     creatorID,
 			ActorID:    int32PtrFromInt64(creatorID),
@@ -248,18 +262,19 @@ func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
 		return errs.ErrConflict
 	}
 
-	return s.tx.RunInTx(ctx, func() error {
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
 		role := "guest"
 		status := "pending"
 		action := "join_request"
 
 		if err == nil {
-			_, err = s.members.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{
+			_, err = tq.members.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{
 				ID:     existing.ID,
 				Status: &status,
 			})
 		} else {
-			_, err = s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+			_, err = tq.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
 				TeamID: teamID,
 				UserID: userID,
 				Role:   &role,
@@ -270,7 +285,7 @@ func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
 			return mapDBError(err)
 		}
 
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:   teamID,
 			UserID:   userID,
 			ActorID:  int32PtrFromInt64(userID),
@@ -288,12 +303,13 @@ func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64
 		return err
 	}
 
-	return s.tx.RunInTx(ctx, func() error {
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
 		role := "player"
 		status := "pending"
 		action := "invite"
 
-		_, err := s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+		_, err := tq.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
 			TeamID: teamID,
 			UserID: inviteeID,
 			Role:   &role,
@@ -303,7 +319,7 @@ func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64
 			return mapDBError(err)
 		}
 
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:   teamID,
 			UserID:   inviteeID,
 			ActorID:  int32PtrFromInt64(inviterID),

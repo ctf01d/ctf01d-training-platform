@@ -1,5 +1,5 @@
 import client from './client'
-import { setToken, clearToken } from './auth'
+import { clearToken } from './auth'
 import type { components } from './schema'
 
 export type User = components['schemas']['User']
@@ -12,9 +12,6 @@ export async function login(body: LoginRequest) {
   const { data, error } = await client.POST('/session', {
     body,
   })
-  if (data) {
-    setToken(data.token)
-  }
   return { data, error }
 }
 

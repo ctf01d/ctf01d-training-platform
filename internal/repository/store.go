@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,7 +11,6 @@ import (
 type Store struct {
 	Pool *pgxpool.Pool
 	*db.Queries
-	txMu sync.Mutex
 }
 
 func NewStore(ctx context.Context, dbURL string) (*Store, error) {
@@ -60,21 +58,14 @@ func (s *Store) WithTx(ctx context.Context, fn func(*db.Queries) error) error {
 	return tx.Commit(ctx)
 }
 
-func (s *Store) RunInTx(ctx context.Context, fn func() error) error {
-	s.txMu.Lock()
-	defer s.txMu.Unlock()
-
+func (s *Store) RunInTx(ctx context.Context, fn func(queries *db.Queries) error) error {
 	tx, err := s.Pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	orig := s.Queries
-	s.Queries = db.New(tx)
-	defer func() { s.Queries = orig }()
-
-	if err := fn(); err != nil {
+	if err := fn(db.New(tx)); err != nil {
 		return err
 	}
 

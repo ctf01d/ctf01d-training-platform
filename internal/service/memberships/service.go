@@ -84,7 +84,7 @@ type TeamQuerier interface {
 }
 
 type TxRunner interface {
-	RunInTx(ctx context.Context, fn func() error) error
+	RunInTx(ctx context.Context, fn func(queries *db.Queries) error) error
 }
 
 type Service struct {
@@ -96,6 +96,19 @@ type Service struct {
 
 func NewService(q Querier, events EventQuerier, teams TeamQuerier, tx TxRunner) *Service {
 	return &Service{q: q, events: events, teams: teams, tx: tx}
+}
+
+type txQueriers struct {
+	q      Querier
+	events EventQuerier
+	teams  TeamQuerier
+}
+
+func (s *Service) txQ(q *db.Queries) *txQueriers {
+	if q == nil {
+		return &txQueriers{q: s.q, events: s.events, teams: s.teams}
+	}
+	return &txQueriers{q: q, events: q, teams: q}
 }
 
 func (s *Service) GetByID(ctx context.Context, id int64) (*Membership, error) {
@@ -241,8 +254,9 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 }
 
 func (s *Service) Approve(ctx context.Context, membershipID int64, actorID int64, globalRole string) error {
-	return s.tx.RunInTx(ctx, func() error {
-		mem, err := s.q.GetTeamMembershipByID(ctx, membershipID)
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		mem, err := tq.q.GetTeamMembershipByID(ctx, membershipID)
 		if err != nil {
 			return mapNotFound(err, "membership")
 		}
@@ -254,12 +268,12 @@ func (s *Service) Approve(ctx context.Context, membershipID int64, actorID int64
 		}
 
 		approved := "approved"
-		updated, err := s.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &approved})
+		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &approved})
 		if err != nil {
 			return err
 		}
 
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    int32Ptr(actorID),
@@ -274,8 +288,9 @@ func (s *Service) Approve(ctx context.Context, membershipID int64, actorID int64
 }
 
 func (s *Service) Reject(ctx context.Context, membershipID int64, actorID int64, globalRole string) error {
-	return s.tx.RunInTx(ctx, func() error {
-		mem, err := s.q.GetTeamMembershipByID(ctx, membershipID)
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		mem, err := tq.q.GetTeamMembershipByID(ctx, membershipID)
 		if err != nil {
 			return mapNotFound(err, "membership")
 		}
@@ -287,12 +302,12 @@ func (s *Service) Reject(ctx context.Context, membershipID int64, actorID int64,
 		}
 
 		rejected := "rejected"
-		updated, err := s.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &rejected})
+		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &rejected})
 		if err != nil {
 			return err
 		}
 
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    int32Ptr(actorID),
@@ -307,8 +322,9 @@ func (s *Service) Reject(ctx context.Context, membershipID int64, actorID int64,
 }
 
 func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) error {
-	return s.tx.RunInTx(ctx, func() error {
-		mem, err := s.q.GetTeamMembershipByID(ctx, membershipID)
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		mem, err := tq.q.GetTeamMembershipByID(ctx, membershipID)
 		if err != nil {
 			return mapNotFound(err, "membership")
 		}
@@ -319,7 +335,7 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
 		}
 
-		evt, err := s.events.GetLatestEventForMember(ctx, db.GetLatestEventForMemberParams{
+		evt, err := tq.events.GetLatestEventForMember(ctx, db.GetLatestEventForMemberParams{
 			TeamID: mem.TeamID,
 			UserID: mem.UserID,
 		})
@@ -331,12 +347,12 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 		}
 
 		approved := "approved"
-		updated, err := s.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &approved})
+		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &approved})
 		if err != nil {
 			return err
 		}
 
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    int32Ptr(userID),
@@ -351,8 +367,9 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 }
 
 func (s *Service) Decline(ctx context.Context, membershipID int64, userID int64) error {
-	return s.tx.RunInTx(ctx, func() error {
-		mem, err := s.q.GetTeamMembershipByID(ctx, membershipID)
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		mem, err := tq.q.GetTeamMembershipByID(ctx, membershipID)
 		if err != nil {
 			return mapNotFound(err, "membership")
 		}
@@ -364,12 +381,12 @@ func (s *Service) Decline(ctx context.Context, membershipID int64, userID int64)
 		}
 
 		rejected := "rejected"
-		updated, err := s.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &rejected})
+		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &rejected})
 		if err != nil {
 			return err
 		}
 
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    int32Ptr(userID),
@@ -388,8 +405,9 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 		return errs.NewValidationError(map[string]string{"role": "invalid role"})
 	}
 
-	return s.tx.RunInTx(ctx, func() error {
-		mem, err := s.q.GetTeamMembershipByID(ctx, membershipID)
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		mem, err := tq.q.GetTeamMembershipByID(ctx, membershipID)
 		if err != nil {
 			return mapNotFound(err, "membership")
 		}
@@ -404,7 +422,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 
 		if oldRole == "owner" && newRole != "owner" {
 			ownerCount := int64(0)
-			members, err := s.q.ListTeamMembershipsByTeam(ctx, mem.TeamID)
+			members, err := tq.q.ListTeamMembershipsByTeam(ctx, mem.TeamID)
 			if err != nil {
 				return err
 			}
@@ -418,12 +436,12 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 			}
 		}
 
-		updated, err := s.q.UpdateMembershipRole(ctx, db.UpdateMembershipRoleParams{ID: membershipID, Role: &newRole})
+		updated, err := tq.q.UpdateMembershipRole(ctx, db.UpdateMembershipRoleParams{ID: membershipID, Role: &newRole})
 		if err != nil {
 			return err
 		}
 
-		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    int32Ptr(actorID),
@@ -447,7 +465,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 				return fmt.Errorf("%w: user %d is already captain of team %d", errs.ErrConflict, mem.UserID, existingTeam.ID)
 			}
 			if existingTeam == nil || existingTeam.ID == mem.TeamID {
-				_, err = s.teams.SetCaptain(ctx, db.SetCaptainParams{ID: mem.TeamID, CaptainID: &captainID})
+				_, err = tq.teams.SetCaptain(ctx, db.SetCaptainParams{ID: mem.TeamID, CaptainID: &captainID})
 				if err != nil {
 					return err
 				}
@@ -455,7 +473,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 		}
 
 		if oldRole == "captain" && newRole != "captain" {
-			_, err = s.teams.ClearCaptain(ctx, mem.TeamID)
+			_, err = tq.teams.ClearCaptain(ctx, mem.TeamID)
 			if err != nil {
 				return err
 			}

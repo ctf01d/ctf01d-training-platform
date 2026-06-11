@@ -56,7 +56,7 @@ type Querier interface {
 }
 
 type TxRunner interface {
-	RunInTx(ctx context.Context, fn func() error) error
+	RunInTx(ctx context.Context, fn func(queries *db.Queries) error) error
 }
 
 type Service struct {
@@ -66,6 +66,13 @@ type Service struct {
 
 func NewService(q Querier, tx TxRunner) *Service {
 	return &Service{q: q, tx: tx}
+}
+
+func (s *Service) txQ(q *db.Queries) Querier {
+	if q == nil {
+		return s.q
+	}
+	return q
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams) (*GameTeam, error) {
@@ -131,8 +138,9 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 }
 
 func (s *Service) Reorder(ctx context.Context, gameID int64, items []ReorderItem) error {
-	return s.tx.RunInTx(ctx, func() error {
-		existing, err := s.q.ListGameTeamsByGame(ctx, gameID)
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		existing, err := tq.ListGameTeamsByGame(ctx, gameID)
 		if err != nil {
 			return err
 		}
@@ -144,7 +152,7 @@ func (s *Service) Reorder(ctx context.Context, gameID int64, items []ReorderItem
 			if !allowed[item.ID] {
 				return errs.ErrForbidden
 			}
-			if err := s.q.UpdateGameTeamOrder(ctx, db.UpdateGameTeamOrderParams{
+			if err := tq.UpdateGameTeamOrder(ctx, db.UpdateGameTeamOrderParams{
 				ID:    item.ID,
 				Order: int32(item.Order),
 			}); err != nil {

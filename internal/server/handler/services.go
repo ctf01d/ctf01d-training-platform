@@ -27,8 +27,9 @@ func serviceToHTTP(s svcsvc.ServiceModel) httpserver.Service {
 
 	if s.Ctf01dTraining != nil {
 		var m map[string]interface{}
-		json.Unmarshal(s.Ctf01dTraining, &m)
-		result.Ctf01dTraining = &m
+		if err := json.Unmarshal(s.Ctf01dTraining, &m); err == nil {
+			result.Ctf01dTraining = &m
+		}
 	}
 
 	if s.PrivateDescription != nil {

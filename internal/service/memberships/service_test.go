@@ -29,8 +29,8 @@ type mockTeamQuerier struct {
 
 type mockTxRunner struct{}
 
-func (m *mockTxRunner) RunInTx(_ context.Context, fn func() error) error {
-	return fn()
+func (m *mockTxRunner) RunInTx(_ context.Context, fn func(*db.Queries) error) error {
+	return fn(nil)
 }
 
 func newMocks() (*mockQuerier, *mockEventQuerier, *mockTeamQuerier, *mockTxRunner) {

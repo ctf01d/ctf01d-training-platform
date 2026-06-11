@@ -236,11 +236,11 @@ func (h *Handler) HandleSetTeamMembershipRole(c *gin.Context) {
 }
 
 func membershipToHTTP(m membersvc.Membership) httpserver.TeamMembership {
-	role := ""
+	role := "guest"
 	if m.Role != nil {
 		role = *m.Role
 	}
-	status := ""
+	status := "pending"
 	if m.Status != nil {
 		status = *m.Status
 	}

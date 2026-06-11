@@ -16,18 +16,16 @@ type mockQuerier struct {
 	nextID int64
 }
 
-type mockTxRunner struct {
-	q *mockQuerier
-}
+type mockTxRunner struct{}
 
 func newMocks() (*mockQuerier, *mockTxRunner) {
 	q := &mockQuerier{items: make(map[int64]db.GameTeam), nextID: 1}
-	tx := &mockTxRunner{q: q}
+	tx := &mockTxRunner{}
 	return q, tx
 }
 
-func (m *mockTxRunner) RunInTx(_ context.Context, fn func() error) error {
-	return fn()
+func (m *mockTxRunner) RunInTx(_ context.Context, fn func(*db.Queries) error) error {
+	return fn(nil)
 }
 
 func (m *mockQuerier) CreateGameTeam(_ context.Context, arg db.CreateGameTeamParams) (db.GameTeam, error) {

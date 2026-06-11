@@ -28,24 +28,19 @@ type mockFinalResultQuerier struct {
 	finalResults map[int64][]db.FinalResult
 }
 
-type mockTxRunner struct {
-	gameQ *mockGameQuerier
-	gsQ   *mockGamesServiceQuerier
-	resQ  *mockResultQuerier
-	frQ   *mockFinalResultQuerier
-}
+type mockTxRunner struct{}
 
 func newMocks() (*mockGameQuerier, *mockGamesServiceQuerier, *mockResultQuerier, *mockFinalResultQuerier, *mockTxRunner) {
 	gq := &mockGameQuerier{games: make(map[int64]db.Game), nextID: 1}
 	gsq := &mockGamesServiceQuerier{pairs: make(map[string]bool)}
 	rq := &mockResultQuerier{results: make(map[int64][]db.Result)}
 	frq := &mockFinalResultQuerier{finalResults: make(map[int64][]db.FinalResult)}
-	tx := &mockTxRunner{gameQ: gq, gsQ: gsq, resQ: rq, frQ: frq}
+	tx := &mockTxRunner{}
 	return gq, gsq, rq, frq, tx
 }
 
-func (m *mockTxRunner) RunInTx(_ context.Context, fn func() error) error {
-	return fn()
+func (m *mockTxRunner) RunInTx(_ context.Context, fn func(*db.Queries) error) error {
+	return fn(nil)
 }
 
 func (m *mockGameQuerier) CreateGame(_ context.Context, arg db.CreateGameParams) (db.Game, error) {

@@ -107,7 +107,7 @@ type FinalResultQuerier interface {
 }
 
 type TxRunner interface {
-	RunInTx(ctx context.Context, fn func() error) error
+	RunInTx(ctx context.Context, fn func(queries *db.Queries) error) error
 }
 
 type Service struct {
@@ -120,6 +120,20 @@ type Service struct {
 
 func NewService(games GameQuerier, gamesSvc GamesServiceQuerier, results ResultQuerier, finalResults FinalResultQuerier, tx TxRunner) *Service {
 	return &Service{games: games, gamesSvc: gamesSvc, results: results, finalResults: finalResults, tx: tx}
+}
+
+type txQueriers struct {
+	games        GameQuerier
+	gamesSvc     GamesServiceQuerier
+	results      ResultQuerier
+	finalResults FinalResultQuerier
+}
+
+func (s *Service) txQ(q *db.Queries) *txQueriers {
+	if q == nil {
+		return &txQueriers{games: s.games, gamesSvc: s.gamesSvc, results: s.results, finalResults: s.finalResults}
+	}
+	return &txQueriers{games: q, gamesSvc: q, results: q, finalResults: q}
 }
 
 func validHTTPURL(s string) bool {
@@ -304,18 +318,19 @@ func (s *Service) Finalize(ctx context.Context, gameID int64) (*Game, error) {
 		return nil, errs.ErrConflict
 	}
 
-	err = s.tx.RunInTx(ctx, func() error {
+	err = s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
 		now := pgtype.Timestamptz{Time: time.Now(), Valid: true}
-		_, err := s.games.SetFinalized(ctx, db.SetFinalizedParams{ID: gameID, Finalized: true, FinalizedAt: now})
+		_, err := tq.games.SetFinalized(ctx, db.SetFinalizedParams{ID: gameID, Finalized: true, FinalizedAt: now})
 		if err != nil {
 			return err
 		}
 
-		if err := s.finalResults.DeleteFinalResultsByGame(ctx, gameID); err != nil {
+		if err := tq.finalResults.DeleteFinalResultsByGame(ctx, gameID); err != nil {
 			return err
 		}
 
-		results, err := s.results.ListResultsByGame(ctx, gameID)
+		results, err := tq.results.ListResultsByGame(ctx, gameID)
 		if err != nil {
 			return err
 		}
@@ -332,7 +347,7 @@ func (s *Service) Finalize(ctx context.Context, gameID int64) (*Game, error) {
 			}
 			prevScore = score
 			pos := curRank
-			_, err := s.finalResults.InsertFinalResult(ctx, db.InsertFinalResultParams{
+			_, err := tq.finalResults.InsertFinalResult(ctx, db.InsertFinalResultParams{
 				GameID:   gameID,
 				TeamID:   r.TeamID,
 				Score:    score,
@@ -366,12 +381,13 @@ func (s *Service) Unfinalize(ctx context.Context, gameID int64) (*Game, error) {
 		return nil, errs.ErrConflict
 	}
 
-	err = s.tx.RunInTx(ctx, func() error {
-		_, err := s.games.SetFinalized(ctx, db.SetFinalizedParams{ID: gameID, Finalized: false, FinalizedAt: pgtype.Timestamptz{}})
+	err = s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		_, err := tq.games.SetFinalized(ctx, db.SetFinalizedParams{ID: gameID, Finalized: false, FinalizedAt: pgtype.Timestamptz{}})
 		if err != nil {
 			return err
 		}
-		return s.finalResults.DeleteFinalResultsByGame(ctx, gameID)
+		return tq.finalResults.DeleteFinalResultsByGame(ctx, gameID)
 	})
 	if err != nil {
 		return nil, err

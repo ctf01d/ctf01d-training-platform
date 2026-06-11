@@ -221,7 +221,14 @@ func (h *Handler) HandleListTeamMembers(c *gin.Context) {
 		items[i] = membershipToHTTP(m)
 	}
 
-	c.JSON(http.StatusOK, items)
+	c.JSON(http.StatusOK, httpserver.TeamMembershipList{
+		Items: items,
+		Pagination: httpserver.Pagination{
+			Page:    1,
+			PerPage: len(items),
+			Total:   len(items),
+		},
+	})
 }
 
 func (h *Handler) HandleListTeamEvents(c *gin.Context) {

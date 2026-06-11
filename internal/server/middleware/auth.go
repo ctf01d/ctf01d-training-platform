@@ -50,14 +50,21 @@ func RequireAuth(jwtMgr *auth.Manager) gin.HandlerFunc {
 
 func RequireRole(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		currentRole, exists := c.Get(string(roleKey))
+		val, exists := c.Get(string(roleKey))
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
 			c.Abort()
 			return
 		}
 
-		if !hasRoleLevel(currentRole.(string), role) {
+		currentRole, ok := val.(string)
+		if !ok {
+			c.JSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "insufficient permissions"})
+			c.Abort()
+			return
+		}
+
+		if !hasRoleLevel(currentRole, role) {
 			c.JSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "insufficient permissions"})
 			c.Abort()
 			return

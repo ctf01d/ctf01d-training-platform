@@ -27,21 +27,17 @@ type mockEventQuerier struct {
 	nextID int64
 }
 
-type mockTxRunner struct {
-	teamQ  *mockTeamQuerier
-	memQ   *mockMembershipQuerier
-	eventQ *mockEventQuerier
-}
+type mockTxRunner struct{}
 
-func (m *mockTxRunner) RunInTx(_ context.Context, fn func() error) error {
-	return fn()
+func (m *mockTxRunner) RunInTx(_ context.Context, fn func(*db.Queries) error) error {
+	return fn(nil)
 }
 
 func newMocks() (*mockTeamQuerier, *mockMembershipQuerier, *mockEventQuerier, *mockTxRunner) {
 	tq := &mockTeamQuerier{teams: make(map[int64]db.Team), nextID: 1, byCaptain: make(map[int32]int64)}
 	mq := &mockMembershipQuerier{members: make(map[string]db.TeamMembership), nextID: 1}
 	eq := &mockEventQuerier{nextID: 1}
-	tx := &mockTxRunner{teamQ: tq, memQ: mq, eventQ: eq}
+	tx := &mockTxRunner{}
 	return tq, mq, eq, tx
 }
 
@@ -475,8 +471,7 @@ func TestInvite_NonManager(t *testing.T) {
 	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
 	role := "player"
 	status := "approved"
-	mq2 := tx.memQ
-	mq2.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+	mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 2, Role: &role, Status: &status,
 	})
 
