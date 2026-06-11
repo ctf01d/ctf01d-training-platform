@@ -10,7 +10,6 @@ __debug*
 server
 log
 tmp
-storage
 .ralphex
 
 # Go

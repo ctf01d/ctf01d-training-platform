@@ -294,11 +294,11 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       final_results/позиций)→scoreboard→unfinalize; сокрытие access_secret для постороннего; закрытый scoreboard.
 
 ### Task 21: Storage abstraction and services queries
-- [ ] `internal/storage/storage.go`: интерфейс `Storage` (Save(ctx,key,r)→FileInfo, Open(ctx,key),
+- [x] `internal/storage/storage.go`: интерфейс `Storage` (Save(ctx,key,r)→FileInfo, Open(ctx,key),
       Delete(ctx,key), Stat(ctx,key)→FileInfo), `FileInfo{Size int64; SHA256 string}`.
-- [ ] `internal/storage/local.go`: `LocalStorage` поверх cfg.Storage.Dir; Save стримит в файл, считая
+- [x] `internal/storage/local.go`: `LocalStorage` поверх cfg.Storage.Dir; Save стримит в файл, считая
       sha256+размер; ключи вида `services/{id}/service.zip`; защита от path traversal. Unit-тесты.
-- [ ] `api/fragments/services.yaml`: Service (все поля; private_description и локальные абсолютные пути
+- [x] `api/fragments/services.yaml`: Service (все поля; private_description и локальные абсолютные пути
       скрывать от не-admin; локальные архивы как метаданные {size, sha256, downloaded_at}),
       ServiceCreate/Update/List, GithubImportRequest (repo_url, опц. ref/subdir), ImportResult
       (service, warnings[]). Пути: CRUD `/services` (фильтр ?public=true, поиск ?q=);
@@ -306,7 +306,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       `POST /services/{id}/redownload`, `POST /services/{id}/upload-archives` (multipart service_archive/
       checker_archive), `GET /services/{id}/download/{kind}` (service|checker, application/zip),
       `POST /services/import/github`, `POST /services/import/zip` (multipart). `make openapi`.
-- [ ] `internal/repository/queries/services.sql`: Create/GetByID/GetByName/List(public,q)/Count/Update/
+- [x] `internal/repository/queries/services.sql`: Create/GetByID/GetByName/List(public,q)/Count/Update/
       Delete; SetPublic; SetCheckStatus(id,status,checked_at); SetServiceLocal(id,path,size,sha256,
       downloaded_at); SetCheckerLocal(...); SetArchiveURLs. `make sqlc-gen`.
 

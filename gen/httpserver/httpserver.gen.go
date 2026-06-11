@@ -17,6 +17,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -113,6 +114,27 @@ func (e ScoreboardStatus) Valid() bool {
 	case ScoreboardStatusOpen:
 		return true
 	case ScoreboardStatusUpcoming:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ServiceCheckStatus.
+const (
+	Failed  ServiceCheckStatus = "failed"
+	Ok      ServiceCheckStatus = "ok"
+	Unknown ServiceCheckStatus = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the ServiceCheckStatus enum.
+func (e ServiceCheckStatus) Valid() bool {
+	switch e {
+	case Failed:
+		return true
+	case Ok:
+		return true
+	case Unknown:
 		return true
 	default:
 		return false
@@ -332,6 +354,24 @@ func (e UserCreateRole) Valid() bool {
 	}
 }
 
+// Defines values for DownloadServiceArchiveParamsKind.
+const (
+	DownloadServiceArchiveParamsKindChecker DownloadServiceArchiveParamsKind = "checker"
+	DownloadServiceArchiveParamsKindService DownloadServiceArchiveParamsKind = "service"
+)
+
+// Valid indicates whether the value is a known member of the DownloadServiceArchiveParamsKind enum.
+func (e DownloadServiceArchiveParamsKind) Valid() bool {
+	switch e {
+	case DownloadServiceArchiveParamsKindChecker:
+		return true
+	case DownloadServiceArchiveParamsKindService:
+		return true
+	default:
+		return false
+	}
+}
+
 // Error defines model for Error.
 type Error struct {
 	Code    string                  `json:"code"`
@@ -458,6 +498,13 @@ type GameUpdate struct {
 	VpnUrl               *string    `json:"vpn_url,omitempty"`
 }
 
+// GithubImportRequest defines model for GithubImportRequest.
+type GithubImportRequest struct {
+	Ref     *string `json:"ref,omitempty"`
+	RepoUrl string  `json:"repo_url"`
+	Subdir  *string `json:"subdir,omitempty"`
+}
+
 // GlobalScoreboard defines model for GlobalScoreboard.
 type GlobalScoreboard struct {
 	Entries []struct {
@@ -465,6 +512,12 @@ type GlobalScoreboard struct {
 		TeamName   string `json:"team_name"`
 		TotalScore int    `json:"total_score"`
 	} `json:"entries"`
+}
+
+// ImportResult defines model for ImportResult.
+type ImportResult struct {
+	Service  Service  `json:"service"`
+	Warnings []string `json:"warnings"`
 }
 
 // InviteRequest defines model for InviteRequest.
@@ -542,6 +595,77 @@ type ScoreboardEntry struct {
 	Score    int    `json:"score"`
 	TeamId   int64  `json:"team_id"`
 	TeamName string `json:"team_name"`
+}
+
+// Service defines model for Service.
+type Service struct {
+	Author             *string                 `json:"author,omitempty"`
+	AvatarUrl          *string                 `json:"avatar_url,omitempty"`
+	CheckStatus        ServiceCheckStatus      `json:"check_status"`
+	CheckedAt          *time.Time              `json:"checked_at,omitempty"`
+	CheckerArchive     *ServiceArchiveMeta     `json:"checker_archive,omitempty"`
+	CheckerArchiveUrl  *string                 `json:"checker_archive_url,omitempty"`
+	Copyright          *string                 `json:"copyright,omitempty"`
+	CreatedAt          *time.Time              `json:"created_at,omitempty"`
+	Ctf01dTraining     *map[string]interface{} `json:"ctf01d_training"`
+	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
+	Id                 int64                   `json:"id"`
+	Name               string                  `json:"name"`
+	PrivateDescription *string                 `json:"private_description,omitempty"`
+	Public             bool                    `json:"public"`
+	PublicDescription  *string                 `json:"public_description,omitempty"`
+	ServiceArchive     *ServiceArchiveMeta     `json:"service_archive,omitempty"`
+	ServiceArchiveUrl  *string                 `json:"service_archive_url,omitempty"`
+	UpdatedAt          *time.Time              `json:"updated_at,omitempty"`
+	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
+}
+
+// ServiceCheckStatus defines model for Service.CheckStatus.
+type ServiceCheckStatus string
+
+// ServiceArchiveMeta defines model for ServiceArchiveMeta.
+type ServiceArchiveMeta struct {
+	DownloadedAt *time.Time `json:"downloaded_at,omitempty"`
+	Sha256       *string    `json:"sha256,omitempty"`
+	Size         *int64     `json:"size,omitempty"`
+}
+
+// ServiceCreate defines model for ServiceCreate.
+type ServiceCreate struct {
+	Author             *string                 `json:"author,omitempty"`
+	AvatarUrl          *string                 `json:"avatar_url,omitempty"`
+	CheckerArchiveUrl  *string                 `json:"checker_archive_url,omitempty"`
+	Copyright          *string                 `json:"copyright,omitempty"`
+	Ctf01dTraining     *map[string]interface{} `json:"ctf01d_training,omitempty"`
+	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
+	Name               string                  `json:"name"`
+	PrivateDescription *string                 `json:"private_description,omitempty"`
+	Public             *bool                   `json:"public,omitempty"`
+	PublicDescription  *string                 `json:"public_description,omitempty"`
+	ServiceArchiveUrl  *string                 `json:"service_archive_url,omitempty"`
+	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
+}
+
+// ServiceList defines model for ServiceList.
+type ServiceList struct {
+	Items      []Service  `json:"items"`
+	Pagination Pagination `json:"pagination"`
+}
+
+// ServiceUpdate defines model for ServiceUpdate.
+type ServiceUpdate struct {
+	Author             *string                 `json:"author,omitempty"`
+	AvatarUrl          *string                 `json:"avatar_url,omitempty"`
+	CheckerArchiveUrl  *string                 `json:"checker_archive_url,omitempty"`
+	Copyright          *string                 `json:"copyright,omitempty"`
+	Ctf01dTraining     *map[string]interface{} `json:"ctf01d_training,omitempty"`
+	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
+	Name               *string                 `json:"name,omitempty"`
+	PrivateDescription *string                 `json:"private_description,omitempty"`
+	Public             *bool                   `json:"public,omitempty"`
+	PublicDescription  *string                 `json:"public_description,omitempty"`
+	ServiceArchiveUrl  *string                 `json:"service_archive_url,omitempty"`
+	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
 }
 
 // SetRoleRequest defines model for SetRoleRequest.
@@ -776,6 +900,28 @@ type ListResultsParams struct {
 	TeamId *int64 `form:"team_id,omitempty" json:"team_id,omitempty"`
 }
 
+// ListServicesParams defines parameters for ListServices.
+type ListServicesParams struct {
+	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+	Public  *bool         `form:"public,omitempty" json:"public,omitempty"`
+	Q       *string       `form:"q,omitempty" json:"q,omitempty"`
+}
+
+// ImportServiceFromZipMultipartBody defines parameters for ImportServiceFromZip.
+type ImportServiceFromZipMultipartBody struct {
+	Archive openapi_types.File `json:"archive"`
+}
+
+// DownloadServiceArchiveParamsKind defines parameters for DownloadServiceArchive.
+type DownloadServiceArchiveParamsKind string
+
+// UploadServiceArchivesMultipartBody defines parameters for UploadServiceArchives.
+type UploadServiceArchivesMultipartBody struct {
+	CheckerArchive *openapi_types.File `json:"checker_archive,omitempty"`
+	ServiceArchive *openapi_types.File `json:"service_archive,omitempty"`
+}
+
 // ListTeamMembershipsParams defines parameters for ListTeamMemberships.
 type ListTeamMembershipsParams struct {
 	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
@@ -832,6 +978,21 @@ type CreateResultJSONRequestBody = ResultCreate
 
 // UpdateResultJSONRequestBody defines body for UpdateResult for application/json ContentType.
 type UpdateResultJSONRequestBody = ResultUpdate
+
+// CreateServiceJSONRequestBody defines body for CreateService for application/json ContentType.
+type CreateServiceJSONRequestBody = ServiceCreate
+
+// ImportServiceFromGithubJSONRequestBody defines body for ImportServiceFromGithub for application/json ContentType.
+type ImportServiceFromGithubJSONRequestBody = GithubImportRequest
+
+// ImportServiceFromZipMultipartRequestBody defines body for ImportServiceFromZip for multipart/form-data ContentType.
+type ImportServiceFromZipMultipartRequestBody ImportServiceFromZipMultipartBody
+
+// UpdateServiceJSONRequestBody defines body for UpdateService for application/json ContentType.
+type UpdateServiceJSONRequestBody = ServiceUpdate
+
+// UploadServiceArchivesMultipartRequestBody defines body for UploadServiceArchives for multipart/form-data ContentType.
+type UploadServiceArchivesMultipartRequestBody UploadServiceArchivesMultipartBody
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
@@ -940,6 +1101,42 @@ type ServerInterface interface {
 	// Get global scoreboard
 	// (GET /scoreboard)
 	GetGlobalScoreboard(c *gin.Context)
+	// List services
+	// (GET /services)
+	ListServices(c *gin.Context, params ListServicesParams)
+	// Create a service
+	// (POST /services)
+	CreateService(c *gin.Context)
+	// Import a service from GitHub
+	// (POST /services/import/github)
+	ImportServiceFromGithub(c *gin.Context)
+	// Import a service from a ZIP file
+	// (POST /services/import/zip)
+	ImportServiceFromZip(c *gin.Context)
+	// Delete a service
+	// (DELETE /services/{id})
+	DeleteService(c *gin.Context, id int64)
+	// Get a service by ID
+	// (GET /services/{id})
+	GetService(c *gin.Context, id int64)
+	// Update a service
+	// (PATCH /services/{id})
+	UpdateService(c *gin.Context, id int64)
+	// Run checker inspection
+	// (POST /services/{id}/check-checker)
+	CheckServiceChecker(c *gin.Context, id int64)
+	// Download service or checker archive
+	// (GET /services/{id}/download/{kind})
+	DownloadServiceArchive(c *gin.Context, id int64, kind DownloadServiceArchiveParamsKind)
+	// Re-download service and checker archives from URLs
+	// (POST /services/{id}/redownload)
+	RedownloadServiceArchives(c *gin.Context, id int64)
+	// Toggle service public flag
+	// (POST /services/{id}/toggle-public)
+	ToggleServicePublic(c *gin.Context, id int64)
+	// Upload service and/or checker archives
+	// (POST /services/{id}/upload-archives)
+	UploadServiceArchives(c *gin.Context, id int64)
 	// Logout
 	// (DELETE /session)
 	Logout(c *gin.Context)
@@ -1645,6 +1842,329 @@ func (siw *ServerInterfaceWrapper) GetGlobalScoreboard(c *gin.Context) {
 	}
 
 	siw.Handler.GetGlobalScoreboard(c)
+}
+
+// ListServices operation middleware
+func (siw *ServerInterfaceWrapper) ListServices(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListServicesParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", c.Request.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "public" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "public", c.Request.URL.Query(), &params.Public, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter public: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListServices(c, params)
+}
+
+// CreateService operation middleware
+func (siw *ServerInterfaceWrapper) CreateService(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateService(c)
+}
+
+// ImportServiceFromGithub operation middleware
+func (siw *ServerInterfaceWrapper) ImportServiceFromGithub(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ImportServiceFromGithub(c)
+}
+
+// ImportServiceFromZip operation middleware
+func (siw *ServerInterfaceWrapper) ImportServiceFromZip(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ImportServiceFromZip(c)
+}
+
+// DeleteService operation middleware
+func (siw *ServerInterfaceWrapper) DeleteService(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteService(c, id)
+}
+
+// GetService operation middleware
+func (siw *ServerInterfaceWrapper) GetService(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetService(c, id)
+}
+
+// UpdateService operation middleware
+func (siw *ServerInterfaceWrapper) UpdateService(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateService(c, id)
+}
+
+// CheckServiceChecker operation middleware
+func (siw *ServerInterfaceWrapper) CheckServiceChecker(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CheckServiceChecker(c, id)
+}
+
+// DownloadServiceArchive operation middleware
+func (siw *ServerInterfaceWrapper) DownloadServiceArchive(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "kind" -------------
+	var kind DownloadServiceArchiveParamsKind
+
+	err = runtime.BindStyledParameterWithOptions("simple", "kind", c.Param("kind"), &kind, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter kind: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DownloadServiceArchive(c, id, kind)
+}
+
+// RedownloadServiceArchives operation middleware
+func (siw *ServerInterfaceWrapper) RedownloadServiceArchives(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RedownloadServiceArchives(c, id)
+}
+
+// ToggleServicePublic operation middleware
+func (siw *ServerInterfaceWrapper) ToggleServicePublic(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ToggleServicePublic(c, id)
+}
+
+// UploadServiceArchives operation middleware
+func (siw *ServerInterfaceWrapper) UploadServiceArchives(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UploadServiceArchives(c, id)
 }
 
 // Logout operation middleware
@@ -2520,6 +3040,18 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/results/:id", wrapper.GetResult)
 	router.PATCH(options.BaseURL+"/results/:id", wrapper.UpdateResult)
 	router.GET(options.BaseURL+"/scoreboard", wrapper.GetGlobalScoreboard)
+	router.GET(options.BaseURL+"/services", wrapper.ListServices)
+	router.POST(options.BaseURL+"/services", wrapper.CreateService)
+	router.POST(options.BaseURL+"/services/import/github", wrapper.ImportServiceFromGithub)
+	router.POST(options.BaseURL+"/services/import/zip", wrapper.ImportServiceFromZip)
+	router.DELETE(options.BaseURL+"/services/:id", wrapper.DeleteService)
+	router.GET(options.BaseURL+"/services/:id", wrapper.GetService)
+	router.PATCH(options.BaseURL+"/services/:id", wrapper.UpdateService)
+	router.POST(options.BaseURL+"/services/:id/check-checker", wrapper.CheckServiceChecker)
+	router.GET(options.BaseURL+"/services/:id/download/:kind", wrapper.DownloadServiceArchive)
+	router.POST(options.BaseURL+"/services/:id/redownload", wrapper.RedownloadServiceArchives)
+	router.POST(options.BaseURL+"/services/:id/toggle-public", wrapper.ToggleServicePublic)
+	router.POST(options.BaseURL+"/services/:id/upload-archives", wrapper.UploadServiceArchives)
 	router.DELETE(options.BaseURL+"/session", wrapper.Logout)
 	router.POST(options.BaseURL+"/session", wrapper.Login)
 	router.GET(options.BaseURL+"/team-memberships", wrapper.ListTeamMemberships)
@@ -2558,66 +3090,79 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"+l8AAAD//w==",
+	"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",
+	"7t6oe9cAgxVcC54XiNa2zfXTfwMAAP//",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

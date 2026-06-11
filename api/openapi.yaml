@@ -663,6 +663,356 @@ paths:
                 $ref: '#/components/schemas/GlobalScoreboard'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /services:
+    get:
+      operationId: listServices
+      tags:
+        - services
+      summary: List services
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - name: public
+          in: query
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of services
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createService
+      tags:
+        - services
+      summary: Create a service
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceCreate'
+      responses:
+        '201':
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/{id}:
+    get:
+      operationId: getService
+      tags:
+        - services
+      summary: Get a service by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Service details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateService
+      tags:
+        - services
+      summary: Update a service
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceUpdate'
+      responses:
+        '200':
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteService
+      tags:
+        - services
+      summary: Delete a service
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Service deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/{id}/toggle-public:
+    post:
+      operationId: toggleServicePublic
+      tags:
+        - services
+      summary: Toggle service public flag
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Service toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/{id}/check-checker:
+    post:
+      operationId: checkServiceChecker
+      tags:
+        - services
+      summary: Run checker inspection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Checker inspected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/{id}/redownload:
+    post:
+      operationId: redownloadServiceArchives
+      tags:
+        - services
+      summary: Re-download service and checker archives from URLs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Archives re-downloaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/{id}/upload-archives:
+    post:
+      operationId: uploadServiceArchives
+      tags:
+        - services
+      summary: Upload service and/or checker archives
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                service_archive:
+                  type: string
+                  format: binary
+                checker_archive:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Archives uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/{id}/download/{kind}:
+    get:
+      operationId: downloadServiceArchive
+      tags:
+        - services
+      summary: Download service or checker archive
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: kind
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - service
+              - checker
+      responses:
+        '200':
+          description: Archive file
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/import/github:
+    post:
+      operationId: importServiceFromGithub
+      tags:
+        - services
+      summary: Import a service from GitHub
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GithubImportRequest'
+      responses:
+        '201':
+          description: Service imported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /services/import/zip:
+    post:
+      operationId: importServiceFromZip
+      tags:
+        - services
+      summary: Import a service from a ZIP file
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - archive
+              properties:
+                archive:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Service imported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /team-memberships:
     get:
       operationId: listTeamMemberships
@@ -1883,6 +2233,173 @@ components:
                 type: string
               total_score:
                 type: integer
+    ServiceArchiveMeta:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+          nullable: true
+        sha256:
+          type: string
+          nullable: true
+        downloaded_at:
+          type: string
+          format: date-time
+          nullable: true
+    Service:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - name
+            - public
+            - check_status
+            - ctf01d_training
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+            public_description:
+              type: string
+              nullable: true
+            private_description:
+              type: string
+              nullable: true
+            author:
+              type: string
+              nullable: true
+            copyright:
+              type: string
+              nullable: true
+            avatar_url:
+              type: string
+              nullable: true
+            public:
+              type: boolean
+            service_archive_url:
+              type: string
+              nullable: true
+            checker_archive_url:
+              type: string
+              nullable: true
+            writeup_url:
+              type: string
+              nullable: true
+            exploits_url:
+              type: string
+              nullable: true
+            check_status:
+              type: string
+              enum:
+                - unknown
+                - ok
+                - failed
+            checked_at:
+              type: string
+              format: date-time
+              nullable: true
+            service_archive:
+              $ref: '#/components/schemas/ServiceArchiveMeta'
+            checker_archive:
+              $ref: '#/components/schemas/ServiceArchiveMeta'
+            ctf01d_training:
+              type: object
+              nullable: true
+    ServiceCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        public_description:
+          type: string
+        private_description:
+          type: string
+        author:
+          type: string
+        copyright:
+          type: string
+        avatar_url:
+          type: string
+        public:
+          type: boolean
+        service_archive_url:
+          type: string
+        checker_archive_url:
+          type: string
+        writeup_url:
+          type: string
+        exploits_url:
+          type: string
+        ctf01d_training:
+          type: object
+    ServiceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        public_description:
+          type: string
+        private_description:
+          type: string
+        author:
+          type: string
+        copyright:
+          type: string
+        avatar_url:
+          type: string
+        public:
+          type: boolean
+        service_archive_url:
+          type: string
+        checker_archive_url:
+          type: string
+        writeup_url:
+          type: string
+        exploits_url:
+          type: string
+        ctf01d_training:
+          type: object
+    ServiceList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    GithubImportRequest:
+      type: object
+      required:
+        - repo_url
+      properties:
+        repo_url:
+          type: string
+        ref:
+          type: string
+        subdir:
+          type: string
+    ImportResult:
+      type: object
+      required:
+        - service
+        - warnings
+      properties:
+        service:
+          $ref: '#/components/schemas/Service'
+        warnings:
+          type: array
+          items:
+            type: string
     TeamMembership:
       allOf:
         - $ref: '#/components/schemas/Timestamped'

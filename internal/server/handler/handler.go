@@ -518,4 +518,52 @@ func (h *Handler) GetGlobalScoreboard(c *gin.Context) {
 	h.HandleGetGlobalScoreboard(c)
 }
 
+func (h *Handler) ListServices(c *gin.Context, params httpserver.ListServicesParams) {
+	notImplemented(c)
+}
+
+func (h *Handler) CreateService(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) ImportServiceFromGithub(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) ImportServiceFromZip(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeleteService(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetService(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UpdateService(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) CheckServiceChecker(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) DownloadServiceArchive(c *gin.Context, id int64, kind httpserver.DownloadServiceArchiveParamsKind) {
+	notImplemented(c)
+}
+
+func (h *Handler) RedownloadServiceArchives(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ToggleServicePublic(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UploadServiceArchives(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
 var _ httpserver.ServerInterface = (*Handler)(nil)

@@ -286,6 +286,162 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List services */
+        get: operations["listServices"];
+        put?: never;
+        /** Create a service */
+        post: operations["createService"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a service by ID */
+        get: operations["getService"];
+        put?: never;
+        post?: never;
+        /** Delete a service */
+        delete: operations["deleteService"];
+        options?: never;
+        head?: never;
+        /** Update a service */
+        patch: operations["updateService"];
+        trace?: never;
+    };
+    "/services/{id}/toggle-public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toggle service public flag */
+        post: operations["toggleServicePublic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/{id}/check-checker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run checker inspection */
+        post: operations["checkServiceChecker"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/{id}/redownload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-download service and checker archives from URLs */
+        post: operations["redownloadServiceArchives"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/{id}/upload-archives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload service and/or checker archives */
+        post: operations["uploadServiceArchives"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/{id}/download/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download service or checker archive */
+        get: operations["downloadServiceArchive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/import/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import a service from GitHub */
+        post: operations["importServiceFromGithub"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/import/zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import a service from a ZIP file */
+        post: operations["importServiceFromZip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/team-memberships": {
         parameters: {
             query?: never;
@@ -785,6 +941,76 @@ export interface components {
                 team_name: string;
                 total_score: number;
             }[];
+        };
+        ServiceArchiveMeta: {
+            /** Format: int64 */
+            size?: number | null;
+            sha256?: string | null;
+            /** Format: date-time */
+            downloaded_at?: string | null;
+        };
+        Service: components["schemas"]["Timestamped"] & {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            public_description?: string | null;
+            private_description?: string | null;
+            author?: string | null;
+            copyright?: string | null;
+            avatar_url?: string | null;
+            public: boolean;
+            service_archive_url?: string | null;
+            checker_archive_url?: string | null;
+            writeup_url?: string | null;
+            exploits_url?: string | null;
+            /** @enum {string} */
+            check_status: "unknown" | "ok" | "failed";
+            /** Format: date-time */
+            checked_at?: string | null;
+            service_archive?: components["schemas"]["ServiceArchiveMeta"];
+            checker_archive?: components["schemas"]["ServiceArchiveMeta"];
+            ctf01d_training: Record<string, never> | null;
+        };
+        ServiceCreate: {
+            name: string;
+            public_description?: string;
+            private_description?: string;
+            author?: string;
+            copyright?: string;
+            avatar_url?: string;
+            public?: boolean;
+            service_archive_url?: string;
+            checker_archive_url?: string;
+            writeup_url?: string;
+            exploits_url?: string;
+            ctf01d_training?: Record<string, never>;
+        };
+        ServiceUpdate: {
+            name?: string;
+            public_description?: string;
+            private_description?: string;
+            author?: string;
+            copyright?: string;
+            avatar_url?: string;
+            public?: boolean;
+            service_archive_url?: string;
+            checker_archive_url?: string;
+            writeup_url?: string;
+            exploits_url?: string;
+            ctf01d_training?: Record<string, never>;
+        };
+        ServiceList: {
+            items: components["schemas"]["Service"][];
+            pagination: components["schemas"]["Pagination"];
+        };
+        GithubImportRequest: {
+            repo_url: string;
+            ref?: string;
+            subdir?: string;
+        };
+        ImportResult: {
+            service: components["schemas"]["Service"];
+            warnings: string[];
         };
         TeamMembership: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
@@ -1630,6 +1856,323 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    listServices: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["PageParam"];
+                per_page?: components["parameters"]["PerPageParam"];
+                public?: boolean;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of services */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceCreate"];
+            };
+        };
+        responses: {
+            /** @description Service created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Service details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Service deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Service updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    toggleServicePublic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Service toggled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    checkServiceChecker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Checker inspected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    redownloadServiceArchives: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archives re-downloaded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    uploadServiceArchives: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    service_archive?: string;
+                    /** Format: binary */
+                    checker_archive?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Archives uploaded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    downloadServiceArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                kind: "service" | "checker";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archive file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    importServiceFromGithub: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GithubImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Service imported */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    importServiceFromZip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archive: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Service imported */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
         };
     };
     listTeamMemberships: {
