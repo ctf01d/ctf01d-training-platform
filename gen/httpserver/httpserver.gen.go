@@ -23,6 +23,177 @@ const (
 	BearerAuthScopes bearerAuthContextKey = "BearerAuth.Scopes"
 )
 
+// Defines values for SetRoleRequestRole.
+const (
+	SetRoleRequestRoleCaptain     SetRoleRequestRole = "captain"
+	SetRoleRequestRoleGuest       SetRoleRequestRole = "guest"
+	SetRoleRequestRoleOwner       SetRoleRequestRole = "owner"
+	SetRoleRequestRolePlayer      SetRoleRequestRole = "player"
+	SetRoleRequestRoleViceCaptain SetRoleRequestRole = "vice_captain"
+)
+
+// Valid indicates whether the value is a known member of the SetRoleRequestRole enum.
+func (e SetRoleRequestRole) Valid() bool {
+	switch e {
+	case SetRoleRequestRoleCaptain:
+		return true
+	case SetRoleRequestRoleGuest:
+		return true
+	case SetRoleRequestRoleOwner:
+		return true
+	case SetRoleRequestRolePlayer:
+		return true
+	case SetRoleRequestRoleViceCaptain:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TeamMembershipRole.
+const (
+	TeamMembershipRoleCaptain     TeamMembershipRole = "captain"
+	TeamMembershipRoleGuest       TeamMembershipRole = "guest"
+	TeamMembershipRoleOwner       TeamMembershipRole = "owner"
+	TeamMembershipRolePlayer      TeamMembershipRole = "player"
+	TeamMembershipRoleViceCaptain TeamMembershipRole = "vice_captain"
+)
+
+// Valid indicates whether the value is a known member of the TeamMembershipRole enum.
+func (e TeamMembershipRole) Valid() bool {
+	switch e {
+	case TeamMembershipRoleCaptain:
+		return true
+	case TeamMembershipRoleGuest:
+		return true
+	case TeamMembershipRoleOwner:
+		return true
+	case TeamMembershipRolePlayer:
+		return true
+	case TeamMembershipRoleViceCaptain:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TeamMembershipStatus.
+const (
+	TeamMembershipStatusApproved TeamMembershipStatus = "approved"
+	TeamMembershipStatusPending  TeamMembershipStatus = "pending"
+	TeamMembershipStatusRejected TeamMembershipStatus = "rejected"
+)
+
+// Valid indicates whether the value is a known member of the TeamMembershipStatus enum.
+func (e TeamMembershipStatus) Valid() bool {
+	switch e {
+	case TeamMembershipStatusApproved:
+		return true
+	case TeamMembershipStatusPending:
+		return true
+	case TeamMembershipStatusRejected:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TeamMembershipCreateRole.
+const (
+	TeamMembershipCreateRoleCaptain     TeamMembershipCreateRole = "captain"
+	TeamMembershipCreateRoleGuest       TeamMembershipCreateRole = "guest"
+	TeamMembershipCreateRoleOwner       TeamMembershipCreateRole = "owner"
+	TeamMembershipCreateRolePlayer      TeamMembershipCreateRole = "player"
+	TeamMembershipCreateRoleViceCaptain TeamMembershipCreateRole = "vice_captain"
+)
+
+// Valid indicates whether the value is a known member of the TeamMembershipCreateRole enum.
+func (e TeamMembershipCreateRole) Valid() bool {
+	switch e {
+	case TeamMembershipCreateRoleCaptain:
+		return true
+	case TeamMembershipCreateRoleGuest:
+		return true
+	case TeamMembershipCreateRoleOwner:
+		return true
+	case TeamMembershipCreateRolePlayer:
+		return true
+	case TeamMembershipCreateRoleViceCaptain:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TeamMembershipCreateStatus.
+const (
+	TeamMembershipCreateStatusApproved TeamMembershipCreateStatus = "approved"
+	TeamMembershipCreateStatusPending  TeamMembershipCreateStatus = "pending"
+	TeamMembershipCreateStatusRejected TeamMembershipCreateStatus = "rejected"
+)
+
+// Valid indicates whether the value is a known member of the TeamMembershipCreateStatus enum.
+func (e TeamMembershipCreateStatus) Valid() bool {
+	switch e {
+	case TeamMembershipCreateStatusApproved:
+		return true
+	case TeamMembershipCreateStatusPending:
+		return true
+	case TeamMembershipCreateStatusRejected:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TeamMembershipUpdateRole.
+const (
+	TeamMembershipUpdateRoleCaptain     TeamMembershipUpdateRole = "captain"
+	TeamMembershipUpdateRoleGuest       TeamMembershipUpdateRole = "guest"
+	TeamMembershipUpdateRoleOwner       TeamMembershipUpdateRole = "owner"
+	TeamMembershipUpdateRolePlayer      TeamMembershipUpdateRole = "player"
+	TeamMembershipUpdateRoleViceCaptain TeamMembershipUpdateRole = "vice_captain"
+)
+
+// Valid indicates whether the value is a known member of the TeamMembershipUpdateRole enum.
+func (e TeamMembershipUpdateRole) Valid() bool {
+	switch e {
+	case TeamMembershipUpdateRoleCaptain:
+		return true
+	case TeamMembershipUpdateRoleGuest:
+		return true
+	case TeamMembershipUpdateRoleOwner:
+		return true
+	case TeamMembershipUpdateRolePlayer:
+		return true
+	case TeamMembershipUpdateRoleViceCaptain:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TeamMembershipUpdateStatus.
+const (
+	Approved TeamMembershipUpdateStatus = "approved"
+	Pending  TeamMembershipUpdateStatus = "pending"
+	Rejected TeamMembershipUpdateStatus = "rejected"
+)
+
+// Valid indicates whether the value is a known member of the TeamMembershipUpdateStatus enum.
+func (e TeamMembershipUpdateStatus) Valid() bool {
+	switch e {
+	case Approved:
+		return true
+	case Pending:
+		return true
+	case Rejected:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UserRole.
 const (
 	UserRoleAdmin  UserRole = "admin"
@@ -72,6 +243,11 @@ type Error struct {
 	Message string                  `json:"message"`
 }
 
+// InviteRequest defines model for InviteRequest.
+type InviteRequest struct {
+	UserId int64 `json:"user_id"`
+}
+
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
 	Password string `json:"password"`
@@ -91,10 +267,155 @@ type Pagination struct {
 	Total   int `json:"total"`
 }
 
+// SetRoleRequest defines model for SetRoleRequest.
+type SetRoleRequest struct {
+	Role SetRoleRequestRole `json:"role"`
+}
+
+// SetRoleRequestRole defines model for SetRoleRequest.Role.
+type SetRoleRequestRole string
+
+// Team defines model for Team.
+type Team struct {
+	AvatarUrl    *string    `json:"avatar_url,omitempty"`
+	CaptainId    *int64     `json:"captain_id,omitempty"`
+	CreatedAt    *time.Time `json:"created_at,omitempty"`
+	Description  *string    `json:"description,omitempty"`
+	Id           int64      `json:"id"`
+	Name         string     `json:"name"`
+	UniversityId *int64     `json:"university_id,omitempty"`
+	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
+	Website      *string    `json:"website,omitempty"`
+}
+
+// TeamCreate defines model for TeamCreate.
+type TeamCreate struct {
+	AvatarUrl    *string `json:"avatar_url,omitempty"`
+	Description  *string `json:"description,omitempty"`
+	Name         string  `json:"name"`
+	UniversityId *int64  `json:"university_id,omitempty"`
+	Website      *string `json:"website,omitempty"`
+}
+
+// TeamList defines model for TeamList.
+type TeamList struct {
+	Items      []Team     `json:"items"`
+	Pagination Pagination `json:"pagination"`
+}
+
+// TeamMembership defines model for TeamMembership.
+type TeamMembership struct {
+	CreatedAt *time.Time           `json:"created_at,omitempty"`
+	Id        int64                `json:"id"`
+	Role      TeamMembershipRole   `json:"role"`
+	Status    TeamMembershipStatus `json:"status"`
+	TeamId    int64                `json:"team_id"`
+	UpdatedAt *time.Time           `json:"updated_at,omitempty"`
+	UserId    int64                `json:"user_id"`
+}
+
+// TeamMembershipRole defines model for TeamMembership.Role.
+type TeamMembershipRole string
+
+// TeamMembershipStatus defines model for TeamMembership.Status.
+type TeamMembershipStatus string
+
+// TeamMembershipCreate defines model for TeamMembershipCreate.
+type TeamMembershipCreate struct {
+	Role   *TeamMembershipCreateRole   `json:"role,omitempty"`
+	Status *TeamMembershipCreateStatus `json:"status,omitempty"`
+	TeamId int64                       `json:"team_id"`
+	UserId int64                       `json:"user_id"`
+}
+
+// TeamMembershipCreateRole defines model for TeamMembershipCreate.Role.
+type TeamMembershipCreateRole string
+
+// TeamMembershipCreateStatus defines model for TeamMembershipCreate.Status.
+type TeamMembershipCreateStatus string
+
+// TeamMembershipEvent defines model for TeamMembershipEvent.
+type TeamMembershipEvent struct {
+	Action     string     `json:"action"`
+	ActorId    *int64     `json:"actor_id,omitempty"`
+	CreatedAt  *time.Time `json:"created_at,omitempty"`
+	FromRole   *string    `json:"from_role,omitempty"`
+	FromStatus *string    `json:"from_status,omitempty"`
+	Id         int64      `json:"id"`
+	TeamId     int64      `json:"team_id"`
+	ToRole     *string    `json:"to_role,omitempty"`
+	ToStatus   *string    `json:"to_status,omitempty"`
+	UpdatedAt  *time.Time `json:"updated_at,omitempty"`
+	UserId     int64      `json:"user_id"`
+}
+
+// TeamMembershipEventList defines model for TeamMembershipEventList.
+type TeamMembershipEventList struct {
+	Items      []TeamMembershipEvent `json:"items"`
+	Pagination Pagination            `json:"pagination"`
+}
+
+// TeamMembershipList defines model for TeamMembershipList.
+type TeamMembershipList struct {
+	Items      []TeamMembership `json:"items"`
+	Pagination Pagination       `json:"pagination"`
+}
+
+// TeamMembershipUpdate defines model for TeamMembershipUpdate.
+type TeamMembershipUpdate struct {
+	Role   *TeamMembershipUpdateRole   `json:"role,omitempty"`
+	Status *TeamMembershipUpdateStatus `json:"status,omitempty"`
+}
+
+// TeamMembershipUpdateRole defines model for TeamMembershipUpdate.Role.
+type TeamMembershipUpdateRole string
+
+// TeamMembershipUpdateStatus defines model for TeamMembershipUpdate.Status.
+type TeamMembershipUpdateStatus string
+
+// TeamUpdate defines model for TeamUpdate.
+type TeamUpdate struct {
+	AvatarUrl    *string `json:"avatar_url,omitempty"`
+	Description  *string `json:"description,omitempty"`
+	Name         *string `json:"name,omitempty"`
+	UniversityId *int64  `json:"university_id,omitempty"`
+	Website      *string `json:"website,omitempty"`
+}
+
 // Timestamped defines model for Timestamped.
 type Timestamped struct {
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
+// University defines model for University.
+type University struct {
+	AvatarUrl *string    `json:"avatar_url,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	Id        int64      `json:"id"`
+	Name      *string    `json:"name,omitempty"`
+	SiteUrl   *string    `json:"site_url,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
+// UniversityCreate defines model for UniversityCreate.
+type UniversityCreate struct {
+	AvatarUrl *string `json:"avatar_url,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	SiteUrl   *string `json:"site_url,omitempty"`
+}
+
+// UniversityList defines model for UniversityList.
+type UniversityList struct {
+	Items      []University `json:"items"`
+	Pagination Pagination   `json:"pagination"`
+}
+
+// UniversityUpdate defines model for UniversityUpdate.
+type UniversityUpdate struct {
+	AvatarUrl *string `json:"avatar_url,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	SiteUrl   *string `json:"site_url,omitempty"`
 }
 
 // User defines model for User.
@@ -146,6 +467,9 @@ type PerPageParam = int
 // Conflict defines model for Conflict.
 type Conflict = Error
 
+// Forbidden defines model for Forbidden.
+type Forbidden = Error
+
 // NotFound defines model for NotFound.
 type NotFound = Error
 
@@ -158,6 +482,30 @@ type ValidationError = Error
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
 
+// ListTeamMembershipsParams defines parameters for ListTeamMemberships.
+type ListTeamMembershipsParams struct {
+	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListTeamsParams defines parameters for ListTeams.
+type ListTeamsParams struct {
+	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListTeamEventsParams defines parameters for ListTeamEvents.
+type ListTeamEventsParams struct {
+	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListUniversitiesParams defines parameters for ListUniversities.
+type ListUniversitiesParams struct {
+	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
 	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
@@ -169,6 +517,30 @@ type UpdateProfileJSONRequestBody = UserUpdate
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
+
+// CreateTeamMembershipJSONRequestBody defines body for CreateTeamMembership for application/json ContentType.
+type CreateTeamMembershipJSONRequestBody = TeamMembershipCreate
+
+// UpdateTeamMembershipJSONRequestBody defines body for UpdateTeamMembership for application/json ContentType.
+type UpdateTeamMembershipJSONRequestBody = TeamMembershipUpdate
+
+// SetTeamMembershipRoleJSONRequestBody defines body for SetTeamMembershipRole for application/json ContentType.
+type SetTeamMembershipRoleJSONRequestBody = SetRoleRequest
+
+// CreateTeamJSONRequestBody defines body for CreateTeam for application/json ContentType.
+type CreateTeamJSONRequestBody = TeamCreate
+
+// UpdateTeamJSONRequestBody defines body for UpdateTeam for application/json ContentType.
+type UpdateTeamJSONRequestBody = TeamUpdate
+
+// InviteToTeamJSONRequestBody defines body for InviteToTeam for application/json ContentType.
+type InviteToTeamJSONRequestBody = InviteRequest
+
+// CreateUniversityJSONRequestBody defines body for CreateUniversity for application/json ContentType.
+type CreateUniversityJSONRequestBody = UniversityCreate
+
+// UpdateUniversityJSONRequestBody defines body for UpdateUniversity for application/json ContentType.
+type UpdateUniversityJSONRequestBody = UniversityUpdate
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = UserCreate
@@ -190,6 +562,78 @@ type ServerInterface interface {
 	// Login
 	// (POST /session)
 	Login(c *gin.Context)
+	// List team memberships
+	// (GET /team-memberships)
+	ListTeamMemberships(c *gin.Context, params ListTeamMembershipsParams)
+	// Create a team membership
+	// (POST /team-memberships)
+	CreateTeamMembership(c *gin.Context)
+	// Delete a team membership
+	// (DELETE /team-memberships/{id})
+	DeleteTeamMembership(c *gin.Context, id int64)
+	// Get a team membership by ID
+	// (GET /team-memberships/{id})
+	GetTeamMembership(c *gin.Context, id int64)
+	// Update a team membership
+	// (PATCH /team-memberships/{id})
+	UpdateTeamMembership(c *gin.Context, id int64)
+	// Accept a team membership invitation
+	// (POST /team-memberships/{id}/accept)
+	AcceptTeamMembership(c *gin.Context, id int64)
+	// Approve a pending team membership
+	// (POST /team-memberships/{id}/approve)
+	ApproveTeamMembership(c *gin.Context, id int64)
+	// Decline a team membership invitation
+	// (POST /team-memberships/{id}/decline)
+	DeclineTeamMembership(c *gin.Context, id int64)
+	// Reject a pending team membership
+	// (POST /team-memberships/{id}/reject)
+	RejectTeamMembership(c *gin.Context, id int64)
+	// Set the role of a team member
+	// (POST /team-memberships/{id}/set-role)
+	SetTeamMembershipRole(c *gin.Context, id int64)
+	// List teams
+	// (GET /teams)
+	ListTeams(c *gin.Context, params ListTeamsParams)
+	// Create a team
+	// (POST /teams)
+	CreateTeam(c *gin.Context)
+	// Delete a team
+	// (DELETE /teams/{id})
+	DeleteTeam(c *gin.Context, id int64)
+	// Get a team by ID
+	// (GET /teams/{id})
+	GetTeam(c *gin.Context, id int64)
+	// Update a team
+	// (PATCH /teams/{id})
+	UpdateTeam(c *gin.Context, id int64)
+	// List team membership events
+	// (GET /teams/{id}/events)
+	ListTeamEvents(c *gin.Context, id int64, params ListTeamEventsParams)
+	// Invite a user to a team
+	// (POST /teams/{id}/invite)
+	InviteToTeam(c *gin.Context, id int64)
+	// Request to join a team
+	// (POST /teams/{id}/join-request)
+	RequestJoinTeam(c *gin.Context, id int64)
+	// List team members
+	// (GET /teams/{id}/members)
+	ListTeamMembers(c *gin.Context, id int64)
+	// List universities
+	// (GET /universities)
+	ListUniversities(c *gin.Context, params ListUniversitiesParams)
+	// Create a university
+	// (POST /universities)
+	CreateUniversity(c *gin.Context)
+	// Delete a university
+	// (DELETE /universities/{id})
+	DeleteUniversity(c *gin.Context, id int64)
+	// Get a university by ID
+	// (GET /universities/{id})
+	GetUniversity(c *gin.Context, id int64)
+	// Update a university
+	// (PATCH /universities/{id})
+	UpdateUniversity(c *gin.Context, id int64)
 	// List users
 	// (GET /users)
 	ListUsers(c *gin.Context, params ListUsersParams)
@@ -272,6 +716,667 @@ func (siw *ServerInterfaceWrapper) Login(c *gin.Context) {
 	}
 
 	siw.Handler.Login(c)
+}
+
+// ListTeamMemberships operation middleware
+func (siw *ServerInterfaceWrapper) ListTeamMemberships(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListTeamMembershipsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", c.Request.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListTeamMemberships(c, params)
+}
+
+// CreateTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) CreateTeamMembership(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateTeamMembership(c)
+}
+
+// DeleteTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) DeleteTeamMembership(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteTeamMembership(c, id)
+}
+
+// GetTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) GetTeamMembership(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetTeamMembership(c, id)
+}
+
+// UpdateTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) UpdateTeamMembership(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateTeamMembership(c, id)
+}
+
+// AcceptTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) AcceptTeamMembership(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AcceptTeamMembership(c, id)
+}
+
+// ApproveTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) ApproveTeamMembership(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ApproveTeamMembership(c, id)
+}
+
+// DeclineTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) DeclineTeamMembership(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeclineTeamMembership(c, id)
+}
+
+// RejectTeamMembership operation middleware
+func (siw *ServerInterfaceWrapper) RejectTeamMembership(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RejectTeamMembership(c, id)
+}
+
+// SetTeamMembershipRole operation middleware
+func (siw *ServerInterfaceWrapper) SetTeamMembershipRole(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SetTeamMembershipRole(c, id)
+}
+
+// ListTeams operation middleware
+func (siw *ServerInterfaceWrapper) ListTeams(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListTeamsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", c.Request.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListTeams(c, params)
+}
+
+// CreateTeam operation middleware
+func (siw *ServerInterfaceWrapper) CreateTeam(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateTeam(c)
+}
+
+// DeleteTeam operation middleware
+func (siw *ServerInterfaceWrapper) DeleteTeam(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteTeam(c, id)
+}
+
+// GetTeam operation middleware
+func (siw *ServerInterfaceWrapper) GetTeam(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetTeam(c, id)
+}
+
+// UpdateTeam operation middleware
+func (siw *ServerInterfaceWrapper) UpdateTeam(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateTeam(c, id)
+}
+
+// ListTeamEvents operation middleware
+func (siw *ServerInterfaceWrapper) ListTeamEvents(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListTeamEventsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", c.Request.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListTeamEvents(c, id, params)
+}
+
+// InviteToTeam operation middleware
+func (siw *ServerInterfaceWrapper) InviteToTeam(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.InviteToTeam(c, id)
+}
+
+// RequestJoinTeam operation middleware
+func (siw *ServerInterfaceWrapper) RequestJoinTeam(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RequestJoinTeam(c, id)
+}
+
+// ListTeamMembers operation middleware
+func (siw *ServerInterfaceWrapper) ListTeamMembers(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListTeamMembers(c, id)
+}
+
+// ListUniversities operation middleware
+func (siw *ServerInterfaceWrapper) ListUniversities(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListUniversitiesParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", c.Request.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListUniversities(c, params)
+}
+
+// CreateUniversity operation middleware
+func (siw *ServerInterfaceWrapper) CreateUniversity(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateUniversity(c)
+}
+
+// DeleteUniversity operation middleware
+func (siw *ServerInterfaceWrapper) DeleteUniversity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteUniversity(c, id)
+}
+
+// GetUniversity operation middleware
+func (siw *ServerInterfaceWrapper) GetUniversity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetUniversity(c, id)
+}
+
+// UpdateUniversity operation middleware
+func (siw *ServerInterfaceWrapper) UpdateUniversity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateUniversity(c, id)
 }
 
 // ListUsers operation middleware
@@ -438,6 +1543,30 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/profile", wrapper.UpdateProfile)
 	router.DELETE(options.BaseURL+"/session", wrapper.Logout)
 	router.POST(options.BaseURL+"/session", wrapper.Login)
+	router.GET(options.BaseURL+"/team-memberships", wrapper.ListTeamMemberships)
+	router.POST(options.BaseURL+"/team-memberships", wrapper.CreateTeamMembership)
+	router.DELETE(options.BaseURL+"/team-memberships/:id", wrapper.DeleteTeamMembership)
+	router.GET(options.BaseURL+"/team-memberships/:id", wrapper.GetTeamMembership)
+	router.PATCH(options.BaseURL+"/team-memberships/:id", wrapper.UpdateTeamMembership)
+	router.POST(options.BaseURL+"/team-memberships/:id/accept", wrapper.AcceptTeamMembership)
+	router.POST(options.BaseURL+"/team-memberships/:id/approve", wrapper.ApproveTeamMembership)
+	router.POST(options.BaseURL+"/team-memberships/:id/decline", wrapper.DeclineTeamMembership)
+	router.POST(options.BaseURL+"/team-memberships/:id/reject", wrapper.RejectTeamMembership)
+	router.POST(options.BaseURL+"/team-memberships/:id/set-role", wrapper.SetTeamMembershipRole)
+	router.GET(options.BaseURL+"/teams", wrapper.ListTeams)
+	router.POST(options.BaseURL+"/teams", wrapper.CreateTeam)
+	router.DELETE(options.BaseURL+"/teams/:id", wrapper.DeleteTeam)
+	router.GET(options.BaseURL+"/teams/:id", wrapper.GetTeam)
+	router.PATCH(options.BaseURL+"/teams/:id", wrapper.UpdateTeam)
+	router.GET(options.BaseURL+"/teams/:id/events", wrapper.ListTeamEvents)
+	router.POST(options.BaseURL+"/teams/:id/invite", wrapper.InviteToTeam)
+	router.POST(options.BaseURL+"/teams/:id/join-request", wrapper.RequestJoinTeam)
+	router.GET(options.BaseURL+"/teams/:id/members", wrapper.ListTeamMembers)
+	router.GET(options.BaseURL+"/universities", wrapper.ListUniversities)
+	router.POST(options.BaseURL+"/universities", wrapper.CreateUniversity)
+	router.DELETE(options.BaseURL+"/universities/:id", wrapper.DeleteUniversity)
+	router.GET(options.BaseURL+"/universities/:id", wrapper.GetUniversity)
+	router.PATCH(options.BaseURL+"/universities/:id", wrapper.UpdateUniversity)
 	router.GET(options.BaseURL+"/users", wrapper.ListUsers)
 	router.POST(options.BaseURL+"/users", wrapper.CreateUser)
 	router.DELETE(options.BaseURL+"/users/:id", wrapper.DeleteUser)
@@ -450,28 +1579,45 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"5Fhdb9s2FP0rwl3fxsRKGhSt3vqxDh2CzeiSDVjgBYx0LbOTSJWkMriB/vvAD1uSRdn5chpgT7Zs8vLy",
-	"nHMPr3gDqSgrwZFrBckNVFTSEjVK+zSlOU7NL+aBcUjga41yCQQ4LRESqGiOQEClCyypGZThnNaFhuSI",
-	"gF5WZgzjGnOU0DQEpih3x0R5OR73OA4EbghIVJXgCm3e7wWfFyzV5nsquEZuv9KqKlhKNRN88kUJbn5r",
-	"l3ghcQ4J/DBpEZm4f9XkJymFXyhDlUpWmSCQtCs1BH4V+qOoebb/VT+jErVMMeJCR3O7ZkPgnNNaL4Rk",
-	"3/AJcuit1hD4gxYssyu4KXtPoF0wQj9mpRgrgnUalRQVSs2cNlKRofn0IlJaMp6Dja4pK+wYmmXMBKbF",
-	"tDNXyxoJ8Loo6FWBq2cfR1x9QSeDEpUy8h2uYWX6tWbS8HPhMmnHzwKxTkXO+Gf8WqPSw61UVKl/hcyC",
-	"26kVyktXUrsSaYeSNuaWdFylDfPR4h/ko8nsIvpceZPopuZC+gChlKY0Z5w6SQzx6dGw9gvSekzwXy00",
-	"LUJ/bSTnXapjWG5mKM8zVqLStKxcbW5oUiLVmF1SS/JcyNJ8g4xqPNDM8jKEtMruOKcJpHXuiaFF8dsc",
-	"kovtFHU30ZDNXdBrqqm8rKXFbqROOvXGVFXQ5ZhGCbCstzPG9asTIAG+JNVmSpBLKQobHXldGs5yW0oE",
-	"zNIogQDNSsY7lN2rglgGpFdGvc35LNaJDvUx81S8t0IYCuSxoe06R8n4KfJcLyB5FYi1AnB9Aq8hfCik",
-	"FdUapbHyvy/owbe3B3/FB28uZz++CEp3zLA2kN7qXwbiUxayUqax7H/ZbVXrBaiUdOlg7ZrRtggd2xpo",
-	"yWbQCza2l3PrAc9ILkOLMWcyprVkevm72btL8B1SifJtbaLcwJV9+rgq9F/+PFv1fiaS+7fVxELryvUD",
-	"jM+FzZdpszt4f/YxPvoQnUnKOON5NC2oNvYRvZ1+AgLXKJVrHY4O48PYbExUyGnFIIGXh/HhS4u6XtgU",
-	"J5UUc+a0n6OVjIHYEvIpgwR+Rj31Qzbaz+M4frT2x5+Kw8azlhK5jkwpRKtUGwIn8dFYyHWOk37v1qHI",
-	"ngBdci5mzYyAqsuSyqXbdJSGliagaa6Mfk1omFnV6HQxxM2JtgudbW/eiWz5qKj54mj69WVKoPkOfPn9",
-	"Rv7YvidVBE6Oj3dP2uzF70Sxw+2WLDcEJgqV8paXYYHOkPqcn4pc1HpYJyduUheoU5HnmEVm+P7lvM5r",
-	"KF6hdHAfjO9Js71e/4lV22/sA/K1AyJVpykqNa+LR+FmkwoLbUBgRoJq1IfNgX5uR5De9cVIL9sOmbRX",
-	"EaaZ3TW4e3VhVLRXC7FdSogHpnQk5pGD5AkKxKxXe3RX1Ljn8SpxXax1wv3Zu2+Vb1UoR3u3d/N75F/j",
-	"7u/t8Zvdk7o3Tvs/DBzKEbUaCEhgXZ6TG5Y1246AD/Z3L4qNOrXXgKbzam8B7RtVn9fufeDOt8JAhQYO",
-	"G0uby/ghtJ3snrS+HLwT/A60cfjJaGv6PYGOn6bcVhd2z5A30yY70qKrZfTpQ9g8t/XHT8zf/6EFt6J5",
-	"cP99N9E8S1P3Hf64qd8iGMrrlSjtNYN9LU8mk0KktFgIpZPX8evYNko+fNB7S8ppjqXhfK1o39vMmv8C",
-	"AAD//w==",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

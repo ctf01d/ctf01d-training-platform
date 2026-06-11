@@ -1,0 +1,181 @@
+tags:
+  - name: universities
+    description: University management
+
+components:
+  schemas:
+    University:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+              nullable: true
+            site_url:
+              type: string
+              nullable: true
+            avatar_url:
+              type: string
+              nullable: true
+    UniversityCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        site_url:
+          type: string
+        avatar_url:
+          type: string
+    UniversityUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        site_url:
+          type: string
+        avatar_url:
+          type: string
+    UniversityList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/University'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+paths:
+  /universities:
+    get:
+      operationId: listUniversities
+      tags:
+        - universities
+      summary: List universities
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: List of universities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UniversityList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createUniversity
+      tags:
+        - universities
+      summary: Create a university
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UniversityCreate'
+      responses:
+        '201':
+          description: University created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/University'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /universities/{id}:
+    get:
+      operationId: getUniversity
+      tags:
+        - universities
+      summary: Get a university by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: University details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/University'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateUniversity
+      tags:
+        - universities
+      summary: Update a university
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UniversityUpdate'
+      responses:
+        '200':
+          description: University updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/University'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteUniversity
+      tags:
+        - universities
+      summary: Delete a university
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: University deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'

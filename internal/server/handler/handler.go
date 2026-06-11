@@ -259,4 +259,104 @@ func parseIDParam(c *gin.Context, param string) (int64, bool) {
 	return id, true
 }
 
+func notImplemented(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, gin.H{"code": "not_implemented", "message": "not implemented"})
+}
+
+func (h *Handler) ListUniversities(c *gin.Context, params httpserver.ListUniversitiesParams) {
+	notImplemented(c)
+}
+
+func (h *Handler) CreateUniversity(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeleteUniversity(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetUniversity(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UpdateUniversity(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ListTeams(c *gin.Context, params httpserver.ListTeamsParams) {
+	notImplemented(c)
+}
+
+func (h *Handler) CreateTeam(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeleteTeam(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetTeam(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UpdateTeam(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ListTeamEvents(c *gin.Context, id int64, params httpserver.ListTeamEventsParams) {
+	notImplemented(c)
+}
+
+func (h *Handler) InviteToTeam(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) RequestJoinTeam(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ListTeamMembers(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ListTeamMemberships(c *gin.Context, params httpserver.ListTeamMembershipsParams) {
+	notImplemented(c)
+}
+
+func (h *Handler) CreateTeamMembership(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeleteTeamMembership(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetTeamMembership(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UpdateTeamMembership(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) AcceptTeamMembership(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ApproveTeamMembership(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeclineTeamMembership(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) RejectTeamMembership(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) SetTeamMembershipRole(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
 var _ httpserver.ServerInterface = (*Handler)(nil)

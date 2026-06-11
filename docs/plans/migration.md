@@ -214,14 +214,14 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       seed admin→login→создать пользователя→list→get→update→смена роли→delete; 401 без токена.
 
 ### Task 15: Universities and Teams fragments + queries
-- [ ] `api/fragments/universities.yaml`: University, UniversityCreate/Update/List; CRUD `/universities`.
-- [ ] `api/fragments/teams.yaml`: Team (id, name, description, website, avatar_url, captain_id nullable,
+- [x] `api/fragments/universities.yaml`: University, UniversityCreate/Update/List; CRUD `/universities`.
+- [x] `api/fragments/teams.yaml`: Team (id, name, description, website, avatar_url, captain_id nullable,
       university_id nullable, timestamps), TeamCreate/Update/List; CRUD `/teams` + `POST /teams/{id}/join-request`,
       `POST /teams/{id}/invite` (body {user_id}), `GET /teams/{id}/members`, `GET /teams/{id}/events`.
-- [ ] `api/fragments/team-memberships.yaml`: TeamMembership (id, team_id, user_id, role, status, timestamps),
+- [x] `api/fragments/team-memberships.yaml`: TeamMembership (id, team_id, user_id, role, status, timestamps),
       TeamMembershipCreate/Update/List, SetRoleRequest (role enum), TeamMembershipEvent. Пути CRUD
       `/team-memberships` + `POST /team-memberships/{id}/approve|reject|accept|decline|set-role`. `make openapi`.
-- [ ] Queries: `universities.sql` (CRUD), `teams.sql` (CRUD + GetTeamByCaptain, SetCaptain, ClearCaptain),
+- [x] Queries: `universities.sql` (CRUD), `teams.sql` (CRUD + GetTeamByCaptain, SetCaptain, ClearCaptain),
       `team_memberships.sql` (Create/GetByID/Update/Delete, ListByTeam, ListByUser, GetMembership(team,user),
       UpdateMembershipStatus, UpdateMembershipRole, CountApprovedManagers(team)),
       `team_membership_events.sql` (CreateEvent, ListByTeam). `make sqlc-gen`.

@@ -83,6 +83,650 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /team-memberships:
+    get:
+      operationId: listTeamMemberships
+      tags:
+        - team-memberships
+      summary: List team memberships
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: List of team memberships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembershipList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createTeamMembership
+      tags:
+        - team-memberships
+      summary: Create a team membership
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembershipCreate'
+      responses:
+        '201':
+          description: Team membership created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}:
+    get:
+      operationId: getTeamMembership
+      tags:
+        - team-memberships
+      summary: Get a team membership by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Team membership details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateTeamMembership
+      tags:
+        - team-memberships
+      summary: Update a team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembershipUpdate'
+      responses:
+        '200':
+          description: Team membership updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteTeamMembership
+      tags:
+        - team-memberships
+      summary: Delete a team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Team membership deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/approve:
+    post:
+      operationId: approveTeamMembership
+      tags:
+        - team-memberships
+      summary: Approve a pending team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/reject:
+    post:
+      operationId: rejectTeamMembership
+      tags:
+        - team-memberships
+      summary: Reject a pending team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/accept:
+    post:
+      operationId: acceptTeamMembership
+      tags:
+        - team-memberships
+      summary: Accept a team membership invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/decline:
+    post:
+      operationId: declineTeamMembership
+      tags:
+        - team-memberships
+      summary: Decline a team membership invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/set-role:
+    post:
+      operationId: setTeamMembershipRole
+      tags:
+        - team-memberships
+      summary: Set the role of a team member
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetRoleRequest'
+      responses:
+        '200':
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /teams:
+    get:
+      operationId: listTeams
+      tags:
+        - teams
+      summary: List teams
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createTeam
+      tags:
+        - teams
+      summary: Create a team
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+      responses:
+        '201':
+          description: Team created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /teams/{id}:
+    get:
+      operationId: getTeam
+      tags:
+        - teams
+      summary: Get a team by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Team details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateTeam
+      tags:
+        - teams
+      summary: Update a team
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdate'
+      responses:
+        '200':
+          description: Team updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteTeam
+      tags:
+        - teams
+      summary: Delete a team
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Team deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /teams/{id}/join-request:
+    post:
+      operationId: requestJoinTeam
+      tags:
+        - teams
+      summary: Request to join a team
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '201':
+          description: Join request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /teams/{id}/invite:
+    post:
+      operationId: inviteToTeam
+      tags:
+        - teams
+      summary: Invite a user to a team
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteRequest'
+      responses:
+        '201':
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /teams/{id}/members:
+    get:
+      operationId: listTeamMembers
+      tags:
+        - teams
+      summary: List team members
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of team memberships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembershipList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /teams/{id}/events:
+    get:
+      operationId: listTeamEvents
+      tags:
+        - teams
+      summary: List team membership events
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: List of membership events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembershipEventList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /universities:
+    get:
+      operationId: listUniversities
+      tags:
+        - universities
+      summary: List universities
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: List of universities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UniversityList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createUniversity
+      tags:
+        - universities
+      summary: Create a university
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UniversityCreate'
+      responses:
+        '201':
+          description: University created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/University'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /universities/{id}:
+    get:
+      operationId: getUniversity
+      tags:
+        - universities
+      summary: Get a university by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: University details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/University'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateUniversity
+      tags:
+        - universities
+      summary: Update a university
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UniversityUpdate'
+      responses:
+        '200':
+          description: University updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/University'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteUniversity
+      tags:
+        - universities
+      summary: Delete a university
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: University deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /users:
     get:
       operationId: listUsers
@@ -274,6 +918,290 @@ components:
           type: string
         user:
           $ref: '#/components/schemas/User'
+    TeamMembership:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - team_id
+            - user_id
+            - role
+            - status
+          properties:
+            id:
+              type: integer
+              format: int64
+            team_id:
+              type: integer
+              format: int64
+            user_id:
+              type: integer
+              format: int64
+            role:
+              type: string
+              enum:
+                - owner
+                - captain
+                - vice_captain
+                - player
+                - guest
+            status:
+              type: string
+              enum:
+                - pending
+                - approved
+                - rejected
+    TeamMembershipCreate:
+      type: object
+      required:
+        - team_id
+        - user_id
+      properties:
+        team_id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        role:
+          type: string
+          enum:
+            - owner
+            - captain
+            - vice_captain
+            - player
+            - guest
+          default: guest
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+          default: pending
+    TeamMembershipUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - owner
+            - captain
+            - vice_captain
+            - player
+            - guest
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+    TeamMembershipList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMembership'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    SetRoleRequest:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum:
+            - owner
+            - captain
+            - vice_captain
+            - player
+            - guest
+    TeamMembershipEvent:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - team_id
+            - user_id
+            - action
+          properties:
+            id:
+              type: integer
+              format: int64
+            team_id:
+              type: integer
+              format: int64
+            user_id:
+              type: integer
+              format: int64
+            actor_id:
+              type: integer
+              format: int64
+              nullable: true
+            action:
+              type: string
+            from_role:
+              type: string
+              nullable: true
+            to_role:
+              type: string
+              nullable: true
+            from_status:
+              type: string
+              nullable: true
+            to_status:
+              type: string
+              nullable: true
+    TeamMembershipEventList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMembershipEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    Team:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - name
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+            description:
+              type: string
+              nullable: true
+            website:
+              type: string
+              nullable: true
+            avatar_url:
+              type: string
+              nullable: true
+            captain_id:
+              type: integer
+              format: int64
+              nullable: true
+            university_id:
+              type: integer
+              format: int64
+              nullable: true
+    TeamCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+        avatar_url:
+          type: string
+        university_id:
+          type: integer
+          format: int64
+          nullable: true
+    TeamUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        website:
+          type: string
+        avatar_url:
+          type: string
+        university_id:
+          type: integer
+          format: int64
+          nullable: true
+    TeamList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    InviteRequest:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: integer
+          format: int64
+    University:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+              nullable: true
+            site_url:
+              type: string
+              nullable: true
+            avatar_url:
+              type: string
+              nullable: true
+    UniversityCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        site_url:
+          type: string
+        avatar_url:
+          type: string
+    UniversityUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        site_url:
+          type: string
+        avatar_url:
+          type: string
+    UniversityList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/University'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
     User:
       allOf:
         - $ref: '#/components/schemas/Timestamped'

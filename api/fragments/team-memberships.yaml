@@ -1,0 +1,439 @@
+tags:
+  - name: team-memberships
+    description: Team membership management
+
+components:
+  schemas:
+    TeamMembership:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - team_id
+            - user_id
+            - role
+            - status
+          properties:
+            id:
+              type: integer
+              format: int64
+            team_id:
+              type: integer
+              format: int64
+            user_id:
+              type: integer
+              format: int64
+            role:
+              type: string
+              enum:
+                - owner
+                - captain
+                - vice_captain
+                - player
+                - guest
+            status:
+              type: string
+              enum:
+                - pending
+                - approved
+                - rejected
+    TeamMembershipCreate:
+      type: object
+      required:
+        - team_id
+        - user_id
+      properties:
+        team_id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        role:
+          type: string
+          enum:
+            - owner
+            - captain
+            - vice_captain
+            - player
+            - guest
+          default: guest
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+          default: pending
+    TeamMembershipUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - owner
+            - captain
+            - vice_captain
+            - player
+            - guest
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+    TeamMembershipList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMembership'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    SetRoleRequest:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum:
+            - owner
+            - captain
+            - vice_captain
+            - player
+            - guest
+    TeamMembershipEvent:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - team_id
+            - user_id
+            - action
+          properties:
+            id:
+              type: integer
+              format: int64
+            team_id:
+              type: integer
+              format: int64
+            user_id:
+              type: integer
+              format: int64
+            actor_id:
+              type: integer
+              format: int64
+              nullable: true
+            action:
+              type: string
+            from_role:
+              type: string
+              nullable: true
+            to_role:
+              type: string
+              nullable: true
+            from_status:
+              type: string
+              nullable: true
+            to_status:
+              type: string
+              nullable: true
+    TeamMembershipEventList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMembershipEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+paths:
+  /team-memberships:
+    get:
+      operationId: listTeamMemberships
+      tags:
+        - team-memberships
+      summary: List team memberships
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: List of team memberships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembershipList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createTeamMembership
+      tags:
+        - team-memberships
+      summary: Create a team membership
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembershipCreate'
+      responses:
+        '201':
+          description: Team membership created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}:
+    get:
+      operationId: getTeamMembership
+      tags:
+        - team-memberships
+      summary: Get a team membership by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Team membership details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateTeamMembership
+      tags:
+        - team-memberships
+      summary: Update a team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembershipUpdate'
+      responses:
+        '200':
+          description: Team membership updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteTeamMembership
+      tags:
+        - team-memberships
+      summary: Delete a team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Team membership deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/approve:
+    post:
+      operationId: approveTeamMembership
+      tags:
+        - team-memberships
+      summary: Approve a pending team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/reject:
+    post:
+      operationId: rejectTeamMembership
+      tags:
+        - team-memberships
+      summary: Reject a pending team membership
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/accept:
+    post:
+      operationId: acceptTeamMembership
+      tags:
+        - team-memberships
+      summary: Accept a team membership invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/decline:
+    post:
+      operationId: declineTeamMembership
+      tags:
+        - team-memberships
+      summary: Decline a team membership invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Membership declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /team-memberships/{id}/set-role:
+    post:
+      operationId: setTeamMembershipRole
+      tags:
+        - team-memberships
+      summary: Set the role of a team member
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetRoleRequest'
+      responses:
+        '200':
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
