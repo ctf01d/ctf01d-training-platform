@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net"
@@ -542,13 +543,19 @@ func generateSVGLogoToFile(text string, dir string, preferName string) string {
 			"<rect width='100%%' height='100%%' fill='%s' />"+
 			"<text x='50%%' y='56%%' dominant-baseline='middle' text-anchor='middle'"+
 			" font-family='Arial, Helvetica, sans-serif' font-size='%d' fill='#fff'>%s</text>"+
-			"</svg>", size, size, color, fontSize, initial)
+			"</svg>", size, size, color, fontSize, xmlEscape(initial))
 
 	filePath := path.Join(dir, preferName+".svg")
 	if err := os.WriteFile(filePath, []byte(svg), 0o644); err != nil {
 		return ""
 	}
 	return filePath
+}
+
+func xmlEscape(s string) string {
+	var buf bytes.Buffer
+	xml.Escape(&buf, []byte(s))
+	return buf.String()
 }
 
 func paletteColor(s string) string {
@@ -844,7 +851,7 @@ func extractCheckerDirFromBundle(bundlePath string, destDir string) bool {
 			rc.Close()
 			continue
 		}
-		io.Copy(out, rc)
+		_, err = io.Copy(out, io.LimitReader(rc, 200*1024*1024))
 		out.Close()
 		rc.Close()
 	}
@@ -852,13 +859,7 @@ func extractCheckerDirFromBundle(bundlePath string, destDir string) bool {
 }
 
 func containsCheckerDir(name string) bool {
-	for {
-		idx := strings.Index(name, "checker/")
-		if idx < 0 {
-			return false
-		}
-		return true
-	}
+	return strings.Contains(name, "checker/")
 }
 
 func writeDummyChecker(destDir string, cid string) {

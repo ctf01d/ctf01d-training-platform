@@ -263,7 +263,7 @@ func (s *Service) Approve(ctx context.Context, membershipID int64, actorID int64
 		if mem.Status == nil || *mem.Status != "pending" {
 			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
 		}
-		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole); err != nil {
+		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole, tq.q); err != nil {
 			return err
 		}
 
@@ -297,7 +297,7 @@ func (s *Service) Reject(ctx context.Context, membershipID int64, actorID int64,
 		if mem.Status == nil || *mem.Status != "pending" {
 			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
 		}
-		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole); err != nil {
+		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole, tq.q); err != nil {
 			return err
 		}
 
@@ -411,7 +411,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 		if err != nil {
 			return mapNotFound(err, "membership")
 		}
-		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole); err != nil {
+		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole, tq.q); err != nil {
 			return err
 		}
 
@@ -457,7 +457,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 
 		if newRole == "captain" {
 			captainID := int32(mem.UserID)
-			_, existingTeam, err := s.getTeamByCaptainSafe(ctx, &captainID)
+			_, existingTeam, err := s.getTeamByCaptainSafe(ctx, &captainID, tq.teams)
 			if err != nil {
 				return err
 			}
@@ -483,11 +483,11 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 	})
 }
 
-func (s *Service) canManageMembership(ctx context.Context, teamID, actorID int64, globalRole string) error {
+func (s *Service) canManageMembership(ctx context.Context, teamID, actorID int64, globalRole string, q Querier) error {
 	if globalRole == "admin" {
 		return nil
 	}
-	mem, err := s.q.GetMembership(ctx, db.GetMembershipParams{TeamID: teamID, UserID: actorID})
+	mem, err := q.GetMembership(ctx, db.GetMembershipParams{TeamID: teamID, UserID: actorID})
 	if err != nil {
 		return errs.ErrForbidden
 	}
@@ -500,8 +500,8 @@ func (s *Service) canManageMembership(ctx context.Context, teamID, actorID int64
 	return nil
 }
 
-func (s *Service) getTeamByCaptainSafe(ctx context.Context, captainID *int32) (found bool, team *db.Team, err error) {
-	t, e := s.teams.GetTeamByCaptain(ctx, captainID)
+func (s *Service) getTeamByCaptainSafe(ctx context.Context, captainID *int32, teams TeamQuerier) (found bool, team *db.Team, err error) {
+	t, e := teams.GetTeamByCaptain(ctx, captainID)
 	if e != nil {
 		if isNoRows(e) {
 			return false, nil, nil

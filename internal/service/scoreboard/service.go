@@ -110,6 +110,8 @@ func (s *Service) ForGame(ctx context.Context, gameID int64, viewerRole string) 
 		if err != nil {
 			return nil, err
 		}
+		curRank := 1
+		var prevScore int
 		for i, r := range results {
 			team, err := s.teams.GetTeamByID(ctx, r.TeamID)
 			if err != nil {
@@ -119,11 +121,15 @@ func (s *Service) ForGame(ctx context.Context, gameID int64, viewerRole string) 
 			if r.Score != nil {
 				score = int(*r.Score)
 			}
+			if i > 0 && score != prevScore {
+				curRank = i + 1
+			}
+			prevScore = score
 			entries = append(entries, ScoreboardEntry{
 				TeamID:   r.TeamID,
 				TeamName: team.Name,
 				Score:    score,
-				Position: i + 1,
+				Position: curRank,
 			})
 		}
 	}

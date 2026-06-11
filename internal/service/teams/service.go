@@ -201,10 +201,14 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*TeamListResult,
 }
 
 func (s *Service) CanManage(ctx context.Context, teamID, userID int64, globalRole string) error {
+	return s.canManageWithQuerier(ctx, teamID, userID, globalRole, s.members)
+}
+
+func (s *Service) canManageWithQuerier(ctx context.Context, teamID, userID int64, globalRole string, members MembershipQuerier) error {
 	if globalRole == "admin" {
 		return nil
 	}
-	membership, err := s.members.GetMembership(ctx, db.GetMembershipParams{
+	membership, err := members.GetMembership(ctx, db.GetMembershipParams{
 		TeamID: teamID,
 		UserID: userID,
 	})
@@ -298,23 +302,35 @@ func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
 }
 
 func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64, globalRole string) error {
-	err := s.CanManage(ctx, teamID, inviterID, globalRole)
-	if err != nil {
-		return err
-	}
-
 	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
 		tq := s.txQ(q)
+		if err := s.canManageWithQuerier(ctx, teamID, inviterID, globalRole, tq.members); err != nil {
+			return err
+		}
 		role := "player"
 		status := "pending"
 		action := "invite"
 
-		_, err := tq.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+		existing, err := tq.members.GetMembership(ctx, db.GetMembershipParams{
 			TeamID: teamID,
 			UserID: inviteeID,
-			Role:   &role,
-			Status: &status,
 		})
+		if err == nil {
+			if existing.Status != nil && *existing.Status != "rejected" {
+				return errs.ErrConflict
+			}
+			_, err = tq.members.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{
+				ID:     existing.ID,
+				Status: &status,
+			})
+		} else {
+			_, err = tq.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+				TeamID: teamID,
+				UserID: inviteeID,
+				Role:   &role,
+				Status: &status,
+			})
+		}
 		if err != nil {
 			return mapDBError(err)
 		}

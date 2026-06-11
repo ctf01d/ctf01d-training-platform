@@ -831,13 +831,14 @@ func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
 
 	role, _ := middleware.CurrentRole(c)
 	isAdmin := role == "admin"
+	isPlayer := role == "player"
 
 	svc, err := h.svcService.GetByID(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		respondError(c, err)
 		return
 	}
-	if !svc.Public && !isAdmin {
+	if !svc.Public && !isAdmin && !isPlayer {
 		c.JSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "service is not public"})
 		return
 	}
