@@ -322,16 +322,16 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       Unit-тесты с httptest и in-memory storage.
 
 ### Task 23: Services imports and checker inspection
-- [ ] `internal/service/services/import_common.go`: безопасная распаковка zip (лимит суммарного размера и
+- [x] `internal/service/services/import_common.go`: безопасная распаковка zip (лимит суммарного размера и
       числа файлов, запрет путей с `..`, anti zip-bomb по коэффициенту сжатия), извлечение метаданных,
       сборка bundle.
-- [ ] `import_github.go` (порт `github_importer.rb` + `service_import/*`): `ImportFromGithub(ctx,req)→
+- [x] `import_github.go` (порт `github_importer.rb` + `service_import/*`): `ImportFromGithub(ctx,req)→
       (Service, warnings[], err)` — скачать репозиторий (codeload zip), извлечь метаданные (порт
       `metadata_extractor.rb`: name, descriptions, author, ctf01d_training), собрать архивы (порт
       `bundle_builder.rb`), создать/обновить Service + сохранить архивы; накапливать warnings.
-- [ ] `import_zip.go`: `ImportFromZip(ctx, zipFile)→(Service, warnings[], err)` аналогично, источник —
+- [x] `import_zip.go`: `ImportFromZip(ctx, zipFile)→(Service, warnings[], err)` аналогично, источник —
       загруженный zip.
-- [ ] `checker.go` (порт `checker_inspector.rb`): `CheckChecker(ctx,id)` — статическая проверка структуры
+- [x] `checker.go` (порт `checker_inspector.rb`): `CheckChecker(ctx,id)` — статическая проверка структуры
       локального архива чекера, выставить check_status (ok/failed/unknown) + checked_at (динамический запуск —
       TODO-комментарий). Фикстуры в `testdata/`. Unit-тесты на извлечение метаданных, path-traversal, структуру.
 
