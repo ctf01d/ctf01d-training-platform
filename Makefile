@@ -1,6 +1,7 @@
 .PHONY: codegen database-attach database-remove database-reset database-run database-stop fmt install lint server-build server-run test \
 	web-rails-image-build web-rails-image-save web-rails-image-build-and-save deploy \
-	go-build go-run go-test go-vet go-fmt go-tidy
+	go-build go-run go-test go-vet go-fmt go-tidy \
+	openapi-merge openapi-codegen openapi-ts openapi openapi-lint
 # -----------------------------------------------------------------------------
 # Docker images (production)
 
@@ -76,3 +77,29 @@ go-fmt:
 ## go-tidy: Run go mod tidy
 go-tidy:
 	go mod tidy
+
+# -----------------------------------------------------------------------------
+# OpenAPI code generation
+
+OPENAPI_FILE := api/openapi.yaml
+OPENAPI_FRAGMENTS_DIR := api/fragments
+OAPI_CODEGEN := go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+
+## openapi-merge: Merge API fragments into a single OpenAPI file
+openapi-merge:
+	yq eval-all '. as $$item ireduce ({}; . * $$item )' $(OPENAPI_FRAGMENTS_DIR)/*.yaml > $(OPENAPI_FILE)
+
+## openapi-codegen: Generate Go server code from OpenAPI spec
+openapi-codegen:
+	$(OAPI_CODEGEN) -config configs/oapi-codegen.yaml $(OPENAPI_FILE)
+
+## openapi-ts: Generate TypeScript types from OpenAPI spec
+openapi-ts:
+	npx openapi-typescript $(OPENAPI_FILE) -o web/src/api/schema.d.ts
+
+## openapi: Full pipeline — merge fragments, generate Go code and TypeScript types
+openapi: openapi-merge openapi-codegen openapi-ts
+
+## openapi-lint: Validate OpenAPI specification with Spectral
+openapi-lint:
+	npx @stoplight/spectral-cli lint $(OPENAPI_FILE) --ruleset configs/spectral.yaml

@@ -83,18 +83,18 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       (yq v4, Node.js, golangci-lint). Выполнить `go mod tidy`, убедиться что build/test зелёные.
 
 ### Task 6: OpenAPI tooling and Makefile pipeline
-- [ ] `tools/tools.go` (build-тег `//go:build tools`) с blank-импортами:
+- [x] `tools/tools.go` (build-тег `//go:build tools`) с blank-импортами:
       `github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen`,
       `github.com/sqlc-dev/sqlc/cmd/sqlc`, `github.com/pressly/goose/v3/cmd/goose`. `go get` для них.
-- [ ] Makefile-таргеты: `openapi-merge` (слить `api/fragments/**/*.yaml` через `yq eval-all
+- [x] Makefile-таргеты: `openapi-merge` (слить `api/fragments/**/*.yaml` через `yq eval-all
       '. as $i ireduce ({}; . * $i)'` в `api/openapi.yaml`), `openapi-codegen`
       (`go run .../oapi-codegen -config configs/oapi-codegen.yaml api/openapi.yaml`),
       `openapi-ts` (`npx openapi-typescript api/openapi.yaml -o web/src/api/schema.d.ts`),
       `openapi` (merge→codegen→ts), `openapi-lint` (`npx @stoplight/spectral-cli lint api/openapi.yaml
       --ruleset configs/spectral.yaml`).
-- [ ] `configs/oapi-codegen.yaml`: package httpserver, output `gen/httpserver/httpserver.gen.go`,
+- [x] `configs/oapi-codegen.yaml`: package httpserver, output `gen/httpserver/httpserver.gen.go`,
       generate {models:true, gin-server:true, embedded-spec:true}.
-- [ ] `configs/spectral.yaml`: extends `spectral:oas` (отключить шумные правила при необходимости).
+- [x] `configs/spectral.yaml`: extends `spectral:oas` (отключить шумные правила при необходимости).
 
 ### Task 7: Base OpenAPI fragments
 - [ ] `api/fragments/00-base.schema.yaml`: `openapi: 3.0.3`, info (title `CTF01D Training Platform API`,

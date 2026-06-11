@@ -1,0 +1,6 @@
+package: httpserver
+output: gen/httpserver/httpserver.gen.go
+generate:
+  models: true
+  gin-server: true
+  embedded-spec: true
