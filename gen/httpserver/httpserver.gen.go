@@ -72,6 +72,18 @@ type Error struct {
 	Message string                  `json:"message"`
 }
 
+// LoginRequest defines model for LoginRequest.
+type LoginRequest struct {
+	Password string `json:"password"`
+	UserName string `json:"user_name"`
+}
+
+// LoginResponse defines model for LoginResponse.
+type LoginResponse struct {
+	Token string `json:"token"`
+	User  User   `json:"user"`
+}
+
 // Pagination defines model for Pagination.
 type Pagination struct {
 	Page    int `json:"page"`
@@ -152,6 +164,12 @@ type ListUsersParams struct {
 	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
+// UpdateProfileJSONRequestBody defines body for UpdateProfile for application/json ContentType.
+type UpdateProfileJSONRequestBody = UserUpdate
+
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody = LoginRequest
+
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = UserCreate
 
@@ -160,6 +178,18 @@ type UpdateUserJSONRequestBody = UserUpdate
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get current user profile
+	// (GET /profile)
+	GetProfile(c *gin.Context)
+	// Update current user profile
+	// (PATCH /profile)
+	UpdateProfile(c *gin.Context)
+	// Logout
+	// (DELETE /session)
+	Logout(c *gin.Context)
+	// Login
+	// (POST /session)
+	Login(c *gin.Context)
 	// List users
 	// (GET /users)
 	ListUsers(c *gin.Context, params ListUsersParams)
@@ -185,6 +215,64 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// GetProfile operation middleware
+func (siw *ServerInterfaceWrapper) GetProfile(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetProfile(c)
+}
+
+// UpdateProfile operation middleware
+func (siw *ServerInterfaceWrapper) UpdateProfile(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateProfile(c)
+}
+
+// Logout operation middleware
+func (siw *ServerInterfaceWrapper) Logout(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.Logout(c)
+}
+
+// Login operation middleware
+func (siw *ServerInterfaceWrapper) Login(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.Login(c)
+}
 
 // ListUsers operation middleware
 func (siw *ServerInterfaceWrapper) ListUsers(c *gin.Context) {
@@ -346,6 +434,10 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.GET(options.BaseURL+"/profile", wrapper.GetProfile)
+	router.PATCH(options.BaseURL+"/profile", wrapper.UpdateProfile)
+	router.DELETE(options.BaseURL+"/session", wrapper.Logout)
+	router.POST(options.BaseURL+"/session", wrapper.Login)
 	router.GET(options.BaseURL+"/users", wrapper.ListUsers)
 	router.POST(options.BaseURL+"/users", wrapper.CreateUser)
 	router.DELETE(options.BaseURL+"/users/:id", wrapper.DeleteUser)
@@ -358,24 +450,27 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 	"AAD//w==",
 }
 

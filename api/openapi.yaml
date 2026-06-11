@@ -8,6 +8,81 @@ tags:
   - name: users
     description: User management
 paths:
+  /session:
+    post:
+      operationId: login
+      tags:
+        - auth
+      summary: Login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: logout
+      tags:
+        - auth
+      summary: Logout
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /profile:
+    get:
+      operationId: getProfile
+      tags:
+        - auth
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateProfile
+      tags:
+        - auth
+      summary: Update current user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /users:
     get:
       operationId: listUsers
@@ -179,6 +254,26 @@ components:
         updated_at:
           type: string
           format: date-time
+    LoginRequest:
+      type: object
+      required:
+        - user_name
+        - password
+      properties:
+        user_name:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
     User:
       allOf:
         - $ref: '#/components/schemas/Timestamped'

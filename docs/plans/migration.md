@@ -197,20 +197,20 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       Delete. Доменный тип `User` (password_digest наружу не отдавать). Unit-тесты с мок-Querier.
 
 ### Task 14: Auth fragment, service, handlers and RBAC middleware
-- [ ] `api/fragments/auth.yaml` (tag auth): `LoginRequest` (user_name, password), `LoginResponse`
+- [x] `api/fragments/auth.yaml` (tag auth): `LoginRequest` (user_name, password), `LoginResponse`
       (token, user $ref User). Пути `POST /session` (login, public, 200/401),
       `DELETE /session` (logout, 204), `GET /profile` (200/401), `PATCH /profile` (UserUpdate без role,
       200/401/422). `make openapi`.
-- [ ] `internal/service/auth/service.go`: `Login(ctx, userName, password) (token, User, err)`
+- [x] `internal/service/auth/service.go`: `Login(ctx, userName, password) (token, User, err)`
       (найти→bcrypt→ErrUnauthorized или JWT), `Me(ctx, userID) (User, error)`; logout — stateless.
-- [ ] `internal/server/middleware/auth.go`: `RequireAuth(jwtMgr)` (читает Bearer, парсит, 401 при ошибке,
+- [x] `internal/server/middleware/auth.go`: `RequireAuth(jwtMgr)` (читает Bearer, парсит, 401 при ошибке,
       кладёт user_id/role/user_name в контекст; хелперы CurrentUserID/CurrentRole),
       `RequireRole(role)` (403 при недостатке; иерархия guest<player<admin), `OptionalAuth`.
       Тесты: нет токена→401, битый→401, валидный→контекст, мало прав→403.
-- [ ] `internal/server/handler/auth.go` + `users.go`: реализовать login/logout/getProfile/updateProfile
+- [x] `internal/server/handler/auth.go` + `users.go`: реализовать login/logout/getProfile/updateProfile
       и users CRUD; убрать соответствующие заглушки. Роуты: `/session` POST public, всё под `/api/v1` —
       RequireAuth; create/update(role)/delete users — RequireRole("admin"); свой профиль — без admin.
-- [ ] Прокинуть Users/Auth/JWT в Handler и main. Интеграционный тест (skip без TEST_DATABASE_URL):
+- [x] Прокинуть Users/Auth/JWT в Handler и main. Интеграционный тест (skip без TEST_DATABASE_URL):
       seed admin→login→создать пользователя→list→get→update→смена роли→delete; 401 без токена.
 
 ### Task 15: Universities and Teams fragments + queries

@@ -6,7 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -27,7 +29,9 @@ func newTestEngine(store Store) *gin.Engine {
 		},
 	}
 	log, _ := zap.NewDevelopment()
-	return New(cfg, log, store)
+	jwtMgr := auth.NewManager("test-secret", 24)
+	h := handler.New(nil, nil, jwtMgr)
+	return New(cfg, log, store, h)
 }
 
 func TestHealthz_OK(t *testing.T) {

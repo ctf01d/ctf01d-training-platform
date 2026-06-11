@@ -9,9 +9,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
+	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
+	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -44,7 +48,12 @@ func run() error {
 	}
 	defer store.Close()
 
-	engine := server.New(cfg, log, store)
+	jwtMgr := auth.NewManager(cfg.JWT.Secret, cfg.JWT.TTLHours)
+	userService := usersvc.NewService(store.Queries)
+	authService := authsvc.NewService(store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
+	h := handler.New(userService, authService, jwtMgr)
+
+	engine := server.New(cfg, log, store, h)
 
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Addr,

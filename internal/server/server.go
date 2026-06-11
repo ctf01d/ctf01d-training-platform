@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ type Store interface {
 	Ping() error
 }
 
-func New(cfg *config.Config, log *zap.Logger, store Store) *gin.Engine {
+func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	if cfg.Env == "development" {
 		gin.SetMode(gin.DebugMode)
@@ -65,10 +65,26 @@ func New(cfg *config.Config, log *zap.Logger, store Store) *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"version": Version})
 	})
 
-	h := handler.New()
-	httpserver.RegisterHandlersWithOptions(engine, h, httpserver.GinServerOptions{
-		BaseURL: "/api/v1",
-	})
+	api := engine.Group("/api/v1")
+	requireAuth := middleware.RequireAuth(h.JWTMgr())
+	requireAdmin := func(c *gin.Context) {
+		requireAuth(c)
+		if c.IsAborted() {
+			return
+		}
+		middleware.RequireRole("admin")(c)
+	}
+
+	api.POST("/session", h.Login)
+	api.DELETE("/session", requireAuth, h.Logout)
+	api.GET("/profile", requireAuth, h.GetProfile)
+	api.PATCH("/profile", requireAuth, h.UpdateProfile)
+
+	api.GET("/users", requireAuth, h.HandleListUsers)
+	api.POST("/users", requireAdmin, h.HandleCreateUser)
+	api.GET("/users/:id", requireAuth, h.HandleGetUser)
+	api.PATCH("/users/:id", requireAuth, h.HandleUpdateUser)
+	api.DELETE("/users/:id", requireAdmin, h.HandleDeleteUser)
 
 	return engine
 }

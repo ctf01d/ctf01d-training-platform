@@ -1,0 +1,154 @@
+package integration
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
+	"github.com/ctf01d/ctf01d-training-platform/internal/config"
+	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
+	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
+	"github.com/ctf01d/ctf01d-training-platform/internal/testutil"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
+
+func setupTest(t *testing.T) (*gin.Engine, func()) {
+	t.Helper()
+
+	store := testutil.NewTestStore(t)
+	testutil.TruncateAll(t, store)
+
+	log, _ := zap.NewDevelopment()
+	cfg := &config.Config{
+		Env: "development",
+		CORS: config.CORSConfig{
+			AllowedOrigins: "http://localhost:5173",
+		},
+	}
+
+	jwtMgr := auth.NewManager("test-integration-secret", 24)
+	userService := usersvc.NewService(store.Queries)
+	authService := authsvc.NewService(store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
+	h := handler.New(userService, authService, jwtMgr)
+
+	engine := server.New(cfg, log, store, h)
+	return engine, func() {}
+}
+
+func makeReq(t *testing.T, engine *gin.Engine, method, path string, body interface{}, token string) *httptest.ResponseRecorder {
+	t.Helper()
+	var bodyReader io.Reader
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			t.Fatalf("marshaling body: %v", err)
+		}
+		bodyReader = bytes.NewReader(b)
+	}
+	req := httptest.NewRequest(method, path, bodyReader)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+	return w
+}
+
+func parseJSON(t *testing.T, w *httptest.ResponseRecorder) map[string]interface{} {
+	t.Helper()
+	var result map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
+		t.Fatalf("parsing JSON: %v, body: %s", err, w.Body.String())
+	}
+	return result
+}
+
+func TestAuthFlow(t *testing.T) {
+	engine, _ := setupTest(t)
+
+	w := makeReq(t, engine, http.MethodPost, "/api/v1/users", map[string]interface{}{
+		"user_name": "admin", "display_name": "Admin", "password": "admin12345", "role": "admin",
+	}, "")
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create admin: %d %s", w.Code, w.Body.String())
+	}
+
+	w = makeReq(t, engine, http.MethodPost, "/api/v1/session", map[string]interface{}{
+		"user_name": "admin", "password": "admin12345",
+	}, "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("login: %d %s", w.Code, w.Body.String())
+	}
+	adminToken := parseJSON(t, w)["token"].(string)
+
+	w = makeReq(t, engine, http.MethodPost, "/api/v1/users", map[string]interface{}{
+		"user_name": "player1", "display_name": "Player One", "password": "password123", "role": "player",
+	}, adminToken)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("create player: %d %s", w.Code, w.Body.String())
+	}
+	player := parseJSON(t, w)
+	playerID := int64(player["id"].(float64))
+
+	w = makeReq(t, engine, http.MethodGet, "/api/v1/users", nil, adminToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("list users: %d %s", w.Code, w.Body.String())
+	}
+
+	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/users/%d", playerID), nil, adminToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get user: %d %s", w.Code, w.Body.String())
+	}
+
+	w = makeReq(t, engine, http.MethodPatch, fmt.Sprintf("/api/v1/users/%d", playerID), map[string]interface{}{
+		"display_name": "Updated Name",
+	}, adminToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("update user: %d %s", w.Code, w.Body.String())
+	}
+
+	w = makeReq(t, engine, http.MethodPost, "/api/v1/session", map[string]interface{}{
+		"user_name": "player1", "password": "password123",
+	}, "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("login player: %d %s", w.Code, w.Body.String())
+	}
+	playerToken := parseJSON(t, w)["token"].(string)
+
+	w = makeReq(t, engine, http.MethodGet, "/api/v1/profile", nil, playerToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get profile: %d %s", w.Code, w.Body.String())
+	}
+	profile := parseJSON(t, w)
+	if profile["user_name"] != "player1" {
+		t.Errorf("expected player1, got %v", profile["user_name"])
+	}
+
+	w = makeReq(t, engine, http.MethodPost, "/api/v1/session", map[string]interface{}{
+		"user_name": "player1", "password": "wrongpassword",
+	}, "")
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for wrong password, got %d", w.Code)
+	}
+
+	w = makeReq(t, engine, http.MethodGet, "/api/v1/users", nil, "")
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 without token, got %d", w.Code)
+	}
+
+	w = makeReq(t, engine, http.MethodDelete, fmt.Sprintf("/api/v1/users/%d", playerID), nil, adminToken)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("delete user: %d %s", w.Code, w.Body.String())
+	}
+}
