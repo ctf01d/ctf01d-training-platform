@@ -58,10 +58,10 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [x] Тест `config_test.go` (через `t.Setenv`) на дефолты и required.
 
 ### Task 3: Logger and DB pool
-- [ ] `go get go.uber.org/zap`. `pkg/logger/logger.go`: `New(env, level string) (*zap.Logger, error)`
+- [x] `go get go.uber.org/zap`. `pkg/logger/logger.go`: `New(env, level string) (*zap.Logger, error)`
       (production→json, иначе console; уровень из level) и `Sync(l)`.
-- [ ] `go get github.com/jackc/pgx/v5 github.com/jackc/pgx/v5/pgxpool`.
-- [ ] `internal/repository/store.go`: `Store{ Pool *pgxpool.Pool }`,
+- [x] `go get github.com/jackc/pgx/v5 github.com/jackc/pgx/v5/pgxpool`.
+- [x] `internal/repository/store.go`: `Store{ Pool *pgxpool.Pool }`,
       `NewStore(ctx, dbURL) (*Store, error)` (создаёт пул + Ping), `Close()`, `Health(ctx) error` (Ping).
 
 ### Task 4: HTTP server with healthz and graceful shutdown
