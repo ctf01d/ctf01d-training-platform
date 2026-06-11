@@ -2,7 +2,8 @@
 	web-rails-image-build web-rails-image-save web-rails-image-build-and-save deploy \
 	go-build go-run go-test go-vet go-fmt go-tidy \
 	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
-	migrate-up migrate-down migrate-status migrate-new
+	migrate-up migrate-down migrate-status migrate-new \
+	sqlc-gen sqlc-vet
 # -----------------------------------------------------------------------------
 # Docker images (production)
 
@@ -126,3 +127,16 @@ migrate-status:
 ## migrate-new: Create a new empty migration (usage: make migrate-new name=add_users)
 migrate-new:
 	$(GOOSE) -dir $(MIGRATIONS_DIR) create $(name) sql
+
+# -----------------------------------------------------------------------------
+# sqlc code generation
+
+SQLC := go run github.com/sqlc-dev/sqlc/cmd/sqlc
+
+## sqlc-gen: Generate Go code from SQL queries using sqlc
+sqlc-gen:
+	$(SQLC) generate
+
+## sqlc-vet: Vet SQL queries and generated code
+sqlc-vet:
+	$(SQLC) vet

@@ -173,13 +173,13 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [x] Прогнать `make migrate-up` и `make migrate-down` против dev-БД — оба чистые.
 
 ### Task 12: sqlc configuration and store transactions
-- [ ] `sqlc.yaml`: version 2, engine postgresql, schema `migrations`, queries `internal/repository/queries`,
+- [x] `sqlc.yaml`: version 2, engine postgresql, schema `migrations`, queries `internal/repository/queries`,
       gen.go: package db, out `internal/repository/db`, sql_package pgx/v5, emit_json_tags true,
       emit_pointers_for_null_types true; overrides timestamptz→time.Time, jsonb→json.RawMessage.
       Makefile-таргеты `sqlc-gen` и `sqlc-vet`.
-- [ ] Расширить `store.go`: встроить `*db.Queries`, метод `WithTx(ctx, fn func(*db.Queries) error) error`
+- [x] Расширить `store.go`: встроить `*db.Queries`, метод `WithTx(ctx, fn func(*db.Queries) error) error`
       (Begin→WithTx→Commit/Rollback).
-- [ ] Helper `internal/repository/testhelper_test.go`: подключение к `TEST_DATABASE_URL` (иначе t.Skip),
+- [x] Helper `internal/repository/testhelper_test.go`: подключение к `TEST_DATABASE_URL` (иначе t.Skip),
       применение goose-миграций programmatically, очистка `TRUNCATE ... RESTART IDENTITY CASCADE`.
 
 ### Task 13: Users queries, service and JWT/bcrypt

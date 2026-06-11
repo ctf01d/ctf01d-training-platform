@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Store struct {
 	Pool *pgxpool.Pool
+	*db.Queries
 }
 
 func NewStore(ctx context.Context, dbURL string) (*Store, error) {
@@ -27,7 +29,7 @@ func NewStore(ctx context.Context, dbURL string) (*Store, error) {
 		return nil, fmt.Errorf("pinging db: %w", err)
 	}
 
-	return &Store{Pool: pool}, nil
+	return &Store{Pool: pool, Queries: db.New(pool)}, nil
 }
 
 func (s *Store) Close() {
@@ -40,4 +42,18 @@ func (s *Store) Health(ctx context.Context) error {
 
 func (s *Store) Ping() error {
 	return s.Pool.Ping(context.Background())
+}
+
+func (s *Store) WithTx(ctx context.Context, fn func(*db.Queries) error) error {
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	if err := fn(s.Queries.WithTx(tx)); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
