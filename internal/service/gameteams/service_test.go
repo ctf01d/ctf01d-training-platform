@@ -8,6 +8,7 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type mockQuerier struct {
@@ -46,7 +47,7 @@ func (m *mockQuerier) CreateGameTeam(_ context.Context, arg db.CreateGameTeamPar
 func (m *mockQuerier) GetGameTeamByID(_ context.Context, id int64) (db.GameTeam, error) {
 	gt, ok := m.items[id]
 	if !ok {
-		return db.GameTeam{}, &noRowsErr{}
+		return db.GameTeam{}, pgx.ErrNoRows
 	}
 	return gt, nil
 }
@@ -64,7 +65,7 @@ func (m *mockQuerier) ListGameTeamsByGame(_ context.Context, gameID int64) ([]db
 func (m *mockQuerier) UpdateGameTeam(_ context.Context, arg db.UpdateGameTeamParams) (db.GameTeam, error) {
 	gt, ok := m.items[arg.ID]
 	if !ok {
-		return db.GameTeam{}, &noRowsErr{}
+		return db.GameTeam{}, pgx.ErrNoRows
 	}
 	if arg.IpAddress != nil {
 		gt.IpAddress = arg.IpAddress
@@ -86,16 +87,12 @@ func (m *mockQuerier) DeleteGameTeam(_ context.Context, id int64) error {
 func (m *mockQuerier) UpdateGameTeamOrder(_ context.Context, arg db.UpdateGameTeamOrderParams) error {
 	gt, ok := m.items[arg.ID]
 	if !ok {
-		return &noRowsErr{}
+		return pgx.ErrNoRows
 	}
 	gt.Order = arg.Order
 	m.items[arg.ID] = gt
 	return nil
 }
-
-type noRowsErr struct{}
-
-func (e *noRowsErr) Error() string { return "no rows in result set" }
 
 func ptrStr(v string) *string { return &v }
 

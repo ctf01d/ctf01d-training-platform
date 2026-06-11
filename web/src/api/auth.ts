@@ -26,7 +26,7 @@ const authMiddleware: Middleware = {
 
 const unauthorizedMiddleware: Middleware = {
   async onResponse({ response }) {
-    if (response.status === 401) {
+    if (response.status === 401 && !window.location.pathname.startsWith('/login')) {
       clearToken()
       window.location.href = '/login'
     }

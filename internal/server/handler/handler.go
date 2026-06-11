@@ -9,6 +9,7 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
 	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
@@ -42,6 +43,7 @@ type Handler struct {
 	svcChecker    *svcsvc.CheckerService
 	svcImport     *svcsvc.ImportService
 	ctf01dBuilder *ctf01dsvc.Builder
+	maxUploadBytes int64
 }
 
 func New(
@@ -61,6 +63,7 @@ func New(
 	svcChecker *svcsvc.CheckerService,
 	svcImport *svcsvc.ImportService,
 	ctf01dBuilder *ctf01dsvc.Builder,
+	maxUploadBytes int64,
 ) *Handler {
 	return &Handler{
 		users:         users,
@@ -79,6 +82,7 @@ func New(
 		svcChecker:    svcChecker,
 		svcImport:     svcImport,
 		ctf01dBuilder: ctf01dBuilder,
+		maxUploadBytes: maxUploadBytes,
 	}
 }
 
@@ -232,6 +236,13 @@ func (h *Handler) HandleGetUser(c *gin.Context) {
 func (h *Handler) HandleUpdateUser(c *gin.Context) {
 	id, ok := parseIDParam(c, "id")
 	if !ok {
+		return
+	}
+
+	userID, _ := middleware.CurrentUserID(c)
+	role, _ := middleware.CurrentRole(c)
+	if role != "admin" && userID != id {
+		respondError(c, errs.ErrForbidden)
 		return
 	}
 
@@ -850,9 +861,13 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 		return
 	}
 	defer f.Close()
-	zipBytes, err := io.ReadAll(f)
+	zipBytes, err := io.ReadAll(io.LimitReader(f, h.maxUploadBytes+1))
 	if err != nil {
 		respondError(c, err)
+		return
+	}
+	if int64(len(zipBytes)) > h.maxUploadBytes {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"code": "validation_error", "message": "archive file too large"})
 		return
 	}
 	role, _ := middleware.CurrentRole(c)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -373,38 +374,21 @@ func validateServiceURLs(avatarUrl, serviceArchiveUrl, checkerArchiveUrl, writeu
 }
 
 func mapNotFound(err error, entity string) error {
-	if isNoRows(err) {
+	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
 	return err
 }
 
 func mapDBError(err error) error {
-	if isDuplicateKey(err) {
+	if repository.IsDuplicateKey(err) {
 		return errs.ErrConflict
 	}
 	return err
 }
 
-func isNoRows(err error) bool {
-	return err != nil && err.Error() == "no rows in result set"
-}
-
 func isDuplicateKey(err error) bool {
-	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "violates unique"))
-}
-
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && searchString(s, sub)
-}
-
-func searchString(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
+	return repository.IsDuplicateKey(err)
 }
 
 func pgtypeTz(t time.Time) pgtype.Timestamptz {

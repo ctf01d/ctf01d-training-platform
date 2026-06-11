@@ -112,9 +112,9 @@ func (h *Handler) HandleUpdateTeam(c *gin.Context) {
 		return
 	}
 
-	name := ""
+	var name *string
 	if req.Name != nil {
-		name = *req.Name
+		name = req.Name
 	}
 
 	params := teamsvc.UpdateParams{

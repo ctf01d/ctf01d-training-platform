@@ -23,6 +23,7 @@ Useful Make targets
 - openapi (merge + codegen + TypeScript types)
 - sqlc-gen (generate Go from SQL queries)
 - migrate-up / migrate-down / migrate-status
+- seed (populate database with test data)
 - lint / lint-fix / verify-codegen
 - web-install / web-build / web-dev
 
@@ -34,7 +35,9 @@ Production (Docker Compose)
 - Services:
   - db: PostgreSQL 16 with healthcheck
   - app: Go server with auto-migrations (RUN_MIGRATIONS=true)
-  - reverse-proxy: Caddy with auto-HTTPS (Let's Encrypt)
+  - reverse-proxy: Caddy with auto-HTTPS (Let's Encrypt), serves SPA and proxies /api/* to app
+- The Dockerfile builds both Go backend and React SPA in separate stages
 - Migrations run automatically on startup when RUN_MIGRATIONS=true
+- API spec: api/openapi.yaml (view with any OpenAPI viewer)
 
 Legacy Rails code (app/, config/, db/, Gemfile) is preserved for reference.

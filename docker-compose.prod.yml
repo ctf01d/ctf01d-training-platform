@@ -39,6 +39,8 @@ services:
       - "8080"
     volumes:
       - storage-data:/data/storage
+      - web-dist:/web-dist
+    entrypoint: ["sh", "-c", "cp -r /app/web/dist/* /web-dist/ && ./ctf01d-server"]
 
   reverse-proxy:
     image: caddy:2
@@ -57,9 +59,11 @@ services:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
+      - web-dist:/srv/web:ro
 
 volumes:
   db-data:
   caddy-data:
   caddy-config:
   storage-data:
+  web-dist:

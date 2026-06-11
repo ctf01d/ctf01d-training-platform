@@ -8,6 +8,7 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type mockGameQuerier struct {
@@ -69,7 +70,7 @@ func (m *mockGameQuerier) CreateGame(_ context.Context, arg db.CreateGameParams)
 func (m *mockGameQuerier) GetGameByID(_ context.Context, id int64) (db.Game, error) {
 	g, ok := m.games[id]
 	if !ok {
-		return db.Game{}, &noRowsErr{}
+		return db.Game{}, pgx.ErrNoRows
 	}
 	return g, nil
 }
@@ -92,7 +93,7 @@ func (m *mockGameQuerier) CountGames(_ context.Context) (int64, error) {
 func (m *mockGameQuerier) UpdateGame(_ context.Context, arg db.UpdateGameParams) (db.Game, error) {
 	g, ok := m.games[arg.ID]
 	if !ok {
-		return db.Game{}, &noRowsErr{}
+		return db.Game{}, pgx.ErrNoRows
 	}
 	if arg.Name != nil {
 		g.Name = arg.Name
@@ -116,7 +117,7 @@ func (m *mockGameQuerier) DeleteGame(_ context.Context, id int64) error {
 func (m *mockGameQuerier) SetFinalized(_ context.Context, arg db.SetFinalizedParams) (db.Game, error) {
 	g, ok := m.games[arg.ID]
 	if !ok {
-		return db.Game{}, &noRowsErr{}
+		return db.Game{}, pgx.ErrNoRows
 	}
 	g.Finalized = arg.Finalized
 	g.FinalizedAt = arg.FinalizedAt
@@ -167,10 +168,6 @@ func (m *mockFinalResultQuerier) InsertFinalResult(_ context.Context, arg db.Ins
 func (m *mockFinalResultQuerier) ListFinalResultsByGame(_ context.Context, gameID int64) ([]db.FinalResult, error) {
 	return m.finalResults[gameID], nil
 }
-
-type noRowsErr struct{}
-
-func (e *noRowsErr) Error() string { return "no rows in result set" }
 
 func ptrStr(v string) *string { return &v }
 

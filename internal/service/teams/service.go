@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 )
 
@@ -37,7 +38,7 @@ type CreateParams struct {
 }
 
 type UpdateParams struct {
-	Name         string  `json:"name"`
+	Name         *string `json:"name"`
 	Description  *string `json:"description"`
 	Website      *string `json:"website"`
 	AvatarUrl    *string `json:"avatar_url"`
@@ -205,9 +206,19 @@ func (s *Service) CanManage(ctx context.Context, teamID, userID int64, globalRol
 }
 
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*Team, error) {
+	name := ""
+	if params.Name != nil {
+		name = *params.Name
+	} else {
+		existing, err := s.teams.GetTeamByID(ctx, id)
+		if err != nil {
+			return nil, mapNotFound(err, "team")
+		}
+		name = existing.Name
+	}
 	team, err := s.teams.UpdateTeam(ctx, db.UpdateTeamParams{
 		ID:           id,
-		Name:         params.Name,
+		Name:         name,
 		Description:  params.Description,
 		Website:      params.Website,
 		AvatarUrl:    params.AvatarUrl,
@@ -313,38 +324,17 @@ func int32PtrFromInt64(v int64) *int32 {
 }
 
 func mapNotFound(err error, entity string) error {
-	if isNoRows(err) {
+	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
 	return err
 }
 
 func mapDBError(err error) error {
-	if isDuplicateKey(err) {
+	if repository.IsDuplicateKey(err) {
 		return errs.ErrConflict
 	}
 	return err
-}
-
-func isNoRows(err error) bool {
-	return err != nil && err.Error() == "no rows in result set"
-}
-
-func isDuplicateKey(err error) bool {
-	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "violates unique"))
-}
-
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && searchString(s, sub)
-}
-
-func searchString(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
 }
 
 func ptrStr(v string) *string { return &v }

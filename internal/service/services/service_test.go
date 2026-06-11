@@ -3,11 +3,14 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type mockQuerier struct {
@@ -26,7 +29,7 @@ func newMockQuerier() *mockQuerier {
 
 func (m *mockQuerier) CreateService(_ context.Context, arg db.CreateServiceParams) (db.Service, error) {
 	if _, exists := m.byName[arg.Name]; exists {
-		return db.Service{}, &duplicateKeyError{}
+		return db.Service{}, fmt.Errorf("duplicate key value violates unique constraint")
 	}
 	id := m.nextID
 	m.nextID++
@@ -57,7 +60,7 @@ func (m *mockQuerier) CreateService(_ context.Context, arg db.CreateServiceParam
 func (m *mockQuerier) GetServiceByID(_ context.Context, id int64) (db.Service, error) {
 	svc, ok := m.services[id]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	return svc, nil
 }
@@ -100,7 +103,7 @@ func (m *mockQuerier) CountServices(_ context.Context, arg db.CountServicesParam
 func (m *mockQuerier) UpdateService(_ context.Context, arg db.UpdateServiceParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.Name = arg.Name
 	if arg.PublicDescription != nil {
@@ -154,21 +157,13 @@ func (m *mockQuerier) DeleteService(_ context.Context, id int64) error {
 func (m *mockQuerier) SetPublic(_ context.Context, arg db.SetPublicParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.Public = arg.Public
 	svc.UpdatedAt = time.Now()
 	m.services[arg.ID] = svc
 	return svc, nil
 }
-
-type noRowsError struct{}
-
-func (e *noRowsError) Error() string { return "no rows in result set" }
-
-type duplicateKeyError struct{}
-
-func (e *duplicateKeyError) Error() string { return "duplicate key value violates unique constraint" }
 
 func strPtr(s string) *string { return &s }
 func boolPtr(b bool) *bool    { return &b }
@@ -552,4 +547,8 @@ func TestFromDB_DefaultTraining(t *testing.T) {
 	if len(parsed) != 0 {
 		t.Errorf("Ctf01dTraining = %v, want empty object", parsed)
 	}
+}
+
+func contains(s, sub string) bool {
+	return len(s) >= len(sub) && strings.Contains(s, sub)
 }

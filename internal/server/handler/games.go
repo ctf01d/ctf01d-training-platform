@@ -197,7 +197,7 @@ func (h *Handler) HandleListGameServices(c *gin.Context) {
 	for i, sid := range serviceIDs {
 		ids[i] = sid
 	}
-	c.JSON(http.StatusOK, gin.H{"service_ids": ids})
+	c.JSON(http.StatusOK, ids)
 }
 
 func (h *Handler) HandleAddGameService(c *gin.Context) {
@@ -219,7 +219,7 @@ func (h *Handler) HandleAddGameService(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.Status(http.StatusOK)
 }
 
 func (h *Handler) HandleRemoveGameService(c *gin.Context) {

@@ -16,6 +16,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -42,7 +43,7 @@ func (m *mockArchiveQuerier) addService(svc db.Service) int64 {
 func (m *mockArchiveQuerier) GetServiceByID(_ context.Context, id int64) (db.Service, error) {
 	svc, ok := m.services[id]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	return *svc, nil
 }
@@ -50,7 +51,7 @@ func (m *mockArchiveQuerier) GetServiceByID(_ context.Context, id int64) (db.Ser
 func (m *mockArchiveQuerier) SetServiceLocal(_ context.Context, arg db.SetServiceLocalParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.ServiceLocalPath = arg.ServiceLocalPath
 	svc.ServiceLocalSize = arg.ServiceLocalSize
@@ -62,7 +63,7 @@ func (m *mockArchiveQuerier) SetServiceLocal(_ context.Context, arg db.SetServic
 func (m *mockArchiveQuerier) SetCheckerLocal(_ context.Context, arg db.SetCheckerLocalParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.CheckerLocalPath = arg.CheckerLocalPath
 	svc.CheckerLocalSize = arg.CheckerLocalSize

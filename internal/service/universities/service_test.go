@@ -7,6 +7,7 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type mockQuerier struct {
@@ -40,7 +41,7 @@ func (m *mockQuerier) CreateUniversity(_ context.Context, arg db.CreateUniversit
 func (m *mockQuerier) GetUniversityByID(_ context.Context, id int64) (db.University, error) {
 	u, ok := m.universities[id]
 	if !ok {
-		return db.University{}, &noRowsError{}
+		return db.University{}, pgx.ErrNoRows
 	}
 	return u, nil
 }
@@ -63,7 +64,7 @@ func (m *mockQuerier) CountUniversities(_ context.Context) (int64, error) {
 func (m *mockQuerier) UpdateUniversity(_ context.Context, arg db.UpdateUniversityParams) (db.University, error) {
 	u, ok := m.universities[arg.ID]
 	if !ok {
-		return db.University{}, &noRowsError{}
+		return db.University{}, pgx.ErrNoRows
 	}
 	if arg.Name != nil {
 		u.Name = arg.Name
@@ -83,10 +84,6 @@ func (m *mockQuerier) DeleteUniversity(_ context.Context, id int64) error {
 	delete(m.universities, id)
 	return nil
 }
-
-type noRowsError struct{}
-
-func (e *noRowsError) Error() string { return "no rows in result set" }
 
 func TestCreate(t *testing.T) {
 	q := newMockQuerier()

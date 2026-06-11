@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -94,14 +95,14 @@ func newMockImportQuerier() *mockImportQuerier {
 func (m *mockImportQuerier) GetServiceByName(_ context.Context, name string) (db.Service, error) {
 	id, ok := m.byName[name]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	return *m.services[id], nil
 }
 
 func (m *mockImportQuerier) CreateService(_ context.Context, arg db.CreateServiceParams) (db.Service, error) {
 	if _, exists := m.byName[arg.Name]; exists {
-		return db.Service{}, &duplicateKeyError{}
+		return db.Service{}, fmt.Errorf("duplicate key value violates unique constraint")
 	}
 	id := m.nextID
 	m.nextID++
@@ -127,7 +128,7 @@ func (m *mockImportQuerier) CreateService(_ context.Context, arg db.CreateServic
 func (m *mockImportQuerier) UpdateService(_ context.Context, arg db.UpdateServiceParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.Name = arg.Name
 	if arg.PublicDescription != nil {
@@ -151,7 +152,7 @@ func (m *mockImportQuerier) UpdateService(_ context.Context, arg db.UpdateServic
 func (m *mockImportQuerier) GetServiceByID(_ context.Context, id int64) (db.Service, error) {
 	svc, ok := m.services[id]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	return *svc, nil
 }
@@ -159,7 +160,7 @@ func (m *mockImportQuerier) GetServiceByID(_ context.Context, id int64) (db.Serv
 func (m *mockImportQuerier) SetServiceLocal(_ context.Context, arg db.SetServiceLocalParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.ServiceLocalPath = arg.ServiceLocalPath
 	svc.ServiceLocalSize = arg.ServiceLocalSize
@@ -171,7 +172,7 @@ func (m *mockImportQuerier) SetServiceLocal(_ context.Context, arg db.SetService
 func (m *mockImportQuerier) SetCheckerLocal(_ context.Context, arg db.SetCheckerLocalParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.CheckerLocalPath = arg.CheckerLocalPath
 	svc.CheckerLocalSize = arg.CheckerLocalSize
@@ -183,7 +184,7 @@ func (m *mockImportQuerier) SetCheckerLocal(_ context.Context, arg db.SetChecker
 func (m *mockImportQuerier) SetArchiveURLs(_ context.Context, arg db.SetArchiveURLsParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	if arg.ServiceArchiveUrl != nil {
 		svc.ServiceArchiveUrl = arg.ServiceArchiveUrl
@@ -197,7 +198,7 @@ func (m *mockImportQuerier) SetArchiveURLs(_ context.Context, arg db.SetArchiveU
 func (m *mockImportQuerier) SetCheckStatus(_ context.Context, arg db.SetCheckStatusParams) (db.Service, error) {
 	svc, ok := m.services[arg.ID]
 	if !ok {
-		return db.Service{}, &noRowsError{}
+		return db.Service{}, pgx.ErrNoRows
 	}
 	svc.CheckStatus = arg.CheckStatus
 	svc.CheckedAt = arg.CheckedAt

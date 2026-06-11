@@ -2,11 +2,13 @@ package users
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type mockQuerier struct {
@@ -25,7 +27,7 @@ func newMockQuerier() *mockQuerier {
 
 func (m *mockQuerier) CreateUser(_ context.Context, arg db.CreateUserParams) (db.User, error) {
 	if _, exists := m.byName[arg.UserName]; exists {
-		return db.User{}, &duplicateKeyError{}
+		return db.User{}, fmt.Errorf("duplicate key value violates unique constraint")
 	}
 	id := m.nextID
 	m.nextID++
@@ -49,7 +51,7 @@ func (m *mockQuerier) CreateUser(_ context.Context, arg db.CreateUserParams) (db
 func (m *mockQuerier) GetUserByID(_ context.Context, id int64) (db.User, error) {
 	u, ok := m.users[id]
 	if !ok {
-		return db.User{}, &noRowsError{}
+		return db.User{}, pgx.ErrNoRows
 	}
 	return u, nil
 }
@@ -57,7 +59,7 @@ func (m *mockQuerier) GetUserByID(_ context.Context, id int64) (db.User, error) 
 func (m *mockQuerier) GetUserByUserName(_ context.Context, userName string) (db.User, error) {
 	id, ok := m.byName[userName]
 	if !ok {
-		return db.User{}, &noRowsError{}
+		return db.User{}, pgx.ErrNoRows
 	}
 	return m.users[id], nil
 }
@@ -80,7 +82,7 @@ func (m *mockQuerier) CountUsers(_ context.Context) (int64, error) {
 func (m *mockQuerier) UpdateUserProfile(_ context.Context, arg db.UpdateUserProfileParams) (db.User, error) {
 	u, ok := m.users[arg.ID]
 	if !ok {
-		return db.User{}, &noRowsError{}
+		return db.User{}, pgx.ErrNoRows
 	}
 	u.DisplayName = arg.DisplayName
 	if arg.AvatarUrl != nil {
@@ -97,7 +99,7 @@ func (m *mockQuerier) UpdateUserProfile(_ context.Context, arg db.UpdateUserProf
 func (m *mockQuerier) UpdateUserRole(_ context.Context, arg db.UpdateUserRoleParams) (db.User, error) {
 	u, ok := m.users[arg.ID]
 	if !ok {
-		return db.User{}, &noRowsError{}
+		return db.User{}, pgx.ErrNoRows
 	}
 	u.Role = arg.Role
 	u.UpdatedAt = time.Now()
@@ -108,7 +110,7 @@ func (m *mockQuerier) UpdateUserRole(_ context.Context, arg db.UpdateUserRolePar
 func (m *mockQuerier) UpdateUserRating(_ context.Context, arg db.UpdateUserRatingParams) (db.User, error) {
 	u, ok := m.users[arg.ID]
 	if !ok {
-		return db.User{}, &noRowsError{}
+		return db.User{}, pgx.ErrNoRows
 	}
 	u.Rating = arg.Rating
 	u.UpdatedAt = time.Now()
@@ -123,14 +125,6 @@ func (m *mockQuerier) DeleteUser(_ context.Context, id int64) error {
 	}
 	return nil
 }
-
-type duplicateKeyError struct{}
-
-func (e *duplicateKeyError) Error() string { return "duplicate key value violates unique constraint" }
-
-type noRowsError struct{}
-
-func (e *noRowsError) Error() string { return "no rows in result set" }
 
 func TestCreate_Success(t *testing.T) {
 	q := newMockQuerier()

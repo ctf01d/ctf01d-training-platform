@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -66,6 +67,12 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 	if options.IncludeHTML {
 		if htmlSource == "" || !dirExists(htmlSource) {
 			htmlSource = buildFallbackHTML(tmpDir)
+		} else {
+			abs, err := filepath.Abs(htmlSource)
+			if err != nil || strings.HasPrefix(abs, "..") {
+				return nil, fmt.Errorf("invalid html_source_path: must be an absolute path within allowed directories")
+			}
+			htmlSource = abs
 		}
 		copyTree(htmlSource, path.Join(dataDir, "html"))
 	}
@@ -117,7 +124,9 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 func applyOptionDefaults(o Options) Options {
 	if o.Prefix == "" {
 		b := make([]byte, 4)
-		rand.Read(b)
+		if _, err := rand.Read(b); err != nil {
+			return o
+		}
 		o.Prefix = "ctf01d_package_" + hex.EncodeToString(b)
 	}
 	return o
@@ -529,7 +538,9 @@ func generateSVGLogoToFile(text string, dir string, preferName string) string {
 			"</svg>", size, size, color, fontSize, initial)
 
 	filePath := path.Join(dir, preferName+".svg")
-	os.WriteFile(filePath, []byte(svg), 0644)
+	if err := os.WriteFile(filePath, []byte(svg), 0644); err != nil {
+		return ""
+	}
 	return filePath
 }
 
@@ -847,8 +858,8 @@ func packZip(rootDir string) ([]byte, error) {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 		_, err = io.Copy(fw, f)
+		f.Close()
 		return err
 	})
 	if err != nil {

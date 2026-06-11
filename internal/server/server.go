@@ -99,7 +99,7 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.GET("/team-memberships", requireAuth, h.HandleListTeamMemberships)
 	api.POST("/team-memberships", append(requireAdmin, h.HandleCreateTeamMembership)...)
 	api.GET("/team-memberships/:id", requireAuth, h.HandleGetTeamMembership)
-	api.PATCH("/team-memberships/:id", requireAuth, h.HandleUpdateTeamMembership)
+	api.PATCH("/team-memberships/:id", append(requireAdmin, h.HandleUpdateTeamMembership)...)
 	api.DELETE("/team-memberships/:id", append(requireAdmin, h.HandleDeleteTeamMembership)...)
 	api.POST("/team-memberships/:id/approve", requireAuth, h.HandleApproveTeamMembership)
 	api.POST("/team-memberships/:id/reject", requireAuth, h.HandleRejectTeamMembership)

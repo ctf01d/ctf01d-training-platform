@@ -7,6 +7,7 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -38,7 +39,7 @@ func newMocks() (*mockGameQuerier, *mockResultQuerier, *mockFinalResultQuerier, 
 func (m *mockGameQuerier) GetGameByID(_ context.Context, id int64) (db.Game, error) {
 	g, ok := m.games[id]
 	if !ok {
-		return db.Game{}, &noRowsErr{}
+		return db.Game{}, pgx.ErrNoRows
 	}
 	return g, nil
 }
@@ -65,14 +66,10 @@ func (m *mockFinalResultQuerier) ListFinalResultsByGame(_ context.Context, gameI
 func (m *mockTeamQuerier) GetTeamByID(_ context.Context, id int64) (db.Team, error) {
 	t, ok := m.teams[id]
 	if !ok {
-		return db.Team{}, &noRowsErr{}
+		return db.Team{}, pgx.ErrNoRows
 	}
 	return t, nil
 }
-
-type noRowsErr struct{}
-
-func (e *noRowsErr) Error() string { return "no rows in result set" }
 
 func ptrInt32(v int32) *int32 { return &v }
 

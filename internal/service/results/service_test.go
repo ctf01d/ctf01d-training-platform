@@ -2,11 +2,13 @@ package results
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type mockGameQuerier struct {
@@ -28,7 +30,7 @@ func newMocks() (*mockGameQuerier, *mockQuerier) {
 func (m *mockGameQuerier) GetGameByID(_ context.Context, id int64) (db.Game, error) {
 	g, ok := m.games[id]
 	if !ok {
-		return db.Game{}, &noRowsErr{}
+		return db.Game{}, pgx.ErrNoRows
 	}
 	return g, nil
 }
@@ -36,7 +38,7 @@ func (m *mockGameQuerier) GetGameByID(_ context.Context, id int64) (db.Game, err
 func (m *mockQuerier) CreateResult(_ context.Context, arg db.CreateResultParams) (db.Result, error) {
 	for _, r := range m.results {
 		if r.GameID == arg.GameID && r.TeamID == arg.TeamID {
-			return db.Result{}, &duplicateKeyErr{}
+			return db.Result{}, fmt.Errorf("duplicate key value violates unique constraint")
 		}
 	}
 	id := m.nextID
@@ -51,7 +53,7 @@ func (m *mockQuerier) CreateResult(_ context.Context, arg db.CreateResultParams)
 func (m *mockQuerier) GetResultByID(_ context.Context, id int64) (db.Result, error) {
 	r, ok := m.results[id]
 	if !ok {
-		return db.Result{}, &noRowsErr{}
+		return db.Result{}, pgx.ErrNoRows
 	}
 	return r, nil
 }
@@ -105,7 +107,7 @@ func (m *mockQuerier) UpsertResult(_ context.Context, arg db.UpsertResultParams)
 func (m *mockQuerier) UpdateResult(_ context.Context, arg db.UpdateResultParams) (db.Result, error) {
 	r, ok := m.results[arg.ID]
 	if !ok {
-		return db.Result{}, &noRowsErr{}
+		return db.Result{}, pgx.ErrNoRows
 	}
 	if arg.Score != nil {
 		r.Score = arg.Score
@@ -120,19 +122,12 @@ func (m *mockQuerier) DeleteResult(_ context.Context, id int64) error {
 	return nil
 }
 
-type noRowsErr struct{}
-
-func (e *noRowsErr) Error() string { return "no rows in result set" }
-
-type duplicateKeyErr struct{}
-
-func (e *duplicateKeyErr) Error() string { return "duplicate key value violates unique constraint" }
-
 func ptrInt32(v int32) *int32 { return &v }
 
 func TestCreate_Success(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	score := int32(100)
 	r, err := svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &score}, "player")
@@ -160,7 +155,6 @@ func TestCreate_FinalizedForbidden(t *testing.T) {
 func TestCreate_FinalizedAdmin(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
-
 	gq.games[1] = db.Game{ID: 1, Finalized: true}
 
 	score := int32(100)
@@ -173,6 +167,7 @@ func TestCreate_FinalizedAdmin(t *testing.T) {
 func TestGetByID_Success(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	score := int32(100)
 	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &score}, "player")
@@ -199,6 +194,7 @@ func TestGetByID_NotFound(t *testing.T) {
 func TestListByGame(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
 	s2 := int32(200)
@@ -217,6 +213,7 @@ func TestListByGame(t *testing.T) {
 func TestUpsert(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
 	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
@@ -234,6 +231,7 @@ func TestUpsert(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
 	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
@@ -251,6 +249,7 @@ func TestUpdate(t *testing.T) {
 func TestUpdate_FinalizedForbidden(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
 	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
@@ -267,6 +266,7 @@ func TestUpdate_FinalizedForbidden(t *testing.T) {
 func TestDelete(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
 	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
@@ -284,6 +284,7 @@ func TestDelete(t *testing.T) {
 func TestDelete_FinalizedForbidden(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
 	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
@@ -299,6 +300,8 @@ func TestDelete_FinalizedForbidden(t *testing.T) {
 func TestListAll(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
+	gq.games[1] = db.Game{ID: 1, Finalized: false}
+	gq.games[2] = db.Game{ID: 2, Finalized: false}
 
 	s1 := int32(100)
 	s2 := int32(200)

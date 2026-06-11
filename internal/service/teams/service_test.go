@@ -8,6 +8,7 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type mockTeamQuerier struct {
@@ -60,18 +61,18 @@ func (m *mockTeamQuerier) CreateTeam(_ context.Context, arg db.CreateTeamParams)
 func (m *mockTeamQuerier) GetTeamByID(_ context.Context, id int64) (db.Team, error) {
 	t, ok := m.teams[id]
 	if !ok {
-		return db.Team{}, &noRowsErr{}
+		return db.Team{}, pgx.ErrNoRows
 	}
 	return t, nil
 }
 
 func (m *mockTeamQuerier) GetTeamByCaptain(_ context.Context, captainID *int32) (db.Team, error) {
 	if captainID == nil {
-		return db.Team{}, &noRowsErr{}
+		return db.Team{}, pgx.ErrNoRows
 	}
 	id, ok := m.byCaptain[*captainID]
 	if !ok {
-		return db.Team{}, &noRowsErr{}
+		return db.Team{}, pgx.ErrNoRows
 	}
 	return m.teams[id], nil
 }
@@ -94,7 +95,7 @@ func (m *mockTeamQuerier) CountTeams(_ context.Context) (int64, error) {
 func (m *mockTeamQuerier) UpdateTeam(_ context.Context, arg db.UpdateTeamParams) (db.Team, error) {
 	t, ok := m.teams[arg.ID]
 	if !ok {
-		return db.Team{}, &noRowsErr{}
+		return db.Team{}, pgx.ErrNoRows
 	}
 	t.Name = arg.Name
 	if arg.Description != nil {
@@ -117,7 +118,7 @@ func (m *mockTeamQuerier) UpdateTeam(_ context.Context, arg db.UpdateTeamParams)
 func (m *mockTeamQuerier) SetCaptain(_ context.Context, arg db.SetCaptainParams) (db.Team, error) {
 	t, ok := m.teams[arg.ID]
 	if !ok {
-		return db.Team{}, &noRowsErr{}
+		return db.Team{}, pgx.ErrNoRows
 	}
 	if arg.CaptainID != nil {
 		m.byCaptain[*arg.CaptainID] = arg.ID
@@ -131,7 +132,7 @@ func (m *mockTeamQuerier) SetCaptain(_ context.Context, arg db.SetCaptainParams)
 func (m *mockTeamQuerier) ClearCaptain(_ context.Context, id int64) (db.Team, error) {
 	t, ok := m.teams[id]
 	if !ok {
-		return db.Team{}, &noRowsErr{}
+		return db.Team{}, pgx.ErrNoRows
 	}
 	if t.CaptainID != nil {
 		delete(m.byCaptain, *t.CaptainID)
@@ -159,7 +160,7 @@ func memKey(teamID, userID int64) string {
 func (m *mockMembershipQuerier) CreateTeamMembership(_ context.Context, arg db.CreateTeamMembershipParams) (db.TeamMembership, error) {
 	key := memKey(arg.TeamID, arg.UserID)
 	if _, ok := m.members[key]; ok {
-		return db.TeamMembership{}, &duplicateKeyErr{}
+		return db.TeamMembership{}, fmt.Errorf("duplicate key value violates unique constraint")
 	}
 	id := m.nextID
 	m.nextID++
@@ -176,7 +177,7 @@ func (m *mockMembershipQuerier) CreateTeamMembership(_ context.Context, arg db.C
 func (m *mockMembershipQuerier) GetMembership(_ context.Context, arg db.GetMembershipParams) (db.TeamMembership, error) {
 	mem, ok := m.members[memKey(arg.TeamID, arg.UserID)]
 	if !ok {
-		return db.TeamMembership{}, &noRowsErr{}
+		return db.TeamMembership{}, pgx.ErrNoRows
 	}
 	return mem, nil
 }
@@ -207,14 +208,6 @@ func (m *mockEventQuerier) CreateEvent(_ context.Context, arg db.CreateEventPara
 	m.events = append(m.events, e)
 	return e, nil
 }
-
-type noRowsErr struct{}
-
-func (e *noRowsErr) Error() string { return "no rows in result set" }
-
-type duplicateKeyErr struct{}
-
-func (e *duplicateKeyErr) Error() string { return "duplicate key value violates unique constraint" }
 
 func TestCreate_Success(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
@@ -365,8 +358,9 @@ func TestUpdate(t *testing.T) {
 	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
 
 	desc := "Updated description"
+	name := "Team Beta"
 	team, err := svc.Update(context.Background(), 1, UpdateParams{
-		Name:        "Team Beta",
+		Name:        &name,
 		Description: &desc,
 	})
 	if err != nil {
