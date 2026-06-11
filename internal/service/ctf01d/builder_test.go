@@ -43,8 +43,8 @@ func strPtr(s string) *string { return &s }
 func makeMockQ() *mockBuilderQuerier {
 	return &mockBuilderQuerier{
 		game: db.Game{
-			ID:   1,
-			Name: strPtr("TestGame"),
+			ID:       1,
+			Name:     strPtr("TestGame"),
 			StartsAt: pgtype.Timestamptz{Time: time.Date(2025, 10, 1, 9, 0, 0, 0, time.UTC), Valid: true},
 			EndsAt:   pgtype.Timestamptz{Time: time.Date(2025, 10, 1, 19, 0, 0, 0, time.UTC), Valid: true},
 		},
@@ -73,7 +73,7 @@ func makeMockQ() *mockBuilderQuerier {
 				Ctf01dTraining:   json.RawMessage(`{"script_wait": 15, "round_sleep": 45}`),
 			},
 			201: {
-				ID:             201,
+				ID:               201,
 				Name:             "Crypto Service",
 				CheckerLocalPath: nil,
 				ServiceLocalPath: nil,

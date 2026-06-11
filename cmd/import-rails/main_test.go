@@ -3,8 +3,6 @@ package main
 import (
 	"testing"
 	"time"
-
-	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 )
 
 func TestMapRailsUserToParams(t *testing.T) {
@@ -88,6 +86,4 @@ func TestMapRailsUserToParams_PreservesPasswordDigest(t *testing.T) {
 	if *params.PasswordDigest != bcryptHash {
 		t.Errorf("PasswordDigest = %q, want exact bcrypt hash preserved", *params.PasswordDigest)
 	}
-
-	var _ db.CreateUserParams = params
 }

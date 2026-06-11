@@ -12,8 +12,8 @@ import (
 )
 
 type mockQuerier struct {
-	members  map[int64]db.TeamMembership
-	nextID   int64
+	members    map[int64]db.TeamMembership
+	nextID     int64
 	byTeamUser map[string]int64
 }
 

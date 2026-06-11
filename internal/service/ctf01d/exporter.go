@@ -24,10 +24,10 @@ import (
 )
 
 var (
-	gameIDRe     = regexp.MustCompile(`^[a-z0-9]+$`)
-	ipRe         = regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)
-	nonAlphaNum  = regexp.MustCompile(`[^a-z0-9]+`)
-	trailingUnd  = regexp.MustCompile(`^_+|_+$`)
+	gameIDRe    = regexp.MustCompile(`^[a-z0-9]+$`)
+	ipRe        = regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)
+	nonAlphaNum = regexp.MustCompile(`[^a-z0-9]+`)
+	trailingUnd = regexp.MustCompile(`^_+|_+$`)
 )
 
 type ExportResult struct {
@@ -59,7 +59,7 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 
 	root := path.Join(tmpDir, options.Prefix)
 	dataDir := path.Join(root, "data")
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		return nil, fmt.Errorf("create data dir: %w", err)
 	}
 
@@ -82,7 +82,7 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 	}
 
 	downloadsDir := path.Join(tmpDir, "downloads")
-	if err := os.MkdirAll(downloadsDir, 0755); err != nil {
+	if err := os.MkdirAll(downloadsDir, 0o755); err != nil {
 		return nil, fmt.Errorf("create downloads dir: %w", err)
 	}
 	ensureTeamLogos(teams, dataDir, downloadsDir)
@@ -95,20 +95,20 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 	if err != nil {
 		return nil, fmt.Errorf("build config: %w", err)
 	}
-	if err := os.WriteFile(cfgPath, []byte(cfgContent), 0644); err != nil {
+	if err := os.WriteFile(cfgPath, []byte(cfgContent), 0o644); err != nil {
 		return nil, fmt.Errorf("write config: %w", err)
 	}
 
 	if len(options.Warnings) > 0 {
 		warningsPath := path.Join(root, "EXPORT_WARNINGS.txt")
-		if err := os.WriteFile(warningsPath, []byte(strings.Join(options.Warnings, "\n")), 0644); err != nil {
+		if err := os.WriteFile(warningsPath, []byte(strings.Join(options.Warnings, "\n")), 0o644); err != nil {
 			return nil, fmt.Errorf("write warnings: %w", err)
 		}
 	}
 
 	if options.IncludeCompose {
 		composePath := path.Join(root, "docker-compose.yml")
-		if err := os.WriteFile(composePath, []byte(composeYML(scoreboard, options)), 0644); err != nil {
+		if err := os.WriteFile(composePath, []byte(composeYML(scoreboard, options)), 0o644); err != nil {
 			return nil, fmt.Errorf("write compose: %w", err)
 		}
 	}
@@ -520,7 +520,7 @@ func ensureTeamLogos(teams []TeamParams, dataDir string, downloadsDir string) {
 		}
 
 		target := path.Join(dataDir, t.LogoRel)
-		os.MkdirAll(path.Dir(target), 0755)
+		os.MkdirAll(path.Dir(target), 0o755)
 		copyFile(src, target)
 	}
 }
@@ -542,7 +542,7 @@ func generateSVGLogoToFile(text string, dir string, preferName string) string {
 			"</svg>", size, size, color, fontSize, initial)
 
 	filePath := path.Join(dir, preferName+".svg")
-	if err := os.WriteFile(filePath, []byte(svg), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(svg), 0o644); err != nil {
 		return ""
 	}
 	return filePath
@@ -571,7 +571,7 @@ func writeDataURLToFile(dataURL string, dir string, preferName string) (string, 
 		}
 		ext := extFromMIME(mime)
 		filePath := path.Join(dir, preferName+ext)
-		if err := os.WriteFile(filePath, bytes, 0644); err != nil {
+		if err := os.WriteFile(filePath, bytes, 0o644); err != nil {
 			return "", err
 		}
 		return filePath, nil
@@ -586,7 +586,7 @@ func writeDataURLToFile(dataURL string, dir string, preferName string) (string, 
 		}
 		ext := extFromMIME(mime)
 		filePath := path.Join(dir, preferName+ext)
-		if err := os.WriteFile(filePath, []byte(raw), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(raw), 0o644); err != nil {
 			return "", err
 		}
 		return filePath, nil
@@ -648,7 +648,7 @@ func materializeCheckers(checkers []CheckerParams, dataDir string) {
 	for _, c := range checkers {
 		cid := normalizeID(c.ID)
 		dir := path.Join(dataDir, "checker_"+cid)
-		os.MkdirAll(dir, 0755)
+		os.MkdirAll(dir, 0o755)
 
 		if c.BundlePath != "" && c.CheckerFromBundle {
 			extracted := extractCheckerDirFromBundle(c.BundlePath, dir)
@@ -675,12 +675,12 @@ func materializeCheckers(checkers []CheckerParams, dataDir string) {
 				rel = "checker.py"
 			}
 			dest := safeJoin(dir, rel)
-			os.MkdirAll(path.Dir(dest), 0755)
+			os.MkdirAll(path.Dir(dest), 0o755)
 			if f.Src != "" && fileExists(f.Src) {
 				copyFile(f.Src, dest)
 			} else {
 				content := fmt.Sprintf("#!/usr/bin/env python3\nprint('dummy checker for %s')\n", cid)
-				os.WriteFile(dest, []byte(content), 0644)
+				os.WriteFile(dest, []byte(content), 0o644)
 			}
 		}
 	}
@@ -717,10 +717,10 @@ func extractCheckerDirFromBundle(bundlePath string, destDir string) bool {
 		}
 		target := safeJoin(destDir, rel)
 		if strings.HasSuffix(name, "/") {
-			os.MkdirAll(target, 0755)
+			os.MkdirAll(target, 0o755)
 			continue
 		}
-		os.MkdirAll(path.Dir(target), 0755)
+		os.MkdirAll(path.Dir(target), 0o755)
 		rc, err := f.Open()
 		if err != nil {
 			continue
@@ -753,7 +753,7 @@ func writeDummyChecker(destDir string, cid string) {
 		return
 	}
 	content := fmt.Sprintf("#!/usr/bin/env python3\nprint('dummy checker for %s')\n", cid)
-	os.WriteFile(p, []byte(content), 0644)
+	os.WriteFile(p, []byte(content), 0o644)
 }
 
 func materializeServiceArchives(checkers []CheckerParams, rootDir string) {
@@ -762,7 +762,7 @@ func materializeServiceArchives(checkers []CheckerParams, rootDir string) {
 		if c.BundlePath == "" || !fileExists(c.BundlePath) {
 			continue
 		}
-		os.MkdirAll(dir, 0755)
+		os.MkdirAll(dir, 0o755)
 		cid := normalizeID(c.ID)
 		dest := path.Join(dir, cid+".zip")
 		copyFile(c.BundlePath, dest)
@@ -773,7 +773,7 @@ func copyTree(src string, dst string) {
 	if !dirExists(src) {
 		return
 	}
-	os.MkdirAll(dst, 0755)
+	os.MkdirAll(dst, 0o755)
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return
@@ -784,7 +784,7 @@ func copyTree(src string, dst string) {
 		if entry.IsDir() {
 			copyTree(s, d)
 		} else {
-			os.MkdirAll(path.Dir(d), 0755)
+			os.MkdirAll(path.Dir(d), 0o755)
 			copyFile(s, d)
 		}
 	}
@@ -792,7 +792,7 @@ func copyTree(src string, dst string) {
 
 func buildFallbackHTML(tmpdir string) string {
 	dir := path.Join(tmpdir, "fallback_html")
-	os.MkdirAll(dir, 0755)
+	os.MkdirAll(dir, 0o755)
 
 	indexHTML := `<!doctype html>
 <html>
@@ -805,14 +805,14 @@ func buildFallbackHTML(tmpdir string) string {
     <p>HTML not found in repository; generated default template.</p>
   </body>
 </html>`
-	os.WriteFile(path.Join(dir, "index-template.html"), []byte(indexHTML), 0644)
+	os.WriteFile(path.Join(dir, "index-template.html"), []byte(indexHTML), 0o644)
 
 	teamsDir := path.Join(dir, "images", "teams")
-	os.MkdirAll(teamsDir, 0755)
+	os.MkdirAll(teamsDir, 0o755)
 
 	minPNG, _ := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+ZzoAAAAASUVORK5CYII=")
 	for i := 1; i <= 10; i++ {
-		os.WriteFile(path.Join(teamsDir, fmt.Sprintf("team%02d.png", i)), minPNG, 0644)
+		os.WriteFile(path.Join(teamsDir, fmt.Sprintf("team%02d.png", i)), minPNG, 0o644)
 	}
 
 	return dir
@@ -946,7 +946,7 @@ func copyFile(src string, dst string) error {
 		return err
 	}
 	defer in.Close()
-	os.MkdirAll(path.Dir(dst), 0755)
+	os.MkdirAll(path.Dir(dst), 0o755)
 	out, err := os.Create(dst)
 	if err != nil {
 		return err

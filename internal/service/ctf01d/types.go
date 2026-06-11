@@ -41,24 +41,24 @@ type CheckerFile struct {
 }
 
 type CheckerParams struct {
-	ID              string
-	Name            string
-	Enabled         bool
-	ScriptWait      int
-	RoundSleep      int
-	ScriptRel       string
-	Files           []CheckerFile
-	BundlePath      string
+	ID                string
+	Name              string
+	Enabled           bool
+	ScriptWait        int
+	RoundSleep        int
+	ScriptRel         string
+	Files             []CheckerFile
+	BundlePath        string
 	CheckerFromBundle bool
 }
 
 type Options struct {
-	Prefix          string
-	IncludeHTML     bool
-	HtmlSourcePath  string
-	IncludeCompose  bool
-	ComposeProject  string
-	Warnings        []string
+	Prefix         string
+	IncludeHTML    bool
+	HtmlSourcePath string
+	IncludeCompose bool
+	ComposeProject string
+	Warnings       []string
 }
 
 type ExportError struct {

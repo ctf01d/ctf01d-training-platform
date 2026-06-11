@@ -110,8 +110,7 @@ func (s *Service) ListByGame(ctx context.Context, gameID int64) ([]GameTeam, err
 }
 
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*GameTeam, error) {
-	var order int32
-	order = params.Order
+	var order int32 = params.Order
 	dbGT, err := s.q.UpdateGameTeam(ctx, db.UpdateGameTeamParams{
 		ID:              id,
 		IpAddress:       params.IpAddress,

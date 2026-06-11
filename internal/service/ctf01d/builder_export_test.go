@@ -20,8 +20,8 @@ import (
 func TestFullExport_WithBuilder(t *testing.T) {
 	mq := &mockBuilderQuerier{
 		game: db.Game{
-			ID:   42,
-			Name: strPtr("CTF 2025"),
+			ID:       42,
+			Name:     strPtr("CTF 2025"),
 			StartsAt: pgtype.Timestamptz{Time: time.Date(2025, 6, 1, 10, 0, 0, 0, time.UTC), Valid: true},
 			EndsAt:   pgtype.Timestamptz{Time: time.Date(2025, 6, 1, 18, 0, 0, 0, time.UTC), Valid: true},
 		},
@@ -227,8 +227,8 @@ func TestBuildParams_WithActualBundle(t *testing.T) {
 
 	mq := &mockBuilderQuerier{
 		game: db.Game{
-			ID:   1,
-			Name: strPtr("Bundle Test"),
+			ID:       1,
+			Name:     strPtr("Bundle Test"),
 			StartsAt: pgtype.Timestamptz{Time: time.Date(2025, 1, 1, 10, 0, 0, 0, time.UTC), Valid: true},
 			EndsAt:   pgtype.Timestamptz{Time: time.Date(2025, 1, 1, 18, 0, 0, 0, time.UTC), Valid: true},
 		},

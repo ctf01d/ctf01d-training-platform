@@ -473,7 +473,6 @@ func TestPgtypeTz(t *testing.T) {
 		t.Errorf("Time = %v, want %v", ts.Time, now)
 	}
 
-	var zeroPgtype pgtype.Timestamptz
-	zeroPgtype = pgtype.Timestamptz{}
+	var zeroPgtype pgtype.Timestamptz = pgtype.Timestamptz{}
 	_ = zeroPgtype
 }

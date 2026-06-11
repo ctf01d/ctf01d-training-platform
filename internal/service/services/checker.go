@@ -23,8 +23,8 @@ type CheckerQuerier interface {
 }
 
 type CheckerService struct {
-	q   CheckerQuerier
-	st  storage.Storage
+	q  CheckerQuerier
+	st storage.Storage
 }
 
 func NewCheckerService(q CheckerQuerier, st storage.Storage) *CheckerService {

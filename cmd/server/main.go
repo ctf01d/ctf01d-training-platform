@@ -13,10 +13,12 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
 	ctf01dsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/ctf01d"
-	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
 	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
+	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
 	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
@@ -24,14 +26,11 @@ import (
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
-	"github.com/ctf01d/ctf01d-training-platform/internal/server"
-	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"go.uber.org/zap"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var version = "dev"
@@ -92,10 +91,10 @@ func run() error {
 	userService := usersvc.NewService(store.Queries)
 	authService := authsvc.NewService(store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
 	universityService := unisvc.NewService(store.Queries)
-	teamService := teamsvc.NewService(store.Queries, store.Queries, store.Queries, store)
-	membershipService := membersvc.NewService(store.Queries, store.Queries, store.Queries, store)
-	gameService := gamesvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries, store)
-	gameTeamService := gameteamsvc.NewService(store.Queries, store)
+	teamService := teamsvc.NewService(store, store, store, store)
+	membershipService := membersvc.NewService(store, store, store, store)
+	gameService := gamesvc.NewService(store, store, store, store, store)
+	gameTeamService := gameteamsvc.NewService(store, store)
 	resultService := resultsvc.NewService(store.Queries, store.Queries)
 	scoreboardService := scoreboardsvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries)
 	svcService := svcsvc.NewService(store.Queries)

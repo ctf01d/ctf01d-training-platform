@@ -12,21 +12,21 @@ import (
 )
 
 type User struct {
-	ID          int64      `json:"id"`
-	UserName    string     `json:"user_name"`
-	DisplayName string     `json:"display_name"`
-	Role        string     `json:"role"`
-	Rating      int        `json:"rating"`
-	AvatarUrl   *string    `json:"avatar_url,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ID          int64     `json:"id"`
+	UserName    string    `json:"user_name"`
+	DisplayName string    `json:"display_name"`
+	Role        string    `json:"role"`
+	Rating      int       `json:"rating"`
+	AvatarUrl   *string   `json:"avatar_url,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type UserListResult struct {
-	Items []User `json:"items"`
-	Page  int    `json:"page"`
-	PerPage int  `json:"per_page"`
-	Total int64  `json:"total"`
+	Items   []User `json:"items"`
+	Page    int    `json:"page"`
+	PerPage int    `json:"per_page"`
+	Total   int64  `json:"total"`
 }
 
 type CreateParams struct {

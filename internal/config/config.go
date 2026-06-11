@@ -25,8 +25,8 @@ type DBConfig struct {
 }
 
 type JWTConfig struct {
-	Secret    string `env:"JWT_SECRET"`
-	TTLHours  int    `env:"JWT_TTL_HOURS" env-default:"24"`
+	Secret   string `env:"JWT_SECRET"`
+	TTLHours int    `env:"JWT_TTL_HOURS" env-default:"24"`
 }
 
 type LogConfig struct {
@@ -38,8 +38,8 @@ type CORSConfig struct {
 }
 
 type StorageConfig struct {
-	Dir             string `env:"STORAGE_DIR" env-default:"./storage"`
-	MaxUploadBytes  int64  `env:"STORAGE_MAX_UPLOAD_BYTES" env-default:"209715200"`
+	Dir            string `env:"STORAGE_DIR" env-default:"./storage"`
+	MaxUploadBytes int64  `env:"STORAGE_MAX_UPLOAD_BYTES" env-default:"209715200"`
 }
 
 func Load() (*Config, error) {

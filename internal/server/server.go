@@ -78,6 +78,7 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.POST("/users", append(requireAdmin, h.HandleCreateUser)...)
 	api.GET("/users/:id", requireAuth, h.HandleGetUser)
 	api.PATCH("/users/:id", requireAuth, h.HandleUpdateUser)
+	api.PATCH("/users/:id/role", append(requireAdmin, h.HandleUpdateUserRole)...)
 	api.DELETE("/users/:id", append(requireAdmin, h.HandleDeleteUser)...)
 
 	api.GET("/universities", requireAuth, h.HandleListUniversities)

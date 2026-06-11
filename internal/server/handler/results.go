@@ -6,8 +6,8 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
-	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
+	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	"github.com/gin-gonic/gin"
 )
 

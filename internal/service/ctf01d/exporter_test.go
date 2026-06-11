@@ -24,7 +24,7 @@ func createTestBundleZip(t *testing.T, hasChecker bool) string {
 	}
 	w.Close()
 
-	os.WriteFile(bundlePath, buf.Bytes(), 0644)
+	os.WriteFile(bundlePath, buf.Bytes(), 0o644)
 	return bundlePath
 }
 

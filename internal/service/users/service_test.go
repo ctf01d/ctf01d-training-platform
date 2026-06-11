@@ -12,9 +12,9 @@ import (
 )
 
 type mockQuerier struct {
-	users   map[int64]db.User
-	nextID  int64
-	byName  map[string]int64
+	users  map[int64]db.User
+	nextID int64
+	byName map[string]int64
 }
 
 func newMockQuerier() *mockQuerier {

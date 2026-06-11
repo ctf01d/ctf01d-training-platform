@@ -54,10 +54,10 @@ func createBundleZip(serviceFiles, checkerFiles map[string]string) []byte {
 func createBundleZipWithSubdir(subdir string, serviceFiles, checkerFiles map[string]string) []byte {
 	files := make(map[string]string)
 	for k, v := range serviceFiles {
-		files[subdir + "/service/" + k] = v
+		files[subdir+"/service/"+k] = v
 	}
 	for k, v := range checkerFiles {
-		files[subdir + "/checker/" + k] = v
+		files[subdir+"/checker/"+k] = v
 	}
 	return createZip(files)
 }
@@ -108,16 +108,16 @@ func (m *mockImportQuerier) CreateService(_ context.Context, arg db.CreateServic
 	m.nextID++
 	now := time.Now()
 	svc := db.Service{
-		ID:                  id,
-		Name:                arg.Name,
-		PublicDescription:   arg.PublicDescription,
-		Copyright:           arg.Copyright,
-		Public:              arg.Public,
-		ServiceArchiveUrl:   arg.ServiceArchiveUrl,
-		Ctf01dTraining:      arg.Ctf01dTraining,
-		CheckStatus:         arg.CheckStatus,
-		CreatedAt:           now,
-		UpdatedAt:           now,
+		ID:                id,
+		Name:              arg.Name,
+		PublicDescription: arg.PublicDescription,
+		Copyright:         arg.Copyright,
+		Public:            arg.Public,
+		ServiceArchiveUrl: arg.ServiceArchiveUrl,
+		Ctf01dTraining:    arg.Ctf01dTraining,
+		CheckStatus:       arg.CheckStatus,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 	m.services[id] = &svc
 	m.byName[arg.Name] = id
@@ -374,8 +374,8 @@ func TestExtractMetadata_FromTrainingJSON(t *testing.T) {
 	trainingJSON, _ := json.Marshal(training)
 
 	bundle := createZipWithBytes(map[string][]byte{
-		"service/README.md":              []byte("# Readme Title\nReadme desc"),
-		"service/ctf01d-training.json":   trainingJSON,
+		"service/README.md":            []byte("# Readme Title\nReadme desc"),
+		"service/ctf01d-training.json": trainingJSON,
 	})
 
 	meta, err := ExtractMetadata(bundle)
@@ -807,7 +807,7 @@ func TestBuildBundle_RootFilesPromoted(t *testing.T) {
 	}
 
 	input2 := createZip(map[string]string{
-		"myrepo/README.md":    "# Root Readme\nRoot description",
+		"myrepo/README.md":       "# Root Readme\nRoot description",
 		"myrepo/service/main.py": "code",
 	})
 
@@ -850,7 +850,7 @@ func TestExtractMetadata_TrainingJSONFallback(t *testing.T) {
 
 func TestBuildBundle_SkipsGitDir(t *testing.T) {
 	input := createZip(map[string]string{
-		"service/main.py":    "code",
+		"service/main.py":     "code",
 		"service/.git/config": "gitconfig",
 	})
 
@@ -901,26 +901,26 @@ func TestExtractTitle(t *testing.T) {
 }
 
 func TestExtractCopyright(t *testing.T) {
- 	tests := []struct {
- 		input    string
- 		contains string
- 	}{
- 		{"Copyright (c) 2024 Test Author", "2024 Test Author"},
- 		{"\u00a9 2024 ACME Inc", "2024 ACME Inc"},
- 		{"No license info here", ""},
- 	}
- 	for _, tt := range tests {
- 		result := extractCopyright(tt.input)
- 		if tt.contains == "" {
- 			if result != "" {
- 				t.Errorf("extractCopyright(%q) = %q, want empty", tt.input, result)
- 			}
- 		} else {
- 			if !strings.Contains(result, tt.contains) {
- 				t.Errorf("extractCopyright(%q) = %q, want to contain %q", tt.input, result, tt.contains)
- 			}
- 		}
- 	}
+	tests := []struct {
+		input    string
+		contains string
+	}{
+		{"Copyright (c) 2024 Test Author", "2024 Test Author"},
+		{"\u00a9 2024 ACME Inc", "2024 ACME Inc"},
+		{"No license info here", ""},
+	}
+	for _, tt := range tests {
+		result := extractCopyright(tt.input)
+		if tt.contains == "" {
+			if result != "" {
+				t.Errorf("extractCopyright(%q) = %q, want empty", tt.input, result)
+			}
+		} else {
+			if !strings.Contains(result, tt.contains) {
+				t.Errorf("extractCopyright(%q) = %q, want to contain %q", tt.input, result, tt.contains)
+			}
+		}
+	}
 }
 
 func TestValidateZipBytes(t *testing.T) {
@@ -960,8 +960,8 @@ func TestComputeSHA256Hex(t *testing.T) {
 
 func TestBuildBundle_WithCheckerExcludedFromService(t *testing.T) {
 	input := createZip(map[string]string{
-		"README.md":       "# Service\nDesc",
-		"main.py":         "code",
+		"README.md":        "# Service\nDesc",
+		"main.py":          "code",
 		"checker/check.py": "checker code",
 	})
 
@@ -1184,5 +1184,7 @@ func TestPgtypeTzInImport(t *testing.T) {
 }
 
 // Silence unused import
-var _ = io.ReadAll
-var _ = pgtype.Timestamptz{}
+var (
+	_ = io.ReadAll
+	_ = pgtype.Timestamptz{}
+)

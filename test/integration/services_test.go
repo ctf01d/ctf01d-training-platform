@@ -22,10 +22,10 @@ func TestServicesFlow(t *testing.T) {
 
 	t.Log("Step: Create a service")
 	w := makeReq(t, engine, http.MethodPost, "/api/v1/services", map[string]interface{}{
-		"name":               "test-service",
-		"public_description": "A test service",
+		"name":                "test-service",
+		"public_description":  "A test service",
 		"private_description": "Internal details",
-		"public":             true,
+		"public":              true,
 	}, playerToken)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("create service: %d %s", w.Code, w.Body.String())
@@ -205,9 +205,9 @@ func createServiceBundleZip(t *testing.T, name, description string) *bytes.Buffe
 	t.Helper()
 	trainingJSON := fmt.Sprintf(`{"display_name":"%s","description":"%s"}`, name, description)
 	return createTestZip(t, map[string]string{
-		"service/hello.txt":             "hello",
-		"service/ctf01d-training.json":  trainingJSON,
-		"checker/checker.sh":            "#!/bin/bash\necho 101",
+		"service/hello.txt":            "hello",
+		"service/ctf01d-training.json": trainingJSON,
+		"checker/checker.sh":           "#!/bin/bash\necho 101",
 	})
 }
 

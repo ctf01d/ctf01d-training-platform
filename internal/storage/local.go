@@ -31,7 +31,7 @@ func (s *LocalStorage) Save(_ context.Context, key string, r io.Reader) (FileInf
 		return FileInfo{}, err
 	}
 
- fullPath := s.fullPath(key)
+	fullPath := s.fullPath(key)
 	dir := filepath.Dir(fullPath)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return FileInfo{}, fmt.Errorf("creating directories: %w", err)
@@ -89,7 +89,7 @@ func (s *LocalStorage) Stat(_ context.Context, key string) (FileInfo, error) {
 	if err := s.validateKey(key); err != nil {
 		return FileInfo{}, err
 	}
- fullPath := s.fullPath(key)
+	fullPath := s.fullPath(key)
 	fi, err := os.Stat(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -25,7 +25,7 @@ func (h *Handler) HandleGetCtf01dExportOptions(c *gin.Context) {
 
 	resp := httpserver.Ctf01dExportOptions{
 		FlagTtlMin:      &opts.FlagTtlMin,
-		BasicAttackCost:  &opts.BasicAttackCost,
+		BasicAttackCost: &opts.BasicAttackCost,
 		IncludeHtml:     &opts.IncludeHtml,
 		IncludeCompose:  &opts.IncludeCompose,
 	}

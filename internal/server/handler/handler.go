@@ -11,40 +11,40 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
-	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
+	ctf01dsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/ctf01d"
 	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
+	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
 	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
-	ctf01dsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/ctf01d"
 	svcsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/services"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
-	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	users         *usersvc.Service
-	auth          *authsvc.Service
-	jwtMgr        *auth.Manager
-	universities  *unisvc.Service
-	teams         *teamsvc.Service
-	memberships   *membersvc.Service
-	games         *gamesvc.Service
-	gameTeams     *gameteamsvc.Service
-	results       *resultsvc.Service
-	scoreboard    *scoreboardsvc.Service
-	gameTeamsQ    *db.Queries
-	svcService    *svcsvc.Service
-	svcArchives   *svcsvc.ArchiveService
-	svcChecker    *svcsvc.CheckerService
-	svcImport     *svcsvc.ImportService
-	ctf01dBuilder *ctf01dsvc.Builder
+	users          *usersvc.Service
+	auth           *authsvc.Service
+	jwtMgr         *auth.Manager
+	universities   *unisvc.Service
+	teams          *teamsvc.Service
+	memberships    *membersvc.Service
+	games          *gamesvc.Service
+	gameTeams      *gameteamsvc.Service
+	results        *resultsvc.Service
+	scoreboard     *scoreboardsvc.Service
+	gameTeamsQ     *db.Queries
+	svcService     *svcsvc.Service
+	svcArchives    *svcsvc.ArchiveService
+	svcChecker     *svcsvc.CheckerService
+	svcImport      *svcsvc.ImportService
+	ctf01dBuilder  *ctf01dsvc.Builder
 	maxUploadBytes int64
-	storageDir    string
+	storageDir     string
 }
 
 func New(
@@ -68,24 +68,24 @@ func New(
 	storageDir string,
 ) *Handler {
 	return &Handler{
-		users:         users,
-		auth:          authSvc,
-		jwtMgr:        jwtMgr,
-		universities:  universities,
-		teams:         teams,
-		memberships:   memberships,
-		games:         games,
-		gameTeams:     gameTeams,
-		results:       results,
-		scoreboard:    scoreboard,
-		gameTeamsQ:    gameTeamsQ,
-		svcService:    svcService,
-		svcArchives:   svcArchives,
-		svcChecker:    svcChecker,
-		svcImport:     svcImport,
-		ctf01dBuilder: ctf01dBuilder,
+		users:          users,
+		auth:           authSvc,
+		jwtMgr:         jwtMgr,
+		universities:   universities,
+		teams:          teams,
+		memberships:    memberships,
+		games:          games,
+		gameTeams:      gameTeams,
+		results:        results,
+		scoreboard:     scoreboard,
+		gameTeamsQ:     gameTeamsQ,
+		svcService:     svcService,
+		svcArchives:    svcArchives,
+		svcChecker:     svcChecker,
+		svcImport:      svcImport,
+		ctf01dBuilder:  ctf01dBuilder,
 		maxUploadBytes: maxUploadBytes,
-		storageDir:    storageDir,
+		storageDir:     storageDir,
 	}
 }
 
@@ -280,6 +280,28 @@ func (h *Handler) HandleDeleteUser(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) HandleUpdateUserRole(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+
+	req, ok := bindJSON[struct {
+		Role string `json:"role" binding:"required,oneof=guest player admin"`
+	}](c)
+	if !ok {
+		return
+	}
+
+	user, err := h.users.UpdateRole(c.Request.Context(), id, req.Role)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, userToHTTP(*user))
 }
 
 // ServerInterface implementation (used for compile-time check)

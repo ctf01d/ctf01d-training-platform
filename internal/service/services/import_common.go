@@ -73,12 +73,14 @@ func detectRootPrefix(zipReader *zip.Reader) string {
 	return ""
 }
 
-var readmeCandidates = []string{"README.md", "readme.md", "README", "readme"}
-var licenseCandidates = []string{
-	"LICENSE", "LICENSE.txt", "LICENSE.md",
-	"LICENCE", "LICENCE.txt",
-	"COPYING", "COPYING.txt",
-}
+var (
+	readmeCandidates  = []string{"README.md", "readme.md", "README", "readme"}
+	licenseCandidates = []string{
+		"LICENSE", "LICENSE.txt", "LICENSE.md",
+		"LICENCE", "LICENCE.txt",
+		"COPYING", "COPYING.txt",
+	}
+)
 
 func readFirstFromZip(zr *zip.Reader, rootPrefix string, candidates []string) (string, []byte) {
 	for _, name := range candidates {
@@ -455,8 +457,10 @@ func extractCheckerFromBundle(bundleBytes []byte) []byte {
 	return buf.Bytes()
 }
 
-var linkRe = regexp.MustCompile(`\[(.*?)\]\((.*?)\)`)
-var codeRe = regexp.MustCompile("`+([^`]+)`+")
+var (
+	linkRe = regexp.MustCompile(`\[(.*?)\]\((.*?)\)`)
+	codeRe = regexp.MustCompile("`+([^`]+)`+")
+)
 
 func extractTitle(md []byte) string {
 	text := string(md)

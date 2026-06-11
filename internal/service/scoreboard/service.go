@@ -18,7 +18,7 @@ type ScoreboardEntry struct {
 
 type Scoreboard struct {
 	GameID  int64             `json:"game_id"`
-	Status string            `json:"status"`
+	Status  string            `json:"status"`
 	Entries []ScoreboardEntry `json:"entries"`
 }
 
@@ -50,10 +50,10 @@ type TeamQuerier interface {
 }
 
 type Service struct {
-	games       GameQuerier
-	results     ResultQuerier
+	games        GameQuerier
+	results      ResultQuerier
 	finalResults FinalResultQuerier
-	teams       TeamQuerier
+	teams        TeamQuerier
 }
 
 func NewService(games GameQuerier, results ResultQuerier, finalResults FinalResultQuerier, teams TeamQuerier) *Service {

@@ -35,22 +35,22 @@ func (m *mockQuerier) CreateService(_ context.Context, arg db.CreateServiceParam
 	m.nextID++
 	now := time.Now()
 	svc := db.Service{
-		ID:                  id,
-		Name:                arg.Name,
-		PublicDescription:   arg.PublicDescription,
-		PrivateDescription:  arg.PrivateDescription,
-		Author:              arg.Author,
-		Copyright:           arg.Copyright,
-		AvatarUrl:           arg.AvatarUrl,
-		Public:              arg.Public,
-		ServiceArchiveUrl:   arg.ServiceArchiveUrl,
-		CheckerArchiveUrl:   arg.CheckerArchiveUrl,
-		WriteupUrl:          arg.WriteupUrl,
-		ExploitsUrl:         arg.ExploitsUrl,
-		CheckStatus:         arg.CheckStatus,
-		Ctf01dTraining:      arg.Ctf01dTraining,
-		CreatedAt:           now,
-		UpdatedAt:           now,
+		ID:                 id,
+		Name:               arg.Name,
+		PublicDescription:  arg.PublicDescription,
+		PrivateDescription: arg.PrivateDescription,
+		Author:             arg.Author,
+		Copyright:          arg.Copyright,
+		AvatarUrl:          arg.AvatarUrl,
+		Public:             arg.Public,
+		ServiceArchiveUrl:  arg.ServiceArchiveUrl,
+		CheckerArchiveUrl:  arg.CheckerArchiveUrl,
+		WriteupUrl:         arg.WriteupUrl,
+		ExploitsUrl:        arg.ExploitsUrl,
+		CheckStatus:        arg.CheckStatus,
+		Ctf01dTraining:     arg.Ctf01dTraining,
+		CreatedAt:          now,
+		UpdatedAt:          now,
 	}
 	m.services[id] = svc
 	m.byName[arg.Name] = id
@@ -175,10 +175,10 @@ func TestCreate_Success(t *testing.T) {
 	author := "test-author"
 	avatar := "https://example.com/avatar.png"
 	result, err := svc.Create(context.Background(), CreateParams{
-		Name:     "test-service",
-		Author:   &author,
+		Name:      "test-service",
+		Author:    &author,
 		AvatarUrl: &avatar,
-		Public:   true,
+		Public:    true,
 	}, true)
 	if err != nil {
 		t.Fatalf("Create: %v", err)

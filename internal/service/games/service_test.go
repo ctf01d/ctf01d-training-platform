@@ -29,10 +29,10 @@ type mockFinalResultQuerier struct {
 }
 
 type mockTxRunner struct {
-	gameQ  *mockGameQuerier
-	gsQ    *mockGamesServiceQuerier
-	resQ   *mockResultQuerier
-	frQ    *mockFinalResultQuerier
+	gameQ *mockGameQuerier
+	gsQ   *mockGamesServiceQuerier
+	resQ  *mockResultQuerier
+	frQ   *mockFinalResultQuerier
 }
 
 func newMocks() (*mockGameQuerier, *mockGamesServiceQuerier, *mockResultQuerier, *mockFinalResultQuerier, *mockTxRunner) {

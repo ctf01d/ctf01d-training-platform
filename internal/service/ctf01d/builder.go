@@ -217,11 +217,11 @@ func (b *Builder) buildTeamParams(ctx context.Context, gameTeams []db.GameTeam) 
 		}
 
 		tp := TeamParams{
-			ID:       teamIDFromGameTeam(gt),
-			Name:     team.Name,
-			Active:   true,
-			LogoURL:  strPtrOrDefault(team.AvatarUrl, ""),
-			LogoSrc:  "",
+			ID:      teamIDFromGameTeam(gt),
+			Name:    team.Name,
+			Active:  true,
+			LogoURL: strPtrOrDefault(team.AvatarUrl, ""),
+			LogoSrc: "",
 		}
 
 		if gt.IpAddress != nil {
@@ -255,13 +255,13 @@ func (b *Builder) buildCheckerParams(ctx context.Context, serviceIDs []int64) ([
 		}
 
 		cp := CheckerParams{
-			ID:              normalizeID(svc.Name),
-			Name:            svc.Name,
-			Enabled:         true,
-			ScriptWait:      10,
-			RoundSleep:      30,
-			ScriptRel:       "./checker.py",
-			BundlePath:      "",
+			ID:                normalizeID(svc.Name),
+			Name:              svc.Name,
+			Enabled:           true,
+			ScriptWait:        10,
+			RoundSleep:        30,
+			ScriptRel:         "./checker.py",
+			BundlePath:        "",
 			CheckerFromBundle: false,
 		}
 

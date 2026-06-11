@@ -99,9 +99,7 @@ func (m *mockQuerier) UpsertResult(_ context.Context, arg db.UpsertResultParams)
 			return r, nil
 		}
 	}
-	return m.CreateResult(context.Background(), db.CreateResultParams{
-		GameID: arg.GameID, TeamID: arg.TeamID, Score: arg.Score,
-	})
+	return m.CreateResult(context.Background(), db.CreateResultParams(arg))
 }
 
 func (m *mockQuerier) UpdateResult(_ context.Context, arg db.UpdateResultParams) (db.Result, error) {

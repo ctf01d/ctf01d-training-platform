@@ -111,11 +111,11 @@ type TxRunner interface {
 }
 
 type Service struct {
-	games       GameQuerier
-	gamesSvc    GamesServiceQuerier
-	results     ResultQuerier
+	games        GameQuerier
+	gamesSvc     GamesServiceQuerier
+	results      ResultQuerier
 	finalResults FinalResultQuerier
-	tx          TxRunner
+	tx           TxRunner
 }
 
 func NewService(games GameQuerier, gamesSvc GamesServiceQuerier, results ResultQuerier, finalResults FinalResultQuerier, tx TxRunner) *Service {

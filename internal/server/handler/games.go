@@ -6,8 +6,8 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
-	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
+	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 	"github.com/gin-gonic/gin"
 )
 
@@ -194,9 +194,7 @@ func (h *Handler) HandleListGameServices(c *gin.Context) {
 	}
 
 	ids := make([]int64, len(serviceIDs))
-	for i, sid := range serviceIDs {
-		ids[i] = sid
-	}
+	copy(ids, serviceIDs)
 	c.JSON(http.StatusOK, ids)
 }
 

@@ -1,3 +1,10 @@
+version: 2
+
+formatters:
+  enable:
+    - gofumpt
+    - gci
+
 run:
   timeout: 5m
 
@@ -6,18 +13,9 @@ linters:
     - govet
     - staticcheck
     - errcheck
-    - gofumpt
-    - gci
     - revive
 
 linters-settings:
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/ctf01d/ctf01d-training-platform)
-  gofumpt:
-    extra-rules: true
   revive:
     rules:
       - name: exported

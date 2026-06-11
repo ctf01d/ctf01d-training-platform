@@ -247,7 +247,7 @@ func logSeed(log *zap.Logger, entity, name string, created bool) {
 	}
 }
 
-func strPtr(s string) *string  { return &s }
+func strPtr(s string) *string { return &s }
 func ptrStr(s *string) string {
 	if s == nil {
 		return ""

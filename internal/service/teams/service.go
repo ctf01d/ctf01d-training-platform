@@ -46,8 +46,8 @@ type UpdateParams struct {
 }
 
 var managingRoles = map[string]bool{
-	"owner":       true,
-	"captain":     true,
+	"owner":        true,
+	"captain":      true,
 	"vice_captain": true,
 }
 
@@ -66,6 +66,7 @@ type TeamQuerier interface {
 type MembershipQuerier interface {
 	CreateTeamMembership(ctx context.Context, arg db.CreateTeamMembershipParams) (db.TeamMembership, error)
 	GetMembership(ctx context.Context, arg db.GetMembershipParams) (db.TeamMembership, error)
+	UpdateMembershipStatus(ctx context.Context, arg db.UpdateMembershipStatusParams) (db.TeamMembership, error)
 	CountApprovedManagers(ctx context.Context, teamID int64) (int64, error)
 }
 
@@ -120,14 +121,14 @@ func (s *Service) Create(ctx context.Context, creatorID int64, params CreatePara
 
 		action := "created"
 		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
-			TeamID:   team.ID,
-			UserID:   creatorID,
-			ActorID:  int32PtrFromInt64(creatorID),
-			Action:   action,
-			FromRole: nil,
-			ToRole:   &ownerRole,
+			TeamID:     team.ID,
+			UserID:     creatorID,
+			ActorID:    int32PtrFromInt64(creatorID),
+			Action:     action,
+			FromRole:   nil,
+			ToRole:     &ownerRole,
 			FromStatus: nil,
-			ToStatus: &approved,
+			ToStatus:   &approved,
 		})
 		if err != nil {
 			return err
@@ -249,12 +250,19 @@ func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
 		status := "pending"
 		action := "join_request"
 
-		_, err := s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
-			TeamID: teamID,
-			UserID: userID,
-			Role:   &role,
-			Status: &status,
-		})
+		if err == nil {
+			_, err = s.members.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{
+				ID:     existing.ID,
+				Status: &status,
+			})
+		} else {
+			_, err = s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+				TeamID: teamID,
+				UserID: userID,
+				Role:   &role,
+				Status: &status,
+			})
+		}
 		if err != nil {
 			return mapDBError(err)
 		}

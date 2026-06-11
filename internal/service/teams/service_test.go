@@ -182,6 +182,17 @@ func (m *mockMembershipQuerier) GetMembership(_ context.Context, arg db.GetMembe
 	return mem, nil
 }
 
+func (m *mockMembershipQuerier) UpdateMembershipStatus(_ context.Context, arg db.UpdateMembershipStatusParams) (db.TeamMembership, error) {
+	for k, mem := range m.members {
+		if mem.ID == arg.ID {
+			mem.Status = arg.Status
+			m.members[k] = mem
+			return mem, nil
+		}
+	}
+	return db.TeamMembership{}, pgx.ErrNoRows
+}
+
 func (m *mockMembershipQuerier) CountApprovedManagers(_ context.Context, teamID int64) (int64, error) {
 	var count int64
 	for _, mem := range m.members {

@@ -342,8 +342,19 @@ func validHTTPURL(s string) bool {
 }
 
 func validAvatarURL(s string) bool {
-	if strings.HasPrefix(s, "data:image") {
-		return true
+	if strings.HasPrefix(s, "data:image/") {
+		rest := s[len("data:image/"):]
+		i := strings.Index(rest, ";")
+		if i < 0 {
+			return false
+		}
+		mime := rest[:i]
+		for _, allowed := range []string{"png", "jpeg", "gif", "webp"} {
+			if mime == allowed {
+				return strings.HasPrefix(rest[i+1:], "base64,")
+			}
+		}
+		return false
 	}
 	return validHTTPURL(s)
 }
