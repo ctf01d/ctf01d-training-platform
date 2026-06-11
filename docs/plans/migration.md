@@ -271,17 +271,17 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       `final_results.sql` (DeleteByGame, InsertFinalResult, ListByGame). `make sqlc-gen`.
 
 ### Task 19: Games, game-teams, results, scoreboard services
-- [ ] `internal/service/games/service.go`: CRUD + URL-валидация (validHTTPURL для site_url/ctftime_url/
+- [x] `internal/service/games/service.go`: CRUD + URL-валидация (validHTTPURL для site_url/ctftime_url/
       vpn_url/vpn_config_url); AddService/RemoveService/ListServices;
       `Finalize(ctx, gameID)` — в транзакции: finalized=true, finalized_at=now, удалить старые
       final_results, пересчитать из results (ORDER BY score DESC → position 1..N, ties как в Rails
       games_controller); `Unfinalize` (finalized=false, finalized_at=null, удалить final_results).
       Маппинг Game→DTO добавляет вычисляемые статусы. Unit-тесты finalize/unfinalize/URL.
-- [ ] `internal/service/gameteams/service.go`: CRUD ростера (uniqueness (game_id,team_id)→conflict),
+- [x] `internal/service/gameteams/service.go`: CRUD ростера (uniqueness (game_id,team_id)→conflict),
       `Reorder(ctx, gameID, []{id,order})` в транзакции.
-- [ ] `internal/service/results/service.go`: CRUD + upsert по (game_id,team_id); запрет правок при
+- [x] `internal/service/results/service.go`: CRUD + upsert по (game_id,team_id); запрет правок при
       finalized (только admin) — повторить поведение Rails.
-- [ ] `internal/service/scoreboard/service.go`: `ForGame(ctx, gameID, viewerRole)` (finalized→final_results,
+- [x] `internal/service/scoreboard/service.go`: `ForGame(ctx, gameID, viewerRole)` (finalized→final_results,
       иначе results; для не-admin при closed/upcoming окне→ErrForbidden), `Global(ctx)`.
 
 ### Task 20: Games handlers, RBAC, secret fields + integration
