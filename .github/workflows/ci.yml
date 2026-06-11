@@ -5,33 +5,84 @@ on:
   pull_request:
 
 jobs:
-  rubocop:
+  go-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
+      - uses: actions/setup-go@v5
         with:
-          ruby-version: "3.4.8"
-          bundler-cache: true
-      - run: bundle exec rubocop --parallel
+          go-version: "1.26"
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: latest
+          args: --config configs/golangci.yaml
 
-  brakeman:
+  openapi-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4.8"
-          bundler-cache: true
-      - run: bundle exec brakeman -q -w2
+      - run: npx @stoplight/spectral-cli lint api/openapi.yaml --ruleset configs/spectral.yaml
 
-  bundler_audit:
+  web-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
+      - uses: actions/setup-node@v4
         with:
-          ruby-version: "3.4.8"
-          bundler-cache: true
-      - run: bundle exec bundler-audit check --update
+          node-version: "22"
+      - run: cd web && npm ci && npm run lint
 
+  codegen-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: make verify-codegen
+
+  go-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ctf01d_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/ctf01d_test?sslmode=disable
+        run: go test ./...
+
+  web-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: cd web && npm ci && npm run typecheck
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [go-lint, go-test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -f docker/Dockerfile --build-arg VERSION=${{ github.sha }} .

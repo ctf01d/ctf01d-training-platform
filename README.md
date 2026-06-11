@@ -1,34 +1,40 @@
 CTF01D Training Platform
 
-Прототип на Rails для демонстрации основных сущностей и потоков.
+Go + Gin + PostgreSQL training platform, built around an OpenAPI-first contract with a React+TypeScript SPA.
 
-Документация
-- [CONCEPT](docs/CONCEPT.md)`: концепция платформы и ключевые идеи.
-- [ROADMAP](docs/ROADMAP.md)`: план работ и ближайшие шаги.
-- [JURY_AND_SERVICE](docs/JURY_AND_SERVICE.md)`: модель «жюри/сервис», роли и взаимодействия.
+Architecture
+- Backend: Go 1.26, Gin, pgx/v5, sqlc, goose migrations
+- Frontend: React + TypeScript (Vite), types generated from OpenAPI spec
+- Layers: handler -> service -> repository
+- Auth: JWT (bcrypt-compatible with Rails password_digest)
 
-Подробности и прочие материалы смотрите в директории `docs/`.
+Development
+- Requirements: Go 1.26, Node.js 22, PostgreSQL 16, yq v4
+- Quick start:
+  1. cp .env.sample .env
+  2. docker compose -f docker-compose.dev.yml up -d
+  3. make migrate-up
+  4. make go-run
+- Frontend dev: make web-install && make web-dev
+- Docs: docs/GO_DEV.md
 
-Производственный запуск (Docker Compose)
-- Требуется: Docker 24+, Docker Compose v2.
-- Подготовка:
-  - Скопируйте `.env.sample` в `.env` и задайте значения:
-    - `POSTGRES_PASSWORD` — пароль БД
-    - `RAILS_MASTER_KEY` — ключ из `config/master.key`
-    - `ACME_EMAIL` — e‑mail для регистрации сертификата Let's Encrypt
-- Запуск/обновление:
-  - Первый запуск: `docker compose up -d --build`
-  - Обновление образа: `docker compose pull && docker compose up -d --build`
-- Миграции:
-  - При старте веб-приложения запускается `rails db:prepare` (создание/миграция БД).
-  - Для ручного прогона миграций: `docker compose run --rm app ./bin/rails db:migrate`.
+Useful Make targets
+- go-build / go-run / go-test / go-vet / go-fmt
+- openapi (merge + codegen + TypeScript types)
+- sqlc-gen (generate Go from SQL queries)
+- migrate-up / migrate-down / migrate-status
+- lint / lint-fix / verify-codegen
+- web-install / web-build / web-dev
 
-Сервисы в Compose
-- `db` — PostgreSQL (создаются БД: `web_rails_production`, `web_rails_production_cache`, `web_rails_production_queue`).
-- `app` — Rails-приложение из `Dockerfile` (экспонирует порт `80` внутри сети Compose).
-- `reverse-proxy` — Caddy с автоматическим HTTPS (Let's Encrypt), слушает `80/443` и проксирует на `app:80`.
+Production (Docker Compose)
+- Requirements: Docker 24+, Docker Compose v2
+- Setup:
+  1. cp .env.sample .env and set POSTGRES_PASSWORD, JWT_SECRET, ACME_EMAIL
+  2. docker compose -f docker-compose.prod.yml up -d --build
+- Services:
+  - db: PostgreSQL 16 with healthcheck
+  - app: Go server with auto-migrations (RUN_MIGRATIONS=true)
+  - reverse-proxy: Caddy with auto-HTTPS (Let's Encrypt)
+- Migrations run automatically on startup when RUN_MIGRATIONS=true
 
-HTTPS (Let's Encrypt)
-- Настройте DNS: `A` (и при необходимости `AAAA`) запись домена `ctf01d-training-platform.ru` на IP вашего VDS.
-- Укажите e‑mail для ACME в `.env` через `ACME_EMAIL`.
-- При запуске `reverse-proxy` выпустит и продлит сертификаты автоматически. Логи можно смотреть: `docker compose logs -f reverse-proxy`.
+Legacy Rails code (app/, config/, db/, Gemfile) is preserved for reference.

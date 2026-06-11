@@ -4,7 +4,8 @@
 	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
 	migrate-up migrate-down migrate-status migrate-new \
 	sqlc-gen sqlc-vet seed \
-	web-install web-build web-gen web-dev
+	web-install web-build web-gen web-dev \
+	lint lint-fix verify-codegen
 # -----------------------------------------------------------------------------
 # Docker images (production)
 
@@ -164,3 +165,20 @@ web-gen:
 ## web-dev: Start frontend dev server with HMR
 web-dev:
 	cd web && npm run dev
+
+# -----------------------------------------------------------------------------
+# Linting and codegen verification
+
+GOLANGCI := golangci-lint
+
+## lint: Run golangci-lint on all Go packages
+lint:
+	$(GOLANGCI) run --config configs/golangci.yaml ./...
+
+## lint-fix: Run golangci-lint with auto-fix
+lint-fix:
+	$(GOLANGCI) run --config configs/golangci.yaml --fix ./...
+
+## verify-codegen: Regenerate all codegen and check for uncommitted changes
+verify-codegen: openapi sqlc-gen
+	git diff --exit-code -- gen/ api/openapi.yaml internal/repository/db/ web/src/api/schema.d.ts

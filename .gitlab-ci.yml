@@ -1,38 +1,57 @@
-image: ruby:3.4.8
-
-variables:
-  BUNDLE_PATH: "vendor/bundle"
-  BUNDLE_WITHOUT: ""
-  RAILS_ENV: "test"
-
-cache:
-  key: "bundler-${CI_COMMIT_REF_SLUG}"
-  paths:
-    - vendor/bundle
-
 stages:
   - lint
-  - security
+  - test
+  - build
 
-before_script:
-  - apt-get update -qq
-  - apt-get install --no-install-recommends -y build-essential git libpq-dev
-  - rm -rf /var/lib/apt/lists /var/cache/apt/archives
-  - bundle config set path "$BUNDLE_PATH"
-  - bundle install -j "$(nproc)" --retry 3
+variables:
+  GOPATH: "$CI_PROJECT_DIR/.go"
 
-rubocop:
+.go-cache: &go-cache
+  before_script:
+    - mkdir -p .go
+  cache:
+    key: "go-${CI_COMMIT_REF_SLUG}"
+    paths:
+      - .go/pkg/mod/
+
+go-lint:
+  image: golangci/golangci-lint:latest
   stage: lint
+  before_script:
+    - mkdir -p .go
   script:
-    - bundle exec rubocop --parallel
+    - golangci-lint run --config configs/golangci.yaml ./...
 
-brakeman:
-  stage: security
+go-test:
+  image: golang:1.26
+  stage: test
+  services:
+    - postgres:16
+  variables:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: ctf01d_test
+    TEST_DATABASE_URL: postgres://postgres:postgres@postgres:5432/ctf01d_test?sslmode=disable
+  <<: *go-cache
   script:
-    - bundle exec brakeman -q -w2
+    - go test ./...
 
-bundler_audit:
-  stage: security
+web-typecheck:
+  image: node:22
+  stage: test
+  cache:
+    key: "node-${CI_COMMIT_REF_SLUG}"
+    paths:
+      - web/node_modules/
   script:
-    - bundle exec bundler-audit check --update
+    - cd web && npm ci && npm run typecheck
 
+docker-build:
+  image: docker:27
+  stage: build
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - docker build -f docker/Dockerfile --build-arg VERSION=$CI_COMMIT_SHA .

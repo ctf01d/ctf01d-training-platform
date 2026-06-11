@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
@@ -27,8 +28,13 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
+	"github.com/pressly/goose/v3"
 	"go.uber.org/zap"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
+
+var version = "dev"
 
 func main() {
 	if err := run(); err != nil {
@@ -38,6 +44,25 @@ func main() {
 }
 
 func run() error {
+	if os.Getenv("RUN_MIGRATIONS") == "true" {
+		dbURL := os.Getenv("DATABASE_URL")
+		if dbURL == "" {
+			return fmt.Errorf("DATABASE_URL is required when RUN_MIGRATIONS=true")
+		}
+		if err := goose.SetDialect("postgres"); err != nil {
+			return fmt.Errorf("setting goose dialect: %w", err)
+		}
+		db, err := sql.Open("pgx", dbURL)
+		if err != nil {
+			return fmt.Errorf("opening DB for migrations: %w", err)
+		}
+		defer db.Close()
+		if err := goose.Up(db, "migrations"); err != nil {
+			return fmt.Errorf("running migrations: %w", err)
+		}
+		fmt.Println("migrations applied successfully")
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("loading config: %w", err)

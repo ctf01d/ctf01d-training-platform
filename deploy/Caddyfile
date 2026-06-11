@@ -10,11 +10,6 @@ ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
     respond "ok" 200
   }
 
-  # =============================
-  # Скрытые файлы и служебные пути
-  # (как уже настроили)
-  # =============================
-
   @hidden_dotfiles {
     path_regexp hidden_dotfiles ^/\.
     not path /.well-known/*
@@ -49,38 +44,30 @@ ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
     respond "" 403
   }
 
-  # =============================
-  # Заголовки безопасности
-  # =============================
   header {
-    # Убираем "Server: Caddy"
     -Server
-
-    # На всякий случай — если Rails что-то такое шлёт
     -X-Powered-By
-
-    # Жёстко форсим HTTPS на год (можно включить preload, если уверен)
     Strict-Transport-Security "max-age=31536000; includeSubDomains"
-
-    # Защита от встраивания в iframe
     X-Frame-Options "DENY"
-
-    # Не пытаться угадывать тип контента
     X-Content-Type-Options "nosniff"
-
-    # Управление реферером
     Referrer-Policy "strict-origin-when-cross-origin"
-
-    # Запрещаем лишние браузерные фичи (под себя можешь ослабить)
     Permissions-Policy "geolocation=(), microphone=(), camera=()"
-
-    # Базовый CSP, чтобы сильно не ломать Rails-ассеты
-    # Если будет что-то падать — это первое, что ослабляем/тюним
-    # img-src расширен под внешние лого (ctftime.org и др.)
     Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
   }
 
-  reverse_proxy app:80
+  handle_path /api/* {
+    reverse_proxy app:8080
+  }
+
+  handle_path /version {
+    reverse_proxy app:8080
+  }
+
+  handle {
+    root * /srv/web
+    try_files {path} /index.html
+    file_server
+  }
 
   log {
     output stdout

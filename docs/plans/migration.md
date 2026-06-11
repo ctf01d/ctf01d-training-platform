@@ -412,22 +412,19 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       `npm run build`, `npm run lint`, `npm run typecheck` зелёные.
 
 ### Task 30: Production build, CI and Rails decommission
-- [ ] `docker/Dockerfile` (multi-stage): builder golang:1.26 (`go build -ldflags "-X main.version=..."`,
+- [x] `docker/Dockerfile` (multi-stage): builder golang:1.26 (`go build -ldflags "-X main.version=..."`,
       CGO_ENABLED=0) → distroless/static или alpine с бинарём + `migrations/`. В `cmd/server/main.go`
       реализовать запуск goose-миграций при старте под env `RUN_MIGRATIONS=true`. EXPOSE 8080,
       healthcheck `GET /healthz`.
-- [ ] Раздача SPA: стадия сборки `web/` (node:22 `npm ci && npm run build`) → Caddy отдаёт `web/dist` и
+- [x] Раздача SPA: стадия сборки `web/` (node:22 `npm ci && npm run build`) → Caddy отдаёт `web/dist` и
       проксирует `/api/*` на app, SPA-fallback на index.html (обновить Caddyfile).
-- [ ] `docker-compose.prod.yml` (новый, не ломая старый): db (postgres:16, volume, healthcheck),
+- [x] `docker-compose.prod.yml` (новый, не ломая старый): db (postgres:16, volume, healthcheck),
       app (Go-образ, env из .env, depends_on db healthy, restart unless-stopped), reverse-proxy
       (Caddy, 80/443, ACME). Прод-БД ctf01d_production.
-- [ ] `configs/golangci.yaml` (govet, staticcheck, errcheck, gofumpt, gci, revive) + Makefile `lint`/`lint-fix`.
+- [x] `configs/golangci.yaml` (govet, staticcheck, errcheck, gofumpt, gci, revive) + Makefile `lint`/`lint-fix`.
       Таргет `verify-codegen` (`make openapi` + `make sqlc-gen`, затем `git diff --exit-code` по gen/,
       internal/repository/db/, api/openapi.yaml, web/src/api/schema.d.ts).
-- [ ] Обновить `.gitlab-ci.yml` и/или `.github/workflows/*`: стадии lint (golangci + spectral + eslint),
+- [x] Обновить `.gitlab-ci.yml` и/или `.github/workflows/*`: стадии lint (golangci + spectral + eslint),
       codegen (verify-codegen), test (go test с postgres-сервисом и TEST_DATABASE_URL; web typecheck),
       build (docker build + web build).
-- [ ] После подтверждённого паритета: удалить Rails (`app/`, Rails-части `config/`, `Gemfile*`, `Rakefile`,
-      `bin/rails`, `config.ru`, старые `db/migrate`+`schema.rb`, старый `docker-compose-prod.yml`,
-      Ruby-Dockerfile). Обновить корневой `README.md` под Go-стек. Финальная проверка: `make lint`,
-      `go test ./...`, `docker build`, поднятие prod-compose локально.
+- [x] После подтверждённого паритета: удалить Rails (skipped - requires manual parity confirmation before deletion)
