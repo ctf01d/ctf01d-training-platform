@@ -135,42 +135,42 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 ### Task 11: Schema migration from schema.rb
 Воспроизвести `db/schema.rb` в goose-миграции (`-- +goose Up`/`Down`; ID bigserial; timestamps
 `timestamptz NOT NULL DEFAULT now()`). Down должен полностью откатывать.
-- [ ] `users`: user_name (NOT NULL, unique index), display_name NOT NULL, role NOT NULL default 'guest',
+- [x] `users`: user_name (NOT NULL, unique index), display_name NOT NULL, role NOT NULL default 'guest',
       rating int NOT NULL default 0, avatar_url, password_digest, timestamps.
-- [ ] `universities`: name, site_url, avatar_url, timestamps.
-- [ ] `teams`: name NOT NULL, description text, website, avatar_url, captain_id bigint, university_id bigint,
+- [x] `universities`: name, site_url, avatar_url, timestamps.
+- [x] `teams`: name NOT NULL, description text, website, avatar_url, captain_id bigint, university_id bigint,
       timestamps. Partial unique `teams(captain_id) WHERE captain_id IS NOT NULL`, index university_id,
       FK university_id→universities.
-- [ ] `team_memberships`: team_id NOT NULL, user_id NOT NULL, role, status, timestamps; indexes team_id,
+- [x] `team_memberships`: team_id NOT NULL, user_id NOT NULL, role, status, timestamps; indexes team_id,
       user_id; FK teams, users.
-- [ ] `team_membership_events`: team_id NOT NULL, user_id NOT NULL, actor_id int, action NOT NULL,
+- [x] `team_membership_events`: team_id NOT NULL, user_id NOT NULL, actor_id int, action NOT NULL,
       from_role/to_role/from_status/to_status, timestamps; indexes actor_id, (team_id, created_at),
       team_id, user_id; FK teams, users.
-- [ ] `games`: name, organizer, starts_at/ends_at, avatar_url, site_url, ctftime_url,
+- [x] `games`: name, organizer, starts_at/ends_at, avatar_url, site_url, ctftime_url,
       finalized bool NOT NULL default false, finalized_at, registration_opens_at/closes_at,
       scoreboard_opens_at/closes_at, vpn_url, vpn_config_url, access_instructions text, access_secret,
       timestamps.
-- [ ] `services`: ВСЕ поля из schema.rb — name NOT NULL (unique index), public_description/
+- [x] `services`: ВСЕ поля из schema.rb — name NOT NULL (unique index), public_description/
       private_description text, author, copyright, avatar_url, public bool NOT NULL default true,
       service_archive_url, checker_archive_url, writeup_url, exploits_url,
       check_status NOT NULL default 'unknown', checked_at, service_local_path,
       service_local_size int, service_local_sha256, service_downloaded_at, checker_local_path,
       checker_local_size int, checker_local_sha256, checker_downloaded_at,
       ctf01d_training jsonb NOT NULL default '{}', timestamps.
-- [ ] `games_services` (join, без id): game_id NOT NULL, service_id NOT NULL; unique (game_id, service_id),
+- [x] `games_services` (join, без id): game_id NOT NULL, service_id NOT NULL; unique (game_id, service_id),
       index (service_id, game_id); FK games, services.
-- [ ] `game_teams`: game_id NOT NULL, team_id NOT NULL, ip_address, ctf01d_id,
+- [x] `game_teams`: game_id NOT NULL, team_id NOT NULL, ip_address, ctf01d_id,
       ctf01d_overrides jsonb NOT NULL default '{}', team_type, "order" int NOT NULL default 0
       (имя экранировать кавычками), timestamps; indexes (game_id,"order",id), unique (game_id,team_id),
       game_id, team_id; FK games, teams.
-- [ ] `results`: game_id NOT NULL, team_id NOT NULL, score int, timestamps; unique (game_id,team_id),
+- [x] `results`: game_id NOT NULL, team_id NOT NULL, score int, timestamps; unique (game_id,team_id),
       indexes game_id, team_id; FK games, teams.
-- [ ] `final_results`: game_id NOT NULL, team_id NOT NULL, score int NOT NULL default 0, position int,
+- [x] `final_results`: game_id NOT NULL, team_id NOT NULL, score int NOT NULL default 0, position int,
       timestamps; unique (game_id,team_id), indexes game_id, team_id; FK games, teams.
-- [ ] `writeups`: game_id NOT NULL, team_id NOT NULL, title NOT NULL, url NOT NULL, timestamps;
+- [x] `writeups`: game_id NOT NULL, team_id NOT NULL, title NOT NULL, url NOT NULL, timestamps;
       unique (game_id,team_id,title), indexes game_id, team_id; FK games, teams.
-- [ ] Триггерная функция `set_updated_at()` + триггеры на все таблицы с updated_at.
-- [ ] Прогнать `make migrate-up` и `make migrate-down` против dev-БД — оба чистые.
+- [x] Триггерная функция `set_updated_at()` + триггеры на все таблицы с updated_at.
+- [x] Прогнать `make migrate-up` и `make migrate-down` против dev-БД — оба чистые.
 
 ### Task 12: sqlc configuration and store transactions
 - [ ] `sqlc.yaml`: version 2, engine postgresql, schema `migrations`, queries `internal/repository/queries`,
