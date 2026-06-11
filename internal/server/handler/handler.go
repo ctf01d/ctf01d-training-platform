@@ -7,22 +7,31 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
+	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
+	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
+	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	users  *usersvc.Service
-	auth   *authsvc.Service
-	jwtMgr *auth.Manager
+	users        *usersvc.Service
+	auth         *authsvc.Service
+	jwtMgr       *auth.Manager
+	universities *unisvc.Service
+	teams        *teamsvc.Service
+	memberships  *membersvc.Service
 }
 
-func New(users *usersvc.Service, authSvc *authsvc.Service, jwtMgr *auth.Manager) *Handler {
+func New(users *usersvc.Service, authSvc *authsvc.Service, jwtMgr *auth.Manager, universities *unisvc.Service, teams *teamsvc.Service, memberships *membersvc.Service) *Handler {
 	return &Handler{
-		users:  users,
-		auth:   authSvc,
-		jwtMgr: jwtMgr,
+		users:        users,
+		auth:         authSvc,
+		jwtMgr:       jwtMgr,
+		universities: universities,
+		teams:        teams,
+		memberships:  memberships,
 	}
 }
 
@@ -264,99 +273,117 @@ func notImplemented(c *gin.Context) {
 }
 
 func (h *Handler) ListUniversities(c *gin.Context, params httpserver.ListUniversitiesParams) {
-	notImplemented(c)
+	h.HandleListUniversities(c)
 }
 
 func (h *Handler) CreateUniversity(c *gin.Context) {
-	notImplemented(c)
-}
-
-func (h *Handler) DeleteUniversity(c *gin.Context, id int64) {
-	notImplemented(c)
+	h.HandleCreateUniversity(c)
 }
 
 func (h *Handler) GetUniversity(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleGetUniversity(c)
 }
 
 func (h *Handler) UpdateUniversity(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUpdateUniversity(c)
+}
+
+func (h *Handler) DeleteUniversity(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleDeleteUniversity(c)
 }
 
 func (h *Handler) ListTeams(c *gin.Context, params httpserver.ListTeamsParams) {
-	notImplemented(c)
+	h.HandleListTeams(c)
 }
 
 func (h *Handler) CreateTeam(c *gin.Context) {
-	notImplemented(c)
-}
-
-func (h *Handler) DeleteTeam(c *gin.Context, id int64) {
-	notImplemented(c)
+	h.HandleCreateTeam(c)
 }
 
 func (h *Handler) GetTeam(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleGetTeam(c)
 }
 
 func (h *Handler) UpdateTeam(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUpdateTeam(c)
+}
+
+func (h *Handler) DeleteTeam(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleDeleteTeam(c)
 }
 
 func (h *Handler) ListTeamEvents(c *gin.Context, id int64, params httpserver.ListTeamEventsParams) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleListTeamEvents(c)
 }
 
 func (h *Handler) InviteToTeam(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleInviteToTeam(c)
 }
 
 func (h *Handler) RequestJoinTeam(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleRequestJoinTeam(c)
 }
 
 func (h *Handler) ListTeamMembers(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleListTeamMembers(c)
 }
 
 func (h *Handler) ListTeamMemberships(c *gin.Context, params httpserver.ListTeamMembershipsParams) {
-	notImplemented(c)
+	h.HandleListTeamMemberships(c)
 }
 
 func (h *Handler) CreateTeamMembership(c *gin.Context) {
-	notImplemented(c)
+	h.HandleCreateTeamMembership(c)
 }
 
 func (h *Handler) DeleteTeamMembership(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleDeleteTeamMembership(c)
 }
 
 func (h *Handler) GetTeamMembership(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleGetTeamMembership(c)
 }
 
 func (h *Handler) UpdateTeamMembership(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUpdateTeamMembership(c)
 }
 
 func (h *Handler) AcceptTeamMembership(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleAcceptTeamMembership(c)
 }
 
 func (h *Handler) ApproveTeamMembership(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleApproveTeamMembership(c)
 }
 
 func (h *Handler) DeclineTeamMembership(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleDeclineTeamMembership(c)
 }
 
 func (h *Handler) RejectTeamMembership(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleRejectTeamMembership(c)
 }
 
 func (h *Handler) SetTeamMembershipRole(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleSetTeamMembershipRole(c)
 }
 
 var _ httpserver.ServerInterface = (*Handler)(nil)

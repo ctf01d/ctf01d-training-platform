@@ -67,13 +67,7 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 
 	api := engine.Group("/api/v1")
 	requireAuth := middleware.RequireAuth(h.JWTMgr())
-	requireAdmin := func(c *gin.Context) {
-		requireAuth(c)
-		if c.IsAborted() {
-			return
-		}
-		middleware.RequireRole("admin")(c)
-	}
+	requireAdmin := []gin.HandlerFunc{requireAuth, middleware.RequireRole("admin")}
 
 	api.POST("/session", h.Login)
 	api.DELETE("/session", requireAuth, h.Logout)
@@ -81,10 +75,37 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.PATCH("/profile", requireAuth, h.UpdateProfile)
 
 	api.GET("/users", requireAuth, h.HandleListUsers)
-	api.POST("/users", requireAdmin, h.HandleCreateUser)
+	api.POST("/users", append(requireAdmin, h.HandleCreateUser)...)
 	api.GET("/users/:id", requireAuth, h.HandleGetUser)
 	api.PATCH("/users/:id", requireAuth, h.HandleUpdateUser)
-	api.DELETE("/users/:id", requireAdmin, h.HandleDeleteUser)
+	api.DELETE("/users/:id", append(requireAdmin, h.HandleDeleteUser)...)
+
+	api.GET("/universities", requireAuth, h.HandleListUniversities)
+	api.POST("/universities", append(requireAdmin, h.HandleCreateUniversity)...)
+	api.GET("/universities/:id", requireAuth, h.HandleGetUniversity)
+	api.PATCH("/universities/:id", append(requireAdmin, h.HandleUpdateUniversity)...)
+	api.DELETE("/universities/:id", append(requireAdmin, h.HandleDeleteUniversity)...)
+
+	api.GET("/teams", requireAuth, h.HandleListTeams)
+	api.POST("/teams", requireAuth, h.HandleCreateTeam)
+	api.GET("/teams/:id", requireAuth, h.HandleGetTeam)
+	api.PATCH("/teams/:id", requireAuth, h.HandleUpdateTeam)
+	api.DELETE("/teams/:id", requireAuth, h.HandleDeleteTeam)
+	api.POST("/teams/:id/join-request", requireAuth, h.HandleRequestJoinTeam)
+	api.POST("/teams/:id/invite", requireAuth, h.HandleInviteToTeam)
+	api.GET("/teams/:id/members", requireAuth, h.HandleListTeamMembers)
+	api.GET("/teams/:id/events", requireAuth, h.HandleListTeamEvents)
+
+	api.GET("/team-memberships", requireAuth, h.HandleListTeamMemberships)
+	api.POST("/team-memberships", append(requireAdmin, h.HandleCreateTeamMembership)...)
+	api.GET("/team-memberships/:id", requireAuth, h.HandleGetTeamMembership)
+	api.PATCH("/team-memberships/:id", requireAuth, h.HandleUpdateTeamMembership)
+	api.DELETE("/team-memberships/:id", append(requireAdmin, h.HandleDeleteTeamMembership)...)
+	api.POST("/team-memberships/:id/approve", requireAuth, h.HandleApproveTeamMembership)
+	api.POST("/team-memberships/:id/reject", requireAuth, h.HandleRejectTeamMembership)
+	api.POST("/team-memberships/:id/accept", requireAuth, h.HandleAcceptTeamMembership)
+	api.POST("/team-memberships/:id/decline", requireAuth, h.HandleDeclineTeamMembership)
+	api.POST("/team-memberships/:id/set-role", requireAuth, h.HandleSetTeamMembershipRole)
 
 	return engine
 }

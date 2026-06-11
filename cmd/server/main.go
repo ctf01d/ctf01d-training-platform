@@ -13,6 +13,9 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
+	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
+	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
+	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
@@ -51,7 +54,10 @@ func run() error {
 	jwtMgr := auth.NewManager(cfg.JWT.Secret, cfg.JWT.TTLHours)
 	userService := usersvc.NewService(store.Queries)
 	authService := authsvc.NewService(store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
-	h := handler.New(userService, authService, jwtMgr)
+	universityService := unisvc.NewService(store.Queries)
+	teamService := teamsvc.NewService(store.Queries, store.Queries, store.Queries, store)
+	membershipService := membersvc.NewService(store.Queries, store.Queries, store.Queries, store)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService)
 
 	engine := server.New(cfg, log, store, h)
 

@@ -241,11 +241,11 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       в транзакции. Unit-тесты на переходы и защиту последнего owner.
 
 ### Task 17: Universities/Teams/Memberships handlers + integration
-- [ ] Хендлеры `universities.go`, `teams.go`, `team_memberships.go`: реализовать все методы, actor из
+- [x] Хендлеры `universities.go`, `teams.go`, `team_memberships.go`: реализовать все методы, actor из
       контекста, мапить доменные ошибки, убрать заглушки. Прокинуть сервисы в Handler и main.
-- [ ] RBAC: чтение — авторизованным; мутации вузов — admin; мутации команд/членства — внутри сервиса по
+- [x] RBAC: чтение — авторизованным; мутации вузов — admin; мутации команд/членства — внутри сервиса по
       управляющей роли (handler передаёт actor).
-- [ ] Интеграционный тест: пользователи+команда→owner приглашает→accept→set-role captain (проверка
+- [x] Интеграционный тест: пользователи+команда→owner приглашает→accept→set-role captain (проверка
       captain_id)→сторонний join-request→approve→список членов и события→управление не-управляющим→403.
 
 ### Task 18: Games status logic, fragments and queries

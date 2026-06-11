@@ -199,6 +199,41 @@ func (s *Service) ListEvents(ctx context.Context, teamID int64, page, perPage in
 	return result, nil
 }
 
+func (s *Service) CreateDirect(ctx context.Context, arg db.CreateTeamMembershipParams) (*Membership, error) {
+	mem, err := s.q.CreateTeamMembership(ctx, arg)
+	if err != nil {
+		return nil, mapDBError(err)
+	}
+	m := fromDB(mem)
+	return &m, nil
+}
+
+func (s *Service) Update(ctx context.Context, id int64, role, status string) (*Membership, error) {
+	if role != "" {
+		updated, err := s.q.UpdateMembershipRole(ctx, db.UpdateMembershipRoleParams{ID: id, Role: &role})
+		if err != nil {
+			return nil, mapNotFound(err, "membership")
+		}
+		m := fromDB(updated)
+		return &m, nil
+	}
+	if status != "" {
+		updated, err := s.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: id, Status: &status})
+		if err != nil {
+			return nil, mapNotFound(err, "membership")
+		}
+		m := fromDB(updated)
+		return &m, nil
+	}
+
+	mem, err := s.q.GetTeamMembershipByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err, "membership")
+	}
+	m := fromDB(mem)
+	return &m, nil
+}
+
 func (s *Service) Delete(ctx context.Context, id int64) error {
 	return s.q.DeleteTeamMembership(ctx, id)
 }
@@ -483,6 +518,30 @@ func mapNotFound(err error, entity string) error {
 		return errs.ErrNotFound
 	}
 	return err
+}
+
+func mapDBError(err error) error {
+	if isDuplicateKey(err) {
+		return errs.ErrConflict
+	}
+	return err
+}
+
+func isDuplicateKey(err error) bool {
+	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "violates unique"))
+}
+
+func contains(s, sub string) bool {
+	return len(s) >= len(sub) && searchString(s, sub)
+}
+
+func searchString(s, sub string) bool {
+	for i := 0; i <= len(s)-len(sub); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
 }
 
 func isNoRows(err error) bool {
