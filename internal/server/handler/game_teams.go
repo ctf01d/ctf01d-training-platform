@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
@@ -148,8 +149,11 @@ func gameTeamToHTTP(gt gameteamsvc.GameTeam) httpserver.GameTeam {
 	var overrides *map[string]interface{}
 	if gt.Ctf01dOverrides != nil {
 		var m map[string]interface{}
-		json.Unmarshal(gt.Ctf01dOverrides, &m)
-		overrides = &m
+		if err := json.Unmarshal(gt.Ctf01dOverrides, &m); err != nil {
+			slog.Warn("invalid ctf01d_overrides JSON in game_team", "id", gt.ID, "error", err)
+		} else {
+			overrides = &m
+		}
 	}
 	return httpserver.GameTeam{
 		Id:              gt.ID,

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -76,7 +77,7 @@ func (s *Service) ForGame(ctx context.Context, gameID int64, viewerRole string) 
 		scClosesAt = &game.ScoreboardClosesAt.Time
 	}
 
-	sbStatus := computeScoreboardStatus(scOpensAt, scClosesAt, now)
+	sbStatus := string(gamesvc.ComputeScoreboardStatus(scOpensAt, scClosesAt, now))
 
 	if viewerRole != "admin" && (sbStatus == "closed" || sbStatus == "upcoming") {
 		return nil, errs.ErrForbidden
@@ -192,20 +193,4 @@ func (s *Service) Global(ctx context.Context) (*GlobalScoreboard, error) {
 	return &GlobalScoreboard{Entries: entries}, nil
 }
 
-func computeScoreboardStatus(opensAt, closesAt *time.Time, now time.Time) string {
-	if opensAt == nil && closesAt == nil {
-		return "always"
-	}
-	if opensAt != nil && now.Before(*opensAt) {
-		return "upcoming"
-	}
-	afterOpen := opensAt == nil || !now.Before(*opensAt)
-	beforeClose := closesAt == nil || !now.After(*closesAt)
-	if afterOpen && beforeClose {
-		return "open"
-	}
-	return "closed"
-}
-
-// re-export for testing convenience
 var _ = pgtype.Timestamptz{}

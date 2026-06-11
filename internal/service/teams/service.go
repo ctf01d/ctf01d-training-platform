@@ -258,16 +258,17 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 }
 
 func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
-	existing, err := s.members.GetMembership(ctx, db.GetMembershipParams{
-		TeamID: teamID,
-		UserID: userID,
-	})
-	if err == nil && existing.Status != nil && *existing.Status != "rejected" {
-		return errs.ErrConflict
-	}
-
 	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
 		tq := s.txQ(q)
+
+		existing, err := tq.members.GetMembership(ctx, db.GetMembershipParams{
+			TeamID: teamID,
+			UserID: userID,
+		})
+		if err == nil && existing.Status != nil && *existing.Status != "rejected" {
+			return errs.ErrConflict
+		}
+
 		role := "guest"
 		status := "pending"
 		action := "join_request"

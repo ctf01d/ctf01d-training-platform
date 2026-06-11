@@ -267,7 +267,20 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*G
 	}); err != nil {
 		return nil, err
 	}
-	if params.StartsAt != nil && params.EndsAt != nil && !params.EndsAt.After(*params.StartsAt) {
+	existing, err := s.games.GetGameByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err, "game")
+	}
+
+	effectiveStartsAt := params.StartsAt
+	if effectiveStartsAt == nil && existing.StartsAt.Valid {
+		effectiveStartsAt = &existing.StartsAt.Time
+	}
+	effectiveEndsAt := params.EndsAt
+	if effectiveEndsAt == nil && existing.EndsAt.Valid {
+		effectiveEndsAt = &existing.EndsAt.Time
+	}
+	if effectiveStartsAt != nil && effectiveEndsAt != nil && !effectiveEndsAt.After(*effectiveStartsAt) {
 		return nil, errs.NewValidationError(map[string]string{"ends_at": "must be after starts_at"})
 	}
 

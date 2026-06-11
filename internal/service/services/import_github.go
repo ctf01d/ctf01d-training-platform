@@ -66,6 +66,10 @@ func NewImportService(q ImportQuerier, store storage.Storage, maxUploadBytes int
 var serviceNameRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRequest, isAdmin bool) (*ImportResult, error) {
+	if req.Subdir != "" {
+		return nil, fmt.Errorf("subdir import is not yet supported")
+	}
+
 	owner, repo, parsedRef, err := parseGitHubURL(req.RepoURL)
 	if err != nil {
 		return nil, fmt.Errorf("parsing GitHub URL: %w", err)
