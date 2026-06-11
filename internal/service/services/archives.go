@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -180,16 +181,10 @@ func isBlockedIP(ip net.IP) bool {
 	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
 		return true
 	}
+	if ip.IsPrivate() {
+		return true
+	}
 	if ip4 := ip.To4(); ip4 != nil {
-		if ip4[0] == 10 || (ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31) || (ip4[0] == 192 && ip4[1] == 168) {
-			return true
-		}
-		if ip4[0] == 169 && ip4[1] == 254 {
-			return true
-		}
-		if ip4[0] == 127 {
-			return true
-		}
 		if ip4[0] == 0 {
 			return true
 		}
@@ -198,13 +193,13 @@ func isBlockedIP(ip net.IP) bool {
 }
 
 func checkURLHost(rawURL string) error {
-	host := strings.TrimPrefix(rawURL, "http://")
-	host = strings.TrimPrefix(host, "https://")
-	if idx := strings.Index(host, "/"); idx >= 0 {
-		host = host[:idx]
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("parsing URL: %w", err)
 	}
-	if idx := strings.Index(host, ":"); idx >= 0 {
-		host = host[:idx]
+	host := u.Hostname()
+	if host == "" {
+		return fmt.Errorf("URL has no host")
 	}
 	ips, err := net.LookupIP(host)
 	if err != nil {

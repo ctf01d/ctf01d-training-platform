@@ -107,6 +107,9 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 
 	existing, err := s.q.GetServiceByName(ctx, name)
 	if err == nil {
+		if !isAdmin {
+			return nil, fmt.Errorf("service with name %q already exists; only admins can update existing services via import", name)
+		}
 		return s.updateFromImport(ctx, existing.ID, name, bundleBytes, meta, archiveURL, training, isAdmin, warnings)
 	}
 

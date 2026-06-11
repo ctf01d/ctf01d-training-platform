@@ -282,8 +282,8 @@ func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
 	})
 }
 
-func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64) error {
-	err := s.CanManage(ctx, teamID, inviterID, "")
+func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64, globalRole string) error {
+	err := s.CanManage(ctx, teamID, inviterID, globalRole)
 	if err != nil {
 		return err
 	}

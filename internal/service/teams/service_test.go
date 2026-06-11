@@ -451,7 +451,7 @@ func TestInvite_Success(t *testing.T) {
 
 	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
 
-	err := svc.Invite(context.Background(), 1, 1, 2)
+	err := svc.Invite(context.Background(), 1, 1, 2, "owner")
 	if err != nil {
 		t.Fatalf("Invite: %v", err)
 	}
@@ -480,7 +480,7 @@ func TestInvite_NonManager(t *testing.T) {
 		TeamID: 1, UserID: 2, Role: &role, Status: &status,
 	})
 
-	err := svc.Invite(context.Background(), 1, 2, 3)
+	err := svc.Invite(context.Background(), 1, 2, 3, "")
 	if err != errs.ErrForbidden {
 		t.Errorf("expected ErrForbidden, got %v", err)
 	}

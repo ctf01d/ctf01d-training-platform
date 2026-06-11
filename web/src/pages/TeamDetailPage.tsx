@@ -146,8 +146,8 @@ export default function TeamDetailPage() {
             <tbody>
               <tr><td className="label">Name</td><td>{team.name}</td></tr>
               <tr><td className="label">Description</td><td>{team.description ?? '—'}</td></tr>
-              <tr><td className="label">Website</td><td>{team.website ? <a href={team.website} target="_blank" rel="noreferrer">{team.website}</a> : '—'}</td></tr>
-              <tr><td className="label">Avatar</td><td>{team.avatar_url ? <a href={team.avatar_url} target="_blank" rel="noreferrer">Link</a> : '—'}</td></tr>
+              <tr><td className="label">Website</td><td>{team.website ? <a href={safeUrl(team.website)} target="_blank" rel="noreferrer">{team.website}</a> : '—'}</td></tr>
+              <tr><td className="label">Avatar</td><td>{team.avatar_url ? <a href={safeUrl(team.avatar_url)} target="_blank" rel="noreferrer">Link</a> : '—'}</td></tr>
               <tr><td className="label">Captain ID</td><td>{team.captain_id ?? '—'}</td></tr>
               <tr><td className="label">University ID</td><td>{team.university_id ?? '—'}</td></tr>
             </tbody>
@@ -314,4 +314,9 @@ export default function TeamDetailPage() {
       </div>
     </div>
   )
+}
+
+function safeUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url
+  return 'about:blank'
 }

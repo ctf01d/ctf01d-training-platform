@@ -226,8 +226,8 @@ export default function GameDetailPage() {
               <tr><td className="label">Scoreboard Status</td><td>{game.scoreboard_status ?? 'closed'}</td></tr>
               <tr><td className="label">Scoreboard Opens</td><td>{game.scoreboard_opens_at ? new Date(game.scoreboard_opens_at).toLocaleString() : '—'}</td></tr>
               <tr><td className="label">Scoreboard Closes</td><td>{game.scoreboard_closes_at ? new Date(game.scoreboard_closes_at).toLocaleString() : '—'}</td></tr>
-              <tr><td className="label">Site URL</td><td>{game.site_url ? <a href={game.site_url} target="_blank" rel="noreferrer">{game.site_url}</a> : '—'}</td></tr>
-              <tr><td className="label">CTFtime URL</td><td>{game.ctftime_url ? <a href={game.ctftime_url} target="_blank" rel="noreferrer">{game.ctftime_url}</a> : '—'}</td></tr>
+              <tr><td className="label">Site URL</td><td>{game.site_url ? <a href={safeHref(game.site_url)} target="_blank" rel="noreferrer">{game.site_url}</a> : '—'}</td></tr>
+              <tr><td className="label">CTFtime URL</td><td>{game.ctftime_url ? <a href={safeHref(game.ctftime_url)} target="_blank" rel="noreferrer">{game.ctftime_url}</a> : '—'}</td></tr>
               <tr><td className="label">VPN URL</td><td>{game.vpn_url ?? '—'}</td></tr>
               <tr><td className="label">Finalized</td><td>{game.finalized ? `Yes${game.finalized_at ? ` at ${new Date(game.finalized_at).toLocaleString()}` : ''}` : 'No'}</td></tr>
               {isAdmin && game.access_secret && <tr><td className="label">Access Secret</td><td>{game.access_secret}</td></tr>}
@@ -373,4 +373,9 @@ export default function GameDetailPage() {
       </div>
     </div>
   )
+}
+
+function safeHref(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url
+  return 'about:blank'
 }

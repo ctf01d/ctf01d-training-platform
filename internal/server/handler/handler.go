@@ -982,11 +982,11 @@ func sanitizeFilename(name string) string {
 	r := make([]byte, 0, len(name))
 	for i := 0; i < len(name); i++ {
 		b := name[i]
-		if b == '"' || b == '\\' || b == '\n' || b == '\r' {
+		if (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') || b == '-' || b == '_' || b == '.' {
+			r = append(r, b)
+		} else {
 			r = append(r, '_')
-			continue
 		}
-		r = append(r, b)
 	}
 	return string(r)
 }

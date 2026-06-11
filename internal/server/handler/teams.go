@@ -190,12 +190,14 @@ func (h *Handler) HandleInviteToTeam(c *gin.Context) {
 		return
 	}
 
+	role, _ := middleware.CurrentRole(c)
+
 	req, ok := bindJSON[httpserver.InviteRequest](c)
 	if !ok {
 		return
 	}
 
-	if err := h.teams.Invite(c.Request.Context(), id, userID, req.UserId); err != nil {
+	if err := h.teams.Invite(c.Request.Context(), id, userID, req.UserId, role); err != nil {
 		respondError(c, err)
 		return
 	}
