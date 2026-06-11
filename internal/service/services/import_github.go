@@ -50,6 +50,15 @@ func NewImportService(q ImportQuerier, store storage.Storage, maxUploadBytes int
 		maxUploadBytes: maxUploadBytes,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Minute,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if len(via) >= 10 {
+					return fmt.Errorf("too many redirects")
+				}
+				return nil
+			},
+			Transport: &http.Transport{
+				DialContext: ssrfSafeDialContext,
+			},
 		},
 	}
 }
@@ -305,8 +314,8 @@ func (s *ImportService) downloadZipBytes(url string) ([]byte, error) {
 
 func parseGitHubURL(repoURL string) (owner, repo, ref string, err error) {
 	repoURL = strings.TrimSpace(repoURL)
-	if !strings.HasPrefix(repoURL, "http://") && !strings.HasPrefix(repoURL, "https://") {
-		return "", "", "", fmt.Errorf("invalid URL")
+	if !strings.HasPrefix(repoURL, "https://") {
+		return "", "", "", fmt.Errorf("invalid URL: must use https")
 	}
 	schemeEnd := strings.Index(repoURL, "://")
 	if schemeEnd < 0 {
@@ -318,7 +327,7 @@ func parseGitHubURL(repoURL string) (owner, repo, ref string, err error) {
 		return "", "", "", fmt.Errorf("invalid GitHub URL: expected /owner/repo")
 	}
 	host := rest[:hostEnd]
-	if host != "github.com" && !strings.HasSuffix(host, ".github.com") {
+	if host != "github.com" {
 		return "", "", "", fmt.Errorf("not a github.com URL")
 	}
 	pathPart := rest[hostEnd+1:]

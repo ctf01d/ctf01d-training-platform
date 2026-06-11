@@ -176,6 +176,9 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*U
 
 	var passwordDigest *string
 	if params.Password != nil {
+		if *params.Password == "" || len(*params.Password) < 6 {
+			return nil, errs.NewValidationError(map[string]string{"password": "password must be at least 6 characters"})
+		}
 		hash, err := auth.HashPassword(*params.Password)
 		if err != nil {
 			return nil, err

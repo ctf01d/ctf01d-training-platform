@@ -175,6 +175,9 @@ func (u urlValidatable) GetURLs() map[string]*string {
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams) (*Game, error) {
+	if params.Name == nil || *params.Name == "" {
+		return nil, errs.NewValidationError(map[string]string{"name": "name is required"})
+	}
 	if err := validateURLs(urlValidatable{
 		siteUrl:      params.SiteUrl,
 		ctftimeUrl:   params.CtftimeUrl,

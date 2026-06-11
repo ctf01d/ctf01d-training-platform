@@ -340,6 +340,9 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 			UserID: mem.UserID,
 		})
 		if err != nil {
+			if repository.IsNoRows(err) {
+				return errs.ErrForbidden
+			}
 			return fmt.Errorf("checking membership source: %w", err)
 		}
 		if evt.Action != "invite" {
@@ -378,6 +381,20 @@ func (s *Service) Decline(ctx context.Context, membershipID int64, userID int64)
 		}
 		if mem.Status == nil || *mem.Status != "pending" {
 			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
+		}
+
+		evt, err := tq.events.GetLatestEventForMember(ctx, db.GetLatestEventForMemberParams{
+			TeamID: mem.TeamID,
+			UserID: mem.UserID,
+		})
+		if err != nil {
+			if repository.IsNoRows(err) {
+				return errs.ErrForbidden
+			}
+			return fmt.Errorf("checking membership source: %w", err)
+		}
+		if evt.Action != "invite" {
+			return errs.ErrForbidden
 		}
 
 		rejected := "rejected"

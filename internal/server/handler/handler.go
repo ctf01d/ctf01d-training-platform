@@ -677,7 +677,7 @@ func (h *Handler) HandleGetService(c *gin.Context) {
 		return
 	}
 	if !svc.Public && !isAdmin {
-		c.JSON(http.StatusNotFound, gin.H{"code": "not_found", "message": "service not found"})
+		respondError(c, errs.ErrNotFound)
 		return
 	}
 	c.JSON(http.StatusOK, serviceToHTTP(*svc))
@@ -785,6 +785,8 @@ func (h *Handler) HandleUploadServiceArchives(c *gin.Context) {
 	}
 	role, _ := middleware.CurrentRole(c)
 	isAdmin := role == "admin"
+
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, h.maxUploadBytes+1024)
 
 	form, err := c.MultipartForm()
 	if err != nil {
