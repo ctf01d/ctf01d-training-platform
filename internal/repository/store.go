@@ -37,3 +37,7 @@ func (s *Store) Close() {
 func (s *Store) Health(ctx context.Context) error {
 	return s.Pool.Ping(ctx)
 }
+
+func (s *Store) Ping() error {
+	return s.Pool.Ping(context.Background())
+}

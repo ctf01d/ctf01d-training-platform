@@ -65,13 +65,13 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       `NewStore(ctx, dbURL) (*Store, error)` (создаёт пул + Ping), `Close()`, `Health(ctx) error` (Ping).
 
 ### Task 4: HTTP server with healthz and graceful shutdown
-- [ ] `go get github.com/gin-gonic/gin github.com/gin-contrib/cors github.com/gin-contrib/requestid`.
-- [ ] `internal/server/server.go`: `New(cfg, log, store) *gin.Engine` — `gin.New()`, middleware Recovery,
+- [x] `go get github.com/gin-gonic/gin github.com/gin-contrib/cors github.com/gin-contrib/requestid`.
+- [x] `internal/server/server.go`: `New(cfg, log, store) *gin.Engine` — `gin.New()`, middleware Recovery,
       requestid, CORS (origins из cfg), zap-логгер запросов. Роуты `GET /healthz` (200 ok / 503 если
       Health падает) и `GET /version` (статическая версия).
-- [ ] `cmd/server/main.go`: bootstrap config→logger→store→server→`http.Server{Addr, Handler,
+- [x] `cmd/server/main.go`: bootstrap config→logger→store→server→`http.Server{Addr, Handler,
       ReadHeaderTimeout:5s}`; graceful shutdown по SIGINT/SIGTERM (Shutdown с таймаутом 5s, затем Close).
-- [ ] Тест `/healthz` через `httptest` (Health за интерфейсом `Pinger`, подменяется в тесте).
+- [x] Тест `/healthz` через `httptest` (Health за интерфейсом `Pinger`, подменяется в тесте).
 
 ### Task 5: Makefile and dev Docker Compose
 - [ ] Добавить Go-таргеты в Makefile (не ломая существующий Rails Makefile; уникальные имена,
