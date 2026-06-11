@@ -3,6 +3,7 @@ package ctf01d
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -19,6 +20,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -596,40 +598,119 @@ func writeDataURLToFile(dataURL string, dir string, preferName string) (string, 
 	return "", fmt.Errorf("invalid data:image URL")
 }
 
+var exporterBlockedNets []*net.IPNet
+var exporterBlockedNetsOnce sync.Once
+
+func initExporterBlockedNets() {
+	exporterBlockedNetsOnce.Do(func() {
+		exporterBlockedNets = mustParseExporterCIDRs(
+			"127.0.0.0/8", "::1/128",
+			"169.254.0.0/16", "fe80::/10",
+			"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7",
+			"0.0.0.0/8", "::/128",
+			"100.64.0.0/10",
+			"198.18.0.0/15",
+			"192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "2001:db8::/32",
+			"224.0.0.0/4", "ff00::/8",
+			"240.0.0.0/4",
+			"192.0.0.0/24",
+			"192.88.99.0/24",
+			"64:ff9b:1::/48",
+			"100::/64",
+			"100:0:0:1::/64",
+			"2001:2::/48",
+			"2002::/16",
+			"3fff::/20",
+			"5f00::/16",
+		)
+	})
+}
+
+func mustParseExporterCIDRs(cidrs ...string) []*net.IPNet {
+	var nets []*net.IPNet
+	for _, s := range cidrs {
+		_, n, err := net.ParseCIDR(s)
+		if err != nil {
+			panic(err)
+		}
+		nets = append(nets, n)
+	}
+	return nets
+}
+
+func isBlockedIP(ip net.IP) bool {
+	initExporterBlockedNets()
+	for _, n := range exporterBlockedNets {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
 func checkDownloadURL(rawURL string) error {
 	u, err := url.Parse(rawURL)
 	if err != nil {
 		return fmt.Errorf("parsing URL: %w", err)
 	}
 	host := u.Hostname()
-	ips, err := net.LookupIP(host)
-	if err != nil {
-		return fmt.Errorf("resolving host: %w", err)
-	}
-	for _, ip := range ips {
-		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-			return fmt.Errorf("blocked address: %s", ip)
-		}
-		if ip4 := ip.To4(); ip4 != nil {
-			if ip4[0] == 10 || (ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31) || (ip4[0] == 192 && ip4[1] == 168) {
-				return fmt.Errorf("blocked private address: %s", ip)
-			}
-			if ip4[0] == 169 && ip4[1] == 254 {
-				return fmt.Errorf("blocked link-local address: %s", ip)
-			}
-			if ip4[0] == 0 {
-				return fmt.Errorf("blocked address: %s", ip)
-			}
-		}
+	if host == "" {
+		return fmt.Errorf("URL has no host")
 	}
 	return nil
 }
 
+func ssrfSafeDialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid address: %w", err)
+	}
+	ips, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return nil, fmt.Errorf("resolving host %s: %w", host, err)
+	}
+	var allowed []net.IPAddr
+	for _, ip := range ips {
+		if isBlockedIP(ip.IP) {
+			return nil, fmt.Errorf("blocked address: %s", ip.IP)
+		}
+		allowed = append(allowed, ip)
+	}
+	if len(allowed) == 0 {
+		return nil, fmt.Errorf("no resolved addresses for host %s", host)
+	}
+	d := net.Dialer{}
+	var lastErr error
+	for _, ip := range allowed {
+		conn, err := d.DialContext(ctx, network, net.JoinHostPort(ip.IP.String(), port))
+		if err == nil {
+			return conn, nil
+		}
+		lastErr = err
+	}
+	return nil, lastErr
+}
+
 func downloadURLToFile(rawURL string, dir string, preferName string) (string, error) {
 	if err := checkDownloadURL(rawURL); err != nil {
-		return "", fmt.Errorf("blocked URL: %w", err)
+		return "", fmt.Errorf("invalid URL: %w", err)
 	}
-	client := &http.Client{Timeout: 15 * time.Second}
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return fmt.Errorf("too many redirects")
+			}
+			host := req.URL.Hostname()
+			if host == "" {
+				return fmt.Errorf("redirect URL has no host")
+			}
+			return nil
+		},
+		Transport: &http.Transport{
+			DialContext: ssrfSafeDialContext,
+		},
+	}
 	resp, err := client.Get(rawURL)
 	if err != nil {
 		return "", fmt.Errorf("download logo: %w", err)

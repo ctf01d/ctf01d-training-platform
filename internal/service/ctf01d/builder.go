@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -19,11 +20,16 @@ type BuilderQuerier interface {
 }
 
 type Builder struct {
-	q BuilderQuerier
+	q          BuilderQuerier
+	storageDir string
 }
 
 func NewBuilder(q BuilderQuerier) *Builder {
 	return &Builder{q: q}
+}
+
+func (b *Builder) SetStorageDir(dir string) {
+	b.storageDir = dir
 }
 
 type BuildResult struct {
@@ -266,7 +272,7 @@ func (b *Builder) buildCheckerParams(ctx context.Context, serviceIDs []int64) ([
 		}
 
 		if svc.CheckerLocalPath != nil && *svc.CheckerLocalPath != "" {
-			cp.BundlePath = *svc.CheckerLocalPath
+			cp.BundlePath = b.resolveStoragePath(*svc.CheckerLocalPath)
 			cp.CheckerFromBundle = true
 		} else {
 			warnings = append(warnings, fmt.Sprintf("service %q has no local checker archive", svc.Name))
@@ -274,7 +280,7 @@ func (b *Builder) buildCheckerParams(ctx context.Context, serviceIDs []int64) ([
 
 		if svc.ServiceLocalPath != nil && *svc.ServiceLocalPath != "" {
 			if cp.BundlePath == "" {
-				cp.BundlePath = *svc.ServiceLocalPath
+				cp.BundlePath = b.resolveStoragePath(*svc.ServiceLocalPath)
 			}
 		}
 
@@ -308,6 +314,13 @@ func (b *Builder) buildCheckerParams(ctx context.Context, serviceIDs []int64) ([
 	}
 
 	return checkers, warnings
+}
+
+func (b *Builder) resolveStoragePath(key string) string {
+	if b.storageDir == "" {
+		return key
+	}
+	return filepath.Join(b.storageDir, key)
 }
 
 func buildScoreboardParams(req Ctf01dExportRequest) ScoreboardParams {

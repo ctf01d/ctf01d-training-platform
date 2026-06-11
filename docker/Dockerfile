@@ -18,13 +18,13 @@ COPY web/ ./
 RUN npm run build
 
 FROM alpine:3.21
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata su-exec
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=go-builder /ctf01d-server ./ctf01d-server
 COPY --from=go-builder /src/migrations ./migrations
 COPY --from=web-builder /web/dist ./web/dist
-RUN mkdir -p /data/storage && chown -R app:app /data /app
+RUN mkdir -p /data/storage /web-dist && chown -R app:app /data /web-dist /app
 USER app
 ENV RUN_MIGRATIONS=false
 ENV APP_ENV=production

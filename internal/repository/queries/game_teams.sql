@@ -14,11 +14,11 @@ SELECT * FROM game_teams WHERE team_id = $1;
 
 -- name: UpdateGameTeam :one
 UPDATE game_teams SET
-    ip_address = COALESCE($2, ip_address),
-    ctf01d_id = COALESCE($3, ctf01d_id),
-    ctf01d_overrides = COALESCE($4, ctf01d_overrides),
-    team_type = COALESCE($5, team_type),
-    "order" = COALESCE($6, "order"),
+    ip_address = COALESCE(sqlc.narg('ip_address'), ip_address),
+    ctf01d_id = COALESCE(sqlc.narg('ctf01d_id'), ctf01d_id),
+    ctf01d_overrides = COALESCE(sqlc.narg('ctf01d_overrides'), ctf01d_overrides),
+    team_type = COALESCE(sqlc.narg('team_type'), team_type),
+    "order" = COALESCE(sqlc.narg('order'), "order"),
     updated_at = now()
 WHERE id = $1
 RETURNING *;

@@ -600,7 +600,7 @@ func (h *Handler) HandleListServices(c *gin.Context) {
 	role, hasRole := middleware.CurrentRole(c)
 	isAdmin := hasRole && role == "admin"
 
-	if publicFilter == nil && !isAdmin {
+	if !isAdmin {
 		b := true
 		publicFilter = &b
 	}

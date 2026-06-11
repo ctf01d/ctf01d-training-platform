@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,7 +22,7 @@ import (
 )
 
 func init() {
-	ssrfCheckHost = func(string) error { return nil }
+	blockedIPCheck = func(net.IP) bool { return false }
 }
 
 type mockArchiveQuerier struct {
@@ -481,26 +482,57 @@ func TestPgtypeTz(t *testing.T) {
 	_ = zeroPgtype
 }
 
-func TestCheckURLHost_Blocked(t *testing.T) {
+func TestIsBlockedIP(t *testing.T) {
 	cases := []struct {
-		url string
-		ok  bool
+		ip string
+		ok bool
 	}{
-		{"http://127.0.0.1/secret", false},
-		{"http://localhost/secret", false},
-		{"http://10.0.0.1/secret", false},
-		{"http://192.168.1.1/secret", false},
-		{"http://172.16.0.1/secret", false},
-		{"http://169.254.169.254/metadata", false},
-		{"http://example.com/file.zip", true},
+		{"127.0.0.1", false},
+		{"::1", false},
+		{"10.0.0.1", false},
+		{"192.168.1.1", false},
+		{"172.16.0.1", false},
+		{"169.254.169.254", false},
+		{"0.0.0.1", false},
+		{"fd00::1", false},
+		{"fc00::1", false},
+		{"fe80::1", false},
+		{"::", false},
+		{"100.64.0.1", false},
+		{"100.127.255.254", false},
+		{"198.18.0.1", false},
+		{"198.19.255.254", false},
+		{"192.0.2.1", false},
+		{"198.51.100.1", false},
+		{"203.0.113.1", false},
+		{"2001:db8::1", false},
+		{"224.0.0.1", false},
+		{"239.255.255.255", false},
+		{"ff02::1", false},
+		{"240.0.0.1", false},
+		{"255.255.255.255", false},
+		{"192.0.0.1", false},
+		{"192.88.99.1", false},
+		{"64:ff9b:1::1", false},
+		{"100::1", false},
+		{"100:0:0:1::1", false},
+		{"2001:2::1", false},
+		{"2002:c0a8:101::", false},
+		{"3fff::1", false},
+		{"5f00::1", false},
+		{"93.184.216.34", true},
+		{"8.8.8.8", true},
+		{"1.1.1.1", true},
+		{"2606:4700:4700::1111", true},
+		{"2001:4860:4860::8888", true},
 	}
 	for _, tc := range cases {
-		err := checkURLHost(tc.url)
-		if tc.ok && err != nil {
-			t.Errorf("checkURLHost(%q): unexpected error: %v", tc.url, err)
+		blocked := isBlockedIP(net.ParseIP(tc.ip))
+		if tc.ok && blocked {
+			t.Errorf("isBlockedIP(%q): expected allowed, got blocked", tc.ip)
 		}
-		if !tc.ok && err == nil {
-			t.Errorf("checkURLHost(%q): expected blocked, got nil", tc.url)
+		if !tc.ok && !blocked {
+			t.Errorf("isBlockedIP(%q): expected blocked, got allowed", tc.ip)
 		}
 	}
 }

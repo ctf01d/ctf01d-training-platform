@@ -39,11 +39,11 @@ type CreateParams struct {
 }
 
 type UpdateParams struct {
-	IpAddress       *string         `json:"ip_address"`
-	Ctf01dID        *string         `json:"ctf01d_id"`
-	Ctf01dOverrides json.RawMessage `json:"ctf01d_overrides"`
-	TeamType        *string         `json:"team_type"`
-	Order           int32           `json:"order"`
+	IpAddress       *string          `json:"ip_address"`
+	Ctf01dID        *string          `json:"ctf01d_id"`
+	Ctf01dOverrides *json.RawMessage `json:"ctf01d_overrides"`
+	TeamType        *string          `json:"team_type"`
+	Order           *int32           `json:"order"`
 }
 
 type Querier interface {
@@ -117,14 +117,17 @@ func (s *Service) ListByGame(ctx context.Context, gameID int64) ([]GameTeam, err
 }
 
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*GameTeam, error) {
-	var order int32 = params.Order
+	var overrides []byte
+	if params.Ctf01dOverrides != nil {
+		overrides = []byte(*params.Ctf01dOverrides)
+	}
 	dbGT, err := s.q.UpdateGameTeam(ctx, db.UpdateGameTeamParams{
 		ID:              id,
 		IpAddress:       params.IpAddress,
 		Ctf01dID:        params.Ctf01dID,
-		Ctf01dOverrides: params.Ctf01dOverrides,
+		Ctf01dOverrides: overrides,
 		TeamType:        params.TeamType,
-		Order:           order,
+		Order:           params.Order,
 	})
 	if err != nil {
 		return nil, mapNotFound(err, "game_team")

@@ -40,7 +40,8 @@ services:
     volumes:
       - storage-data:/data/storage
       - web-dist:/web-dist
-    entrypoint: ["sh", "-c", "cp -r /app/web/dist/* /web-dist/ && ./ctf01d-server"]
+    user: "0:0"
+    entrypoint: ["sh", "-c", "cp -r /app/web/dist/. /web-dist/ && chown -R app:app /web-dist/ /data/storage && exec su-exec app:app ./ctf01d-server"]
 
   reverse-proxy:
     image: caddy:2

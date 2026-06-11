@@ -22,7 +22,7 @@ SELECT count(*) FROM users;
 -- name: UpdateUserProfile :one
 UPDATE users
 SET display_name = $2,
-    avatar_url = $3,
+    avatar_url = COALESCE($3, avatar_url),
     password_digest = COALESCE($4, password_digest),
     updated_at = now()
 WHERE id = $1

@@ -102,6 +102,7 @@ func run() error {
 	svcChecker := svcsvc.NewCheckerService(store.Queries, fileStorage)
 	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
 	ctf01dBuilder := ctf01dsvc.NewBuilder(store.Queries)
+	ctf01dBuilder.SetStorageDir(cfg.Storage.Dir)
 	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
 
 	engine := server.New(cfg, log, store, h)

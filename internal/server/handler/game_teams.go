@@ -101,17 +101,17 @@ func (h *Handler) HandleUpdateGameTeam(c *gin.Context) {
 		return
 	}
 
-	order := int32(0)
+	var order *int32
 	if req.Order != nil {
-		order = int32(*req.Order)
+		v := int32(*req.Order)
+		order = &v
 	}
 
-	var overrides json.RawMessage
+	var overrides *json.RawMessage
 	if req.Ctf01dOverrides != nil {
 		b, _ := json.Marshal(req.Ctf01dOverrides)
-		overrides = b
-	} else {
-		overrides = json.RawMessage("{}")
+		raw := json.RawMessage(b)
+		overrides = &raw
 	}
 
 	params := gameteamsvc.UpdateParams{

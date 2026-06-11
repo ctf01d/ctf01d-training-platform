@@ -186,12 +186,12 @@ RETURNING id, game_id, team_id, ip_address, ctf01d_id, ctf01d_overrides, team_ty
 `
 
 type UpdateGameTeamParams struct {
-	ID              int64           `json:"id"`
-	IpAddress       *string         `json:"ip_address"`
-	Ctf01dID        *string         `json:"ctf01d_id"`
-	Ctf01dOverrides json.RawMessage `json:"ctf01d_overrides"`
-	TeamType        *string         `json:"team_type"`
-	Order           int32           `json:"order"`
+	ID              int64   `json:"id"`
+	IpAddress       *string `json:"ip_address"`
+	Ctf01dID        *string `json:"ctf01d_id"`
+	Ctf01dOverrides []byte  `json:"ctf01d_overrides"`
+	TeamType        *string `json:"team_type"`
+	Order           *int32  `json:"order"`
 }
 
 func (q *Queries) UpdateGameTeam(ctx context.Context, arg UpdateGameTeamParams) (GameTeam, error) {

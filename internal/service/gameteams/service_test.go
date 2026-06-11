@@ -71,7 +71,9 @@ func (m *mockQuerier) UpdateGameTeam(_ context.Context, arg db.UpdateGameTeamPar
 	if arg.Ctf01dID != nil {
 		gt.Ctf01dID = arg.Ctf01dID
 	}
-	gt.Order = arg.Order
+	if arg.Order != nil {
+		gt.Order = *arg.Order
+	}
 	gt.UpdatedAt = time.Now()
 	m.items[arg.ID] = gt
 	return gt, nil
@@ -177,7 +179,8 @@ func TestUpdate(t *testing.T) {
 	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Order: 0})
 
 	newIP := "10.0.0.2"
-	gt, err := svc.Update(context.Background(), 1, UpdateParams{IpAddress: &newIP, Order: 5})
+	orderVal := int32(5)
+	gt, err := svc.Update(context.Background(), 1, UpdateParams{IpAddress: &newIP, Order: &orderVal})
 	if err != nil {
 		t.Fatalf("Update: %v", err)
 	}
