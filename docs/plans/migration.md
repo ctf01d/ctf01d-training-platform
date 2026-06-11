@@ -47,15 +47,15 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       LOG_LEVEL, CORS_ALLOWED_ORIGINS, STORAGE_DIR, STORAGE_MAX_UPLOAD_BYTES`.
 
 ### Task 2: Configuration package
-- [ ] `internal/config/config.go` со структурой `Config` через `github.com/ilyakaznacheev/cleanenv`:
+- [x] `internal/config/config.go` со структурой `Config` через `github.com/ilyakaznacheev/cleanenv`:
       `Env` (APP_ENV, default development), `HTTP.Addr` (HTTP_ADDR, default `:8080`),
       `DB.URL` (DATABASE_URL, default `postgres://postgres:postgres@localhost:5432/ctf01d_development?sslmode=disable`),
       `JWT.Secret` (JWT_SECRET), `JWT.TTLHours` (JWT_TTL_HOURS default 24),
       `Log.Level` (LOG_LEVEL default info), `CORS.AllowedOrigins` (CORS_ALLOWED_ORIGINS default
       `http://localhost:5173`), `Storage.Dir` (STORAGE_DIR default `./storage`),
       `Storage.MaxUploadBytes` (STORAGE_MAX_UPLOAD_BYTES default 209715200).
-- [ ] `Load() (*Config, error)`: в env `production` требует непустые JWT_SECRET и DATABASE_URL.
-- [ ] Тест `config_test.go` (через `t.Setenv`) на дефолты и required.
+- [x] `Load() (*Config, error)`: в env `production` требует непустые JWT_SECRET и DATABASE_URL.
+- [x] Тест `config_test.go` (через `t.Setenv`) на дефолты и required.
 
 ### Task 3: Logger and DB pool
 - [ ] `go get go.uber.org/zap`. `pkg/logger/logger.go`: `New(env, level string) (*zap.Logger, error)`
