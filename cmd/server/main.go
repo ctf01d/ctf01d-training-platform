@@ -13,6 +13,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
+	ctf01dsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/ctf01d"
 	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
 	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
@@ -76,7 +77,8 @@ func run() error {
 	svcArchives := svcsvc.NewArchiveService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
 	svcChecker := svcsvc.NewCheckerService(store.Queries)
 	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport)
+	ctf01dBuilder := ctf01dsvc.NewBuilder(store.Queries)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder)
 
 	engine := server.New(cfg, log, store, h)
 

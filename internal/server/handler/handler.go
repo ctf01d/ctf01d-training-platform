@@ -16,6 +16,7 @@ import (
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
 	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
+	ctf01dsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/ctf01d"
 	svcsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/services"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
@@ -40,6 +41,7 @@ type Handler struct {
 	svcArchives   *svcsvc.ArchiveService
 	svcChecker    *svcsvc.CheckerService
 	svcImport     *svcsvc.ImportService
+	ctf01dBuilder *ctf01dsvc.Builder
 }
 
 func New(
@@ -58,6 +60,7 @@ func New(
 	svcArchives *svcsvc.ArchiveService,
 	svcChecker *svcsvc.CheckerService,
 	svcImport *svcsvc.ImportService,
+	ctf01dBuilder *ctf01dsvc.Builder,
 ) *Handler {
 	return &Handler{
 		users:         users,
@@ -75,6 +78,7 @@ func New(
 		svcArchives:   svcArchives,
 		svcChecker:    svcChecker,
 		svcImport:     svcImport,
+		ctf01dBuilder: ctf01dBuilder,
 	}
 }
 
@@ -859,14 +863,6 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, importResultToHTTP(result))
-}
-
-func (h *Handler) HandleGetCtf01dExportOptions(c *gin.Context) {
-	notImplemented(c)
-}
-
-func (h *Handler) HandleExportCtf01d(c *gin.Context) {
-	notImplemented(c)
 }
 
 func (h *Handler) ListServices(c *gin.Context, params httpserver.ListServicesParams) {

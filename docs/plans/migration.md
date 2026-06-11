@@ -366,16 +366,16 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       archive/zip в память. Лимиты на скачивание/распаковку, проверка путей.
 
 ### Task 26: ctf01d builder, handlers, tests
-- [ ] `internal/service/ctf01d/builder.go`: `BuildParams(ctx, gameID, req)→(GameParams, ScoreboardParams,
+- [x] `internal/service/ctf01d/builder.go`: `BuildParams(ctx, gameID, req)→(GameParams, ScoreboardParams,
       []TeamParams, []CheckerParams, Options, warnings[], err)` — собрать из БД (game времена→UTC,
       game_teams→TeamParams через ip/ctf01d_id/order/overrides, связанные services→CheckerParams через
       локальные архивы + ctf01d_training/overrides);
       `BuildOptions(ctx, gameID)→(Ctf01dExportOptions, warnings, err)` (дефолты + warnings: команда без ip,
       сервис без локального архива, нет логотипа — портировать из `export_ctf01d_options`).
-- [ ] `internal/server/handler/ctf01d.go`: GetCtf01dExportOptions (JSON), ExportCtf01d (builder→exporter→
+- [x] `internal/server/handler/ctf01d.go`: GetCtf01dExportOptions (JSON), ExportCtf01d (builder→exporter→
       стрим zip с Content-Type application/zip + Content-Disposition; 422 с details при ошибках валидации).
       RBAC: RequireRole("player")/admin. Прокинуть сервис в Handler и main.
-- [ ] Фикстуры в `internal/service/ctf01d/testdata/` (bundle-zip сервиса, png-логотип, html-каталог).
+- [x] Фикстуры в `internal/service/ctf01d/testdata/` (bundle-zip сервиса, png-логотип, html-каталог).
       Unit-тесты exporter: распаковать сгенерированный zip и проверить data/config.yml (валидный YAML),
       data/html, логотипы, checker_<id>/, docker-compose.yml при include_compose. Тест builder на маппинг
       overrides/training и warnings.
