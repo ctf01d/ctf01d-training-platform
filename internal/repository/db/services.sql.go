@@ -14,17 +14,17 @@ import (
 
 const countServices = `-- name: CountServices :one
 SELECT count(*) FROM services
-WHERE ($1::boolean IS NULL OR public = $1)
-  AND ($2::text IS NULL OR name ILIKE '%' || $2 || '%')
+WHERE (public = $1 OR $1 IS NULL)
+  AND (name ILIKE '%' || $2 || '%' OR $2 IS NULL)
 `
 
 type CountServicesParams struct {
-	Column1 bool   `json:"column_1"`
-	Column2 string `json:"column_2"`
+	PublicFilter *bool   `json:"public_filter"`
+	SearchQuery  *string `json:"search_query"`
 }
 
 func (q *Queries) CountServices(ctx context.Context, arg CountServicesParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countServices, arg.Column1, arg.Column2)
+	row := q.db.QueryRow(ctx, countServices, arg.PublicFilter, arg.SearchQuery)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -186,25 +186,25 @@ func (q *Queries) GetServiceByName(ctx context.Context, name string) (Service, e
 
 const listServices = `-- name: ListServices :many
 SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training FROM services
-WHERE ($1::boolean IS NULL OR public = $1)
-  AND ($2::text IS NULL OR name ILIKE '%' || $2 || '%')
+WHERE (public = $3 OR $3 IS NULL)
+  AND (name ILIKE '%' || $4 || '%' OR $4 IS NULL)
 ORDER BY id
-LIMIT $3 OFFSET $4
+LIMIT $1 OFFSET $2
 `
 
 type ListServicesParams struct {
-	Column1 bool   `json:"column_1"`
-	Column2 string `json:"column_2"`
-	Limit   int32  `json:"limit"`
-	Offset  int32  `json:"offset"`
+	Limit        int32   `json:"limit"`
+	Offset       int32   `json:"offset"`
+	PublicFilter *bool   `json:"public_filter"`
+	SearchQuery  *string `json:"search_query"`
 }
 
 func (q *Queries) ListServices(ctx context.Context, arg ListServicesParams) ([]Service, error) {
 	rows, err := q.db.Query(ctx, listServices,
-		arg.Column1,
-		arg.Column2,
 		arg.Limit,
 		arg.Offset,
+		arg.PublicFilter,
+		arg.SearchQuery,
 	)
 	if err != nil {
 		return nil, err

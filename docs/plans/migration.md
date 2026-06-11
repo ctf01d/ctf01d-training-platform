@@ -311,10 +311,10 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       downloaded_at); SetCheckerLocal(...); SetArchiveURLs. `make sqlc-gen`.
 
 ### Task 22: Services core, archives, download
-- [ ] `internal/service/services/service.go`: CRUD + URL-валидация (порт `Service#validate_urls`:
+- [x] `internal/service/services/service.go`: CRUD + URL-валидация (порт `Service#validate_urls`:
       avatar_url допускает data:image, остальные валидный http(s)://); TogglePublic; маппинг скрывает
       private_description и локальные пути от не-admin; uniqueness name→conflict. Unit-тесты.
-- [ ] `internal/service/services/archives.go` (порт `archive_downloader.rb` + `service_archives.rb`):
+- [x] `internal/service/services/archives.go` (порт `archive_downloader.rb` + `service_archives.rb`):
       `Redownload(ctx,id)` (скачать service/checker архивы по URL с таймаутом, лимитом размера, проверкой
       zip; сохранить через Storage; записать local path/size/sha256/downloaded_at);
       `UploadArchives(ctx,id,serviceFile,checkerFile)` (сохранить загруженные, обновить метаданные);

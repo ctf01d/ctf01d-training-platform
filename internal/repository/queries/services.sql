@@ -13,15 +13,15 @@ SELECT * FROM services WHERE name = $1;
 
 -- name: ListServices :many
 SELECT * FROM services
-WHERE ($1::boolean IS NULL OR public = $1)
-  AND ($2::text IS NULL OR name ILIKE '%' || $2 || '%')
+WHERE (public = sqlc.narg('public_filter') OR sqlc.narg('public_filter') IS NULL)
+  AND (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL)
 ORDER BY id
-LIMIT $3 OFFSET $4;
+LIMIT $1 OFFSET $2;
 
 -- name: CountServices :one
 SELECT count(*) FROM services
-WHERE ($1::boolean IS NULL OR public = $1)
-  AND ($2::text IS NULL OR name ILIKE '%' || $2 || '%');
+WHERE (public = sqlc.narg('public_filter') OR sqlc.narg('public_filter') IS NULL)
+  AND (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL);
 
 -- name: UpdateService :one
 UPDATE services SET

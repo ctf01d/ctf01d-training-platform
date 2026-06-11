@@ -1,0 +1,412 @@
+package services
+
+import (
+	"context"
+	"encoding/json"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type ServiceModel struct {
+	ID                  int64
+	Name                string
+	PublicDescription   *string
+	PrivateDescription  *string
+	Author              *string
+	Copyright           *string
+	AvatarUrl           *string
+	Public              bool
+	ServiceArchiveUrl   *string
+	CheckerArchiveUrl   *string
+	WriteupUrl          *string
+	ExploitsUrl         *string
+	CheckStatus         string
+	CheckedAt           *time.Time
+	ServiceLocalPath    *string
+	ServiceLocalSize    *int32
+	ServiceLocalSha256  *string
+	ServiceDownloadedAt *time.Time
+	CheckerLocalPath    *string
+	CheckerLocalSize    *int32
+	CheckerLocalSha256  *string
+	CheckerDownloadedAt *time.Time
+	Ctf01dTraining      json.RawMessage
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+}
+
+type ServiceListResult struct {
+	Items   []ServiceModel
+	Page    int
+	PerPage int
+	Total   int64
+}
+
+type CreateParams struct {
+	Name               string
+	PublicDescription  *string
+	PrivateDescription *string
+	Author             *string
+	Copyright          *string
+	AvatarUrl          *string
+	Public             bool
+	ServiceArchiveUrl  *string
+	CheckerArchiveUrl  *string
+	WriteupUrl         *string
+	ExploitsUrl        *string
+	Ctf01dTraining     json.RawMessage
+}
+
+type UpdateParams struct {
+	Name               *string
+	PublicDescription  *string
+	PrivateDescription *string
+	Author             *string
+	Copyright          *string
+	AvatarUrl          *string
+	Public             *bool
+	ServiceArchiveUrl  *string
+	CheckerArchiveUrl  *string
+	WriteupUrl         *string
+	ExploitsUrl        *string
+	Ctf01dTraining     json.RawMessage
+}
+
+type Querier interface {
+	CreateService(ctx context.Context, arg db.CreateServiceParams) (db.Service, error)
+	GetServiceByID(ctx context.Context, id int64) (db.Service, error)
+	ListServices(ctx context.Context, arg db.ListServicesParams) ([]db.Service, error)
+	CountServices(ctx context.Context, arg db.CountServicesParams) (int64, error)
+	UpdateService(ctx context.Context, arg db.UpdateServiceParams) (db.Service, error)
+	DeleteService(ctx context.Context, id int64) error
+	SetPublic(ctx context.Context, arg db.SetPublicParams) (db.Service, error)
+}
+
+type Service struct {
+	q Querier
+}
+
+func NewService(q Querier) *Service {
+	return &Service{q: q}
+}
+
+func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool) (*ServiceModel, error) {
+	if err := validateServiceURLs(params.AvatarUrl, params.ServiceArchiveUrl, params.CheckerArchiveUrl, params.WriteupUrl, params.ExploitsUrl); err != nil {
+		return nil, err
+	}
+
+	training := params.Ctf01dTraining
+	if training == nil {
+		training = json.RawMessage("{}")
+	}
+
+	dbSvc, err := s.q.CreateService(ctx, db.CreateServiceParams{
+		Name:               params.Name,
+		PublicDescription:  params.PublicDescription,
+		PrivateDescription: params.PrivateDescription,
+		Author:             params.Author,
+		Copyright:          params.Copyright,
+		AvatarUrl:          params.AvatarUrl,
+		Public:             params.Public,
+		ServiceArchiveUrl:  params.ServiceArchiveUrl,
+		CheckerArchiveUrl:  params.CheckerArchiveUrl,
+		WriteupUrl:         params.WriteupUrl,
+		ExploitsUrl:        params.ExploitsUrl,
+		CheckStatus:        "unknown",
+		Ctf01dTraining:     training,
+	})
+	if err != nil {
+		return nil, mapDBError(err)
+	}
+
+	svc := fromDB(dbSvc, isAdmin)
+	return &svc, nil
+}
+
+func (s *Service) GetByID(ctx context.Context, id int64, isAdmin bool) (*ServiceModel, error) {
+	dbSvc, err := s.q.GetServiceByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err, "service")
+	}
+	svc := fromDB(dbSvc, isAdmin)
+	return &svc, nil
+}
+
+func (s *Service) List(ctx context.Context, page, perPage int, publicFilter *bool, query *string, isAdmin bool) (*ServiceListResult, error) {
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 100 {
+		perPage = 20
+	}
+
+	offset := int32((page - 1) * perPage)
+	limit := int32(perPage)
+
+	items, err := s.q.ListServices(ctx, db.ListServicesParams{
+		PublicFilter: publicFilter,
+		SearchQuery:  query,
+		Limit:        limit,
+		Offset:       offset,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := s.q.CountServices(ctx, db.CountServicesParams{
+		PublicFilter: publicFilter,
+		SearchQuery:  query,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	result := &ServiceListResult{
+		Items:   make([]ServiceModel, len(items)),
+		Page:    page,
+		PerPage: perPage,
+		Total:   total,
+	}
+	for i, item := range items {
+		result.Items[i] = fromDB(item, isAdmin)
+	}
+	return result, nil
+}
+
+func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isAdmin bool) (*ServiceModel, error) {
+	current, err := s.q.GetServiceByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err, "service")
+	}
+
+	avatarUrl := current.AvatarUrl
+	if params.AvatarUrl != nil {
+		avatarUrl = params.AvatarUrl
+	}
+	serviceArchiveUrl := current.ServiceArchiveUrl
+	if params.ServiceArchiveUrl != nil {
+		serviceArchiveUrl = params.ServiceArchiveUrl
+	}
+	checkerArchiveUrl := current.CheckerArchiveUrl
+	if params.CheckerArchiveUrl != nil {
+		checkerArchiveUrl = params.CheckerArchiveUrl
+	}
+	writeupUrl := current.WriteupUrl
+	if params.WriteupUrl != nil {
+		writeupUrl = params.WriteupUrl
+	}
+	exploitsUrl := current.ExploitsUrl
+	if params.ExploitsUrl != nil {
+		exploitsUrl = params.ExploitsUrl
+	}
+
+	if err := validateServiceURLs(avatarUrl, serviceArchiveUrl, checkerArchiveUrl, writeupUrl, exploitsUrl); err != nil {
+		return nil, err
+	}
+
+	name := current.Name
+	if params.Name != nil {
+		name = *params.Name
+	}
+	public := current.Public
+	if params.Public != nil {
+		public = *params.Public
+	}
+	training := current.Ctf01dTraining
+	if params.Ctf01dTraining != nil {
+		training = params.Ctf01dTraining
+	}
+
+	dbSvc, err := s.q.UpdateService(ctx, db.UpdateServiceParams{
+		ID:                 id,
+		Name:               name,
+		PublicDescription:  params.PublicDescription,
+		PrivateDescription: params.PrivateDescription,
+		Author:             params.Author,
+		Copyright:          params.Copyright,
+		AvatarUrl:          params.AvatarUrl,
+		Public:             public,
+		ServiceArchiveUrl:  params.ServiceArchiveUrl,
+		CheckerArchiveUrl:  params.CheckerArchiveUrl,
+		WriteupUrl:         params.WriteupUrl,
+		ExploitsUrl:        params.ExploitsUrl,
+		Ctf01dTraining:     training,
+	})
+	if err != nil {
+		return nil, mapDBError(err)
+	}
+
+	svc := fromDB(dbSvc, isAdmin)
+	return &svc, nil
+}
+
+func (s *Service) Delete(ctx context.Context, id int64) error {
+	return s.q.DeleteService(ctx, id)
+}
+
+func (s *Service) TogglePublic(ctx context.Context, id int64, isAdmin bool) (*ServiceModel, error) {
+	current, err := s.q.GetServiceByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err, "service")
+	}
+
+	dbSvc, err := s.q.SetPublic(ctx, db.SetPublicParams{
+		ID:     id,
+		Public: !current.Public,
+	})
+	if err != nil {
+		return nil, mapDBError(err)
+	}
+
+	svc := fromDB(dbSvc, isAdmin)
+	return &svc, nil
+}
+
+func fromDB(s db.Service, isAdmin bool) ServiceModel {
+	m := ServiceModel{
+		ID:                s.ID,
+		Name:              s.Name,
+		PublicDescription: s.PublicDescription,
+		Author:            s.Author,
+		Copyright:         s.Copyright,
+		AvatarUrl:         s.AvatarUrl,
+		Public:            s.Public,
+		ServiceArchiveUrl: s.ServiceArchiveUrl,
+		CheckerArchiveUrl: s.CheckerArchiveUrl,
+		WriteupUrl:        s.WriteupUrl,
+		ExploitsUrl:       s.ExploitsUrl,
+		CheckStatus:       s.CheckStatus,
+		Ctf01dTraining:    s.Ctf01dTraining,
+		CreatedAt:         s.CreatedAt,
+		UpdatedAt:         s.UpdatedAt,
+	}
+
+	if s.PrivateDescription != nil {
+		m.PrivateDescription = s.PrivateDescription
+	}
+	if s.CheckedAt.Valid {
+		m.CheckedAt = &s.CheckedAt.Time
+	}
+	if s.ServiceLocalPath != nil {
+		m.ServiceLocalPath = s.ServiceLocalPath
+	}
+	if s.ServiceLocalSize != nil {
+		m.ServiceLocalSize = s.ServiceLocalSize
+	}
+	if s.ServiceLocalSha256 != nil {
+		m.ServiceLocalSha256 = s.ServiceLocalSha256
+	}
+	if s.ServiceDownloadedAt.Valid {
+		m.ServiceDownloadedAt = &s.ServiceDownloadedAt.Time
+	}
+	if s.CheckerLocalPath != nil {
+		m.CheckerLocalPath = s.CheckerLocalPath
+	}
+	if s.CheckerLocalSize != nil {
+		m.CheckerLocalSize = s.CheckerLocalSize
+	}
+	if s.CheckerLocalSha256 != nil {
+		m.CheckerLocalSha256 = s.CheckerLocalSha256
+	}
+	if s.CheckerDownloadedAt.Valid {
+		m.CheckerDownloadedAt = &s.CheckerDownloadedAt.Time
+	}
+
+	if !isAdmin {
+		m.PrivateDescription = nil
+		m.ServiceLocalPath = nil
+		m.ServiceLocalSize = nil
+		m.ServiceLocalSha256 = nil
+		m.ServiceDownloadedAt = nil
+		m.CheckerLocalPath = nil
+		m.CheckerLocalSize = nil
+		m.CheckerLocalSha256 = nil
+		m.CheckerDownloadedAt = nil
+	}
+
+	return m
+}
+
+func validHTTPURL(s string) bool {
+	u, err := url.Parse(s)
+	if err != nil {
+		return false
+	}
+	return u.Scheme == "http" || u.Scheme == "https"
+}
+
+func validAvatarURL(s string) bool {
+	if strings.HasPrefix(s, "data:image") {
+		return true
+	}
+	return validHTTPURL(s)
+}
+
+func validateServiceURLs(avatarUrl, serviceArchiveUrl, checkerArchiveUrl, writeupUrl, exploitsUrl *string) error {
+	fields := make(map[string]string)
+
+	if avatarUrl != nil && *avatarUrl != "" && !validAvatarURL(*avatarUrl) {
+		fields["avatar_url"] = "must be a valid http(s) URL or data:image URI"
+	}
+
+	urlFields := map[string]*string{
+		"service_archive_url": serviceArchiveUrl,
+		"checker_archive_url": checkerArchiveUrl,
+		"writeup_url":         writeupUrl,
+		"exploits_url":        exploitsUrl,
+	}
+	for field, val := range urlFields {
+		if val != nil && *val != "" && !validHTTPURL(*val) {
+			fields[field] = "must be a valid http(s) URL"
+		}
+	}
+
+	if len(fields) > 0 {
+		return errs.NewValidationError(fields)
+	}
+	return nil
+}
+
+func mapNotFound(err error, entity string) error {
+	if isNoRows(err) {
+		return errs.ErrNotFound
+	}
+	return err
+}
+
+func mapDBError(err error) error {
+	if isDuplicateKey(err) {
+		return errs.ErrConflict
+	}
+	return err
+}
+
+func isNoRows(err error) bool {
+	return err != nil && err.Error() == "no rows in result set"
+}
+
+func isDuplicateKey(err error) bool {
+	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "violates unique"))
+}
+
+func contains(s, sub string) bool {
+	return len(s) >= len(sub) && searchString(s, sub)
+}
+
+func searchString(s, sub string) bool {
+	for i := 0; i <= len(s)-len(sub); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}
+
+func pgtypeTz(t time.Time) pgtype.Timestamptz {
+	return pgtype.Timestamptz{Time: t, Valid: true}
+}
