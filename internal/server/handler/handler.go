@@ -386,4 +386,92 @@ func (h *Handler) SetTeamMembershipRole(c *gin.Context, id int64) {
 	h.HandleSetTeamMembershipRole(c)
 }
 
+func (h *Handler) ListGames(c *gin.Context, params httpserver.ListGamesParams) {
+	notImplemented(c)
+}
+
+func (h *Handler) CreateGame(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetGame(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UpdateGame(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeleteGame(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) FinalizeGame(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UnfinalizeGame(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ListGameServices(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) AddGameService(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) RemoveGameService(c *gin.Context, id int64, serviceId int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ListGameTeams(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ReorderGameTeams(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) CreateGameTeam(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) UpdateGameTeam(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeleteGameTeam(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) ListResults(c *gin.Context, params httpserver.ListResultsParams) {
+	notImplemented(c)
+}
+
+func (h *Handler) CreateResult(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetResult(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) UpdateResult(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) DeleteResult(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetGameScoreboard(c *gin.Context, id int64) {
+	notImplemented(c)
+}
+
+func (h *Handler) GetGlobalScoreboard(c *gin.Context) {
+	notImplemented(c)
+}
+
 var _ httpserver.ServerInterface = (*Handler)(nil)

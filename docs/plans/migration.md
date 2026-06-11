@@ -249,23 +249,23 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       captain_id)→сторонний join-request→approve→список членов и события→управление не-управляющим→403.
 
 ### Task 18: Games status logic, fragments and queries
-- [ ] `internal/service/games/status.go`: чистые функции `ComputeStatus(startsAt,endsAt,now)`
+- [x] `internal/service/games/status.go`: чистые функции `ComputeStatus(startsAt,endsAt,now)`
       (upcoming/ongoing/past/unknown), `ComputeRegistrationStatus(opens,closes,now)`
       (unscheduled/upcoming/open/closed), `ComputeScoreboardStatus(opens,closes,now)`
       (always/upcoming/open/closed) — портировать из `app/models/game.rb` 1:1. Unit-тесты всех веток.
-- [ ] `api/fragments/games.yaml`: Game (все поля schema.rb + read-only status/registration_status/
+- [x] `api/fragments/games.yaml`: Game (все поля schema.rb + read-only status/registration_status/
       scoreboard_status; access_secret отдавать только admin/управляющим), GameCreate/Update/List;
       CRUD `/games` + `GET/POST /games/{id}/services`, `DELETE /games/{id}/services/{service_id}`,
       `POST /games/{id}/finalize`, `POST /games/{id}/unfinalize`.
-- [ ] `api/fragments/game-teams.yaml`: GameTeam (id, game_id, team_id, ip_address, ctf01d_id,
+- [x] `api/fragments/game-teams.yaml`: GameTeam (id, game_id, team_id, ip_address, ctf01d_id,
       ctf01d_overrides object, team_type, order, timestamps), GameTeamCreate/Update/List; пути
       `GET /games/{id}/teams`, `POST /game-teams`, `PATCH /game-teams/{id}`, `DELETE /game-teams/{id}`,
       `POST /games/{id}/teams/reorder` (body [{id,order}]).
-- [ ] `api/fragments/results.yaml`: Result, ResultCreate/Update/List; CRUD `/results`.
-- [ ] `api/fragments/scoreboard.yaml`: ScoreboardEntry (team_id, team_name, score, position),
+- [x] `api/fragments/results.yaml`: Result, ResultCreate/Update/List; CRUD `/results`.
+- [x] `api/fragments/scoreboard.yaml`: ScoreboardEntry (team_id, team_name, score, position),
       Scoreboard (game_id, status, entries[]); `GET /games/{id}/scoreboard` (public, с учётом окна) и
       `GET /scoreboard` (общий рейтинг). `make openapi`.
-- [ ] Queries: `games.sql` (CRUD + SetFinalized), `games_services.sql` (AddService ON CONFLICT DO NOTHING,
+- [x] Queries: `games.sql` (CRUD + SetFinalized), `games_services.sql` (AddService ON CONFLICT DO NOTHING,
       RemoveService, ListServicesByGame), `game_teams.sql` (CRUD + ListByGame ORDER BY "order",id +
       UpdateOrder), `results.sql` (CRUD + ListByGame ORDER BY score DESC + UpsertResult),
       `final_results.sql` (DeleteByGame, InsertFinalResult, ListByGame). `make sqlc-gen`.

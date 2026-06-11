@@ -1,0 +1,460 @@
+tags:
+  - name: games
+    description: Game management
+
+components:
+  schemas:
+    Game:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - finalized
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+              nullable: true
+            organizer:
+              type: string
+              nullable: true
+            starts_at:
+              type: string
+              format: date-time
+              nullable: true
+            ends_at:
+              type: string
+              format: date-time
+              nullable: true
+            avatar_url:
+              type: string
+              nullable: true
+            site_url:
+              type: string
+              nullable: true
+            ctftime_url:
+              type: string
+              nullable: true
+            finalized:
+              type: boolean
+            finalized_at:
+              type: string
+              format: date-time
+              nullable: true
+            registration_opens_at:
+              type: string
+              format: date-time
+              nullable: true
+            registration_closes_at:
+              type: string
+              format: date-time
+              nullable: true
+            scoreboard_opens_at:
+              type: string
+              format: date-time
+              nullable: true
+            scoreboard_closes_at:
+              type: string
+              format: date-time
+              nullable: true
+            vpn_url:
+              type: string
+              nullable: true
+            vpn_config_url:
+              type: string
+              nullable: true
+            access_instructions:
+              type: string
+              nullable: true
+            access_secret:
+              type: string
+              nullable: true
+            status:
+              type: string
+              enum:
+                - upcoming
+                - ongoing
+                - past
+                - unknown
+              readOnly: true
+            registration_status:
+              type: string
+              enum:
+                - unscheduled
+                - upcoming
+                - open
+                - closed
+              readOnly: true
+            scoreboard_status:
+              type: string
+              enum:
+                - always
+                - upcoming
+                - open
+                - closed
+              readOnly: true
+    GameCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        organizer:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        avatar_url:
+          type: string
+        site_url:
+          type: string
+        ctftime_url:
+          type: string
+        registration_opens_at:
+          type: string
+          format: date-time
+        registration_closes_at:
+          type: string
+          format: date-time
+        scoreboard_opens_at:
+          type: string
+          format: date-time
+        scoreboard_closes_at:
+          type: string
+          format: date-time
+        vpn_url:
+          type: string
+        vpn_config_url:
+          type: string
+        access_instructions:
+          type: string
+        access_secret:
+          type: string
+    GameUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        organizer:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        avatar_url:
+          type: string
+        site_url:
+          type: string
+        ctftime_url:
+          type: string
+        registration_opens_at:
+          type: string
+          format: date-time
+        registration_closes_at:
+          type: string
+          format: date-time
+        scoreboard_opens_at:
+          type: string
+          format: date-time
+        scoreboard_closes_at:
+          type: string
+          format: date-time
+        vpn_url:
+          type: string
+        vpn_config_url:
+          type: string
+        access_instructions:
+          type: string
+        access_secret:
+          type: string
+    GameList:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Game'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+paths:
+  /games:
+    get:
+      operationId: listGames
+      tags:
+        - games
+      summary: List games
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: List of games
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createGame
+      tags:
+        - games
+      summary: Create a game
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameCreate'
+      responses:
+        '201':
+          description: Game created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /games/{id}:
+    get:
+      operationId: getGame
+      tags:
+        - games
+      summary: Get a game by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Game details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateGame
+      tags:
+        - games
+      summary: Update a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameUpdate'
+      responses:
+        '200':
+          description: Game updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteGame
+      tags:
+        - games
+      summary: Delete a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Game deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /games/{id}/services:
+    get:
+      operationId: listGameServices
+      tags:
+        - games
+      summary: List services linked to a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of service IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: addGameService
+      tags:
+        - games
+      summary: Link a service to a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - service_id
+              properties:
+                service_id:
+                  type: integer
+                  format: int64
+      responses:
+        '200':
+          description: Service linked
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /games/{id}/services/{service_id}:
+    delete:
+      operationId: removeGameService
+      tags:
+        - games
+      summary: Unlink a service from a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Service unlinked
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /games/{id}/finalize:
+    post:
+      operationId: finalizeGame
+      tags:
+        - games
+      summary: Finalize game results
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Game finalized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /games/{id}/unfinalize:
+    post:
+      operationId: unfinalizeGame
+      tags:
+        - games
+      summary: Unfinalize game results
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Game unfinalized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'

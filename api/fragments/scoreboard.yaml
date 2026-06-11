@@ -1,0 +1,109 @@
+tags:
+  - name: scoreboard
+    description: Scoreboard views
+
+components:
+  schemas:
+    ScoreboardEntry:
+      type: object
+      required:
+        - team_id
+        - team_name
+        - score
+        - position
+      properties:
+        team_id:
+          type: integer
+          format: int64
+        team_name:
+          type: string
+        score:
+          type: integer
+        position:
+          type: integer
+    Scoreboard:
+      type: object
+      required:
+        - game_id
+        - status
+        - entries
+      properties:
+        game_id:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+            - always
+            - upcoming
+            - open
+            - closed
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScoreboardEntry'
+    GlobalScoreboard:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            required:
+              - team_id
+              - team_name
+              - total_score
+            properties:
+              team_id:
+                type: integer
+                format: int64
+              team_name:
+                type: string
+              total_score:
+                type: integer
+
+paths:
+  /games/{id}/scoreboard:
+    get:
+      operationId: getGameScoreboard
+      tags:
+        - scoreboard
+      summary: Get scoreboard for a game
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Game scoreboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scoreboard'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /scoreboard:
+    get:
+      operationId: getGlobalScoreboard
+      tags:
+        - scoreboard
+      summary: Get global scoreboard
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Global scoreboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalScoreboard'
+        '401':
+          $ref: '#/components/responses/Unauthorized'

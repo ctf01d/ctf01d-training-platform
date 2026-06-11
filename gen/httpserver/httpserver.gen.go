@@ -23,6 +23,102 @@ const (
 	BearerAuthScopes bearerAuthContextKey = "BearerAuth.Scopes"
 )
 
+// Defines values for GameRegistrationStatus.
+const (
+	GameRegistrationStatusClosed      GameRegistrationStatus = "closed"
+	GameRegistrationStatusOpen        GameRegistrationStatus = "open"
+	GameRegistrationStatusUnscheduled GameRegistrationStatus = "unscheduled"
+	GameRegistrationStatusUpcoming    GameRegistrationStatus = "upcoming"
+)
+
+// Valid indicates whether the value is a known member of the GameRegistrationStatus enum.
+func (e GameRegistrationStatus) Valid() bool {
+	switch e {
+	case GameRegistrationStatusClosed:
+		return true
+	case GameRegistrationStatusOpen:
+		return true
+	case GameRegistrationStatusUnscheduled:
+		return true
+	case GameRegistrationStatusUpcoming:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GameScoreboardStatus.
+const (
+	GameScoreboardStatusAlways   GameScoreboardStatus = "always"
+	GameScoreboardStatusClosed   GameScoreboardStatus = "closed"
+	GameScoreboardStatusOpen     GameScoreboardStatus = "open"
+	GameScoreboardStatusUpcoming GameScoreboardStatus = "upcoming"
+)
+
+// Valid indicates whether the value is a known member of the GameScoreboardStatus enum.
+func (e GameScoreboardStatus) Valid() bool {
+	switch e {
+	case GameScoreboardStatusAlways:
+		return true
+	case GameScoreboardStatusClosed:
+		return true
+	case GameScoreboardStatusOpen:
+		return true
+	case GameScoreboardStatusUpcoming:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GameStatus.
+const (
+	GameStatusOngoing  GameStatus = "ongoing"
+	GameStatusPast     GameStatus = "past"
+	GameStatusUnknown  GameStatus = "unknown"
+	GameStatusUpcoming GameStatus = "upcoming"
+)
+
+// Valid indicates whether the value is a known member of the GameStatus enum.
+func (e GameStatus) Valid() bool {
+	switch e {
+	case GameStatusOngoing:
+		return true
+	case GameStatusPast:
+		return true
+	case GameStatusUnknown:
+		return true
+	case GameStatusUpcoming:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ScoreboardStatus.
+const (
+	ScoreboardStatusAlways   ScoreboardStatus = "always"
+	ScoreboardStatusClosed   ScoreboardStatus = "closed"
+	ScoreboardStatusOpen     ScoreboardStatus = "open"
+	ScoreboardStatusUpcoming ScoreboardStatus = "upcoming"
+)
+
+// Valid indicates whether the value is a known member of the ScoreboardStatus enum.
+func (e ScoreboardStatus) Valid() bool {
+	switch e {
+	case ScoreboardStatusAlways:
+		return true
+	case ScoreboardStatusClosed:
+		return true
+	case ScoreboardStatusOpen:
+		return true
+	case ScoreboardStatusUpcoming:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SetRoleRequestRole.
 const (
 	SetRoleRequestRoleCaptain     SetRoleRequestRole = "captain"
@@ -243,6 +339,134 @@ type Error struct {
 	Message string                  `json:"message"`
 }
 
+// Game defines model for Game.
+type Game struct {
+	AccessInstructions   *string                 `json:"access_instructions,omitempty"`
+	AccessSecret         *string                 `json:"access_secret,omitempty"`
+	AvatarUrl            *string                 `json:"avatar_url,omitempty"`
+	CreatedAt            *time.Time              `json:"created_at,omitempty"`
+	CtftimeUrl           *string                 `json:"ctftime_url,omitempty"`
+	EndsAt               *time.Time              `json:"ends_at,omitempty"`
+	Finalized            bool                    `json:"finalized"`
+	FinalizedAt          *time.Time              `json:"finalized_at,omitempty"`
+	Id                   int64                   `json:"id"`
+	Name                 *string                 `json:"name,omitempty"`
+	Organizer            *string                 `json:"organizer,omitempty"`
+	RegistrationClosesAt *time.Time              `json:"registration_closes_at,omitempty"`
+	RegistrationOpensAt  *time.Time              `json:"registration_opens_at,omitempty"`
+	RegistrationStatus   *GameRegistrationStatus `json:"registration_status,omitempty"`
+	ScoreboardClosesAt   *time.Time              `json:"scoreboard_closes_at,omitempty"`
+	ScoreboardOpensAt    *time.Time              `json:"scoreboard_opens_at,omitempty"`
+	ScoreboardStatus     *GameScoreboardStatus   `json:"scoreboard_status,omitempty"`
+	SiteUrl              *string                 `json:"site_url,omitempty"`
+	StartsAt             *time.Time              `json:"starts_at,omitempty"`
+	Status               *GameStatus             `json:"status,omitempty"`
+	UpdatedAt            *time.Time              `json:"updated_at,omitempty"`
+	VpnConfigUrl         *string                 `json:"vpn_config_url,omitempty"`
+	VpnUrl               *string                 `json:"vpn_url,omitempty"`
+}
+
+// GameRegistrationStatus defines model for Game.RegistrationStatus.
+type GameRegistrationStatus string
+
+// GameScoreboardStatus defines model for Game.ScoreboardStatus.
+type GameScoreboardStatus string
+
+// GameStatus defines model for Game.Status.
+type GameStatus string
+
+// GameCreate defines model for GameCreate.
+type GameCreate struct {
+	AccessInstructions   *string    `json:"access_instructions,omitempty"`
+	AccessSecret         *string    `json:"access_secret,omitempty"`
+	AvatarUrl            *string    `json:"avatar_url,omitempty"`
+	CtftimeUrl           *string    `json:"ctftime_url,omitempty"`
+	EndsAt               *time.Time `json:"ends_at,omitempty"`
+	Name                 *string    `json:"name,omitempty"`
+	Organizer            *string    `json:"organizer,omitempty"`
+	RegistrationClosesAt *time.Time `json:"registration_closes_at,omitempty"`
+	RegistrationOpensAt  *time.Time `json:"registration_opens_at,omitempty"`
+	ScoreboardClosesAt   *time.Time `json:"scoreboard_closes_at,omitempty"`
+	ScoreboardOpensAt    *time.Time `json:"scoreboard_opens_at,omitempty"`
+	SiteUrl              *string    `json:"site_url,omitempty"`
+	StartsAt             *time.Time `json:"starts_at,omitempty"`
+	VpnConfigUrl         *string    `json:"vpn_config_url,omitempty"`
+	VpnUrl               *string    `json:"vpn_url,omitempty"`
+}
+
+// GameList defines model for GameList.
+type GameList struct {
+	Items      []Game     `json:"items"`
+	Pagination Pagination `json:"pagination"`
+}
+
+// GameTeam defines model for GameTeam.
+type GameTeam struct {
+	CreatedAt       *time.Time              `json:"created_at,omitempty"`
+	Ctf01dId        *string                 `json:"ctf01d_id,omitempty"`
+	Ctf01dOverrides *map[string]interface{} `json:"ctf01d_overrides,omitempty"`
+	GameId          int64                   `json:"game_id"`
+	Id              int64                   `json:"id"`
+	IpAddress       *string                 `json:"ip_address,omitempty"`
+	Order           int                     `json:"order"`
+	TeamId          int64                   `json:"team_id"`
+	TeamType        *string                 `json:"team_type,omitempty"`
+	UpdatedAt       *time.Time              `json:"updated_at,omitempty"`
+}
+
+// GameTeamCreate defines model for GameTeamCreate.
+type GameTeamCreate struct {
+	Ctf01dId        *string                 `json:"ctf01d_id,omitempty"`
+	Ctf01dOverrides *map[string]interface{} `json:"ctf01d_overrides,omitempty"`
+	GameId          int64                   `json:"game_id"`
+	IpAddress       *string                 `json:"ip_address,omitempty"`
+	Order           *int                    `json:"order,omitempty"`
+	TeamId          int64                   `json:"team_id"`
+	TeamType        *string                 `json:"team_type,omitempty"`
+}
+
+// GameTeamList defines model for GameTeamList.
+type GameTeamList struct {
+	Items []GameTeam `json:"items"`
+}
+
+// GameTeamUpdate defines model for GameTeamUpdate.
+type GameTeamUpdate struct {
+	Ctf01dId        *string                 `json:"ctf01d_id,omitempty"`
+	Ctf01dOverrides *map[string]interface{} `json:"ctf01d_overrides,omitempty"`
+	IpAddress       *string                 `json:"ip_address,omitempty"`
+	Order           *int                    `json:"order,omitempty"`
+	TeamType        *string                 `json:"team_type,omitempty"`
+}
+
+// GameUpdate defines model for GameUpdate.
+type GameUpdate struct {
+	AccessInstructions   *string    `json:"access_instructions,omitempty"`
+	AccessSecret         *string    `json:"access_secret,omitempty"`
+	AvatarUrl            *string    `json:"avatar_url,omitempty"`
+	CtftimeUrl           *string    `json:"ctftime_url,omitempty"`
+	EndsAt               *time.Time `json:"ends_at,omitempty"`
+	Name                 *string    `json:"name,omitempty"`
+	Organizer            *string    `json:"organizer,omitempty"`
+	RegistrationClosesAt *time.Time `json:"registration_closes_at,omitempty"`
+	RegistrationOpensAt  *time.Time `json:"registration_opens_at,omitempty"`
+	ScoreboardClosesAt   *time.Time `json:"scoreboard_closes_at,omitempty"`
+	ScoreboardOpensAt    *time.Time `json:"scoreboard_opens_at,omitempty"`
+	SiteUrl              *string    `json:"site_url,omitempty"`
+	StartsAt             *time.Time `json:"starts_at,omitempty"`
+	VpnConfigUrl         *string    `json:"vpn_config_url,omitempty"`
+	VpnUrl               *string    `json:"vpn_url,omitempty"`
+}
+
+// GlobalScoreboard defines model for GlobalScoreboard.
+type GlobalScoreboard struct {
+	Entries []struct {
+		TeamId     int64  `json:"team_id"`
+		TeamName   string `json:"team_name"`
+		TotalScore int    `json:"total_score"`
+	} `json:"entries"`
+}
+
 // InviteRequest defines model for InviteRequest.
 type InviteRequest struct {
 	UserId int64 `json:"user_id"`
@@ -265,6 +489,59 @@ type Pagination struct {
 	Page    int `json:"page"`
 	PerPage int `json:"per_page"`
 	Total   int `json:"total"`
+}
+
+// ReorderRequest defines model for ReorderRequest.
+type ReorderRequest struct {
+	Items []struct {
+		Id    int64 `json:"id"`
+		Order int   `json:"order"`
+	} `json:"items"`
+}
+
+// Result defines model for Result.
+type Result struct {
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	GameId    int64      `json:"game_id"`
+	Id        int64      `json:"id"`
+	Score     *int       `json:"score,omitempty"`
+	TeamId    int64      `json:"team_id"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
+// ResultCreate defines model for ResultCreate.
+type ResultCreate struct {
+	GameId int64 `json:"game_id"`
+	Score  *int  `json:"score,omitempty"`
+	TeamId int64 `json:"team_id"`
+}
+
+// ResultList defines model for ResultList.
+type ResultList struct {
+	Items []Result `json:"items"`
+}
+
+// ResultUpdate defines model for ResultUpdate.
+type ResultUpdate struct {
+	Score *int `json:"score,omitempty"`
+}
+
+// Scoreboard defines model for Scoreboard.
+type Scoreboard struct {
+	Entries []ScoreboardEntry `json:"entries"`
+	GameId  int64             `json:"game_id"`
+	Status  ScoreboardStatus  `json:"status"`
+}
+
+// ScoreboardStatus defines model for Scoreboard.Status.
+type ScoreboardStatus string
+
+// ScoreboardEntry defines model for ScoreboardEntry.
+type ScoreboardEntry struct {
+	Position int    `json:"position"`
+	Score    int    `json:"score"`
+	TeamId   int64  `json:"team_id"`
+	TeamName string `json:"team_name"`
 }
 
 // SetRoleRequest defines model for SetRoleRequest.
@@ -482,6 +759,23 @@ type ValidationError = Error
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
 
+// ListGamesParams defines parameters for ListGames.
+type ListGamesParams struct {
+	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// AddGameServiceJSONBody defines parameters for AddGameService.
+type AddGameServiceJSONBody struct {
+	ServiceId int64 `json:"service_id"`
+}
+
+// ListResultsParams defines parameters for ListResults.
+type ListResultsParams struct {
+	GameId *int64 `form:"game_id,omitempty" json:"game_id,omitempty"`
+	TeamId *int64 `form:"team_id,omitempty" json:"team_id,omitempty"`
+}
+
 // ListTeamMembershipsParams defines parameters for ListTeamMemberships.
 type ListTeamMembershipsParams struct {
 	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
@@ -512,8 +806,32 @@ type ListUsersParams struct {
 	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
+// CreateGameTeamJSONRequestBody defines body for CreateGameTeam for application/json ContentType.
+type CreateGameTeamJSONRequestBody = GameTeamCreate
+
+// UpdateGameTeamJSONRequestBody defines body for UpdateGameTeam for application/json ContentType.
+type UpdateGameTeamJSONRequestBody = GameTeamUpdate
+
+// CreateGameJSONRequestBody defines body for CreateGame for application/json ContentType.
+type CreateGameJSONRequestBody = GameCreate
+
+// UpdateGameJSONRequestBody defines body for UpdateGame for application/json ContentType.
+type UpdateGameJSONRequestBody = GameUpdate
+
+// AddGameServiceJSONRequestBody defines body for AddGameService for application/json ContentType.
+type AddGameServiceJSONRequestBody AddGameServiceJSONBody
+
+// ReorderGameTeamsJSONRequestBody defines body for ReorderGameTeams for application/json ContentType.
+type ReorderGameTeamsJSONRequestBody = ReorderRequest
+
 // UpdateProfileJSONRequestBody defines body for UpdateProfile for application/json ContentType.
 type UpdateProfileJSONRequestBody = UserUpdate
+
+// CreateResultJSONRequestBody defines body for CreateResult for application/json ContentType.
+type CreateResultJSONRequestBody = ResultCreate
+
+// UpdateResultJSONRequestBody defines body for UpdateResult for application/json ContentType.
+type UpdateResultJSONRequestBody = ResultUpdate
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
@@ -550,12 +868,78 @@ type UpdateUserJSONRequestBody = UserUpdate
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Add a team to a game
+	// (POST /game-teams)
+	CreateGameTeam(c *gin.Context)
+	// Remove a team from a game
+	// (DELETE /game-teams/{id})
+	DeleteGameTeam(c *gin.Context, id int64)
+	// Update a game team entry
+	// (PATCH /game-teams/{id})
+	UpdateGameTeam(c *gin.Context, id int64)
+	// List games
+	// (GET /games)
+	ListGames(c *gin.Context, params ListGamesParams)
+	// Create a game
+	// (POST /games)
+	CreateGame(c *gin.Context)
+	// Delete a game
+	// (DELETE /games/{id})
+	DeleteGame(c *gin.Context, id int64)
+	// Get a game by ID
+	// (GET /games/{id})
+	GetGame(c *gin.Context, id int64)
+	// Update a game
+	// (PATCH /games/{id})
+	UpdateGame(c *gin.Context, id int64)
+	// Finalize game results
+	// (POST /games/{id}/finalize)
+	FinalizeGame(c *gin.Context, id int64)
+	// Get scoreboard for a game
+	// (GET /games/{id}/scoreboard)
+	GetGameScoreboard(c *gin.Context, id int64)
+	// List services linked to a game
+	// (GET /games/{id}/services)
+	ListGameServices(c *gin.Context, id int64)
+	// Link a service to a game
+	// (POST /games/{id}/services)
+	AddGameService(c *gin.Context, id int64)
+	// Unlink a service from a game
+	// (DELETE /games/{id}/services/{service_id})
+	RemoveGameService(c *gin.Context, id int64, serviceId int64)
+	// List teams in a game
+	// (GET /games/{id}/teams)
+	ListGameTeams(c *gin.Context, id int64)
+	// Reorder teams in a game
+	// (POST /games/{id}/teams/reorder)
+	ReorderGameTeams(c *gin.Context, id int64)
+	// Unfinalize game results
+	// (POST /games/{id}/unfinalize)
+	UnfinalizeGame(c *gin.Context, id int64)
 	// Get current user profile
 	// (GET /profile)
 	GetProfile(c *gin.Context)
 	// Update current user profile
 	// (PATCH /profile)
 	UpdateProfile(c *gin.Context)
+	// List results
+	// (GET /results)
+	ListResults(c *gin.Context, params ListResultsParams)
+	// Create a result
+	// (POST /results)
+	CreateResult(c *gin.Context)
+	// Delete a result
+	// (DELETE /results/{id})
+	DeleteResult(c *gin.Context, id int64)
+	// Get a result by ID
+	// (GET /results/{id})
+	GetResult(c *gin.Context, id int64)
+	// Update a result
+	// (PATCH /results/{id})
+	UpdateResult(c *gin.Context, id int64)
+	// Get global scoreboard
+	// (GET /scoreboard)
+	GetGlobalScoreboard(c *gin.Context)
 	// Logout
 	// (DELETE /session)
 	Logout(c *gin.Context)
@@ -660,6 +1044,431 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(c *gin.Context)
 
+// CreateGameTeam operation middleware
+func (siw *ServerInterfaceWrapper) CreateGameTeam(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateGameTeam(c)
+}
+
+// DeleteGameTeam operation middleware
+func (siw *ServerInterfaceWrapper) DeleteGameTeam(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteGameTeam(c, id)
+}
+
+// UpdateGameTeam operation middleware
+func (siw *ServerInterfaceWrapper) UpdateGameTeam(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateGameTeam(c, id)
+}
+
+// ListGames operation middleware
+func (siw *ServerInterfaceWrapper) ListGames(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListGamesParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", c.Request.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListGames(c, params)
+}
+
+// CreateGame operation middleware
+func (siw *ServerInterfaceWrapper) CreateGame(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateGame(c)
+}
+
+// DeleteGame operation middleware
+func (siw *ServerInterfaceWrapper) DeleteGame(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteGame(c, id)
+}
+
+// GetGame operation middleware
+func (siw *ServerInterfaceWrapper) GetGame(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetGame(c, id)
+}
+
+// UpdateGame operation middleware
+func (siw *ServerInterfaceWrapper) UpdateGame(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateGame(c, id)
+}
+
+// FinalizeGame operation middleware
+func (siw *ServerInterfaceWrapper) FinalizeGame(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.FinalizeGame(c, id)
+}
+
+// GetGameScoreboard operation middleware
+func (siw *ServerInterfaceWrapper) GetGameScoreboard(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetGameScoreboard(c, id)
+}
+
+// ListGameServices operation middleware
+func (siw *ServerInterfaceWrapper) ListGameServices(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListGameServices(c, id)
+}
+
+// AddGameService operation middleware
+func (siw *ServerInterfaceWrapper) AddGameService(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AddGameService(c, id)
+}
+
+// RemoveGameService operation middleware
+func (siw *ServerInterfaceWrapper) RemoveGameService(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "service_id" -------------
+	var serviceId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "service_id", c.Param("service_id"), &serviceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter service_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RemoveGameService(c, id, serviceId)
+}
+
+// ListGameTeams operation middleware
+func (siw *ServerInterfaceWrapper) ListGameTeams(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListGameTeams(c, id)
+}
+
+// ReorderGameTeams operation middleware
+func (siw *ServerInterfaceWrapper) ReorderGameTeams(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ReorderGameTeams(c, id)
+}
+
+// UnfinalizeGame operation middleware
+func (siw *ServerInterfaceWrapper) UnfinalizeGame(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UnfinalizeGame(c, id)
+}
+
 // GetProfile operation middleware
 func (siw *ServerInterfaceWrapper) GetProfile(c *gin.Context) {
 
@@ -688,6 +1497,154 @@ func (siw *ServerInterfaceWrapper) UpdateProfile(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateProfile(c)
+}
+
+// ListResults operation middleware
+func (siw *ServerInterfaceWrapper) ListResults(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListResultsParams
+
+	// ------------- Optional query parameter "game_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "game_id", c.Request.URL.Query(), &params.GameId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter game_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "team_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "team_id", c.Request.URL.Query(), &params.TeamId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter team_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListResults(c, params)
+}
+
+// CreateResult operation middleware
+func (siw *ServerInterfaceWrapper) CreateResult(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateResult(c)
+}
+
+// DeleteResult operation middleware
+func (siw *ServerInterfaceWrapper) DeleteResult(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteResult(c, id)
+}
+
+// GetResult operation middleware
+func (siw *ServerInterfaceWrapper) GetResult(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetResult(c, id)
+}
+
+// UpdateResult operation middleware
+func (siw *ServerInterfaceWrapper) UpdateResult(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateResult(c, id)
+}
+
+// GetGlobalScoreboard operation middleware
+func (siw *ServerInterfaceWrapper) GetGlobalScoreboard(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetGlobalScoreboard(c)
 }
 
 // Logout operation middleware
@@ -1539,8 +2496,30 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.POST(options.BaseURL+"/game-teams", wrapper.CreateGameTeam)
+	router.DELETE(options.BaseURL+"/game-teams/:id", wrapper.DeleteGameTeam)
+	router.PATCH(options.BaseURL+"/game-teams/:id", wrapper.UpdateGameTeam)
+	router.GET(options.BaseURL+"/games", wrapper.ListGames)
+	router.POST(options.BaseURL+"/games", wrapper.CreateGame)
+	router.DELETE(options.BaseURL+"/games/:id", wrapper.DeleteGame)
+	router.GET(options.BaseURL+"/games/:id", wrapper.GetGame)
+	router.PATCH(options.BaseURL+"/games/:id", wrapper.UpdateGame)
+	router.POST(options.BaseURL+"/games/:id/finalize", wrapper.FinalizeGame)
+	router.GET(options.BaseURL+"/games/:id/scoreboard", wrapper.GetGameScoreboard)
+	router.GET(options.BaseURL+"/games/:id/services", wrapper.ListGameServices)
+	router.POST(options.BaseURL+"/games/:id/services", wrapper.AddGameService)
+	router.DELETE(options.BaseURL+"/games/:id/services/:service_id", wrapper.RemoveGameService)
+	router.GET(options.BaseURL+"/games/:id/teams", wrapper.ListGameTeams)
+	router.POST(options.BaseURL+"/games/:id/teams/reorder", wrapper.ReorderGameTeams)
+	router.POST(options.BaseURL+"/games/:id/unfinalize", wrapper.UnfinalizeGame)
 	router.GET(options.BaseURL+"/profile", wrapper.GetProfile)
 	router.PATCH(options.BaseURL+"/profile", wrapper.UpdateProfile)
+	router.GET(options.BaseURL+"/results", wrapper.ListResults)
+	router.POST(options.BaseURL+"/results", wrapper.CreateResult)
+	router.DELETE(options.BaseURL+"/results/:id", wrapper.DeleteResult)
+	router.GET(options.BaseURL+"/results/:id", wrapper.GetResult)
+	router.PATCH(options.BaseURL+"/results/:id", wrapper.UpdateResult)
+	router.GET(options.BaseURL+"/scoreboard", wrapper.GetGlobalScoreboard)
 	router.DELETE(options.BaseURL+"/session", wrapper.Logout)
 	router.POST(options.BaseURL+"/session", wrapper.Login)
 	router.GET(options.BaseURL+"/team-memberships", wrapper.ListTeamMemberships)
@@ -1579,45 +2558,66 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
+	"+l8AAAD//w==",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

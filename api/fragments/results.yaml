@@ -1,0 +1,191 @@
+tags:
+  - name: results
+    description: Game results management
+
+components:
+  schemas:
+    Result:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - game_id
+            - team_id
+          properties:
+            id:
+              type: integer
+              format: int64
+            game_id:
+              type: integer
+              format: int64
+            team_id:
+              type: integer
+              format: int64
+            score:
+              type: integer
+              nullable: true
+    ResultCreate:
+      type: object
+      required:
+        - game_id
+        - team_id
+      properties:
+        game_id:
+          type: integer
+          format: int64
+        team_id:
+          type: integer
+          format: int64
+        score:
+          type: integer
+    ResultUpdate:
+      type: object
+      properties:
+        score:
+          type: integer
+    ResultList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+
+paths:
+  /results:
+    get:
+      operationId: listResults
+      tags:
+        - results
+      summary: List results
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: game_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: team_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createResult
+      tags:
+        - results
+      summary: Create a result
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultCreate'
+      responses:
+        '201':
+          description: Result created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /results/{id}:
+    get:
+      operationId: getResult
+      tags:
+        - results
+      summary: Get a result by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Result details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateResult
+      tags:
+        - results
+      summary: Update a result
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultUpdate'
+      responses:
+        '200':
+          description: Result updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteResult
+      tags:
+        - results
+      summary: Delete a result
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Result deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'

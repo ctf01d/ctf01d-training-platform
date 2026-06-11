@@ -40,6 +40,252 @@ export interface paths {
         patch: operations["updateProfile"];
         trace?: never;
     };
+    "/games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List games */
+        get: operations["listGames"];
+        put?: never;
+        /** Create a game */
+        post: operations["createGame"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a game by ID */
+        get: operations["getGame"];
+        put?: never;
+        post?: never;
+        /** Delete a game */
+        delete: operations["deleteGame"];
+        options?: never;
+        head?: never;
+        /** Update a game */
+        patch: operations["updateGame"];
+        trace?: never;
+    };
+    "/games/{id}/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List services linked to a game */
+        get: operations["listGameServices"];
+        put?: never;
+        /** Link a service to a game */
+        post: operations["addGameService"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/services/{service_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unlink a service from a game */
+        delete: operations["removeGameService"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finalize game results */
+        post: operations["finalizeGame"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/unfinalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unfinalize game results */
+        post: operations["unfinalizeGame"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List teams in a game */
+        get: operations["listGameTeams"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a team to a game */
+        post: operations["createGameTeam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-teams/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a team from a game */
+        delete: operations["deleteGameTeam"];
+        options?: never;
+        head?: never;
+        /** Update a game team entry */
+        patch: operations["updateGameTeam"];
+        trace?: never;
+    };
+    "/games/{id}/teams/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder teams in a game */
+        post: operations["reorderGameTeams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List results */
+        get: operations["listResults"];
+        put?: never;
+        /** Create a result */
+        post: operations["createResult"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/results/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a result by ID */
+        get: operations["getResult"];
+        put?: never;
+        post?: never;
+        /** Delete a result */
+        delete: operations["deleteResult"];
+        options?: never;
+        head?: never;
+        /** Update a result */
+        patch: operations["updateResult"];
+        trace?: never;
+    };
+    "/games/{id}/scoreboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get scoreboard for a game */
+        get: operations["getGameScoreboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scoreboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get global scoreboard */
+        get: operations["getGlobalScoreboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/team-memberships": {
         parameters: {
             query?: never;
@@ -371,6 +617,175 @@ export interface components {
             token: string;
             user: components["schemas"]["User"];
         };
+        Game: components["schemas"]["Timestamped"] & {
+            /** Format: int64 */
+            id: number;
+            name?: string | null;
+            organizer?: string | null;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            avatar_url?: string | null;
+            site_url?: string | null;
+            ctftime_url?: string | null;
+            finalized: boolean;
+            /** Format: date-time */
+            finalized_at?: string | null;
+            /** Format: date-time */
+            registration_opens_at?: string | null;
+            /** Format: date-time */
+            registration_closes_at?: string | null;
+            /** Format: date-time */
+            scoreboard_opens_at?: string | null;
+            /** Format: date-time */
+            scoreboard_closes_at?: string | null;
+            vpn_url?: string | null;
+            vpn_config_url?: string | null;
+            access_instructions?: string | null;
+            access_secret?: string | null;
+            /** @enum {string} */
+            readonly status?: "upcoming" | "ongoing" | "past" | "unknown";
+            /** @enum {string} */
+            readonly registration_status?: "unscheduled" | "upcoming" | "open" | "closed";
+            /** @enum {string} */
+            readonly scoreboard_status?: "always" | "upcoming" | "open" | "closed";
+        };
+        GameCreate: {
+            name?: string;
+            organizer?: string;
+            /** Format: date-time */
+            starts_at?: string;
+            /** Format: date-time */
+            ends_at?: string;
+            avatar_url?: string;
+            site_url?: string;
+            ctftime_url?: string;
+            /** Format: date-time */
+            registration_opens_at?: string;
+            /** Format: date-time */
+            registration_closes_at?: string;
+            /** Format: date-time */
+            scoreboard_opens_at?: string;
+            /** Format: date-time */
+            scoreboard_closes_at?: string;
+            vpn_url?: string;
+            vpn_config_url?: string;
+            access_instructions?: string;
+            access_secret?: string;
+        };
+        GameUpdate: {
+            name?: string;
+            organizer?: string;
+            /** Format: date-time */
+            starts_at?: string;
+            /** Format: date-time */
+            ends_at?: string;
+            avatar_url?: string;
+            site_url?: string;
+            ctftime_url?: string;
+            /** Format: date-time */
+            registration_opens_at?: string;
+            /** Format: date-time */
+            registration_closes_at?: string;
+            /** Format: date-time */
+            scoreboard_opens_at?: string;
+            /** Format: date-time */
+            scoreboard_closes_at?: string;
+            vpn_url?: string;
+            vpn_config_url?: string;
+            access_instructions?: string;
+            access_secret?: string;
+        };
+        GameList: {
+            items: components["schemas"]["Game"][];
+            pagination: components["schemas"]["Pagination"];
+        };
+        GameTeam: components["schemas"]["Timestamped"] & {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            ip_address?: string | null;
+            ctf01d_id?: string | null;
+            ctf01d_overrides?: Record<string, never> | null;
+            team_type?: string | null;
+            order: number;
+        };
+        GameTeamCreate: {
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            ip_address?: string;
+            ctf01d_id?: string;
+            ctf01d_overrides?: Record<string, never>;
+            team_type?: string;
+            order?: number;
+        };
+        GameTeamUpdate: {
+            ip_address?: string;
+            ctf01d_id?: string;
+            ctf01d_overrides?: Record<string, never>;
+            team_type?: string;
+            order?: number;
+        };
+        GameTeamList: {
+            items: components["schemas"]["GameTeam"][];
+        };
+        ReorderRequest: {
+            items: {
+                /** Format: int64 */
+                id: number;
+                order: number;
+            }[];
+        };
+        Result: components["schemas"]["Timestamped"] & {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            score?: number | null;
+        };
+        ResultCreate: {
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            score?: number;
+        };
+        ResultUpdate: {
+            score?: number;
+        };
+        ResultList: {
+            items: components["schemas"]["Result"][];
+        };
+        ScoreboardEntry: {
+            /** Format: int64 */
+            team_id: number;
+            team_name: string;
+            score: number;
+            position: number;
+        };
+        Scoreboard: {
+            /** Format: int64 */
+            game_id: number;
+            /** @enum {string} */
+            status: "always" | "upcoming" | "open" | "closed";
+            entries: components["schemas"]["ScoreboardEntry"][];
+        };
+        GlobalScoreboard: {
+            entries: {
+                /** Format: int64 */
+                team_id: number;
+                team_name: string;
+                total_score: number;
+            }[];
+        };
         TeamMembership: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
             id: number;
@@ -666,6 +1081,555 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    listGames: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["PageParam"];
+                per_page?: components["parameters"]["PerPageParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of games */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameCreate"];
+            };
+        };
+        responses: {
+            /** @description Game created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Game"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Game"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameUpdate"];
+            };
+        };
+        responses: {
+            /** @description Game updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Game"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    listGameServices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of service IDs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number[];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    addGameService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    service_id: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Service linked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    removeGameService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                service_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Service unlinked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    finalizeGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game finalized */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Game"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    unfinalizeGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game unfinalized */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Game"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listGameTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of game teams */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeamList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    createGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameTeamCreate"];
+            };
+        };
+        responses: {
+            /** @description Game team created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeam"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    deleteGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game team deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameTeamUpdate"];
+            };
+        };
+        responses: {
+            /** @description Game team updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeam"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    reorderGameTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Teams reordered */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listResults: {
+        parameters: {
+            query?: {
+                game_id?: number;
+                team_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultCreate"];
+            };
+        };
+        responses: {
+            /** @description Result created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Result details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Result deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultUpdate"];
+            };
+        };
+        responses: {
+            /** @description Result updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getGameScoreboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game scoreboard */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Scoreboard"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getGlobalScoreboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Global scoreboard */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalScoreboard"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listTeamMemberships: {
