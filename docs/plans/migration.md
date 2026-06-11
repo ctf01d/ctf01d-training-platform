@@ -97,10 +97,10 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [x] `configs/spectral.yaml`: extends `spectral:oas` (отключить шумные правила при необходимости).
 
 ### Task 7: Base OpenAPI fragments
-- [ ] `api/fragments/00-base.schema.yaml`: `openapi: 3.0.3`, info (title `CTF01D Training Platform API`,
+- [x] `api/fragments/00-base.schema.yaml`: `openapi: 3.0.3`, info (title `CTF01D Training Platform API`,
       version 1.0.0), servers (`http://localhost:8080`), tags {}, paths {}, components {},
       `security: [{ BearerAuth: [] }]`.
-- [ ] `api/fragments/10-components.schema.yaml` → `components`: securitySchemes.BearerAuth (http/bearer/JWT);
+- [x] `api/fragments/10-components.schema.yaml` → `components`: securitySchemes.BearerAuth (http/bearer/JWT);
       schemas: `Error` (code, message, details nullable), `Pagination` (page, per_page, total),
       `Timestamped` (created_at, updated_at date-time); parameters PageParam/PerPageParam (query int,
       default 1/20); responses NotFound/Unauthorized/Forbidden/ValidationError/Conflict (ref Error).
