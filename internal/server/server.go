@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -61,6 +63,11 @@ func New(cfg *config.Config, log *zap.Logger, store Store) *gin.Engine {
 
 	engine.GET("/version", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"version": Version})
+	})
+
+	h := handler.New()
+	httpserver.RegisterHandlersWithOptions(engine, h, httpserver.GinServerOptions{
+		BaseURL: "/api/v1",
 	})
 
 	return engine

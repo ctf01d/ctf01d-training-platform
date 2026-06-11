@@ -106,18 +106,18 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       default 1/20); responses NotFound/Unauthorized/Forbidden/ValidationError/Conflict (ref Error).
 
 ### Task 8: Users OpenAPI fragment and codegen wiring
-- [ ] `api/fragments/users.yaml` (tag users): схемы `User` (allOf Timestamped + id int64, user_name,
+- [x] `api/fragments/users.yaml` (tag users): схемы `User` (allOf Timestamped + id int64, user_name,
       display_name, role enum[guest,player,admin], rating int, avatar_url nullable),
       `UserCreate` (user_name required pattern `^[a-zA-Z0-9_]+$`, display_name required, password required
       minLength 6, role enum default guest, avatar_url nullable), `UserUpdate` (display_name, avatar_url,
       password — все optional), `UserList` (items[] + pagination). Пути CRUD `/users`
       (operationId listUsers/createUser/getUser/updateUser/deleteUser) с кодами 200/201/204/404/409/422.
-- [ ] `make openapi` (merge→codegen→ts), убедиться что создан `api/openapi.yaml`,
+- [x] `make openapi` (merge→codegen→ts), убедиться что создан `api/openapi.yaml`,
       `gen/httpserver/httpserver.gen.go` (с `ServerInterface` и типами) и `web/src/api/schema.d.ts`.
-- [ ] `internal/server/handler/handler.go`: `Handler` (пока пустой) + конструктор; реализовать ВСЕ методы
+- [x] `internal/server/handler/handler.go`: `Handler` (пока пустой) + конструктор; реализовать ВСЕ методы
       `httpserver.ServerInterface` заглушками `501 {"code":"not_implemented"}`. Проверить компиляцией
       `var _ httpserver.ServerInterface = (*Handler)(nil)`.
-- [ ] В `server.go` подключить роуты через `httpserver.RegisterHandlersWithOptions(engine, handler,
+- [x] В `server.go` подключить роуты через `httpserver.RegisterHandlersWithOptions(engine, handler,
       {BaseURL:"/api/v1"})`.
 
 ### Task 9: Error mapping and request helpers
