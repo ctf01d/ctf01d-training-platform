@@ -135,6 +135,19 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 
 	api.GET("/scoreboard", requireAuth, h.HandleGetGlobalScoreboard)
 
+	api.GET("/services", middleware.OptionalAuth(h.JWTMgr()), h.HandleListServices)
+	api.POST("/services", append(requirePlayer, h.HandleCreateService)...)
+	api.POST("/services/import/github", append(requirePlayer, h.HandleImportServiceFromGithub)...)
+	api.POST("/services/import/zip", append(requirePlayer, h.HandleImportServiceFromZip)...)
+	api.DELETE("/services/:id", append(requirePlayer, h.HandleDeleteService)...)
+	api.GET("/services/:id", middleware.OptionalAuth(h.JWTMgr()), h.HandleGetService)
+	api.PATCH("/services/:id", append(requirePlayer, h.HandleUpdateService)...)
+	api.POST("/services/:id/check-checker", append(requirePlayer, h.HandleCheckServiceChecker)...)
+	api.GET("/services/:id/download/:kind", requireAuth, h.HandleDownloadServiceArchive)
+	api.POST("/services/:id/redownload", append(requirePlayer, h.HandleRedownloadServiceArchives)...)
+	api.POST("/services/:id/toggle-public", append(requirePlayer, h.HandleToggleServicePublic)...)
+	api.POST("/services/:id/upload-archives", append(requirePlayer, h.HandleUploadServiceArchives)...)
+
 	return engine
 }
 

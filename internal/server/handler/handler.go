@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -13,6 +16,7 @@ import (
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
 	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
+	svcsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/services"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
@@ -32,6 +36,10 @@ type Handler struct {
 	results       *resultsvc.Service
 	scoreboard    *scoreboardsvc.Service
 	gameTeamsQ    *db.Queries
+	svcService    *svcsvc.Service
+	svcArchives   *svcsvc.ArchiveService
+	svcChecker    *svcsvc.CheckerService
+	svcImport     *svcsvc.ImportService
 }
 
 func New(
@@ -46,6 +54,10 @@ func New(
 	results *resultsvc.Service,
 	scoreboard *scoreboardsvc.Service,
 	gameTeamsQ *db.Queries,
+	svcService *svcsvc.Service,
+	svcArchives *svcsvc.ArchiveService,
+	svcChecker *svcsvc.CheckerService,
+	svcImport *svcsvc.ImportService,
 ) *Handler {
 	return &Handler{
 		users:         users,
@@ -59,6 +71,10 @@ func New(
 		results:       results,
 		scoreboard:    scoreboard,
 		gameTeamsQ:    gameTeamsQ,
+		svcService:    svcService,
+		svcArchives:   svcArchives,
+		svcChecker:    svcChecker,
+		svcImport:     svcImport,
 	}
 }
 
@@ -518,52 +534,388 @@ func (h *Handler) GetGlobalScoreboard(c *gin.Context) {
 	h.HandleGetGlobalScoreboard(c)
 }
 
+func (h *Handler) HandleListServices(c *gin.Context) {
+	page := 1
+	perPage := 20
+	if v := c.Query("page"); v != "" {
+		if p, err := strconv.Atoi(v); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if v := c.Query("per_page"); v != "" {
+		if p, err := strconv.Atoi(v); err == nil && p > 0 {
+			perPage = p
+		}
+	}
+	var publicFilter *bool
+	if v := c.Query("public"); v != "" {
+		b := v == "true"
+		publicFilter = &b
+	}
+	var q *string
+	if v := c.Query("q"); v != "" {
+		q = &v
+	}
+
+	role, hasRole := middleware.CurrentRole(c)
+	isAdmin := hasRole && role == "admin"
+
+	result, err := h.svcService.List(c.Request.Context(), page, perPage, publicFilter, q, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	items := make([]httpserver.Service, len(result.Items))
+	for i, s := range result.Items {
+		items[i] = serviceToHTTP(s)
+	}
+
+	c.JSON(http.StatusOK, httpserver.ServiceList{
+		Items: items,
+		Pagination: httpserver.Pagination{
+			Page:    result.Page,
+			PerPage: result.PerPage,
+			Total:   int(result.Total),
+		},
+	})
+}
+
+func (h *Handler) HandleCreateService(c *gin.Context) {
+	req, ok := bindJSON[httpserver.ServiceCreate](c)
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+	pub := true
+	if req.Public != nil {
+		pub = *req.Public
+	}
+	var training json.RawMessage
+	if req.Ctf01dTraining != nil {
+		b, _ := json.Marshal(*req.Ctf01dTraining)
+		training = b
+	}
+	params := svcsvc.CreateParams{
+		Name:               req.Name,
+		PublicDescription:  req.PublicDescription,
+		PrivateDescription: req.PrivateDescription,
+		Author:             req.Author,
+		Copyright:          req.Copyright,
+		AvatarUrl:          req.AvatarUrl,
+		Public:             pub,
+		ServiceArchiveUrl:  req.ServiceArchiveUrl,
+		CheckerArchiveUrl:  req.CheckerArchiveUrl,
+		WriteupUrl:         req.WriteupUrl,
+		ExploitsUrl:        req.ExploitsUrl,
+		Ctf01dTraining:     training,
+	}
+	svc, err := h.svcService.Create(c.Request.Context(), params, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, serviceToHTTP(*svc))
+}
+
+func (h *Handler) HandleGetService(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	role, hasRole := middleware.CurrentRole(c)
+	isAdmin := hasRole && role == "admin"
+	svc, err := h.svcService.GetByID(c.Request.Context(), id, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	if !svc.Public && !isAdmin {
+		c.JSON(http.StatusNotFound, gin.H{"code": "not_found", "message": "service not found"})
+		return
+	}
+	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+}
+
+func (h *Handler) HandleUpdateService(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	req, ok := bindJSON[httpserver.ServiceUpdate](c)
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+	var training json.RawMessage
+	if req.Ctf01dTraining != nil {
+		b, _ := json.Marshal(*req.Ctf01dTraining)
+		training = b
+	}
+	params := svcsvc.UpdateParams{
+		Name:               req.Name,
+		PublicDescription:  req.PublicDescription,
+		PrivateDescription: req.PrivateDescription,
+		Author:             req.Author,
+		Copyright:          req.Copyright,
+		AvatarUrl:          req.AvatarUrl,
+		Public:             req.Public,
+		ServiceArchiveUrl:  req.ServiceArchiveUrl,
+		CheckerArchiveUrl:  req.CheckerArchiveUrl,
+		WriteupUrl:         req.WriteupUrl,
+		ExploitsUrl:        req.ExploitsUrl,
+		Ctf01dTraining:     training,
+	}
+	svc, err := h.svcService.Update(c.Request.Context(), id, params, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+}
+
+func (h *Handler) HandleDeleteService(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	if err := h.svcService.Delete(c.Request.Context(), id); err != nil {
+		respondError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) HandleToggleServicePublic(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+	svc, err := h.svcService.TogglePublic(c.Request.Context(), id, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+}
+
+func (h *Handler) HandleCheckServiceChecker(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+	svc, err := h.svcChecker.CheckChecker(c.Request.Context(), id, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+}
+
+func (h *Handler) HandleRedownloadServiceArchives(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+	svc, err := h.svcArchives.Redownload(c.Request.Context(), id, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+}
+
+func (h *Handler) HandleUploadServiceArchives(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"code": "validation_error", "message": "expected multipart form"})
+		return
+	}
+
+	var serviceFile io.Reader
+	if files := form.File["service_archive"]; len(files) > 0 {
+		f, err := files[0].Open()
+		if err != nil {
+			respondError(c, err)
+			return
+		}
+		defer f.Close()
+		serviceFile = f
+	}
+
+	var checkerFile io.Reader
+	if files := form.File["checker_archive"]; len(files) > 0 {
+		f, err := files[0].Open()
+		if err != nil {
+			respondError(c, err)
+			return
+		}
+		defer f.Close()
+		checkerFile = f
+	}
+
+	svc, err := h.svcArchives.UploadArchives(c.Request.Context(), id, serviceFile, checkerFile, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+}
+
+func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	kind := c.Param("kind")
+
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+
+	svc, err := h.svcService.GetByID(c.Request.Context(), id, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	if !svc.Public && !isAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "service is not public"})
+		return
+	}
+
+	rc, filename, err := h.svcArchives.OpenLocal(c.Request.Context(), id, kind)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	defer rc.Close()
+
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	c.Status(http.StatusOK)
+	io.Copy(c.Writer, rc)
+}
+
+func (h *Handler) HandleImportServiceFromGithub(c *gin.Context) {
+	req, ok := bindJSON[httpserver.GithubImportRequest](c)
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+	importReq := svcsvc.GithubImportRequest{
+		RepoURL: req.RepoUrl,
+	}
+	if req.Ref != nil {
+		importReq.Ref = *req.Ref
+	}
+	if req.Subdir != nil {
+		importReq.Subdir = *req.Subdir
+	}
+	result, err := h.svcImport.ImportFromGithub(c.Request.Context(), importReq, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, importResultToHTTP(result))
+}
+
+func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
+	file, err := c.FormFile("archive")
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"code": "validation_error", "message": "archive file is required"})
+		return
+	}
+	f, err := file.Open()
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	defer f.Close()
+	zipBytes, err := io.ReadAll(f)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == "admin"
+	result, err := h.svcImport.ImportFromZipUpload(c.Request.Context(), zipBytes, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, importResultToHTTP(result))
+}
+
 func (h *Handler) ListServices(c *gin.Context, params httpserver.ListServicesParams) {
-	notImplemented(c)
+	h.HandleListServices(c)
 }
 
 func (h *Handler) CreateService(c *gin.Context) {
-	notImplemented(c)
-}
-
-func (h *Handler) ImportServiceFromGithub(c *gin.Context) {
-	notImplemented(c)
-}
-
-func (h *Handler) ImportServiceFromZip(c *gin.Context) {
-	notImplemented(c)
-}
-
-func (h *Handler) DeleteService(c *gin.Context, id int64) {
-	notImplemented(c)
+	h.HandleCreateService(c)
 }
 
 func (h *Handler) GetService(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleGetService(c)
 }
 
 func (h *Handler) UpdateService(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUpdateService(c)
+}
+
+func (h *Handler) DeleteService(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleDeleteService(c)
 }
 
 func (h *Handler) CheckServiceChecker(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleCheckServiceChecker(c)
 }
 
 func (h *Handler) DownloadServiceArchive(c *gin.Context, id int64, kind httpserver.DownloadServiceArchiveParamsKind) {
-	notImplemented(c)
+	c.Set("id", id)
+	c.Set("kind", string(kind))
+	h.HandleDownloadServiceArchive(c)
 }
 
 func (h *Handler) RedownloadServiceArchives(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleRedownloadServiceArchives(c)
 }
 
 func (h *Handler) ToggleServicePublic(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleToggleServicePublic(c)
 }
 
 func (h *Handler) UploadServiceArchives(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUploadServiceArchives(c)
+}
+
+func (h *Handler) ImportServiceFromGithub(c *gin.Context) {
+	h.HandleImportServiceFromGithub(c)
+}
+
+func (h *Handler) ImportServiceFromZip(c *gin.Context) {
+	h.HandleImportServiceFromZip(c)
 }
 
 var _ httpserver.ServerInterface = (*Handler)(nil)

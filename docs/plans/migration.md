@@ -336,11 +336,11 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       TODO-комментарий). Фикстуры в `testdata/`. Unit-тесты на извлечение метаданных, path-traversal, структуру.
 
 ### Task 24: Services handlers + integration
-- [ ] `internal/server/handler/services.go`: CRUD, toggle, check, redownload, upload (c.FormFile),
+- [x] `internal/server/handler/services.go`: CRUD, toggle, check, redownload, upload (c.FormFile),
       download (стрим файла с Content-Type/Content-Disposition), import github/zip. Убрать заглушки.
-- [ ] RBAC: мутации/импорт/чек — RequireRole("player"); download публичного — авторизованным,
+- [x] RBAC: мутации/импорт/чек — RequireRole("player"); download публичного — авторизованным,
       непубличного — player/admin. Прокинуть Storage и сервисы в Handler и main.
-- [ ] Интеграционный тест: create→upload-archives→download→toggle-public→list(public/q)→import из
+- [x] Интеграционный тест: create→upload-archives→download→toggle-public→list(public/q)→import из
       тестового zip→check-checker.
 
 ### Task 25: ctf01d export fragment, params and pure exporter

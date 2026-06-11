@@ -18,12 +18,14 @@ import (
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
 	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
+	svcsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/services"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
+	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 	"github.com/ctf01d/ctf01d-training-platform/internal/testutil"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -41,6 +43,15 @@ func setupTest(t *testing.T) (*gin.Engine, *repository.Store, func()) {
 		CORS: config.CORSConfig{
 			AllowedOrigins: "http://localhost:5173",
 		},
+		Storage: config.StorageConfig{
+			Dir:            t.TempDir(),
+			MaxUploadBytes: 10 * 1024 * 1024,
+		},
+	}
+
+	fileStorage, err := storage.NewLocalStorage(cfg.Storage.Dir)
+	if err != nil {
+		t.Fatalf("creating file storage: %v", err)
 	}
 
 	jwtMgr := auth.NewManager("test-integration-secret", 24)
@@ -53,7 +64,11 @@ func setupTest(t *testing.T) (*gin.Engine, *repository.Store, func()) {
 	gameTeamService := gameteamsvc.NewService(store.Queries, store)
 	resultService := resultsvc.NewService(store.Queries, store.Queries)
 	scoreboardService := scoreboardsvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries)
+	svcService := svcsvc.NewService(store.Queries)
+	svcArchives := svcsvc.NewArchiveService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
+	svcChecker := svcsvc.NewCheckerService(store.Queries)
+	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport)
 
 	engine := server.New(cfg, log, store, h)
 	return engine, store, func() {}

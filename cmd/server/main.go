@@ -18,11 +18,13 @@ import (
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
 	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
 	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
+	svcsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/services"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
+	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -55,6 +57,11 @@ func run() error {
 	}
 	defer store.Close()
 
+	fileStorage, err := storage.NewLocalStorage(cfg.Storage.Dir)
+	if err != nil {
+		return fmt.Errorf("creating file storage: %w", err)
+	}
+
 	jwtMgr := auth.NewManager(cfg.JWT.Secret, cfg.JWT.TTLHours)
 	userService := usersvc.NewService(store.Queries)
 	authService := authsvc.NewService(store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
@@ -65,7 +72,11 @@ func run() error {
 	gameTeamService := gameteamsvc.NewService(store.Queries, store)
 	resultService := resultsvc.NewService(store.Queries, store.Queries)
 	scoreboardService := scoreboardsvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries)
+	svcService := svcsvc.NewService(store.Queries)
+	svcArchives := svcsvc.NewArchiveService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
+	svcChecker := svcsvc.NewCheckerService(store.Queries)
+	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport)
 
 	engine := server.New(cfg, log, store, h)
 
