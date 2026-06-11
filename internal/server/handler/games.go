@@ -79,7 +79,10 @@ func (h *Handler) HandleCreateGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gameToHTTP(*game, true))
+	viewerRole, _ := middleware.CurrentRole(c)
+	userID, hasUser := middleware.CurrentUserID(c)
+
+	c.JSON(http.StatusCreated, gameToHTTP(*game, h.canAccessGameSecrets(c, game.ID, viewerRole, hasUser, userID)))
 }
 
 func (h *Handler) HandleGetGame(c *gin.Context) {
@@ -135,7 +138,10 @@ func (h *Handler) HandleUpdateGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gameToHTTP(*game, true))
+	viewerRole, _ := middleware.CurrentRole(c)
+	userID, hasUser := middleware.CurrentUserID(c)
+
+	c.JSON(http.StatusOK, gameToHTTP(*game, h.canAccessGameSecrets(c, game.ID, viewerRole, hasUser, userID)))
 }
 
 func (h *Handler) HandleDeleteGame(c *gin.Context) {
@@ -163,7 +169,10 @@ func (h *Handler) HandleFinalizeGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gameToHTTP(*game, true))
+	viewerRole, _ := middleware.CurrentRole(c)
+	userID, hasUser := middleware.CurrentUserID(c)
+
+	c.JSON(http.StatusOK, gameToHTTP(*game, h.canAccessGameSecrets(c, game.ID, viewerRole, hasUser, userID)))
 }
 
 func (h *Handler) HandleUnfinalizeGame(c *gin.Context) {
@@ -178,7 +187,10 @@ func (h *Handler) HandleUnfinalizeGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gameToHTTP(*game, true))
+	viewerRole, _ := middleware.CurrentRole(c)
+	userID, hasUser := middleware.CurrentUserID(c)
+
+	c.JSON(http.StatusOK, gameToHTTP(*game, h.canAccessGameSecrets(c, game.ID, viewerRole, hasUser, userID)))
 }
 
 func (h *Handler) HandleListGameServices(c *gin.Context) {

@@ -94,7 +94,7 @@ func (q *Queries) ListAllResults(ctx context.Context) ([]Result, error) {
 }
 
 const listResultsByGame = `-- name: ListResultsByGame :many
-SELECT id, game_id, team_id, score, created_at, updated_at FROM results WHERE game_id = $1 ORDER BY score DESC
+SELECT id, game_id, team_id, score, created_at, updated_at FROM results WHERE game_id = $1 ORDER BY score DESC, team_id ASC
 `
 
 func (q *Queries) ListResultsByGame(ctx context.Context, gameID int64) ([]Result, error) {

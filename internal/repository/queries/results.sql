@@ -7,7 +7,7 @@ RETURNING *;
 SELECT * FROM results WHERE id = $1;
 
 -- name: ListResultsByGame :many
-SELECT * FROM results WHERE game_id = $1 ORDER BY score DESC;
+SELECT * FROM results WHERE game_id = $1 ORDER BY score DESC, team_id ASC;
 
 -- name: ListResultsByTeam :many
 SELECT * FROM results WHERE team_id = $1;
