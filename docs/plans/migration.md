@@ -227,14 +227,14 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       `team_membership_events.sql` (CreateEvent, ListByTeam). `make sqlc-gen`.
 
 ### Task 16: Universities, Teams, Memberships services
-- [ ] `internal/service/universities/service.go`: CRUD (мутации — admin, проверка в handler). Тесты.
-- [ ] `internal/service/teams/service.go`: CRUD; Create — создатель становится owner (membership
+- [x] `internal/service/universities/service.go`: CRUD (мутации — admin, проверка в handler). Тесты.
+- [x] `internal/service/teams/service.go`: CRUD; Create — создатель становится owner (membership
       role=owner/status=approved + событие); captain_id глобально уникален→ErrConflict;
       Update/Delete — admin или управляющий член (`CanManage(ctx, teamID, userID, role)`);
       `RequestJoin` (membership guest/pending + событие join_request); `Invite` (управляющий → membership
       player/pending + событие invite). Мутации членства в транзакции (store.WithTx). Unit-тесты:
       owner-flow, captain uniqueness, матрица прав управления.
-- [ ] `internal/service/memberships/service.go`: List/Get/Create/Update/Delete; Approve/Reject
+- [x] `internal/service/memberships/service.go`: List/Get/Create/Update/Delete; Approve/Reject
       (pending→approved/rejected, событие; управляющий/admin); Accept/Decline (для приглашённого);
       SetRole (нельзя удалить/понизить последнего owner; назначение captain синхронит teams.captain_id
       с учётом глобальной уникальности). Каждое изменение — событие с from/to role/status + actor_id,

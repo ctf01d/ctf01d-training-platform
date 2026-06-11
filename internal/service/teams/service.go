@@ -1,0 +1,359 @@
+package teams
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+)
+
+type Team struct {
+	ID           int64     `json:"id"`
+	Name         string    `json:"name"`
+	Description  *string   `json:"description"`
+	Website      *string   `json:"website"`
+	AvatarUrl    *string   `json:"avatar_url"`
+	CaptainID    *int32    `json:"captain_id"`
+	UniversityID *int64    `json:"university_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type TeamListResult struct {
+	Items   []Team `json:"items"`
+	Page    int    `json:"page"`
+	PerPage int    `json:"per_page"`
+	Total   int64  `json:"total"`
+}
+
+type CreateParams struct {
+	Name         string  `json:"name"`
+	Description  *string `json:"description"`
+	Website      *string `json:"website"`
+	AvatarUrl    *string `json:"avatar_url"`
+	UniversityID *int64  `json:"university_id"`
+}
+
+type UpdateParams struct {
+	Name         string  `json:"name"`
+	Description  *string `json:"description"`
+	Website      *string `json:"website"`
+	AvatarUrl    *string `json:"avatar_url"`
+	UniversityID *int64  `json:"university_id"`
+}
+
+var managingRoles = map[string]bool{
+	"owner":       true,
+	"captain":     true,
+	"vice_captain": true,
+}
+
+type TeamQuerier interface {
+	CreateTeam(ctx context.Context, arg db.CreateTeamParams) (db.Team, error)
+	GetTeamByID(ctx context.Context, id int64) (db.Team, error)
+	GetTeamByCaptain(ctx context.Context, captainID *int32) (db.Team, error)
+	ListTeams(ctx context.Context, arg db.ListTeamsParams) ([]db.Team, error)
+	CountTeams(ctx context.Context) (int64, error)
+	UpdateTeam(ctx context.Context, arg db.UpdateTeamParams) (db.Team, error)
+	SetCaptain(ctx context.Context, arg db.SetCaptainParams) (db.Team, error)
+	ClearCaptain(ctx context.Context, id int64) (db.Team, error)
+	DeleteTeam(ctx context.Context, id int64) error
+}
+
+type MembershipQuerier interface {
+	CreateTeamMembership(ctx context.Context, arg db.CreateTeamMembershipParams) (db.TeamMembership, error)
+	GetMembership(ctx context.Context, arg db.GetMembershipParams) (db.TeamMembership, error)
+	CountApprovedManagers(ctx context.Context, teamID int64) (int64, error)
+}
+
+type EventQuerier interface {
+	CreateEvent(ctx context.Context, arg db.CreateEventParams) (db.TeamMembershipEvent, error)
+}
+
+type TxRunner interface {
+	RunInTx(ctx context.Context, fn func() error) error
+}
+
+type Service struct {
+	teams   TeamQuerier
+	members MembershipQuerier
+	events  EventQuerier
+	tx      TxRunner
+}
+
+func NewService(teams TeamQuerier, members MembershipQuerier, events EventQuerier, tx TxRunner) *Service {
+	return &Service{teams: teams, members: members, events: events, tx: tx}
+}
+
+func (s *Service) Create(ctx context.Context, creatorID int64, params CreateParams) (*Team, error) {
+	if params.Name == "" {
+		return nil, errs.NewValidationError(map[string]string{"name": "is required"})
+	}
+
+	var result *Team
+	err := s.tx.RunInTx(ctx, func() error {
+		team, err := s.teams.CreateTeam(ctx, db.CreateTeamParams{
+			Name:         params.Name,
+			Description:  params.Description,
+			Website:      params.Website,
+			AvatarUrl:    params.AvatarUrl,
+			UniversityID: params.UniversityID,
+		})
+		if err != nil {
+			return mapDBError(err)
+		}
+
+		ownerRole := "owner"
+		approved := "approved"
+		_, err = s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+			TeamID: team.ID,
+			UserID: creatorID,
+			Role:   &ownerRole,
+			Status: &approved,
+		})
+		if err != nil {
+			return err
+		}
+
+		action := "created"
+		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+			TeamID:   team.ID,
+			UserID:   creatorID,
+			ActorID:  int32PtrFromInt64(creatorID),
+			Action:   action,
+			FromRole: nil,
+			ToRole:   &ownerRole,
+			FromStatus: nil,
+			ToStatus: &approved,
+		})
+		if err != nil {
+			return err
+		}
+
+		t := fromDB(team)
+		result = &t
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (s *Service) GetByID(ctx context.Context, id int64) (*Team, error) {
+	team, err := s.teams.GetTeamByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err, "team")
+	}
+	t := fromDB(team)
+	return &t, nil
+}
+
+func (s *Service) List(ctx context.Context, page, perPage int) (*TeamListResult, error) {
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 100 {
+		perPage = 20
+	}
+
+	offset := int32((page - 1) * perPage)
+	limit := int32(perPage)
+
+	items, err := s.teams.ListTeams(ctx, db.ListTeamsParams{Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := s.teams.CountTeams(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &TeamListResult{
+		Items:   make([]Team, len(items)),
+		Page:    page,
+		PerPage: perPage,
+		Total:   total,
+	}
+	for i, item := range items {
+		result.Items[i] = fromDB(item)
+	}
+	return result, nil
+}
+
+func (s *Service) CanManage(ctx context.Context, teamID, userID int64, globalRole string) error {
+	if globalRole == "admin" {
+		return nil
+	}
+	membership, err := s.members.GetMembership(ctx, db.GetMembershipParams{
+		TeamID: teamID,
+		UserID: userID,
+	})
+	if err != nil {
+		return errs.ErrForbidden
+	}
+	if membership.Status == nil || *membership.Status != "approved" {
+		return errs.ErrForbidden
+	}
+	if membership.Role == nil || !managingRoles[*membership.Role] {
+		return errs.ErrForbidden
+	}
+	return nil
+}
+
+func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*Team, error) {
+	team, err := s.teams.UpdateTeam(ctx, db.UpdateTeamParams{
+		ID:           id,
+		Name:         params.Name,
+		Description:  params.Description,
+		Website:      params.Website,
+		AvatarUrl:    params.AvatarUrl,
+		UniversityID: params.UniversityID,
+	})
+	if err != nil {
+		return nil, mapNotFound(err, "team")
+	}
+	t := fromDB(team)
+	return &t, nil
+}
+
+func (s *Service) Delete(ctx context.Context, id int64) error {
+	return s.teams.DeleteTeam(ctx, id)
+}
+
+func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
+	existing, err := s.members.GetMembership(ctx, db.GetMembershipParams{
+		TeamID: teamID,
+		UserID: userID,
+	})
+	if err == nil && existing.Status != nil && *existing.Status != "rejected" {
+		return errs.ErrConflict
+	}
+
+	return s.tx.RunInTx(ctx, func() error {
+		role := "guest"
+		status := "pending"
+		action := "join_request"
+
+		_, err := s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+			TeamID: teamID,
+			UserID: userID,
+			Role:   &role,
+			Status: &status,
+		})
+		if err != nil {
+			return mapDBError(err)
+		}
+
+		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+			TeamID:   teamID,
+			UserID:   userID,
+			ActorID:  int32PtrFromInt64(userID),
+			Action:   action,
+			ToRole:   &role,
+			ToStatus: &status,
+		})
+		return err
+	})
+}
+
+func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64) error {
+	err := s.CanManage(ctx, teamID, inviterID, "")
+	if err != nil {
+		return err
+	}
+
+	return s.tx.RunInTx(ctx, func() error {
+		role := "player"
+		status := "pending"
+		action := "invite"
+
+		_, err := s.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
+			TeamID: teamID,
+			UserID: inviteeID,
+			Role:   &role,
+			Status: &status,
+		})
+		if err != nil {
+			return mapDBError(err)
+		}
+
+		_, err = s.events.CreateEvent(ctx, db.CreateEventParams{
+			TeamID:   teamID,
+			UserID:   inviteeID,
+			ActorID:  int32PtrFromInt64(inviterID),
+			Action:   action,
+			ToRole:   &role,
+			ToStatus: &status,
+		})
+		return err
+	})
+}
+
+func fromDB(t db.Team) Team {
+	return Team{
+		ID:           t.ID,
+		Name:         t.Name,
+		Description:  t.Description,
+		Website:      t.Website,
+		AvatarUrl:    t.AvatarUrl,
+		CaptainID:    t.CaptainID,
+		UniversityID: t.UniversityID,
+		CreatedAt:    t.CreatedAt,
+		UpdatedAt:    t.UpdatedAt,
+	}
+}
+
+func int32PtrFromInt64(v int64) *int32 {
+	i := int32(v)
+	return &i
+}
+
+func mapNotFound(err error, entity string) error {
+	if isNoRows(err) {
+		return errs.ErrNotFound
+	}
+	return err
+}
+
+func mapDBError(err error) error {
+	if isDuplicateKey(err) {
+		return errs.ErrConflict
+	}
+	return err
+}
+
+func isNoRows(err error) bool {
+	return err != nil && err.Error() == "no rows in result set"
+}
+
+func isDuplicateKey(err error) bool {
+	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "violates unique"))
+}
+
+func contains(s, sub string) bool {
+	return len(s) >= len(sub) && searchString(s, sub)
+}
+
+func searchString(s, sub string) bool {
+	for i := 0; i <= len(s)-len(sub); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}
+
+func ptrStr(v string) *string { return &v }
+
+func EnsureCaptainUnique(ctx context.Context, q TeamQuerier, userID int64) error {
+	captainID := int32(userID)
+	_, err := q.GetTeamByCaptain(ctx, &captainID)
+	if err == nil {
+		return fmt.Errorf("%w: user %d is already captain of another team", errs.ErrConflict, userID)
+	}
+	return nil
+}

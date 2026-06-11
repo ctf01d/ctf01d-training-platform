@@ -1,0 +1,177 @@
+package universities
+
+import (
+	"context"
+	"time"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+)
+
+type University struct {
+	ID        int64     `json:"id"`
+	Name      *string   `json:"name"`
+	SiteUrl   *string   `json:"site_url"`
+	AvatarUrl *string   `json:"avatar_url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type UniversityListResult struct {
+	Items   []University `json:"items"`
+	Page    int          `json:"page"`
+	PerPage int          `json:"per_page"`
+	Total   int64        `json:"total"`
+}
+
+type CreateParams struct {
+	Name      *string `json:"name"`
+	SiteUrl   *string `json:"site_url"`
+	AvatarUrl *string `json:"avatar_url"`
+}
+
+type UpdateParams struct {
+	Name      *string `json:"name"`
+	SiteUrl   *string `json:"site_url"`
+	AvatarUrl *string `json:"avatar_url"`
+}
+
+type Querier interface {
+	CreateUniversity(ctx context.Context, arg db.CreateUniversityParams) (db.University, error)
+	GetUniversityByID(ctx context.Context, id int64) (db.University, error)
+	ListUniversities(ctx context.Context, arg db.ListUniversitiesParams) ([]db.University, error)
+	CountUniversities(ctx context.Context) (int64, error)
+	UpdateUniversity(ctx context.Context, arg db.UpdateUniversityParams) (db.University, error)
+	DeleteUniversity(ctx context.Context, id int64) error
+}
+
+type Service struct {
+	q Querier
+}
+
+func NewService(q Querier) *Service {
+	return &Service{q: q}
+}
+
+func (s *Service) Create(ctx context.Context, params CreateParams) (*University, error) {
+	dbUni, err := s.q.CreateUniversity(ctx, db.CreateUniversityParams{
+		Name:      params.Name,
+		SiteUrl:   params.SiteUrl,
+		AvatarUrl: params.AvatarUrl,
+	})
+	if err != nil {
+		return nil, mapDBError(err)
+	}
+	u := fromDB(dbUni)
+	return &u, nil
+}
+
+func (s *Service) GetByID(ctx context.Context, id int64) (*University, error) {
+	dbUni, err := s.q.GetUniversityByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err, "university")
+	}
+	u := fromDB(dbUni)
+	return &u, nil
+}
+
+func (s *Service) List(ctx context.Context, page, perPage int) (*UniversityListResult, error) {
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 100 {
+		perPage = 20
+	}
+
+	offset := int32((page - 1) * perPage)
+	limit := int32(perPage)
+
+	items, err := s.q.ListUniversities(ctx, db.ListUniversitiesParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := s.q.CountUniversities(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &UniversityListResult{
+		Items:   make([]University, len(items)),
+		Page:    page,
+		PerPage: perPage,
+		Total:   total,
+	}
+	for i, item := range items {
+		result.Items[i] = fromDB(item)
+	}
+
+	return result, nil
+}
+
+func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*University, error) {
+	dbUni, err := s.q.UpdateUniversity(ctx, db.UpdateUniversityParams{
+		ID:        id,
+		Name:      params.Name,
+		SiteUrl:   params.SiteUrl,
+		AvatarUrl: params.AvatarUrl,
+	})
+	if err != nil {
+		return nil, mapNotFound(err, "university")
+	}
+	u := fromDB(dbUni)
+	return &u, nil
+}
+
+func (s *Service) Delete(ctx context.Context, id int64) error {
+	return s.q.DeleteUniversity(ctx, id)
+}
+
+func fromDB(u db.University) University {
+	return University{
+		ID:        u.ID,
+		Name:      u.Name,
+		SiteUrl:   u.SiteUrl,
+		AvatarUrl: u.AvatarUrl,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
+
+func mapNotFound(err error, entity string) error {
+	if isNoRows(err) {
+		return errs.ErrNotFound
+	}
+	return err
+}
+
+func mapDBError(err error) error {
+	if isDuplicateKey(err) {
+		return errs.ErrConflict
+	}
+	return err
+}
+
+func isNoRows(err error) bool {
+	return err != nil && err.Error() == "no rows in result set"
+}
+
+func isDuplicateKey(err error) bool {
+	return err != nil && (contains(err.Error(), "duplicate key") || contains(err.Error(), "violates unique"))
+}
+
+func contains(s, sub string) bool {
+	return len(s) >= len(sub) && searchString(s, sub)
+}
+
+func searchString(s, sub string) bool {
+	for i := 0; i <= len(s)-len(sub); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}

@@ -57,3 +57,21 @@ func (s *Store) WithTx(ctx context.Context, fn func(*db.Queries) error) error {
 
 	return tx.Commit(ctx)
 }
+
+func (s *Store) RunInTx(ctx context.Context, fn func() error) error {
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	orig := s.Queries
+	s.Queries = db.New(tx)
+	defer func() { s.Queries = orig }()
+
+	if err := fn(); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
