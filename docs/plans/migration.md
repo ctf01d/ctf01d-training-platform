@@ -121,9 +121,9 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       {BaseURL:"/api/v1"})`.
 
 ### Task 9: Error mapping and request helpers
-- [ ] `internal/domain/errs/errs.go`: sentinel-ошибки `ErrNotFound, ErrConflict, ErrForbidden,
+- [x] `internal/domain/errs/errs.go`: sentinel-ошибки `ErrNotFound, ErrConflict, ErrForbidden,
       ErrUnauthorized`; тип `ValidationError{ Fields map[string]string }` (реализует error).
-- [ ] `internal/server/handler/response.go`: `respondError(c, err)` (errors.Is/As → 404/409/403/401/422,
+- [x] `internal/server/handler/response.go`: `respondError(c, err)` (errors.Is/As → 404/409/403/401/422,
       прочее → 500, тело Error), `bindJSON[T](c) (T, bool)` (422 при ошибке). Unit-тест на каждый класс.
 
 ### Task 10: goose migrations setup
