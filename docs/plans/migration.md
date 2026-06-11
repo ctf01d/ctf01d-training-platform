@@ -35,7 +35,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - `go vet ./...`
 - `go test ./...`
 
-## Task 1: Initialize Go module and base layout
+### Task 1: Initialize Go module and base layout
 - [ ] `go mod init github.com/ctf01d/ctf01d-training-platform` (Go 1.26).
 - [ ] Создать каталоги с `.gitkeep`: `cmd/server/`, `internal/config/`, `internal/server/`,
       `internal/server/handler/`, `internal/server/middleware/`, `internal/service/`, `internal/repository/`,
@@ -46,7 +46,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] `.env.sample` с переменными: `APP_ENV, HTTP_ADDR, DATABASE_URL, JWT_SECRET, JWT_TTL_HOURS,
       LOG_LEVEL, CORS_ALLOWED_ORIGINS, STORAGE_DIR, STORAGE_MAX_UPLOAD_BYTES`.
 
-## Task 2: Configuration package
+### Task 2: Configuration package
 - [ ] `internal/config/config.go` со структурой `Config` через `github.com/ilyakaznacheev/cleanenv`:
       `Env` (APP_ENV, default development), `HTTP.Addr` (HTTP_ADDR, default `:8080`),
       `DB.URL` (DATABASE_URL, default `postgres://postgres:postgres@localhost:5432/ctf01d_development?sslmode=disable`),
@@ -57,14 +57,14 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] `Load() (*Config, error)`: в env `production` требует непустые JWT_SECRET и DATABASE_URL.
 - [ ] Тест `config_test.go` (через `t.Setenv`) на дефолты и required.
 
-## Task 3: Logger and DB pool
+### Task 3: Logger and DB pool
 - [ ] `go get go.uber.org/zap`. `pkg/logger/logger.go`: `New(env, level string) (*zap.Logger, error)`
       (production→json, иначе console; уровень из level) и `Sync(l)`.
 - [ ] `go get github.com/jackc/pgx/v5 github.com/jackc/pgx/v5/pgxpool`.
 - [ ] `internal/repository/store.go`: `Store{ Pool *pgxpool.Pool }`,
       `NewStore(ctx, dbURL) (*Store, error)` (создаёт пул + Ping), `Close()`, `Health(ctx) error` (Ping).
 
-## Task 4: HTTP server with healthz and graceful shutdown
+### Task 4: HTTP server with healthz and graceful shutdown
 - [ ] `go get github.com/gin-gonic/gin github.com/gin-contrib/cors github.com/gin-contrib/requestid`.
 - [ ] `internal/server/server.go`: `New(cfg, log, store) *gin.Engine` — `gin.New()`, middleware Recovery,
       requestid, CORS (origins из cfg), zap-логгер запросов. Роуты `GET /healthz` (200 ok / 503 если
@@ -73,7 +73,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       ReadHeaderTimeout:5s}`; graceful shutdown по SIGINT/SIGTERM (Shutdown с таймаутом 5s, затем Close).
 - [ ] Тест `/healthz` через `httptest` (Health за интерфейсом `Pinger`, подменяется в тесте).
 
-## Task 5: Makefile and dev Docker Compose
+### Task 5: Makefile and dev Docker Compose
 - [ ] Добавить Go-таргеты в Makefile (не ломая существующий Rails Makefile; уникальные имена,
       каждый с `## name: описание`): `go-build` (`go build -o ctf01d-server ./cmd/server`), `go-run`,
       `go-test`, `go-vet`, `go-fmt` (gofmt -w + gofumpt при наличии), `go-tidy` (`go mod tidy`).
@@ -82,7 +82,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] `docs/GO_DEV.md` с инструкцией локального запуска и требованиями к инструментам
       (yq v4, Node.js, golangci-lint). Выполнить `go mod tidy`, убедиться что build/test зелёные.
 
-## Task 6: OpenAPI tooling and Makefile pipeline
+### Task 6: OpenAPI tooling and Makefile pipeline
 - [ ] `tools/tools.go` (build-тег `//go:build tools`) с blank-импортами:
       `github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen`,
       `github.com/sqlc-dev/sqlc/cmd/sqlc`, `github.com/pressly/goose/v3/cmd/goose`. `go get` для них.
@@ -96,7 +96,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       generate {models:true, gin-server:true, embedded-spec:true}.
 - [ ] `configs/spectral.yaml`: extends `spectral:oas` (отключить шумные правила при необходимости).
 
-## Task 7: Base OpenAPI fragments
+### Task 7: Base OpenAPI fragments
 - [ ] `api/fragments/00-base.schema.yaml`: `openapi: 3.0.3`, info (title `CTF01D Training Platform API`,
       version 1.0.0), servers (`http://localhost:8080`), tags {}, paths {}, components {},
       `security: [{ BearerAuth: [] }]`.
@@ -105,7 +105,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       `Timestamped` (created_at, updated_at date-time); parameters PageParam/PerPageParam (query int,
       default 1/20); responses NotFound/Unauthorized/Forbidden/ValidationError/Conflict (ref Error).
 
-## Task 8: Users OpenAPI fragment and codegen wiring
+### Task 8: Users OpenAPI fragment and codegen wiring
 - [ ] `api/fragments/users.yaml` (tag users): схемы `User` (allOf Timestamped + id int64, user_name,
       display_name, role enum[guest,player,admin], rating int, avatar_url nullable),
       `UserCreate` (user_name required pattern `^[a-zA-Z0-9_]+$`, display_name required, password required
@@ -120,19 +120,19 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] В `server.go` подключить роуты через `httpserver.RegisterHandlersWithOptions(engine, handler,
       {BaseURL:"/api/v1"})`.
 
-## Task 9: Error mapping and request helpers
+### Task 9: Error mapping and request helpers
 - [ ] `internal/domain/errs/errs.go`: sentinel-ошибки `ErrNotFound, ErrConflict, ErrForbidden,
       ErrUnauthorized`; тип `ValidationError{ Fields map[string]string }` (реализует error).
 - [ ] `internal/server/handler/response.go`: `respondError(c, err)` (errors.Is/As → 404/409/403/401/422,
       прочее → 500, тело Error), `bindJSON[T](c) (T, bool)` (422 при ошибке). Unit-тест на каждый класс.
 
-## Task 10: goose migrations setup
+### Task 10: goose migrations setup
 - [ ] `go get github.com/pressly/goose/v3`. Makefile-таргеты: `migrate-up`
       (`goose -dir migrations postgres "$$DATABASE_URL" up`), `migrate-down`, `migrate-status`,
       `migrate-new name=...` (`goose -dir migrations create $(name) sql`).
 - [ ] `migrations/README.md` с правилами именования.
 
-## Task 11: Schema migration from schema.rb
+### Task 11: Schema migration from schema.rb
 Воспроизвести `db/schema.rb` в goose-миграции (`-- +goose Up`/`Down`; ID bigserial; timestamps
 `timestamptz NOT NULL DEFAULT now()`). Down должен полностью откатывать.
 - [ ] `users`: user_name (NOT NULL, unique index), display_name NOT NULL, role NOT NULL default 'guest',
@@ -172,7 +172,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] Триггерная функция `set_updated_at()` + триггеры на все таблицы с updated_at.
 - [ ] Прогнать `make migrate-up` и `make migrate-down` против dev-БД — оба чистые.
 
-## Task 12: sqlc configuration and store transactions
+### Task 12: sqlc configuration and store transactions
 - [ ] `sqlc.yaml`: version 2, engine postgresql, schema `migrations`, queries `internal/repository/queries`,
       gen.go: package db, out `internal/repository/db`, sql_package pgx/v5, emit_json_tags true,
       emit_pointers_for_null_types true; overrides timestamptz→time.Time, jsonb→json.RawMessage.
@@ -182,7 +182,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] Helper `internal/repository/testhelper_test.go`: подключение к `TEST_DATABASE_URL` (иначе t.Skip),
       применение goose-миграций programmatically, очистка `TRUNCATE ... RESTART IDENTITY CASCADE`.
 
-## Task 13: Users queries, service and JWT/bcrypt
+### Task 13: Users queries, service and JWT/bcrypt
 - [ ] `internal/repository/queries/users.sql` (аннотации sqlc): CreateUser, GetUserByID,
       GetUserByUserName, ListUsers(limit,offset), CountUsers, UpdateUserProfile (display_name,
       avatar_url, password_digest nullable через COALESCE), UpdateUserRole, UpdateUserRating, DeleteUser.
@@ -196,7 +196,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       хеш пароля, uniqueness→ErrConflict), GetByID, List(page,perPage)→(items,total), Update, UpdateRole,
       Delete. Доменный тип `User` (password_digest наружу не отдавать). Unit-тесты с мок-Querier.
 
-## Task 14: Auth fragment, service, handlers and RBAC middleware
+### Task 14: Auth fragment, service, handlers and RBAC middleware
 - [ ] `api/fragments/auth.yaml` (tag auth): `LoginRequest` (user_name, password), `LoginResponse`
       (token, user $ref User). Пути `POST /session` (login, public, 200/401),
       `DELETE /session` (logout, 204), `GET /profile` (200/401), `PATCH /profile` (UserUpdate без role,
@@ -213,7 +213,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] Прокинуть Users/Auth/JWT в Handler и main. Интеграционный тест (skip без TEST_DATABASE_URL):
       seed admin→login→создать пользователя→list→get→update→смена роли→delete; 401 без токена.
 
-## Task 15: Universities and Teams fragments + queries
+### Task 15: Universities and Teams fragments + queries
 - [ ] `api/fragments/universities.yaml`: University, UniversityCreate/Update/List; CRUD `/universities`.
 - [ ] `api/fragments/teams.yaml`: Team (id, name, description, website, avatar_url, captain_id nullable,
       university_id nullable, timestamps), TeamCreate/Update/List; CRUD `/teams` + `POST /teams/{id}/join-request`,
@@ -226,7 +226,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       UpdateMembershipStatus, UpdateMembershipRole, CountApprovedManagers(team)),
       `team_membership_events.sql` (CreateEvent, ListByTeam). `make sqlc-gen`.
 
-## Task 16: Universities, Teams, Memberships services
+### Task 16: Universities, Teams, Memberships services
 - [ ] `internal/service/universities/service.go`: CRUD (мутации — admin, проверка в handler). Тесты.
 - [ ] `internal/service/teams/service.go`: CRUD; Create — создатель становится owner (membership
       role=owner/status=approved + событие); captain_id глобально уникален→ErrConflict;
@@ -240,7 +240,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       с учётом глобальной уникальности). Каждое изменение — событие с from/to role/status + actor_id,
       в транзакции. Unit-тесты на переходы и защиту последнего owner.
 
-## Task 17: Universities/Teams/Memberships handlers + integration
+### Task 17: Universities/Teams/Memberships handlers + integration
 - [ ] Хендлеры `universities.go`, `teams.go`, `team_memberships.go`: реализовать все методы, actor из
       контекста, мапить доменные ошибки, убрать заглушки. Прокинуть сервисы в Handler и main.
 - [ ] RBAC: чтение — авторизованным; мутации вузов — admin; мутации команд/членства — внутри сервиса по
@@ -248,7 +248,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] Интеграционный тест: пользователи+команда→owner приглашает→accept→set-role captain (проверка
       captain_id)→сторонний join-request→approve→список членов и события→управление не-управляющим→403.
 
-## Task 18: Games status logic, fragments and queries
+### Task 18: Games status logic, fragments and queries
 - [ ] `internal/service/games/status.go`: чистые функции `ComputeStatus(startsAt,endsAt,now)`
       (upcoming/ongoing/past/unknown), `ComputeRegistrationStatus(opens,closes,now)`
       (unscheduled/upcoming/open/closed), `ComputeScoreboardStatus(opens,closes,now)`
@@ -270,7 +270,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       UpdateOrder), `results.sql` (CRUD + ListByGame ORDER BY score DESC + UpsertResult),
       `final_results.sql` (DeleteByGame, InsertFinalResult, ListByGame). `make sqlc-gen`.
 
-## Task 19: Games, game-teams, results, scoreboard services
+### Task 19: Games, game-teams, results, scoreboard services
 - [ ] `internal/service/games/service.go`: CRUD + URL-валидация (validHTTPURL для site_url/ctftime_url/
       vpn_url/vpn_config_url); AddService/RemoveService/ListServices;
       `Finalize(ctx, gameID)` — в транзакции: finalized=true, finalized_at=now, удалить старые
@@ -284,7 +284,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] `internal/service/scoreboard/service.go`: `ForGame(ctx, gameID, viewerRole)` (finalized→final_results,
       иначе results; для не-admin при closed/upcoming окне→ErrForbidden), `Global(ctx)`.
 
-## Task 20: Games handlers, RBAC, secret fields + integration
+### Task 20: Games handlers, RBAC, secret fields + integration
 - [ ] Хендлеры `games.go`, `game_teams.go`, `results.go`, `scoreboard.go`; убрать заглушки.
 - [ ] RBAC: мутации игр/ростера/результатов — RequireRole("player"); чтение — авторизованным;
       `GET /games/{id}/scoreboard` — public (OptionalAuth, viewerRole). `access_secret`/VPN-поля —
@@ -293,7 +293,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] Интеграционный тест: игра→команды в ростер→reorder→сервисы→результаты→finalize (проверка
       final_results/позиций)→scoreboard→unfinalize; сокрытие access_secret для постороннего; закрытый scoreboard.
 
-## Task 21: Storage abstraction and services queries
+### Task 21: Storage abstraction and services queries
 - [ ] `internal/storage/storage.go`: интерфейс `Storage` (Save(ctx,key,r)→FileInfo, Open(ctx,key),
       Delete(ctx,key), Stat(ctx,key)→FileInfo), `FileInfo{Size int64; SHA256 string}`.
 - [ ] `internal/storage/local.go`: `LocalStorage` поверх cfg.Storage.Dir; Save стримит в файл, считая
@@ -310,7 +310,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       Delete; SetPublic; SetCheckStatus(id,status,checked_at); SetServiceLocal(id,path,size,sha256,
       downloaded_at); SetCheckerLocal(...); SetArchiveURLs. `make sqlc-gen`.
 
-## Task 22: Services core, archives, download
+### Task 22: Services core, archives, download
 - [ ] `internal/service/services/service.go`: CRUD + URL-валидация (порт `Service#validate_urls`:
       avatar_url допускает data:image, остальные валидный http(s)://); TogglePublic; маппинг скрывает
       private_description и локальные пути от не-admin; uniqueness name→conflict. Unit-тесты.
@@ -321,7 +321,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       `OpenLocal(ctx,id,kind)→(rc,name,err)`. Лимит размера (cfg.Storage.MaxUploadBytes), валидация zip.
       Unit-тесты с httptest и in-memory storage.
 
-## Task 23: Services imports and checker inspection
+### Task 23: Services imports and checker inspection
 - [ ] `internal/service/services/import_common.go`: безопасная распаковка zip (лимит суммарного размера и
       числа файлов, запрет путей с `..`, anti zip-bomb по коэффициенту сжатия), извлечение метаданных,
       сборка bundle.
@@ -335,7 +335,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       локального архива чекера, выставить check_status (ok/failed/unknown) + checked_at (динамический запуск —
       TODO-комментарий). Фикстуры в `testdata/`. Unit-тесты на извлечение метаданных, path-traversal, структуру.
 
-## Task 24: Services handlers + integration
+### Task 24: Services handlers + integration
 - [ ] `internal/server/handler/services.go`: CRUD, toggle, check, redownload, upload (c.FormFile),
       download (стрим файла с Content-Type/Content-Disposition), import github/zip. Убрать заглушки.
 - [ ] RBAC: мутации/импорт/чек — RequireRole("player"); download публичного — авторизованным,
@@ -343,7 +343,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [ ] Интеграционный тест: create→upload-archives→download→toggle-public→list(public/q)→import из
       тестового zip→check-checker.
 
-## Task 25: ctf01d export fragment, params and pure exporter
+### Task 25: ctf01d export fragment, params and pure exporter
 - [ ] Расширить `api/fragments/games.yaml`: `GET /games/{id}/export/ctf01d/options`
       (getCtf01dExportOptions → Ctf01dExportOptions: дефолты + warnings о неполных данных),
       `POST /games/{id}/export/ctf01d` (exportCtf01d, body Ctf01dExportRequest → 200 application/zip
@@ -365,7 +365,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       (bundle service/+checker/); buildComposeYML (опционально); сборка zip из временного каталога через
       archive/zip в память. Лимиты на скачивание/распаковку, проверка путей.
 
-## Task 26: ctf01d builder, handlers, tests
+### Task 26: ctf01d builder, handlers, tests
 - [ ] `internal/service/ctf01d/builder.go`: `BuildParams(ctx, gameID, req)→(GameParams, ScoreboardParams,
       []TeamParams, []CheckerParams, Options, warnings[], err)` — собрать из БД (game времена→UTC,
       game_teams→TeamParams через ip/ctf01d_id/order/overrides, связанные services→CheckerParams через
@@ -380,7 +380,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       data/html, логотипы, checker_<id>/, docker-compose.yml при include_compose. Тест builder на маппинг
       overrides/training и warnings.
 
-## Task 27: Seeds and optional data import
+### Task 27: Seeds and optional data import
 - [ ] `cmd/seed/main.go`: создать admin (user_name=admin, пароль из SEED_ADMIN_PASSWORD или admin12345,
       role=admin, bcrypt cost 12), тестовые вузы/команды/игру; идемпотентно (ON CONFLICT DO NOTHING).
       Makefile-таргет `seed` (`go run ./cmd/seed`).
@@ -388,7 +388,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       реализовать users (password_digest как есть — bcrypt совместим), остальные таблицы — TODO. Тест на
       чистую функцию маппинга row→params.
 
-## Task 28: Frontend SPA scaffold and typed client
+### Task 28: Frontend SPA scaffold and typed client
 - [ ] Создать `web/` (Vite react-ts): package.json, vite.config.ts (dev-proxy `/api`→`http://localhost:8080`),
       tsconfig.json, index.html, src/main.tsx, src/App.tsx. Зависимости: react-router-dom, openapi-fetch;
       dev: openapi-typescript, eslint, @typescript-eslint/*, prettier. Скрипты: dev, build, lint,
@@ -398,7 +398,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       Тонкие обёртки по доменам в `src/api/`.
 - [ ] Makefile-таргеты: `web-install` (npm ci), `web-build`, `web-gen`, `web-dev`.
 
-## Task 29: Frontend auth, routing and screens
+### Task 29: Frontend auth, routing and screens
 - [ ] `src/auth/AuthContext.tsx`: токен (localStorage) + текущий пользователь, login (POST /session),
       logout, useAuth(). `src/routes.tsx`: react-router-dom, ProtectedRoute (редирект на /login),
       AdminRoute (по роли), Layout с навигацией. Страница Login.
@@ -411,7 +411,7 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       multipart-загрузка, обработка 401/403, состояния загрузки/пустые. Убедиться что
       `npm run build`, `npm run lint`, `npm run typecheck` зелёные.
 
-## Task 30: Production build, CI and Rails decommission
+### Task 30: Production build, CI and Rails decommission
 - [ ] `docker/Dockerfile` (multi-stage): builder golang:1.26 (`go build -ldflags "-X main.version=..."`,
       CGO_ENABLED=0) → distroless/static или alpine с бинарём + `migrations/`. В `cmd/server/main.go`
       реализовать запуск goose-миграций при старте под env `RUN_MIGRATIONS=true`. EXPOSE 8080,
