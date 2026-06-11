@@ -54,7 +54,7 @@ func bindJSON[T any](c *gin.Context) (T, bool) {
 		}
 		c.JSON(http.StatusUnprocessableEntity, errorResponse{
 			Code:    "validation_error",
-			Message: err.Error(),
+			Message: "request validation failed",
 		})
 		return req, false
 	}

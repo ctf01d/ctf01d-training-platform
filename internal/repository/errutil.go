@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -17,5 +16,5 @@ func IsDuplicateKey(err error) bool {
 	if errors.As(err, &pgErr) {
 		return pgErr.Code == "23505"
 	}
-	return strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "violates unique")
+	return false
 }

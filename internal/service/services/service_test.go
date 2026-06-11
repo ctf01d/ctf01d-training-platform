@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type mockQuerier struct {
@@ -29,7 +29,7 @@ func newMockQuerier() *mockQuerier {
 
 func (m *mockQuerier) CreateService(_ context.Context, arg db.CreateServiceParams) (db.Service, error) {
 	if _, exists := m.byName[arg.Name]; exists {
-		return db.Service{}, fmt.Errorf("duplicate key value violates unique constraint")
+		return db.Service{}, &pgconn.PgError{Code: "23505", Message: "duplicate key value violates unique constraint"}
 	}
 	id := m.nextID
 	m.nextID++

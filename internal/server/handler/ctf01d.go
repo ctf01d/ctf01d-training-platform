@@ -68,7 +68,11 @@ func (h *Handler) HandleExportCtf01d(c *gin.Context) {
 			return
 		}
 		abs = filepath.Clean(abs)
-		allowedBase, _ := filepath.Abs(h.storageDir)
+		allowedBase, err := filepath.Abs(h.storageDir)
+		if err != nil {
+			respondError(c, fmt.Errorf("resolving storage dir: %w", err))
+			return
+		}
 		if !strings.HasPrefix(abs, allowedBase+string(filepath.Separator)) && abs != allowedBase {
 			respondError(c, fmt.Errorf("html_source_path must be within the storage directory"))
 			return

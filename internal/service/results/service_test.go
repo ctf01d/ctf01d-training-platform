@@ -2,13 +2,13 @@ package results
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type mockGameQuerier struct {
@@ -38,7 +38,7 @@ func (m *mockGameQuerier) GetGameByID(_ context.Context, id int64) (db.Game, err
 func (m *mockQuerier) CreateResult(_ context.Context, arg db.CreateResultParams) (db.Result, error) {
 	for _, r := range m.results {
 		if r.GameID == arg.GameID && r.TeamID == arg.TeamID {
-			return db.Result{}, fmt.Errorf("duplicate key value violates unique constraint")
+			return db.Result{}, &pgconn.PgError{Code: "23505", Message: "duplicate key value violates unique constraint"}
 		}
 	}
 	id := m.nextID

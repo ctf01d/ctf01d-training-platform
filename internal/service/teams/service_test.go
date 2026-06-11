@@ -9,6 +9,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type mockTeamQuerier struct {
@@ -156,7 +157,7 @@ func memKey(teamID, userID int64) string {
 func (m *mockMembershipQuerier) CreateTeamMembership(_ context.Context, arg db.CreateTeamMembershipParams) (db.TeamMembership, error) {
 	key := memKey(arg.TeamID, arg.UserID)
 	if _, ok := m.members[key]; ok {
-		return db.TeamMembership{}, fmt.Errorf("duplicate key value violates unique constraint")
+		return db.TeamMembership{}, &pgconn.PgError{Code: "23505", Message: "duplicate key value violates unique constraint"}
 	}
 	id := m.nextID
 	m.nextID++
