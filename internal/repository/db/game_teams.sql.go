@@ -83,6 +83,26 @@ func (q *Queries) GetGameTeamByID(ctx context.Context, id int64) (GameTeam, erro
 	return i, err
 }
 
+const isUserApprovedInGameTeams = `-- name: IsUserApprovedInGameTeams :one
+SELECT EXISTS(
+  SELECT 1 FROM game_teams gt
+  JOIN team_memberships tm ON tm.team_id = gt.team_id AND tm.user_id = $2 AND tm.status = 'approved'
+  WHERE gt.game_id = $1
+)
+`
+
+type IsUserApprovedInGameTeamsParams struct {
+	GameID int64 `json:"game_id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) IsUserApprovedInGameTeams(ctx context.Context, arg IsUserApprovedInGameTeamsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isUserApprovedInGameTeams, arg.GameID, arg.UserID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const listGameTeamsByGame = `-- name: ListGameTeamsByGame :many
 SELECT id, game_id, team_id, ip_address, ctf01d_id, ctf01d_overrides, team_type, "order", created_at, updated_at FROM game_teams WHERE game_id = $1 ORDER BY "order", id
 `

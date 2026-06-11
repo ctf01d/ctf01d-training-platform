@@ -285,12 +285,12 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       иначе results; для не-admin при closed/upcoming окне→ErrForbidden), `Global(ctx)`.
 
 ### Task 20: Games handlers, RBAC, secret fields + integration
-- [ ] Хендлеры `games.go`, `game_teams.go`, `results.go`, `scoreboard.go`; убрать заглушки.
-- [ ] RBAC: мутации игр/ростера/результатов — RequireRole("player"); чтение — авторизованным;
+- [x] Хендлеры `games.go`, `game_teams.go`, `results.go`, `scoreboard.go`; убрать заглушки.
+- [x] RBAC: мутации игр/ростера/результатов — RequireRole("player"); чтение — авторизованным;
       `GET /games/{id}/scoreboard` — public (OptionalAuth, viewerRole). `access_secret`/VPN-поля —
       только admin или approved-членам команд-участниц (портировать `can_access_game?` из
       ApplicationController). Прокинуть сервисы в Handler и main.
-- [ ] Интеграционный тест: игра→команды в ростер→reorder→сервисы→результаты→finalize (проверка
+- [x] Интеграционный тест: игра→команды в ростер→reorder→сервисы→результаты→finalize (проверка
       final_results/позиций)→scoreboard→unfinalize; сокрытие access_secret для постороннего; закрытый scoreboard.
 
 ### Task 21: Storage abstraction and services queries

@@ -107,6 +107,34 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.POST("/team-memberships/:id/decline", requireAuth, h.HandleDeclineTeamMembership)
 	api.POST("/team-memberships/:id/set-role", requireAuth, h.HandleSetTeamMembershipRole)
 
+	requirePlayer := []gin.HandlerFunc{requireAuth, middleware.RequireRole("player")}
+
+	api.GET("/games", requireAuth, h.HandleListGames)
+	api.POST("/games", append(requirePlayer, h.HandleCreateGame)...)
+	api.GET("/games/:id", requireAuth, h.HandleGetGame)
+	api.PATCH("/games/:id", append(requirePlayer, h.HandleUpdateGame)...)
+	api.DELETE("/games/:id", append(requirePlayer, h.HandleDeleteGame)...)
+	api.POST("/games/:id/finalize", append(requirePlayer, h.HandleFinalizeGame)...)
+	api.POST("/games/:id/unfinalize", append(requirePlayer, h.HandleUnfinalizeGame)...)
+	api.GET("/games/:id/services", requireAuth, h.HandleListGameServices)
+	api.POST("/games/:id/services", append(requirePlayer, h.HandleAddGameService)...)
+	api.DELETE("/games/:id/services/:service_id", append(requirePlayer, h.HandleRemoveGameService)...)
+	api.GET("/games/:id/teams", requireAuth, h.HandleListGameTeams)
+	api.POST("/games/:id/teams/reorder", append(requirePlayer, h.HandleReorderGameTeams)...)
+	api.GET("/games/:id/scoreboard", middleware.OptionalAuth(h.JWTMgr()), h.HandleGetGameScoreboard)
+
+	api.POST("/game-teams", append(requirePlayer, h.HandleCreateGameTeam)...)
+	api.PATCH("/game-teams/:id", append(requirePlayer, h.HandleUpdateGameTeam)...)
+	api.DELETE("/game-teams/:id", append(requirePlayer, h.HandleDeleteGameTeam)...)
+
+	api.GET("/results", requireAuth, h.HandleListResults)
+	api.POST("/results", append(requirePlayer, h.HandleCreateResult)...)
+	api.GET("/results/:id", requireAuth, h.HandleGetResult)
+	api.PATCH("/results/:id", append(requirePlayer, h.HandleUpdateResult)...)
+	api.DELETE("/results/:id", append(requirePlayer, h.HandleDeleteResult)...)
+
+	api.GET("/scoreboard", requireAuth, h.HandleGetGlobalScoreboard)
+
 	return engine
 }
 

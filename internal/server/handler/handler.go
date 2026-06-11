@@ -6,8 +6,13 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
+	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
+	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
+	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
+	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
@@ -16,22 +21,44 @@ import (
 )
 
 type Handler struct {
-	users        *usersvc.Service
-	auth         *authsvc.Service
-	jwtMgr       *auth.Manager
-	universities *unisvc.Service
-	teams        *teamsvc.Service
-	memberships  *membersvc.Service
+	users         *usersvc.Service
+	auth          *authsvc.Service
+	jwtMgr        *auth.Manager
+	universities  *unisvc.Service
+	teams         *teamsvc.Service
+	memberships   *membersvc.Service
+	games         *gamesvc.Service
+	gameTeams     *gameteamsvc.Service
+	results       *resultsvc.Service
+	scoreboard    *scoreboardsvc.Service
+	gameTeamsQ    *db.Queries
 }
 
-func New(users *usersvc.Service, authSvc *authsvc.Service, jwtMgr *auth.Manager, universities *unisvc.Service, teams *teamsvc.Service, memberships *membersvc.Service) *Handler {
+func New(
+	users *usersvc.Service,
+	authSvc *authsvc.Service,
+	jwtMgr *auth.Manager,
+	universities *unisvc.Service,
+	teams *teamsvc.Service,
+	memberships *membersvc.Service,
+	games *gamesvc.Service,
+	gameTeams *gameteamsvc.Service,
+	results *resultsvc.Service,
+	scoreboard *scoreboardsvc.Service,
+	gameTeamsQ *db.Queries,
+) *Handler {
 	return &Handler{
-		users:        users,
-		auth:         authSvc,
-		jwtMgr:       jwtMgr,
-		universities: universities,
-		teams:        teams,
-		memberships:  memberships,
+		users:         users,
+		auth:          authSvc,
+		jwtMgr:        jwtMgr,
+		universities:  universities,
+		teams:         teams,
+		memberships:   memberships,
+		games:         games,
+		gameTeams:     gameTeams,
+		results:       results,
+		scoreboard:    scoreboard,
+		gameTeamsQ:    gameTeamsQ,
 	}
 }
 
@@ -387,91 +414,108 @@ func (h *Handler) SetTeamMembershipRole(c *gin.Context, id int64) {
 }
 
 func (h *Handler) ListGames(c *gin.Context, params httpserver.ListGamesParams) {
-	notImplemented(c)
+	h.HandleListGames(c)
 }
 
 func (h *Handler) CreateGame(c *gin.Context) {
-	notImplemented(c)
+	h.HandleCreateGame(c)
 }
 
 func (h *Handler) GetGame(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleGetGame(c)
 }
 
 func (h *Handler) UpdateGame(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUpdateGame(c)
 }
 
 func (h *Handler) DeleteGame(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleDeleteGame(c)
 }
 
 func (h *Handler) FinalizeGame(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleFinalizeGame(c)
 }
 
 func (h *Handler) UnfinalizeGame(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUnfinalizeGame(c)
 }
 
 func (h *Handler) ListGameServices(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleListGameServices(c)
 }
 
 func (h *Handler) AddGameService(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleAddGameService(c)
 }
 
 func (h *Handler) RemoveGameService(c *gin.Context, id int64, serviceId int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	c.Set("service_id", serviceId)
+	h.HandleRemoveGameService(c)
 }
 
 func (h *Handler) ListGameTeams(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleListGameTeams(c)
 }
 
 func (h *Handler) ReorderGameTeams(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleReorderGameTeams(c)
 }
 
 func (h *Handler) CreateGameTeam(c *gin.Context) {
-	notImplemented(c)
+	h.HandleCreateGameTeam(c)
 }
 
 func (h *Handler) UpdateGameTeam(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUpdateGameTeam(c)
 }
 
 func (h *Handler) DeleteGameTeam(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleDeleteGameTeam(c)
 }
 
 func (h *Handler) ListResults(c *gin.Context, params httpserver.ListResultsParams) {
-	notImplemented(c)
+	h.HandleListResults(c)
 }
 
 func (h *Handler) CreateResult(c *gin.Context) {
-	notImplemented(c)
+	h.HandleCreateResult(c)
 }
 
 func (h *Handler) GetResult(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleGetResult(c)
 }
 
 func (h *Handler) UpdateResult(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleUpdateResult(c)
 }
 
 func (h *Handler) DeleteResult(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleDeleteResult(c)
 }
 
 func (h *Handler) GetGameScoreboard(c *gin.Context, id int64) {
-	notImplemented(c)
+	c.Set("id", id)
+	h.HandleGetGameScoreboard(c)
 }
 
 func (h *Handler) GetGlobalScoreboard(c *gin.Context) {
-	notImplemented(c)
+	h.HandleGetGlobalScoreboard(c)
 }
 
 var _ httpserver.ServerInterface = (*Handler)(nil)

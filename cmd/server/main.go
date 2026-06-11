@@ -13,7 +13,11 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
+	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
+	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 	membersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/memberships"
+	resultsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/results"
+	scoreboardsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/scoreboard"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
@@ -57,7 +61,11 @@ func run() error {
 	universityService := unisvc.NewService(store.Queries)
 	teamService := teamsvc.NewService(store.Queries, store.Queries, store.Queries, store)
 	membershipService := membersvc.NewService(store.Queries, store.Queries, store.Queries, store)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService)
+	gameService := gamesvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries, store)
+	gameTeamService := gameteamsvc.NewService(store.Queries, store)
+	resultService := resultsvc.NewService(store.Queries, store.Queries)
+	scoreboardService := scoreboardsvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries)
 
 	engine := server.New(cfg, log, store, h)
 

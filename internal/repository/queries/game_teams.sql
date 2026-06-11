@@ -29,3 +29,10 @@ DELETE FROM game_teams WHERE id = $1;
 -- name: UpdateGameTeamOrder :exec
 UPDATE game_teams SET "order" = $2, updated_at = now()
 WHERE id = $1;
+
+-- name: IsUserApprovedInGameTeams :one
+SELECT EXISTS(
+  SELECT 1 FROM game_teams gt
+  JOIN team_memberships tm ON tm.team_id = gt.team_id AND tm.user_id = $2 AND tm.status = 'approved'
+  WHERE gt.game_id = $1
+);
