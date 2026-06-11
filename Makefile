@@ -3,7 +3,8 @@
 	go-build go-run go-test go-vet go-fmt go-tidy \
 	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
 	migrate-up migrate-down migrate-status migrate-new \
-	sqlc-gen sqlc-vet seed
+	sqlc-gen sqlc-vet seed \
+	web-install web-build web-gen web-dev
 # -----------------------------------------------------------------------------
 # Docker images (production)
 
@@ -144,3 +145,22 @@ sqlc-vet:
 ## seed: Populate database with test data (idempotent)
 seed:
 	go run ./cmd/seed
+
+# -----------------------------------------------------------------------------
+# Frontend (web/ SPA)
+
+## web-install: Install frontend dependencies
+web-install:
+	cd web && npm ci
+
+## web-build: Build frontend for production
+web-build:
+	cd web && npm run build
+
+## web-gen: Regenerate TypeScript API types from OpenAPI spec
+web-gen:
+	cd web && npm run gen:api
+
+## web-dev: Start frontend dev server with HMR
+web-dev:
+	cd web && npm run dev

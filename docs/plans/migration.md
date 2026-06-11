@@ -389,14 +389,14 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       чистую функцию маппинга row→params.
 
 ### Task 28: Frontend SPA scaffold and typed client
-- [ ] Создать `web/` (Vite react-ts): package.json, vite.config.ts (dev-proxy `/api`→`http://localhost:8080`),
+- [x] Создать `web/` (Vite react-ts): package.json, vite.config.ts (dev-proxy `/api`→`http://localhost:8080`),
       tsconfig.json, index.html, src/main.tsx, src/App.tsx. Зависимости: react-router-dom, openapi-fetch;
       dev: openapi-typescript, eslint, @typescript-eslint/*, prettier. Скрипты: dev, build, lint,
       typecheck (`tsc --noEmit`), gen:api (`openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts`).
-- [ ] `npm run gen:api` → `src/api/schema.d.ts`. `src/api/client.ts`: `createClient<paths>({baseUrl:
+- [x] `npm run gen:api` → `src/api/schema.d.ts`. `src/api/client.ts`: `createClient<paths>({baseUrl:
       '/api/v1'})` + middleware (Authorization Bearer из стора, обработка 401→разлогин/редирект).
       Тонкие обёртки по доменам в `src/api/`.
-- [ ] Makefile-таргеты: `web-install` (npm ci), `web-build`, `web-gen`, `web-dev`.
+- [x] Makefile-таргеты: `web-install` (npm ci), `web-build`, `web-gen`, `web-dev`.
 
 ### Task 29: Frontend auth, routing and screens
 - [ ] `src/auth/AuthContext.tsx`: токен (localStorage) + текущий пользователь, login (POST /session),
