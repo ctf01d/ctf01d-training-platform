@@ -1,9 +1,12 @@
+import { RouterProvider } from 'react-router-dom'
+import { AuthProvider } from './auth/AuthContext'
+import { router } from './routes'
+
 function App() {
   return (
-    <div>
-      <h1>CTF01D Training Platform</h1>
-      <p>Loading...</p>
-    </div>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   )
 }
 

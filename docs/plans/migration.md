@@ -399,10 +399,10 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [x] Makefile-таргеты: `web-install` (npm ci), `web-build`, `web-gen`, `web-dev`.
 
 ### Task 29: Frontend auth, routing and screens
-- [ ] `src/auth/AuthContext.tsx`: токен (localStorage) + текущий пользователь, login (POST /session),
+- [x] `src/auth/AuthContext.tsx`: токен (localStorage) + текущий пользователь, login (POST /session),
       logout, useAuth(). `src/routes.tsx`: react-router-dom, ProtectedRoute (редирект на /login),
       AdminRoute (по роли), Layout с навигацией. Страница Login.
-- [ ] Экраны (соответствуют `app/views/*`): Games (список со статусами, детали, CRUD player/admin, ростер,
+- [x] Экраны (соответствуют `app/views/*`): Games (список со статусами, детали, CRUD player/admin, ростер,
       привязка сервисов, finalize/unfinalize, кнопка экспорта ctf01d — скачивание zip); Services (каталог с
       фильтром public/поиском, детали, CRUD, toggle-public, импорт github/zip, upload-archives,
       check-checker, скачивание архивов); Teams (список, состав, события, CRUD, join-request, invite,
