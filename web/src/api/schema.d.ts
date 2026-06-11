@@ -146,6 +146,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/games/{id}/export/ctf01d/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get ctf01d export options and warnings for a game */
+        get: operations["getCtf01dExportOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/export/ctf01d": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Export game as ctf01d zip archive */
+        post: operations["exportCtf01d"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games/{id}/teams": {
         parameters: {
             query?: never;
@@ -857,6 +891,56 @@ export interface components {
             items: components["schemas"]["Game"][];
             pagination: components["schemas"]["Pagination"];
         };
+        Ctf01dExportOptions: {
+            /** @default 8080 */
+            port: number;
+            /** @default true */
+            include_html: boolean;
+            /** @default true */
+            include_compose: boolean;
+            html_source_path?: string;
+            /** @default 1 */
+            flag_ttl_min: number;
+            /** @default 1 */
+            basic_attack_cost: number;
+            /** @default 1 */
+            defence_cost: number;
+            /** Format: date-time */
+            coffee_break_start?: string | null;
+            /** Format: date-time */
+            coffee_break_end?: string | null;
+            warnings?: string[];
+        };
+        Ctf01dExportRequest: {
+            prefix?: string;
+            /** @default true */
+            include_html: boolean;
+            html_source_path?: string;
+            /** @default true */
+            include_compose: boolean;
+            compose_project?: string;
+            /** @default 8080 */
+            port: number;
+            /** @default ./html */
+            htmlfolder: string;
+            /** @default false */
+            random: boolean;
+            /** @default 1 */
+            flag_ttl_min: number;
+            /** @default 1 */
+            basic_attack_cost: number;
+            /** @default 1 */
+            defence_cost: number;
+            /** Format: date-time */
+            coffee_break_start?: string | null;
+            /** Format: date-time */
+            coffee_break_end?: string | null;
+        };
+        Ctf01dExportError: {
+            code: string;
+            message?: string;
+            errors: string[];
+        };
         GameTeam: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
             id: number;
@@ -1558,6 +1642,67 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    getCtf01dExportOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Export options with warnings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ctf01dExportOptions"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    exportCtf01d: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Ctf01dExportRequest"];
+            };
+        };
+        responses: {
+            /** @description ctf01d zip archive */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            /** @description Export validation errors */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ctf01dExportError"];
+                };
+            };
         };
     };
     listGameTeams: {

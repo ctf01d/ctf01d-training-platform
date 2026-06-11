@@ -344,18 +344,18 @@ games, game_teams, services, results, final_results, writeups, games_services (j
       тестового zip→check-checker.
 
 ### Task 25: ctf01d export fragment, params and pure exporter
-- [ ] Расширить `api/fragments/games.yaml`: `GET /games/{id}/export/ctf01d/options`
+- [x] Расширить `api/fragments/games.yaml`: `GET /games/{id}/export/ctf01d/options`
       (getCtf01dExportOptions → Ctf01dExportOptions: дефолты + warnings о неполных данных),
       `POST /games/{id}/export/ctf01d` (exportCtf01d, body Ctf01dExportRequest → 200 application/zip
       binary, или 422 со списком ошибок). Схема Ctf01dExportRequest (prefix, include_html, html_source_path,
       include_compose, compose_project, scoreboard.port/htmlfolder/random, overrides). `make openapi`.
-- [ ] `internal/service/ctf01d/types.go` — зеркало входа Ruby-сервиса: GameParams (id, name, start_utc,
+- [x] `internal/service/ctf01d/types.go` — зеркало входа Ruby-сервиса: GameParams (id, name, start_utc,
       end_utc, coffee_break_start/end_utc, flag_ttl_min, basic_attack_cost, defence_cost),
       ScoreboardParams (port, htmlfolder, random), TeamParams (id, name, active, ip_address, logo_rel,
       logo_src), CheckerParams (id, name, enabled, script_wait, round_sleep, script_rel, files[]{src,rel}),
       Options (prefix, include_html, html_source_path, include_compose, compose_project); `ExportError`
       (накопление сообщений).
-- [ ] `internal/service/ctf01d/exporter.go` — порт `app/services/ctf01d/export_zip.rb` пошагово, сохраняя
+- [x] `internal/service/ctf01d/exporter.go` — порт `app/services/ctf01d/export_zip.rb` пошагово, сохраняя
       поведение: `Export(params)→(filename, data []byte, err)`; hydrateCheckersFromBundles +
       detectCheckerEntrypoint (checker.*/checker на верхнем уровне, иначе basename); validateInputs
       (собрать все ошибки: обязательные поля, уникальность id, корректность ip); buildYAMLConfig

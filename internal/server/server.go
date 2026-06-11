@@ -122,6 +122,8 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.GET("/games/:id/teams", requireAuth, h.HandleListGameTeams)
 	api.POST("/games/:id/teams/reorder", append(requirePlayer, h.HandleReorderGameTeams)...)
 	api.GET("/games/:id/scoreboard", middleware.OptionalAuth(h.JWTMgr()), h.HandleGetGameScoreboard)
+	api.GET("/games/:id/export/ctf01d/options", append(requirePlayer, h.HandleGetCtf01dExportOptions)...)
+	api.POST("/games/:id/export/ctf01d", append(requirePlayer, h.HandleExportCtf01d)...)
 
 	api.POST("/game-teams", append(requirePlayer, h.HandleCreateGameTeam)...)
 	api.PATCH("/game-teams/:id", append(requirePlayer, h.HandleUpdateGameTeam)...)

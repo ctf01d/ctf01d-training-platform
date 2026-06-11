@@ -861,6 +861,14 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 	c.JSON(http.StatusOK, importResultToHTTP(result))
 }
 
+func (h *Handler) HandleGetCtf01dExportOptions(c *gin.Context) {
+	notImplemented(c)
+}
+
+func (h *Handler) HandleExportCtf01d(c *gin.Context) {
+	notImplemented(c)
+}
+
 func (h *Handler) ListServices(c *gin.Context, params httpserver.ListServicesParams) {
 	h.HandleListServices(c)
 }
@@ -916,6 +924,16 @@ func (h *Handler) ImportServiceFromGithub(c *gin.Context) {
 
 func (h *Handler) ImportServiceFromZip(c *gin.Context) {
 	h.HandleImportServiceFromZip(c)
+}
+
+func (h *Handler) GetCtf01dExportOptions(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleGetCtf01dExportOptions(c)
+}
+
+func (h *Handler) ExportCtf01d(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleExportCtf01d(c)
 }
 
 var _ httpserver.ServerInterface = (*Handler)(nil)

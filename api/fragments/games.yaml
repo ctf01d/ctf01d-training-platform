@@ -186,6 +186,100 @@ components:
             $ref: '#/components/schemas/Game'
         pagination:
           $ref: '#/components/schemas/Pagination'
+    Ctf01dExportOptions:
+      type: object
+      properties:
+        port:
+          type: integer
+          default: 8080
+        include_html:
+          type: boolean
+          default: true
+        include_compose:
+          type: boolean
+          default: true
+        html_source_path:
+          type: string
+        flag_ttl_min:
+          type: integer
+          default: 1
+        basic_attack_cost:
+          type: integer
+          default: 1
+        defence_cost:
+          type: number
+          default: 1.0
+        coffee_break_start:
+          type: string
+          format: date-time
+          nullable: true
+        coffee_break_end:
+          type: string
+          format: date-time
+          nullable: true
+        warnings:
+          type: array
+          items:
+            type: string
+    Ctf01dExportRequest:
+      type: object
+      properties:
+        prefix:
+          type: string
+        include_html:
+          type: boolean
+          default: true
+        html_source_path:
+          type: string
+        include_compose:
+          type: boolean
+          default: true
+        compose_project:
+          type: string
+        port:
+          type: integer
+          default: 8080
+        htmlfolder:
+          type: string
+          default: "./html"
+        random:
+          type: boolean
+          default: false
+        flag_ttl_min:
+          type: integer
+          default: 1
+          minimum: 1
+          maximum: 25
+        basic_attack_cost:
+          type: integer
+          default: 1
+          minimum: 1
+          maximum: 500
+        defence_cost:
+          type: number
+          default: 1.0
+        coffee_break_start:
+          type: string
+          format: date-time
+          nullable: true
+        coffee_break_end:
+          type: string
+          format: date-time
+          nullable: true
+    Ctf01dExportError:
+      type: object
+      required:
+        - code
+        - errors
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
 
 paths:
   /games:
@@ -454,6 +548,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Game'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /games/{id}/export/ctf01d/options:
+    get:
+      operationId: getCtf01dExportOptions
+      tags:
+        - games
+      summary: Get ctf01d export options and warnings for a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Export options with warnings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ctf01dExportOptions'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /games/{id}/export/ctf01d:
+    post:
+      operationId: exportCtf01d
+      tags:
+        - games
+      summary: Export game as ctf01d zip archive
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ctf01dExportRequest'
+      responses:
+        '200':
+          description: ctf01d zip archive
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '422':
+          description: Export validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ctf01dExportError'
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
