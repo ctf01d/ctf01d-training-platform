@@ -36,14 +36,14 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - `go test ./...`
 
 ### Task 1: Initialize Go module and base layout
-- [ ] `go mod init github.com/ctf01d/ctf01d-training-platform` (Go 1.26).
-- [ ] Создать каталоги с `.gitkeep`: `cmd/server/`, `internal/config/`, `internal/server/`,
+- [x] `go mod init github.com/ctf01d/ctf01d-training-platform` (Go 1.26).
+- [x] Создать каталоги с `.gitkeep`: `cmd/server/`, `internal/config/`, `internal/server/`,
       `internal/server/handler/`, `internal/server/middleware/`, `internal/service/`, `internal/repository/`,
       `internal/repository/queries/`, `internal/domain/errs/`, `pkg/logger/`, `migrations/`,
       `api/fragments/`, `gen/httpserver/`, `tools/`.
-- [ ] `.gitignore` для Go: `/ctf01d-server`, `*.out`, `.env`, `/tmp/`, `web/node_modules/`, `web/dist/`,
+- [x] `.gitignore` для Go: `/ctf01d-server`, `*.out`, `.env`, `/tmp/`, `web/node_modules/`, `web/dist/`,
       `/storage/`. Не игнорировать существующие Rails-файлы.
-- [ ] `.env.sample` с переменными: `APP_ENV, HTTP_ADDR, DATABASE_URL, JWT_SECRET, JWT_TTL_HOURS,
+- [x] `.env.sample` с переменными: `APP_ENV, HTTP_ADDR, DATABASE_URL, JWT_SECRET, JWT_TTL_HOURS,
       LOG_LEVEL, CORS_ALLOWED_ORIGINS, STORAGE_DIR, STORAGE_MAX_UPLOAD_BYTES`.
 
 ### Task 2: Configuration package

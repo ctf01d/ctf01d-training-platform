@@ -12,3 +12,11 @@ log
 tmp
 storage
 .ralphex
+
+# Go
+/ctf01d-server
+*.out
+.env
+web/node_modules/
+web/dist/
+/storage/
