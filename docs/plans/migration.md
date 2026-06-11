@@ -74,12 +74,12 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [x] Тест `/healthz` через `httptest` (Health за интерфейсом `Pinger`, подменяется в тесте).
 
 ### Task 5: Makefile and dev Docker Compose
-- [ ] Добавить Go-таргеты в Makefile (не ломая существующий Rails Makefile; уникальные имена,
+- [x] Добавить Go-таргеты в Makefile (не ломая существующий Rails Makefile; уникальные имена,
       каждый с `## name: описание`): `go-build` (`go build -o ctf01d-server ./cmd/server`), `go-run`,
       `go-test`, `go-vet`, `go-fmt` (gofmt -w + gofumpt при наличии), `go-tidy` (`go mod tidy`).
-- [ ] `docker-compose.dev.yml`: `db` (postgres:16, POSTGRES_USER/PASSWORD=postgres,
+- [x] `docker-compose.dev.yml`: `db` (postgres:16, POSTGRES_USER/PASSWORD=postgres,
       POSTGRES_DB=ctf01d_development, порт 5432, volume) и опционально `adminer` (8081).
-- [ ] `docs/GO_DEV.md` с инструкцией локального запуска и требованиями к инструментам
+- [x] `docs/GO_DEV.md` с инструкцией локального запуска и требованиями к инструментам
       (yq v4, Node.js, golangci-lint). Выполнить `go mod tidy`, убедиться что build/test зелёные.
 
 ### Task 6: OpenAPI tooling and Makefile pipeline

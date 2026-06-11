@@ -1,5 +1,6 @@
 .PHONY: codegen database-attach database-remove database-reset database-run database-stop fmt install lint server-build server-run test \
-	web-rails-image-build web-rails-image-save web-rails-image-build-and-save deploy
+	web-rails-image-build web-rails-image-save web-rails-image-build-and-save deploy \
+	go-build go-run go-test go-vet go-fmt go-tidy
 # -----------------------------------------------------------------------------
 # Docker images (production)
 
@@ -47,3 +48,31 @@ RSYNC_EXCLUDES = \
 
 deploy:
 	rsync -az $(RSYNC_EXCLUDES) ./ $(DEPLOY_HOST):$(DEPLOY_TARGET)
+
+# -----------------------------------------------------------------------------
+# Go development targets
+
+## go-build: Compile the Go server binary
+go-build:
+	go build -o ctf01d-server ./cmd/server
+
+## go-run: Build and run the Go server
+go-run: go-build
+	./ctf01d-server
+
+## go-test: Run all Go tests
+go-test:
+	go test ./...
+
+## go-vet: Run go vet on all packages
+go-vet:
+	go vet ./...
+
+## go-fmt: Format Go source files (gofmt + gofumpt if available)
+go-fmt:
+	gofmt -w .
+	@gofumpt -w . 2>/dev/null || true
+
+## go-tidy: Run go mod tidy
+go-tidy:
+	go mod tidy
