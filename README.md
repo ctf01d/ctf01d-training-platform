@@ -6,7 +6,7 @@ Architecture
 - Backend: Go 1.26, Gin, pgx/v5, sqlc, goose migrations
 - Frontend: React + TypeScript (Vite), types generated from OpenAPI spec
 - Layers: handler -> service -> repository
-- Auth: JWT (bcrypt-compatible with Rails password_digest)
+- Auth: JWT (bcrypt-compatible with imported password_digest values)
 
 Development
 - Requirements: Go 1.26, Node.js 22, PostgreSQL 16, yq v4
@@ -40,4 +40,4 @@ Production (Docker Compose)
 - Migrations run automatically on startup when RUN_MIGRATIONS=true
 - API spec: api/openapi.yaml (view with any OpenAPI viewer)
 
-Legacy Rails code (app/, config/, db/, Gemfile) is preserved for reference.
+Rails runtime code has been removed. The temporary `cmd/import-rails` tool is kept for data import from an old Rails database.

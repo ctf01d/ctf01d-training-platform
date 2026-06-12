@@ -78,7 +78,6 @@ CREATE TABLE team_memberships (
 
 CREATE INDEX index_team_memberships_on_team_id ON team_memberships (team_id);
 CREATE INDEX index_team_memberships_on_user_id ON team_memberships (user_id);
-CREATE UNIQUE INDEX index_team_memberships_on_team_id_and_user_id ON team_memberships (team_id, user_id);
 
 CREATE TRIGGER set_team_memberships_updated_at
     BEFORE UPDATE ON team_memberships

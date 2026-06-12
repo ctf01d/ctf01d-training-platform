@@ -1,21 +1,14 @@
-dckr_mysql/*
-pg_docker
-src/server
-.bundle
-vendor
-/docker_tmp
-main
-cmd/__debug*
-__debug*
-server
-log
-tmp
-.ralphex
-
 # Go
 /ctf01d-server
 *.out
 .env
+cmd/__debug*
+__debug*
+
+# Local runtime data
+/log/
+/tmp/
+/.ralphex/
 web/node_modules/
 web/dist/
 /storage/

@@ -26,6 +26,7 @@ import (
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
+	writeupsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/writeups"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -96,6 +97,7 @@ func run() error {
 	gameService := gamesvc.NewService(store, store, store, store, store)
 	gameTeamService := gameteamsvc.NewService(store, store)
 	resultService := resultsvc.NewService(store.Queries, store.Queries)
+	writeupService := writeupsvc.NewService(store.Queries, teamService)
 	scoreboardService := scoreboardsvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries)
 	svcService := svcsvc.NewService(store.Queries)
 	svcArchives := svcsvc.NewArchiveService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
@@ -103,7 +105,7 @@ func run() error {
 	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
 	ctf01dBuilder := ctf01dsvc.NewBuilder(store.Queries)
 	ctf01dBuilder.SetStorageDir(cfg.Storage.Dir)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, writeupService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
 
 	engine := server.New(cfg, log, store, h)
 

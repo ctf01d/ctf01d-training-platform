@@ -8,6 +8,8 @@ import * as servicesApi from '../api/services'
 import type { Service } from '../api/services'
 import * as resultsApi from '../api/results'
 import type { Result, ResultCreate } from '../api/results'
+import * as writeupsApi from '../api/writeups'
+import type { Writeup, WriteupCreate } from '../api/writeups'
 import * as teamsApi from '../api/teams'
 import { ErrorDisplay, ActionButton, handleApiError } from '../components/ErrorDisplay'
 import { useAuth } from '../auth/AuthContext'
@@ -16,7 +18,7 @@ export default function GameDetailPage() {
   const { id } = useParams<{ id: string }>()
   const gameId = Number(id)
   const navigate = useNavigate()
-  const { isPlayer, isAdmin } = useAuth()
+  const { user, isPlayer, isAdmin } = useAuth()
 
   const [game, setGame] = useState<Game | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,13 +30,16 @@ export default function GameDetailPage() {
 
   const [gameTeams, setGameTeams] = useState<GameTeam[]>([])
   const [teamNames, setTeamNames] = useState<Record<number, string>>({})
+  const [manageableTeamIds, setManageableTeamIds] = useState<number[]>([])
   const [serviceIds, setServiceIds] = useState<number[]>([])
   const [serviceDetails, setServiceDetails] = useState<Record<number, Service>>({})
   const [results, setResults] = useState<Result[]>([])
+  const [writeups, setWriteups] = useState<Writeup[]>([])
 
   const [addTeamForm, setAddTeamForm] = useState<GameTeamCreate>({ game_id: gameId, team_id: 0 })
   const [addServiceId, setAddServiceId] = useState('')
   const [addResultForm, setAddResultForm] = useState<ResultCreate>({ game_id: gameId, team_id: 0, score: 0 })
+  const [addWriteupForm, setAddWriteupForm] = useState<WriteupCreate>({ game_id: gameId, team_id: 0, title: '', url: 'https://' })
 
   const fetchGame = useCallback(async () => {
     setLoading(true)
@@ -50,15 +55,26 @@ export default function GameDetailPage() {
       setGameTeams(data.items)
       const ids = data.items.map(gt => gt.team_id)
       const nameMap: Record<number, string> = {}
+      const manageable: number[] = []
       for (const tid of ids) {
         if (!teamNames[tid]) {
           const r = await teamsApi.getTeam(tid)
           if (r.data) nameMap[tid] = r.data.name
         }
+        if (isAdmin) {
+          manageable.push(tid)
+        } else if (user) {
+          const r = await teamsApi.listTeamMembers(tid)
+          const membership = r.data?.items.find(m => m.user_id === user.id)
+          if (membership?.status === 'approved' && (membership.role === 'owner' || membership.role === 'captain' || membership.role === 'vice_captain')) {
+            manageable.push(tid)
+          }
+        }
       }
       setTeamNames(prev => ({ ...prev, ...nameMap }))
+      setManageableTeamIds(manageable)
     }
-  }, [gameId, teamNames])
+  }, [gameId, isAdmin, teamNames, user])
 
   const fetchServices = useCallback(async () => {
     const { data } = await gamesApi.listGameServices(gameId)
@@ -78,12 +94,18 @@ export default function GameDetailPage() {
     if (data) setResults(data.items)
   }, [gameId])
 
+  const fetchWriteups = useCallback(async () => {
+    const { data } = await writeupsApi.listWriteups({ game_id: gameId })
+    if (data) setWriteups(data.items)
+  }, [gameId])
+
   useEffect(() => {
     void fetchGame()
     void fetchGameTeams()
     void fetchServices()
     void fetchResults()
-  }, [fetchGame, fetchGameTeams, fetchServices, fetchResults])
+    void fetchWriteups()
+  }, [fetchGame, fetchGameTeams, fetchServices, fetchResults, fetchWriteups])
 
   const handleSave = async () => {
     setSaving(true)
@@ -197,10 +219,25 @@ export default function GameDetailPage() {
     await fetchResults()
   }
 
+  const handleAddWriteup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const { error: err } = await writeupsApi.createWriteup(addWriteupForm)
+    if (err) { setError(err); return }
+    setAddWriteupForm({ game_id: gameId, team_id: 0, title: '', url: 'https://' })
+    await fetchWriteups()
+  }
+
+  const handleDeleteWriteup = async (writeupId: number) => {
+    const { error: err } = await writeupsApi.deleteWriteup(writeupId)
+    if (err) { setError(err); return }
+    await fetchWriteups()
+  }
+
   if (loading) return <div className="loading">Loading...</div>
   if (!game) return <ErrorDisplay error={error} onRetry={fetchGame} />
 
   const canEdit = isPlayer
+  const canManageWriteups = isAdmin || manageableTeamIds.length > 0
 
   return (
     <div className="page">
@@ -368,6 +405,41 @@ export default function GameDetailPage() {
             <input type="number" placeholder="Team ID" value={addResultForm.team_id || ''} onChange={e => setAddResultForm(f => ({ ...f, team_id: Number(e.target.value) }))} required />
             <input type="number" placeholder="Score" value={addResultForm.score ?? ''} onChange={e => setAddResultForm(f => ({ ...f, score: Number(e.target.value) }))} required />
             <button type="submit" className="btn btn-sm">Add Result</button>
+          </form>
+        )}
+      </div>
+
+      <div className="detail-section">
+        <h3>Writeups</h3>
+        {writeups.length > 0 ? (
+          <table className="data-table">
+            <thead>
+              <tr><th>Team</th><th>Title</th><th>URL</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {writeups.map(w => (
+                <tr key={w.id}>
+                  <td>{teamNames[w.team_id] ?? `Team #${w.team_id}`}</td>
+                  <td>{w.title}</td>
+                  <td><a href={safeHref(w.url)} target="_blank" rel="noreferrer">{w.url}</a></td>
+                  <td>
+                    {(isAdmin || manageableTeamIds.includes(w.team_id)) && (
+                      <ActionButton onClick={() => void handleDeleteWriteup(w.id)} variant="danger" confirm="Delete this writeup?">Delete</ActionButton>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No writeups.</p>
+        )}
+        {canManageWriteups && (
+          <form onSubmit={e => void handleAddWriteup(e)} className="inline-form">
+            <input type="number" placeholder="Team ID" value={addWriteupForm.team_id || ''} onChange={e => setAddWriteupForm(f => ({ ...f, team_id: Number(e.target.value) }))} required />
+            <input placeholder="Title" value={addWriteupForm.title} onChange={e => setAddWriteupForm(f => ({ ...f, title: e.target.value }))} required />
+            <input placeholder="https://..." value={addWriteupForm.url} onChange={e => setAddWriteupForm(f => ({ ...f, url: e.target.value }))} required />
+            <button type="submit" className="btn btn-sm">Add Writeup</button>
           </form>
         )}
       </div>

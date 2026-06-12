@@ -26,6 +26,7 @@ import (
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
+	writeupsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/writeups"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 	"github.com/ctf01d/ctf01d-training-platform/internal/testutil"
 	"github.com/gin-gonic/gin"
@@ -64,13 +65,14 @@ func setupTest(t *testing.T) (*gin.Engine, *repository.Store, func()) {
 	gameService := gamesvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries, store)
 	gameTeamService := gameteamsvc.NewService(store.Queries, store)
 	resultService := resultsvc.NewService(store.Queries, store.Queries)
+	writeupService := writeupsvc.NewService(store.Queries, teamService)
 	scoreboardService := scoreboardsvc.NewService(store.Queries, store.Queries, store.Queries, store.Queries)
 	svcService := svcsvc.NewService(store.Queries)
 	svcArchives := svcsvc.NewArchiveService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
 	svcChecker := svcsvc.NewCheckerService(store.Queries, fileStorage)
 	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
 	ctf01dBuilder := ctf01dsvc.NewBuilder(store.Queries)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, writeupService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
 
 	engine := server.New(cfg, log, store, h)
 	return engine, store, func() {}

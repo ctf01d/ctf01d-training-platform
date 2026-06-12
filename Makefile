@@ -1,34 +1,10 @@
-.PHONY: codegen database-attach database-remove database-reset database-run database-stop fmt install lint server-build server-run test \
-	web-rails-image-build web-rails-image-save web-rails-image-build-and-save deploy \
+.PHONY: deploy \
 	go-build go-run go-test go-vet go-fmt go-tidy \
 	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
 	migrate-up migrate-down migrate-status migrate-new \
 	sqlc-gen sqlc-vet seed \
 	web-install web-build web-gen web-dev \
 	lint lint-fix verify-codegen
-# -----------------------------------------------------------------------------
-# Docker images (production)
-
-# Image name can be overridden: make WEB_RAILS_IMAGE=myrepo/web-rails web-rails-image-build
-WEB_RAILS_IMAGE ?= ctf01d/web-rails
-GIT_TAG := $(shell git describe --tags --always 2>/dev/null || echo dev)
-
-# Build production image for web-rails app
-web-rails-image-build:
-	docker build -t $(WEB_RAILS_IMAGE):$(GIT_TAG) -f web-rails/Dockerfile web-rails
-
-# Export the built image into a tar file under dist/
-web-rails-image-save:
-	@mkdir -p dist
-	@if ! docker image inspect $(WEB_RAILS_IMAGE):$(GIT_TAG) >/dev/null 2>&1; then \
-		echo "Image $(WEB_RAILS_IMAGE):$(GIT_TAG) not found. Run 'make web-rails-image-build' first."; \
-		exit 1; \
-	fi
-	docker image save $(WEB_RAILS_IMAGE):$(GIT_TAG) -o dist/web-rails-$(GIT_TAG).tar
-	@echo "Saved to dist/web-rails-$(GIT_TAG).tar"
-
-# Convenience: build then export
-web-rails-image-build-and-save: web-rails-image-build web-rails-image-save
 
 # -----------------------------------------------------------------------------
 # Remote deploy helper (rsync with excludes)

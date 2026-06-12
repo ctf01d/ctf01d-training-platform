@@ -30,7 +30,12 @@ func newTestEngine(store Store) *gin.Engine {
 	}
 	log, _ := zap.NewDevelopment()
 	jwtMgr := auth.NewManager("test-secret", 24)
-	h := handler.New(nil, nil, jwtMgr, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, 209715200, "./storage")
+	h := handler.New(
+		nil, nil, jwtMgr,
+		nil, nil, nil, nil, nil, nil, nil, nil,
+		nil, nil, nil, nil, nil, nil,
+		209715200, "./storage",
+	)
 	return New(cfg, log, store, h)
 }
 

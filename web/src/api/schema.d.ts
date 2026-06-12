@@ -40,6 +40,75 @@ export interface paths {
         patch: operations["updateProfile"];
         trace?: never;
     };
+    "/games/{id}/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List teams in a game */
+        get: operations["listGameTeams"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a team to a game */
+        post: operations["createGameTeam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-teams/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a team from a game */
+        delete: operations["deleteGameTeam"];
+        options?: never;
+        head?: never;
+        /** Update a game team entry */
+        patch: operations["updateGameTeam"];
+        trace?: never;
+    };
+    "/games/{id}/teams/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder teams in a game */
+        post: operations["reorderGameTeams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games": {
         parameters: {
             query?: never;
@@ -174,75 +243,6 @@ export interface paths {
         put?: never;
         /** Export game as ctf01d zip archive */
         post: operations["exportCtf01d"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/games/{id}/teams": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List teams in a game */
-        get: operations["listGameTeams"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/game-teams": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add a team to a game */
-        post: operations["createGameTeam"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/game-teams/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove a team from a game */
-        delete: operations["deleteGameTeam"];
-        options?: never;
-        head?: never;
-        /** Update a game team entry */
-        patch: operations["updateGameTeam"];
-        trace?: never;
-    };
-    "/games/{id}/teams/reorder": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reorder teams in a game */
-        post: operations["reorderGameTeams"];
         delete?: never;
         options?: never;
         head?: never;
@@ -777,6 +777,42 @@ export interface paths {
         patch: operations["updateUser"];
         trace?: never;
     };
+    "/writeups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List writeups */
+        get: operations["listWriteups"];
+        put?: never;
+        /** Create a writeup */
+        post: operations["createWriteup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/writeups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a writeup by ID */
+        get: operations["getWriteup"];
+        put?: never;
+        post?: never;
+        /** Delete a writeup */
+        delete: operations["deleteWriteup"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -806,6 +842,47 @@ export interface components {
         LoginResponse: {
             token: string;
             user: components["schemas"]["User"];
+        };
+        GameTeam: components["schemas"]["Timestamped"] & {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            ip_address?: string | null;
+            ctf01d_id?: string | null;
+            ctf01d_overrides?: Record<string, never> | null;
+            team_type?: string | null;
+            order: number;
+        };
+        GameTeamCreate: {
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            ip_address?: string;
+            ctf01d_id?: string;
+            ctf01d_overrides?: Record<string, never>;
+            team_type?: string;
+            order?: number;
+        };
+        GameTeamUpdate: {
+            ip_address?: string;
+            ctf01d_id?: string;
+            ctf01d_overrides?: Record<string, never>;
+            team_type?: string;
+            order?: number;
+        };
+        GameTeamList: {
+            items: components["schemas"]["GameTeam"][];
+        };
+        ReorderRequest: {
+            items: {
+                /** Format: int64 */
+                id: number;
+                order: number;
+            }[];
         };
         Game: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
@@ -940,47 +1017,6 @@ export interface components {
             code: string;
             message?: string;
             errors: string[];
-        };
-        GameTeam: components["schemas"]["Timestamped"] & {
-            /** Format: int64 */
-            id: number;
-            /** Format: int64 */
-            game_id: number;
-            /** Format: int64 */
-            team_id: number;
-            ip_address?: string | null;
-            ctf01d_id?: string | null;
-            ctf01d_overrides?: Record<string, never> | null;
-            team_type?: string | null;
-            order: number;
-        };
-        GameTeamCreate: {
-            /** Format: int64 */
-            game_id: number;
-            /** Format: int64 */
-            team_id: number;
-            ip_address?: string;
-            ctf01d_id?: string;
-            ctf01d_overrides?: Record<string, never>;
-            team_type?: string;
-            order?: number;
-        };
-        GameTeamUpdate: {
-            ip_address?: string;
-            ctf01d_id?: string;
-            ctf01d_overrides?: Record<string, never>;
-            team_type?: string;
-            order?: number;
-        };
-        GameTeamList: {
-            items: components["schemas"]["GameTeam"][];
-        };
-        ReorderRequest: {
-            items: {
-                /** Format: int64 */
-                id: number;
-                order: number;
-            }[];
         };
         Result: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
@@ -1244,6 +1280,29 @@ export interface components {
             items: components["schemas"]["User"][];
             pagination: components["schemas"]["Pagination"];
         };
+        Writeup: components["schemas"]["Timestamped"] & {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            title: string;
+            /** Format: uri */
+            url: string;
+        };
+        WriteupCreate: {
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            title: string;
+            /** Format: uri */
+            url: string;
+        };
+        WriteupList: {
+            items: components["schemas"]["Writeup"][];
+        };
     };
     responses: {
         /** @description Resource not found */
@@ -1391,6 +1450,133 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    listGameTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of game teams */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeamList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    createGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameTeamCreate"];
+            };
+        };
+        responses: {
+            /** @description Game team created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeam"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    deleteGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game team deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameTeamUpdate"];
+            };
+        };
+        responses: {
+            /** @description Game team updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeam"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    reorderGameTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Teams reordered */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     listGames: {
@@ -1703,133 +1889,6 @@ export interface operations {
                     "application/json": components["schemas"]["Ctf01dExportError"];
                 };
             };
-        };
-    };
-    listGameTeams: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of game teams */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GameTeamList"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    createGameTeam: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GameTeamCreate"];
-            };
-        };
-        responses: {
-            /** @description Game team created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GameTeam"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
-        };
-    };
-    deleteGameTeam: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Game team deleted */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateGameTeam: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GameTeamUpdate"];
-            };
-        };
-        responses: {
-            /** @description Game team updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GameTeam"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    reorderGameTeams: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReorderRequest"];
-            };
-        };
-        responses: {
-            /** @description Teams reordered */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
         };
     };
     listResults: {
@@ -3059,6 +3118,105 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    listWriteups: {
+        parameters: {
+            query?: {
+                game_id?: number;
+                team_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of writeups */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WriteupList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createWriteup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WriteupCreate"];
+            };
+        };
+        responses: {
+            /** @description Writeup created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Writeup"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getWriteup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Writeup details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Writeup"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteWriteup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Writeup deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
 }

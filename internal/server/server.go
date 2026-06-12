@@ -136,6 +136,11 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.PATCH("/results/:id", append(requirePlayer, h.HandleUpdateResult)...)
 	api.DELETE("/results/:id", append(requirePlayer, h.HandleDeleteResult)...)
 
+	api.GET("/writeups", requireAuth, h.HandleListWriteups)
+	api.POST("/writeups", requireAuth, h.HandleCreateWriteup)
+	api.GET("/writeups/:id", requireAuth, h.HandleGetWriteup)
+	api.DELETE("/writeups/:id", requireAuth, h.HandleDeleteWriteup)
+
 	api.GET("/scoreboard", requireAuth, h.HandleGetGlobalScoreboard)
 
 	api.GET("/services", middleware.OptionalAuth(h.JWTMgr()), h.HandleListServices)

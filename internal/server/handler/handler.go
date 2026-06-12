@@ -23,6 +23,7 @@ import (
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
+	writeupsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/writeups"
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,6 +37,7 @@ type Handler struct {
 	games          *gamesvc.Service
 	gameTeams      *gameteamsvc.Service
 	results        *resultsvc.Service
+	writeups       *writeupsvc.Service
 	scoreboard     *scoreboardsvc.Service
 	gameTeamsQ     *db.Queries
 	svcService     *svcsvc.Service
@@ -57,6 +59,7 @@ func New(
 	games *gamesvc.Service,
 	gameTeams *gameteamsvc.Service,
 	results *resultsvc.Service,
+	writeups *writeupsvc.Service,
 	scoreboard *scoreboardsvc.Service,
 	gameTeamsQ *db.Queries,
 	svcService *svcsvc.Service,
@@ -77,6 +80,7 @@ func New(
 		games:          games,
 		gameTeams:      gameTeams,
 		results:        results,
+		writeups:       writeups,
 		scoreboard:     scoreboard,
 		gameTeamsQ:     gameTeamsQ,
 		svcService:     svcService,

@@ -4,6 +4,9 @@ import * as teamsApi from '../api/teams'
 import type { Team, TeamUpdate } from '../api/teams'
 import * as membershipsApi from '../api/team-memberships'
 import type { TeamMembership, SetRoleRequest } from '../api/team-memberships'
+import * as gamesApi from '../api/games'
+import * as writeupsApi from '../api/writeups'
+import type { Writeup } from '../api/writeups'
 import type { components } from '../api/schema'
 import { ErrorDisplay, ActionButton } from '../components/ErrorDisplay'
 import { useAuth } from '../auth/AuthContext'
@@ -35,6 +38,8 @@ export default function TeamDetailPage() {
   const eventsPerPage = 10
 
   const [roleForm, setRoleForm] = useState<Record<number, string>>({})
+  const [writeups, setWriteups] = useState<Writeup[]>([])
+  const [gameNames, setGameNames] = useState<Record<number, string>>({})
 
   const fetchTeam = useCallback(async () => {
     setLoading(true)
@@ -57,17 +62,32 @@ export default function TeamDetailPage() {
     }
   }, [teamId, eventsPage])
 
+  const fetchWriteups = useCallback(async () => {
+    const { data } = await writeupsApi.listWriteups({ team_id: teamId })
+    if (data) {
+      setWriteups(data.items)
+      const names: Record<number, string> = {}
+      const gameIds = Array.from(new Set(data.items.map(w => w.game_id)))
+      for (const gameID of gameIds) {
+        const r = await gamesApi.getGame(gameID)
+        if (r.data) names[gameID] = r.data.name ?? `Game #${gameID}`
+      }
+      setGameNames(prev => ({ ...prev, ...names }))
+    }
+  }, [teamId])
+
   useEffect(() => {
     void fetchTeam()
     void fetchMembers()
-  }, [fetchTeam, fetchMembers])
+    void fetchWriteups()
+  }, [fetchTeam, fetchMembers, fetchWriteups])
 
   useEffect(() => {
     void fetchEvents()
   }, [fetchEvents])
 
   const isManager = isAdmin || members.some(
-    m => m.user_id === user?.id && (m.role === 'owner' || m.role === 'captain') && m.status === 'approved'
+    m => m.user_id === user?.id && (m.role === 'owner' || m.role === 'captain' || m.role === 'vice_captain') && m.status === 'approved'
   )
 
   const startEdit = () => {
@@ -126,6 +146,12 @@ export default function TeamDetailPage() {
     const { error: err } = await teamsApi.deleteTeam(teamId)
     if (err) { setError(err); return }
     navigate('/teams')
+  }
+
+  const handleDeleteWriteup = async (writeupId: number) => {
+    const { error: err } = await writeupsApi.deleteWriteup(writeupId)
+    if (err) { setError(err); return }
+    await fetchWriteups()
   }
 
   if (loading) return <div className="loading">Loading...</div>
@@ -271,6 +297,38 @@ export default function TeamDetailPage() {
               {inviteLoading ? 'Inviting...' : 'Invite'}
             </button>
           </form>
+        )}
+      </div>
+
+      <div className="detail-section">
+        <h3>Writeups</h3>
+        {writeups.length > 0 ? (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Game</th>
+                <th>Title</th>
+                <th>URL</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {writeups.map(w => (
+                <tr key={w.id}>
+                  <td>{gameNames[w.game_id] ?? `Game #${w.game_id}`}</td>
+                  <td>{w.title}</td>
+                  <td><a href={safeUrl(w.url)} target="_blank" rel="noreferrer">{w.url}</a></td>
+                  <td>
+                    {isManager && (
+                      <ActionButton onClick={() => void handleDeleteWriteup(w.id)} variant="danger" confirm="Delete this writeup?">Delete</ActionButton>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No writeups.</p>
         )}
       </div>
 

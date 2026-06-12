@@ -427,4 +427,6 @@ games, game_teams, services, results, final_results, writeups, games_services (j
 - [x] Обновить `.gitlab-ci.yml` и/или `.github/workflows/*`: стадии lint (golangci + spectral + eslint),
       codegen (verify-codegen), test (go test с postgres-сервисом и TEST_DATABASE_URL; web typecheck),
       build (docker build + web build).
-- [x] После подтверждённого паритета: удалить Rails (skipped - requires manual parity confirmation before deletion)
+- [x] После подтверждённого паритета: удалить Rails (`app/`, Rails `config/`, `db/`, `Gemfile*`,
+      `Rakefile`, `bin/rails`, `config.ru`, старые compose/Dockerfile). `cmd/import-rails` оставлен
+      временно для переноса данных из старой Rails-БД.
