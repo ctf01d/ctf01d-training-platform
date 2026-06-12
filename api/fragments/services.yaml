@@ -1,7 +1,3 @@
-tags:
-  - name: services
-    description: Service management
-
 components:
   schemas:
     ServiceArchiveMeta:
@@ -171,7 +167,6 @@ components:
           type: array
           items:
             type: string
-
 paths:
   /services:
     get:
@@ -201,6 +196,7 @@ paths:
                 $ref: '#/components/schemas/ServiceList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List services
     post:
       operationId: createService
       tags:
@@ -227,6 +223,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a service
   /services/{id}:
     get:
       operationId: getService
@@ -253,6 +250,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a service by ID
     patch:
       operationId: updateService
       tags:
@@ -288,6 +286,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a service
     delete:
       operationId: deleteService
       tags:
@@ -309,6 +308,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a service
   /services/{id}/toggle-public:
     post:
       operationId: toggleServicePublic
@@ -335,6 +335,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Toggle service public flag
   /services/{id}/check-checker:
     post:
       operationId: checkServiceChecker
@@ -363,6 +364,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Run checker inspection
   /services/{id}/redownload:
     post:
       operationId: redownloadServiceArchives
@@ -391,6 +393,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Re-download service and checker archives from URLs
   /services/{id}/upload-archives:
     post:
       operationId: uploadServiceArchives
@@ -432,6 +435,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Upload service and/or checker archives
   /services/{id}/download/{kind}:
     get:
       operationId: downloadServiceArchive
@@ -467,6 +471,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Download service or checker archive
   /services/import/github:
     post:
       operationId: importServiceFromGithub
@@ -492,6 +497,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Import a service from GitHub
   /services/import/zip:
     post:
       operationId: importServiceFromZip
@@ -523,3 +529,4 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Import a service from a ZIP file

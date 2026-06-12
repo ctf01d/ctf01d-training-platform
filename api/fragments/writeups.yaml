@@ -1,7 +1,3 @@
-tags:
-  - name: writeups
-    description: Team writeups for games
-
 components:
   schemas:
     Writeup:
@@ -58,7 +54,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Writeup'
-
 paths:
   /writeups:
     get:
@@ -88,6 +83,7 @@ paths:
                 $ref: '#/components/schemas/WriteupList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List writeups
     post:
       operationId: createWriteup
       tags:
@@ -116,6 +112,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a writeup
   /writeups/{id}:
     get:
       operationId: getWriteup
@@ -142,6 +139,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a writeup by ID
     delete:
       operationId: deleteWriteup
       tags:
@@ -165,3 +163,4 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a writeup

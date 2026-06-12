@@ -1,7 +1,3 @@
-tags:
-  - name: auth
-    description: Authentication
-
 components:
   schemas:
     LoginRequest:
@@ -24,7 +20,6 @@ components:
           type: string
         user:
           $ref: '#/components/schemas/User'
-
 paths:
   /session:
     post:
@@ -48,6 +43,7 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Login
     delete:
       operationId: logout
       tags:
@@ -60,6 +56,7 @@ paths:
           description: Logged out
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Logout
   /profile:
     get:
       operationId: getProfile
@@ -77,6 +74,7 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get current user profile
     patch:
       operationId: updateProfile
       tags:
@@ -101,3 +99,4 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
+      description: Update current user profile

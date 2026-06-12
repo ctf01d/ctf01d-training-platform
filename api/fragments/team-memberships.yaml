@@ -1,7 +1,3 @@
-tags:
-  - name: team-memberships
-    description: Team membership management
-
 components:
   schemas:
     TeamMembership:
@@ -157,7 +153,6 @@ components:
             $ref: '#/components/schemas/TeamMembershipEvent'
         pagination:
           $ref: '#/components/schemas/Pagination'
-
 paths:
   /team-memberships:
     get:
@@ -179,6 +174,7 @@ paths:
                 $ref: '#/components/schemas/TeamMembershipList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List team memberships
     post:
       operationId: createTeamMembership
       tags:
@@ -205,6 +201,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a team membership
   /team-memberships/{id}:
     get:
       operationId: getTeamMembership
@@ -231,6 +228,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a team membership by ID
     patch:
       operationId: updateTeamMembership
       tags:
@@ -266,6 +264,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a team membership
     delete:
       operationId: deleteTeamMembership
       tags:
@@ -289,6 +288,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a team membership
   /team-memberships/{id}/approve:
     post:
       operationId: approveTeamMembership
@@ -317,6 +317,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Approve a pending team membership
   /team-memberships/{id}/reject:
     post:
       operationId: rejectTeamMembership
@@ -345,6 +346,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Reject a pending team membership
   /team-memberships/{id}/accept:
     post:
       operationId: acceptTeamMembership
@@ -373,6 +375,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Accept a team membership invitation
   /team-memberships/{id}/decline:
     post:
       operationId: declineTeamMembership
@@ -401,6 +404,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Decline a team membership invitation
   /team-memberships/{id}/set-role:
     post:
       operationId: setTeamMembershipRole
@@ -437,3 +441,4 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Set the role of a team member

@@ -13,9 +13,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login */
+        /**
+         * Login
+         * @description Login
+         */
         post: operations["login"];
-        /** Logout */
+        /**
+         * Logout
+         * @description Logout
+         */
         delete: operations["logout"];
         options?: never;
         head?: never;
@@ -29,84 +35,21 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get current user profile */
+        /**
+         * Get current user profile
+         * @description Get current user profile
+         */
         get: operations["getProfile"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Update current user profile */
+        /**
+         * Update current user profile
+         * @description Update current user profile
+         */
         patch: operations["updateProfile"];
-        trace?: never;
-    };
-    "/games/{id}/teams": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List teams in a game */
-        get: operations["listGameTeams"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/game-teams": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add a team to a game */
-        post: operations["createGameTeam"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/game-teams/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove a team from a game */
-        delete: operations["deleteGameTeam"];
-        options?: never;
-        head?: never;
-        /** Update a game team entry */
-        patch: operations["updateGameTeam"];
-        trace?: never;
-    };
-    "/games/{id}/teams/reorder": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reorder teams in a game */
-        post: operations["reorderGameTeams"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/games": {
@@ -116,10 +59,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List games */
+        /**
+         * List games
+         * @description List games
+         */
         get: operations["listGames"];
         put?: never;
-        /** Create a game */
+        /**
+         * Create a game
+         * @description Create a game
+         */
         post: operations["createGame"];
         delete?: never;
         options?: never;
@@ -134,15 +83,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a game by ID */
+        /**
+         * Get a game by ID
+         * @description Get a game by ID
+         */
         get: operations["getGame"];
         put?: never;
         post?: never;
-        /** Delete a game */
+        /**
+         * Delete a game
+         * @description Delete a game
+         */
         delete: operations["deleteGame"];
         options?: never;
         head?: never;
-        /** Update a game */
+        /**
+         * Update a game
+         * @description Update a game
+         */
         patch: operations["updateGame"];
         trace?: never;
     };
@@ -153,10 +111,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List services linked to a game */
+        /**
+         * List services linked to a game
+         * @description List services linked to a game
+         */
         get: operations["listGameServices"];
         put?: never;
-        /** Link a service to a game */
+        /**
+         * Link a service to a game
+         * @description Link a service to a game
+         */
         post: operations["addGameService"];
         delete?: never;
         options?: never;
@@ -174,7 +138,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Unlink a service from a game */
+        /**
+         * Unlink a service from a game
+         * @description Unlink a service from a game
+         */
         delete: operations["removeGameService"];
         options?: never;
         head?: never;
@@ -190,7 +157,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Finalize game results */
+        /**
+         * Finalize game results
+         * @description Finalize game results
+         */
         post: operations["finalizeGame"];
         delete?: never;
         options?: never;
@@ -207,7 +177,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Unfinalize game results */
+        /**
+         * Unfinalize game results
+         * @description Unfinalize game results
+         */
         post: operations["unfinalizeGame"];
         delete?: never;
         options?: never;
@@ -222,7 +195,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get ctf01d export options and warnings for a game */
+        /**
+         * Get ctf01d export options and warnings for a game
+         * @description Get ctf01d export options and warnings for a game
+         */
         get: operations["getCtf01dExportOptions"];
         put?: never;
         post?: never;
@@ -241,8 +217,95 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Export game as ctf01d zip archive */
+        /**
+         * Export game as ctf01d zip archive
+         * @description Export game as ctf01d zip archive
+         */
         post: operations["exportCtf01d"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{id}/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List teams in a game
+         * @description List teams in a game
+         */
+        get: operations["listGameTeams"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a team to a game
+         * @description Add a team to a game
+         */
+        post: operations["createGameTeam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/game-teams/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a team from a game
+         * @description Remove a team from a game
+         */
+        delete: operations["deleteGameTeam"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a game team entry
+         * @description Update a game team entry
+         */
+        patch: operations["updateGameTeam"];
+        trace?: never;
+    };
+    "/games/{id}/teams/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reorder teams in a game
+         * @description Reorder teams in a game
+         */
+        post: operations["reorderGameTeams"];
         delete?: never;
         options?: never;
         head?: never;
@@ -256,10 +319,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List results */
+        /**
+         * List results
+         * @description List results
+         */
         get: operations["listResults"];
         put?: never;
-        /** Create a result */
+        /**
+         * Create a result
+         * @description Create a result
+         */
         post: operations["createResult"];
         delete?: never;
         options?: never;
@@ -274,15 +343,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a result by ID */
+        /**
+         * Get a result by ID
+         * @description Get a result by ID
+         */
         get: operations["getResult"];
         put?: never;
         post?: never;
-        /** Delete a result */
+        /**
+         * Delete a result
+         * @description Delete a result
+         */
         delete: operations["deleteResult"];
         options?: never;
         head?: never;
-        /** Update a result */
+        /**
+         * Update a result
+         * @description Update a result
+         */
         patch: operations["updateResult"];
         trace?: never;
     };
@@ -293,7 +371,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get scoreboard for a game */
+        /**
+         * Get scoreboard for a game
+         * @description Get scoreboard for a game
+         */
         get: operations["getGameScoreboard"];
         put?: never;
         post?: never;
@@ -310,7 +391,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get global scoreboard */
+        /**
+         * Get global scoreboard
+         * @description Get global scoreboard
+         */
         get: operations["getGlobalScoreboard"];
         put?: never;
         post?: never;
@@ -327,10 +411,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List services */
+        /**
+         * List services
+         * @description List services
+         */
         get: operations["listServices"];
         put?: never;
-        /** Create a service */
+        /**
+         * Create a service
+         * @description Create a service
+         */
         post: operations["createService"];
         delete?: never;
         options?: never;
@@ -345,15 +435,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a service by ID */
+        /**
+         * Get a service by ID
+         * @description Get a service by ID
+         */
         get: operations["getService"];
         put?: never;
         post?: never;
-        /** Delete a service */
+        /**
+         * Delete a service
+         * @description Delete a service
+         */
         delete: operations["deleteService"];
         options?: never;
         head?: never;
-        /** Update a service */
+        /**
+         * Update a service
+         * @description Update a service
+         */
         patch: operations["updateService"];
         trace?: never;
     };
@@ -366,7 +465,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Toggle service public flag */
+        /**
+         * Toggle service public flag
+         * @description Toggle service public flag
+         */
         post: operations["toggleServicePublic"];
         delete?: never;
         options?: never;
@@ -383,7 +485,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Run checker inspection */
+        /**
+         * Run checker inspection
+         * @description Run checker inspection
+         */
         post: operations["checkServiceChecker"];
         delete?: never;
         options?: never;
@@ -400,7 +505,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Re-download service and checker archives from URLs */
+        /**
+         * Re-download service and checker archives from URLs
+         * @description Re-download service and checker archives from URLs
+         */
         post: operations["redownloadServiceArchives"];
         delete?: never;
         options?: never;
@@ -417,7 +525,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload service and/or checker archives */
+        /**
+         * Upload service and/or checker archives
+         * @description Upload service and/or checker archives
+         */
         post: operations["uploadServiceArchives"];
         delete?: never;
         options?: never;
@@ -432,7 +543,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Download service or checker archive */
+        /**
+         * Download service or checker archive
+         * @description Download service or checker archive
+         */
         get: operations["downloadServiceArchive"];
         put?: never;
         post?: never;
@@ -451,7 +565,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Import a service from GitHub */
+        /**
+         * Import a service from GitHub
+         * @description Import a service from GitHub
+         */
         post: operations["importServiceFromGithub"];
         delete?: never;
         options?: never;
@@ -468,7 +585,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Import a service from a ZIP file */
+        /**
+         * Import a service from a ZIP file
+         * @description Import a service from a ZIP file
+         */
         post: operations["importServiceFromZip"];
         delete?: never;
         options?: never;
@@ -483,10 +603,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List team memberships */
+        /**
+         * List team memberships
+         * @description List team memberships
+         */
         get: operations["listTeamMemberships"];
         put?: never;
-        /** Create a team membership */
+        /**
+         * Create a team membership
+         * @description Create a team membership
+         */
         post: operations["createTeamMembership"];
         delete?: never;
         options?: never;
@@ -501,15 +627,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a team membership by ID */
+        /**
+         * Get a team membership by ID
+         * @description Get a team membership by ID
+         */
         get: operations["getTeamMembership"];
         put?: never;
         post?: never;
-        /** Delete a team membership */
+        /**
+         * Delete a team membership
+         * @description Delete a team membership
+         */
         delete: operations["deleteTeamMembership"];
         options?: never;
         head?: never;
-        /** Update a team membership */
+        /**
+         * Update a team membership
+         * @description Update a team membership
+         */
         patch: operations["updateTeamMembership"];
         trace?: never;
     };
@@ -522,7 +657,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Approve a pending team membership */
+        /**
+         * Approve a pending team membership
+         * @description Approve a pending team membership
+         */
         post: operations["approveTeamMembership"];
         delete?: never;
         options?: never;
@@ -539,7 +677,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reject a pending team membership */
+        /**
+         * Reject a pending team membership
+         * @description Reject a pending team membership
+         */
         post: operations["rejectTeamMembership"];
         delete?: never;
         options?: never;
@@ -556,7 +697,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Accept a team membership invitation */
+        /**
+         * Accept a team membership invitation
+         * @description Accept a team membership invitation
+         */
         post: operations["acceptTeamMembership"];
         delete?: never;
         options?: never;
@@ -573,7 +717,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Decline a team membership invitation */
+        /**
+         * Decline a team membership invitation
+         * @description Decline a team membership invitation
+         */
         post: operations["declineTeamMembership"];
         delete?: never;
         options?: never;
@@ -590,7 +737,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set the role of a team member */
+        /**
+         * Set the role of a team member
+         * @description Set the role of a team member
+         */
         post: operations["setTeamMembershipRole"];
         delete?: never;
         options?: never;
@@ -605,10 +755,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List teams */
+        /**
+         * List teams
+         * @description List teams
+         */
         get: operations["listTeams"];
         put?: never;
-        /** Create a team */
+        /**
+         * Create a team
+         * @description Create a team
+         */
         post: operations["createTeam"];
         delete?: never;
         options?: never;
@@ -623,15 +779,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a team by ID */
+        /**
+         * Get a team by ID
+         * @description Get a team by ID
+         */
         get: operations["getTeam"];
         put?: never;
         post?: never;
-        /** Delete a team */
+        /**
+         * Delete a team
+         * @description Delete a team
+         */
         delete: operations["deleteTeam"];
         options?: never;
         head?: never;
-        /** Update a team */
+        /**
+         * Update a team
+         * @description Update a team
+         */
         patch: operations["updateTeam"];
         trace?: never;
     };
@@ -644,7 +809,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request to join a team */
+        /**
+         * Request to join a team
+         * @description Request to join a team
+         */
         post: operations["requestJoinTeam"];
         delete?: never;
         options?: never;
@@ -661,7 +829,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Invite a user to a team */
+        /**
+         * Invite a user to a team
+         * @description Invite a user to a team
+         */
         post: operations["inviteToTeam"];
         delete?: never;
         options?: never;
@@ -676,7 +847,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List team members */
+        /**
+         * List team members
+         * @description List team members
+         */
         get: operations["listTeamMembers"];
         put?: never;
         post?: never;
@@ -693,7 +867,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List team membership events */
+        /**
+         * List team membership events
+         * @description List team membership events
+         */
         get: operations["listTeamEvents"];
         put?: never;
         post?: never;
@@ -710,10 +887,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List universities */
+        /**
+         * List universities
+         * @description List universities
+         */
         get: operations["listUniversities"];
         put?: never;
-        /** Create a university */
+        /**
+         * Create a university
+         * @description Create a university
+         */
         post: operations["createUniversity"];
         delete?: never;
         options?: never;
@@ -728,15 +911,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a university by ID */
+        /**
+         * Get a university by ID
+         * @description Get a university by ID
+         */
         get: operations["getUniversity"];
         put?: never;
         post?: never;
-        /** Delete a university */
+        /**
+         * Delete a university
+         * @description Delete a university
+         */
         delete: operations["deleteUniversity"];
         options?: never;
         head?: never;
-        /** Update a university */
+        /**
+         * Update a university
+         * @description Update a university
+         */
         patch: operations["updateUniversity"];
         trace?: never;
     };
@@ -747,10 +939,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List users */
+        /**
+         * List users
+         * @description List users
+         */
         get: operations["listUsers"];
         put?: never;
-        /** Create a user */
+        /**
+         * Create a user
+         * @description Create a user
+         */
         post: operations["createUser"];
         delete?: never;
         options?: never;
@@ -765,15 +963,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a user by ID */
+        /**
+         * Get a user by ID
+         * @description Get a user by ID
+         */
         get: operations["getUser"];
         put?: never;
         post?: never;
-        /** Delete a user */
+        /**
+         * Delete a user
+         * @description Delete a user
+         */
         delete: operations["deleteUser"];
         options?: never;
         head?: never;
-        /** Update a user */
+        /**
+         * Update a user
+         * @description Update a user
+         */
         patch: operations["updateUser"];
         trace?: never;
     };
@@ -784,10 +991,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List writeups */
+        /**
+         * List writeups
+         * @description List writeups
+         */
         get: operations["listWriteups"];
         put?: never;
-        /** Create a writeup */
+        /**
+         * Create a writeup
+         * @description Create a writeup
+         */
         post: operations["createWriteup"];
         delete?: never;
         options?: never;
@@ -802,11 +1015,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a writeup by ID */
+        /**
+         * Get a writeup by ID
+         * @description Get a writeup by ID
+         */
         get: operations["getWriteup"];
         put?: never;
         post?: never;
-        /** Delete a writeup */
+        /**
+         * Delete a writeup
+         * @description Delete a writeup
+         */
         delete: operations["deleteWriteup"];
         options?: never;
         head?: never;
@@ -842,47 +1061,6 @@ export interface components {
         LoginResponse: {
             token: string;
             user: components["schemas"]["User"];
-        };
-        GameTeam: components["schemas"]["Timestamped"] & {
-            /** Format: int64 */
-            id: number;
-            /** Format: int64 */
-            game_id: number;
-            /** Format: int64 */
-            team_id: number;
-            ip_address?: string | null;
-            ctf01d_id?: string | null;
-            ctf01d_overrides?: Record<string, never> | null;
-            team_type?: string | null;
-            order: number;
-        };
-        GameTeamCreate: {
-            /** Format: int64 */
-            game_id: number;
-            /** Format: int64 */
-            team_id: number;
-            ip_address?: string;
-            ctf01d_id?: string;
-            ctf01d_overrides?: Record<string, never>;
-            team_type?: string;
-            order?: number;
-        };
-        GameTeamUpdate: {
-            ip_address?: string;
-            ctf01d_id?: string;
-            ctf01d_overrides?: Record<string, never>;
-            team_type?: string;
-            order?: number;
-        };
-        GameTeamList: {
-            items: components["schemas"]["GameTeam"][];
-        };
-        ReorderRequest: {
-            items: {
-                /** Format: int64 */
-                id: number;
-                order: number;
-            }[];
         };
         Game: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
@@ -1017,6 +1195,47 @@ export interface components {
             code: string;
             message?: string;
             errors: string[];
+        };
+        GameTeam: components["schemas"]["Timestamped"] & {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            ip_address?: string | null;
+            ctf01d_id?: string | null;
+            ctf01d_overrides?: Record<string, never> | null;
+            team_type?: string | null;
+            order: number;
+        };
+        GameTeamCreate: {
+            /** Format: int64 */
+            game_id: number;
+            /** Format: int64 */
+            team_id: number;
+            ip_address?: string;
+            ctf01d_id?: string;
+            ctf01d_overrides?: Record<string, never>;
+            team_type?: string;
+            order?: number;
+        };
+        GameTeamUpdate: {
+            ip_address?: string;
+            ctf01d_id?: string;
+            ctf01d_overrides?: Record<string, never>;
+            team_type?: string;
+            order?: number;
+        };
+        GameTeamList: {
+            items: components["schemas"]["GameTeam"][];
+        };
+        ReorderRequest: {
+            items: {
+                /** Format: int64 */
+                id: number;
+                order: number;
+            }[];
         };
         Result: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
@@ -1452,133 +1671,6 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
-    listGameTeams: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of game teams */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GameTeamList"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    createGameTeam: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GameTeamCreate"];
-            };
-        };
-        responses: {
-            /** @description Game team created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GameTeam"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
-        };
-    };
-    deleteGameTeam: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Game team deleted */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    updateGameTeam: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GameTeamUpdate"];
-            };
-        };
-        responses: {
-            /** @description Game team updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GameTeam"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    reorderGameTeams: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReorderRequest"];
-            };
-        };
-        responses: {
-            /** @description Teams reordered */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
     listGames: {
         parameters: {
             query?: {
@@ -1889,6 +1981,133 @@ export interface operations {
                     "application/json": components["schemas"]["Ctf01dExportError"];
                 };
             };
+        };
+    };
+    listGameTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of game teams */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeamList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    createGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameTeamCreate"];
+            };
+        };
+        responses: {
+            /** @description Game team created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeam"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    deleteGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game team deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateGameTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameTeamUpdate"];
+            };
+        };
+        responses: {
+            /** @description Game team updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameTeam"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    reorderGameTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Teams reordered */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     listResults: {

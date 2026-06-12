@@ -1,7 +1,3 @@
-tags:
-  - name: scoreboard
-    description: Scoreboard views
-
 components:
   schemas:
     ScoreboardEntry:
@@ -63,7 +59,6 @@ components:
                 type: string
               total_score:
                 type: integer
-
 paths:
   /games/{id}/scoreboard:
     get:
@@ -90,6 +85,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '403':
           $ref: '#/components/responses/Forbidden'
+      description: Get scoreboard for a game
   /scoreboard:
     get:
       operationId: getGlobalScoreboard
@@ -107,3 +103,4 @@ paths:
                 $ref: '#/components/schemas/GlobalScoreboard'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get global scoreboard

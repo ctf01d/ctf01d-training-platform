@@ -1,10 +1,36 @@
 openapi: 3.0.3
 info:
   title: CTF01D Training Platform API
+  description: |
+    REST API for the CTF01D training platform: users, teams, universities,
+    games (competitions), services, results, scoreboards and writeups.
   version: 1.0.0
+  contact:
+    name: CTF01D
+    url: https://github.com/ctf01d
 servers:
   - url: http://localhost:8080
 tags:
+  - name: auth
+    description: Authentication and session management
+  - name: users
+    description: User accounts
+  - name: universities
+    description: Universities
+  - name: teams
+    description: Teams and rosters
+  - name: team-memberships
+    description: Team membership requests, invites and roles
+  - name: games
+    description: Games (competitions) and their configuration
+  - name: game-teams
+    description: Game participants and per-game team settings
+  - name: services
+    description: Vulnerable services and checkers
+  - name: results
+    description: Per-game team results
+  - name: scoreboard
+    description: Scoreboards and standings
   - name: writeups
     description: Team writeups for games
 paths:
@@ -30,6 +56,7 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Login
     delete:
       operationId: logout
       tags:
@@ -42,6 +69,7 @@ paths:
           description: Logged out
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Logout
   /profile:
     get:
       operationId: getProfile
@@ -59,6 +87,7 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get current user profile
     patch:
       operationId: updateProfile
       tags:
@@ -83,140 +112,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /games/{id}/teams:
-    get:
-      operationId: listGameTeams
-      tags:
-        - game-teams
-      summary: List teams in a game
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: List of game teams
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameTeamList'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-  /game-teams:
-    post:
-      operationId: createGameTeam
-      tags:
-        - game-teams
-      summary: Add a team to a game
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GameTeamCreate'
-      responses:
-        '201':
-          description: Game team created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameTeam'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-  /game-teams/{id}:
-    patch:
-      operationId: updateGameTeam
-      tags:
-        - game-teams
-      summary: Update a game team entry
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GameTeamUpdate'
-      responses:
-        '200':
-          description: Game team updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameTeam'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-    delete:
-      operationId: deleteGameTeam
-      tags:
-        - game-teams
-      summary: Remove a team from a game
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '204':
-          description: Game team deleted
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-  /games/{id}/teams/reorder:
-    post:
-      operationId: reorderGameTeams
-      tags:
-        - game-teams
-      summary: Reorder teams in a game
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReorderRequest'
-      responses:
-        '200':
-          description: Teams reordered
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+      description: Update current user profile
   /games:
     get:
       operationId: listGames
@@ -237,6 +133,7 @@ paths:
                 $ref: '#/components/schemas/GameList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List games
     post:
       operationId: createGame
       tags:
@@ -261,6 +158,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a game
   /games/{id}:
     get:
       operationId: getGame
@@ -287,6 +185,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a game by ID
     patch:
       operationId: updateGame
       tags:
@@ -320,6 +219,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a game
     delete:
       operationId: deleteGame
       tags:
@@ -341,6 +241,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a game
   /games/{id}/services:
     get:
       operationId: listGameServices
@@ -370,6 +271,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List services linked to a game
     post:
       operationId: addGameService
       tags:
@@ -405,6 +307,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Link a service to a game
   /games/{id}/services/{service_id}:
     delete:
       operationId: removeGameService
@@ -433,6 +336,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Unlink a service from a game
   /games/{id}/finalize:
     post:
       operationId: finalizeGame
@@ -461,6 +365,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Finalize game results
   /games/{id}/unfinalize:
     post:
       operationId: unfinalizeGame
@@ -487,6 +392,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Unfinalize game results
   /games/{id}/export/ctf01d/options:
     get:
       operationId: getCtf01dExportOptions
@@ -513,6 +419,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get ctf01d export options and warnings for a game
   /games/{id}/export/ctf01d:
     post:
       operationId: exportCtf01d
@@ -552,6 +459,146 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Export game as ctf01d zip archive
+  /games/{id}/teams:
+    get:
+      operationId: listGameTeams
+      tags:
+        - game-teams
+      summary: List teams in a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of game teams
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameTeamList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: List teams in a game
+  /game-teams:
+    post:
+      operationId: createGameTeam
+      tags:
+        - game-teams
+      summary: Add a team to a game
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameTeamCreate'
+      responses:
+        '201':
+          description: Game team created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameTeam'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Add a team to a game
+  /game-teams/{id}:
+    patch:
+      operationId: updateGameTeam
+      tags:
+        - game-teams
+      summary: Update a game team entry
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameTeamUpdate'
+      responses:
+        '200':
+          description: Game team updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameTeam'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Update a game team entry
+    delete:
+      operationId: deleteGameTeam
+      tags:
+        - game-teams
+      summary: Remove a team from a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Game team deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Remove a team from a game
+  /games/{id}/teams/reorder:
+    post:
+      operationId: reorderGameTeams
+      tags:
+        - game-teams
+      summary: Reorder teams in a game
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '200':
+          description: Teams reordered
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Reorder teams in a game
   /results:
     get:
       operationId: listResults
@@ -580,6 +627,7 @@ paths:
                 $ref: '#/components/schemas/ResultList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List results
     post:
       operationId: createResult
       tags:
@@ -606,6 +654,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a result
   /results/{id}:
     get:
       operationId: getResult
@@ -632,6 +681,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a result by ID
     patch:
       operationId: updateResult
       tags:
@@ -665,6 +715,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a result
     delete:
       operationId: deleteResult
       tags:
@@ -686,6 +737,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a result
   /games/{id}/scoreboard:
     get:
       operationId: getGameScoreboard
@@ -711,6 +763,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '403':
           $ref: '#/components/responses/Forbidden'
+      description: Get scoreboard for a game
   /scoreboard:
     get:
       operationId: getGlobalScoreboard
@@ -728,6 +781,7 @@ paths:
                 $ref: '#/components/schemas/GlobalScoreboard'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get global scoreboard
   /services:
     get:
       operationId: listServices
@@ -756,6 +810,7 @@ paths:
                 $ref: '#/components/schemas/ServiceList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List services
     post:
       operationId: createService
       tags:
@@ -782,6 +837,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a service
   /services/{id}:
     get:
       operationId: getService
@@ -808,6 +864,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a service by ID
     patch:
       operationId: updateService
       tags:
@@ -843,6 +900,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a service
     delete:
       operationId: deleteService
       tags:
@@ -864,6 +922,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a service
   /services/{id}/toggle-public:
     post:
       operationId: toggleServicePublic
@@ -890,6 +949,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Toggle service public flag
   /services/{id}/check-checker:
     post:
       operationId: checkServiceChecker
@@ -918,6 +978,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Run checker inspection
   /services/{id}/redownload:
     post:
       operationId: redownloadServiceArchives
@@ -946,6 +1007,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Re-download service and checker archives from URLs
   /services/{id}/upload-archives:
     post:
       operationId: uploadServiceArchives
@@ -987,6 +1049,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Upload service and/or checker archives
   /services/{id}/download/{kind}:
     get:
       operationId: downloadServiceArchive
@@ -1022,6 +1085,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Download service or checker archive
   /services/import/github:
     post:
       operationId: importServiceFromGithub
@@ -1047,6 +1111,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Import a service from GitHub
   /services/import/zip:
     post:
       operationId: importServiceFromZip
@@ -1078,6 +1143,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Import a service from a ZIP file
   /team-memberships:
     get:
       operationId: listTeamMemberships
@@ -1098,6 +1164,7 @@ paths:
                 $ref: '#/components/schemas/TeamMembershipList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List team memberships
     post:
       operationId: createTeamMembership
       tags:
@@ -1124,6 +1191,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a team membership
   /team-memberships/{id}:
     get:
       operationId: getTeamMembership
@@ -1150,6 +1218,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a team membership by ID
     patch:
       operationId: updateTeamMembership
       tags:
@@ -1185,6 +1254,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a team membership
     delete:
       operationId: deleteTeamMembership
       tags:
@@ -1208,6 +1278,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a team membership
   /team-memberships/{id}/approve:
     post:
       operationId: approveTeamMembership
@@ -1236,6 +1307,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Approve a pending team membership
   /team-memberships/{id}/reject:
     post:
       operationId: rejectTeamMembership
@@ -1264,6 +1336,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Reject a pending team membership
   /team-memberships/{id}/accept:
     post:
       operationId: acceptTeamMembership
@@ -1292,6 +1365,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Accept a team membership invitation
   /team-memberships/{id}/decline:
     post:
       operationId: declineTeamMembership
@@ -1320,6 +1394,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Decline a team membership invitation
   /team-memberships/{id}/set-role:
     post:
       operationId: setTeamMembershipRole
@@ -1356,6 +1431,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Set the role of a team member
   /teams:
     get:
       operationId: listTeams
@@ -1376,6 +1452,7 @@ paths:
                 $ref: '#/components/schemas/TeamList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List teams
     post:
       operationId: createTeam
       tags:
@@ -1402,6 +1479,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a team
   /teams/{id}:
     get:
       operationId: getTeam
@@ -1428,6 +1506,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a team by ID
     patch:
       operationId: updateTeam
       tags:
@@ -1463,6 +1542,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a team
     delete:
       operationId: deleteTeam
       tags:
@@ -1484,6 +1564,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a team
   /teams/{id}/join-request:
     post:
       operationId: requestJoinTeam
@@ -1510,6 +1591,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Request to join a team
   /teams/{id}/invite:
     post:
       operationId: inviteToTeam
@@ -1544,6 +1626,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Invite a user to a team
   /teams/{id}/members:
     get:
       operationId: listTeamMembers
@@ -1570,6 +1653,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List team members
   /teams/{id}/events:
     get:
       operationId: listTeamEvents
@@ -1598,6 +1682,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List team membership events
   /universities:
     get:
       operationId: listUniversities
@@ -1618,6 +1703,7 @@ paths:
                 $ref: '#/components/schemas/UniversityList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List universities
     post:
       operationId: createUniversity
       tags:
@@ -1642,6 +1728,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a university
   /universities/{id}:
     get:
       operationId: getUniversity
@@ -1668,6 +1755,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a university by ID
     patch:
       operationId: updateUniversity
       tags:
@@ -1701,6 +1789,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a university
     delete:
       operationId: deleteUniversity
       tags:
@@ -1722,6 +1811,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a university
   /users:
     get:
       operationId: listUsers
@@ -1742,6 +1832,7 @@ paths:
                 $ref: '#/components/schemas/UserList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List users
     post:
       operationId: createUser
       tags:
@@ -1768,6 +1859,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a user
   /users/{id}:
     get:
       operationId: getUser
@@ -1794,6 +1886,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a user by ID
     patch:
       operationId: updateUser
       tags:
@@ -1829,6 +1922,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a user
     delete:
       operationId: deleteUser
       tags:
@@ -1850,6 +1944,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a user
   /writeups:
     get:
       operationId: listWriteups
@@ -1878,6 +1973,7 @@ paths:
                 $ref: '#/components/schemas/WriteupList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List writeups
     post:
       operationId: createWriteup
       tags:
@@ -1906,6 +2002,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a writeup
   /writeups/{id}:
     get:
       operationId: getWriteup
@@ -1932,6 +2029,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a writeup by ID
     delete:
       operationId: deleteWriteup
       tags:
@@ -1955,6 +2053,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a writeup
 components:
   securitySchemes:
     BearerAuth:
@@ -2018,101 +2117,6 @@ components:
           type: string
         user:
           $ref: '#/components/schemas/User'
-    GameTeam:
-      allOf:
-        - $ref: '#/components/schemas/Timestamped'
-        - type: object
-          required:
-            - id
-            - game_id
-            - team_id
-            - order
-          properties:
-            id:
-              type: integer
-              format: int64
-            game_id:
-              type: integer
-              format: int64
-            team_id:
-              type: integer
-              format: int64
-            ip_address:
-              type: string
-              nullable: true
-            ctf01d_id:
-              type: string
-              nullable: true
-            ctf01d_overrides:
-              type: object
-              nullable: true
-            team_type:
-              type: string
-              nullable: true
-            order:
-              type: integer
-    GameTeamCreate:
-      type: object
-      required:
-        - game_id
-        - team_id
-      properties:
-        game_id:
-          type: integer
-          format: int64
-        team_id:
-          type: integer
-          format: int64
-        ip_address:
-          type: string
-        ctf01d_id:
-          type: string
-        ctf01d_overrides:
-          type: object
-        team_type:
-          type: string
-        order:
-          type: integer
-    GameTeamUpdate:
-      type: object
-      properties:
-        ip_address:
-          type: string
-        ctf01d_id:
-          type: string
-        ctf01d_overrides:
-          type: object
-        team_type:
-          type: string
-        order:
-          type: integer
-    GameTeamList:
-      type: object
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/GameTeam'
-    ReorderRequest:
-      type: object
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          items:
-            type: object
-            required:
-              - id
-              - order
-            properties:
-              id:
-                type: integer
-                format: int64
-              order:
-                type: integer
     Game:
       allOf:
         - $ref: '#/components/schemas/Timestamped'
@@ -2350,7 +2354,7 @@ components:
           default: 8080
         htmlfolder:
           type: string
-          default: "./html"
+          default: './html'
         random:
           type: boolean
           default: false
@@ -2389,6 +2393,101 @@ components:
           type: array
           items:
             type: string
+    GameTeam:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - game_id
+            - team_id
+            - order
+          properties:
+            id:
+              type: integer
+              format: int64
+            game_id:
+              type: integer
+              format: int64
+            team_id:
+              type: integer
+              format: int64
+            ip_address:
+              type: string
+              nullable: true
+            ctf01d_id:
+              type: string
+              nullable: true
+            ctf01d_overrides:
+              type: object
+              nullable: true
+            team_type:
+              type: string
+              nullable: true
+            order:
+              type: integer
+    GameTeamCreate:
+      type: object
+      required:
+        - game_id
+        - team_id
+      properties:
+        game_id:
+          type: integer
+          format: int64
+        team_id:
+          type: integer
+          format: int64
+        ip_address:
+          type: string
+        ctf01d_id:
+          type: string
+        ctf01d_overrides:
+          type: object
+        team_type:
+          type: string
+        order:
+          type: integer
+    GameTeamUpdate:
+      type: object
+      properties:
+        ip_address:
+          type: string
+        ctf01d_id:
+          type: string
+        ctf01d_overrides:
+          type: object
+        team_type:
+          type: string
+        order:
+          type: integer
+    GameTeamList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameTeam'
+    ReorderRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - order
+            properties:
+              id:
+                type: integer
+                format: int64
+              order:
+                type: integer
     Result:
       allOf:
         - $ref: '#/components/schemas/Timestamped'

@@ -1,7 +1,3 @@
-tags:
-  - name: games
-    description: Game management
-
 components:
   schemas:
     Game:
@@ -241,7 +237,7 @@ components:
           default: 8080
         htmlfolder:
           type: string
-          default: "./html"
+          default: './html'
         random:
           type: boolean
           default: false
@@ -280,7 +276,6 @@ components:
           type: array
           items:
             type: string
-
 paths:
   /games:
     get:
@@ -302,6 +297,7 @@ paths:
                 $ref: '#/components/schemas/GameList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List games
     post:
       operationId: createGame
       tags:
@@ -326,6 +322,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Create a game
   /games/{id}:
     get:
       operationId: getGame
@@ -352,6 +349,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get a game by ID
     patch:
       operationId: updateGame
       tags:
@@ -385,6 +383,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Update a game
     delete:
       operationId: deleteGame
       tags:
@@ -406,6 +405,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Delete a game
   /games/{id}/services:
     get:
       operationId: listGameServices
@@ -435,6 +435,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: List services linked to a game
     post:
       operationId: addGameService
       tags:
@@ -470,6 +471,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Link a service to a game
   /games/{id}/services/{service_id}:
     delete:
       operationId: removeGameService
@@ -498,6 +500,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Unlink a service from a game
   /games/{id}/finalize:
     post:
       operationId: finalizeGame
@@ -526,6 +529,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Finalize game results
   /games/{id}/unfinalize:
     post:
       operationId: unfinalizeGame
@@ -552,6 +556,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Unfinalize game results
   /games/{id}/export/ctf01d/options:
     get:
       operationId: getCtf01dExportOptions
@@ -578,6 +583,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Get ctf01d export options and warnings for a game
   /games/{id}/export/ctf01d:
     post:
       operationId: exportCtf01d
@@ -617,3 +623,4 @@ paths:
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+      description: Export game as ctf01d zip archive

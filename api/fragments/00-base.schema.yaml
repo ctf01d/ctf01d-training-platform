@@ -1,10 +1,38 @@
 openapi: 3.0.3
 info:
   title: CTF01D Training Platform API
+  description: |
+    REST API for the CTF01D training platform: users, teams, universities,
+    games (competitions), services, results, scoreboards and writeups.
   version: 1.0.0
+  contact:
+    name: CTF01D
+    url: https://github.com/ctf01d
 servers:
   - url: http://localhost:8080
-tags: []
+tags:
+  - name: auth
+    description: Authentication and session management
+  - name: users
+    description: User accounts
+  - name: universities
+    description: Universities
+  - name: teams
+    description: Teams and rosters
+  - name: team-memberships
+    description: Team membership requests, invites and roles
+  - name: games
+    description: Games (competitions) and their configuration
+  - name: game-teams
+    description: Game participants and per-game team settings
+  - name: services
+    description: Vulnerable services and checkers
+  - name: results
+    description: Per-game team results
+  - name: scoreboard
+    description: Scoreboards and standings
+  - name: writeups
+    description: Team writeups for games
 paths: {}
 components: {}
 security:

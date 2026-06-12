@@ -1,8 +1,4 @@
-extends:
-  - spectral:oas
+extends: ['spectral:oas', 'spectral:asyncapi']
 
 rules:
-  operation-description: off
-  oas3-schema: off
-  info-contact: off
-  info-description: off
+  operation-description: 'off'
