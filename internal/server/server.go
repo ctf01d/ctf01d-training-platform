@@ -5,13 +5,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/config"
-	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
-	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/config"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 )
 
 type Store interface {

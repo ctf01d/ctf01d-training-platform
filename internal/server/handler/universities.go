@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
-	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) HandleListUniversities(c *gin.Context) {

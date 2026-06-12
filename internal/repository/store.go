@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 )
 
 type Store struct {

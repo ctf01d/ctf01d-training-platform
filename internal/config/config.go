@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -49,10 +50,10 @@ func Load() (*Config, error) {
 	}
 	if cfg.Env == "production" {
 		if cfg.JWT.Secret == "" {
-			return nil, fmt.Errorf("JWT_SECRET is required in production")
+			return nil, errors.New("JWT_SECRET is required in production")
 		}
 		if cfg.DB.URL == "" {
-			return nil, fmt.Errorf("DATABASE_URL is required in production")
+			return nil, errors.New("DATABASE_URL is required in production")
 		}
 	}
 	if cfg.DB.URL == "" {

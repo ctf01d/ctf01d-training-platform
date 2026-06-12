@@ -169,7 +169,6 @@ func TestRemainingHTTPRoutesFlow(t *testing.T) {
 	requireStatus(t, makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/writeups?game_id=%d&team_id=%d", gameID, teamID), nil, ownerToken), http.StatusOK, "list writeups")
 	requireStatus(t, makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/writeups/%d", writeupID), nil, ownerToken), http.StatusOK, "get writeup")
 	requireStatus(t, makeReq(t, engine, http.MethodDelete, fmt.Sprintf("/api/v1/writeups/%d", writeupID), nil, ownerToken), http.StatusNoContent, "delete writeup")
-
 }
 
 func membershipIDForUser(t *testing.T, engine *gin.Engine, teamID, userID int64, token string) int64 {

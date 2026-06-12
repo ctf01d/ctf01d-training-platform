@@ -6,11 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type mockStore struct {

@@ -14,11 +14,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func init() {
@@ -478,7 +479,7 @@ func TestPgtypeTz(t *testing.T) {
 		t.Errorf("Time = %v, want %v", ts.Time, now)
 	}
 
-	var zeroPgtype pgtype.Timestamptz = pgtype.Timestamptz{}
+	var zeroPgtype = pgtype.Timestamptz{}
 	_ = zeroPgtype
 }
 

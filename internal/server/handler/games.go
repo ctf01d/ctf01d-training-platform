@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
-	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) HandleListGames(c *gin.Context) {

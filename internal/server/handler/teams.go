@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	teamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/teams"
-	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) HandleListTeams(c *gin.Context) {

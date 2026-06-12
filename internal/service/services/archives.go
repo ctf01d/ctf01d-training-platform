@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -40,11 +41,11 @@ func NewArchiveService(q ArchiveQuerier, store storage.Storage, maxUploadBytes i
 			Timeout: 5 * time.Minute,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				if len(via) >= 10 {
-					return fmt.Errorf("too many redirects")
+					return errors.New("too many redirects")
 				}
 				host := req.URL.Hostname()
 				if host == "" {
-					return fmt.Errorf("redirect URL has no host")
+					return errors.New("redirect URL has no host")
 				}
 				return nil
 			},
@@ -217,7 +218,7 @@ func (s *ArchiveService) OpenLocal(ctx context.Context, id int64, kind string) (
 	return rc, filename, nil
 }
 
-var errBlockedHost = fmt.Errorf("URL resolves to a blocked or private address")
+var errBlockedHost = errors.New("URL resolves to a blocked or private address")
 
 var blockedIPCheck = isBlockedIP
 
@@ -293,7 +294,7 @@ func (s *ArchiveService) downloadAndSave(ctx context.Context, archiveURL, key st
 		return storage.FileInfo{}, fmt.Errorf("reading archive header: %w", err)
 	}
 	if !bytes.Equal(header[:n], zipMagic) {
-		return storage.FileInfo{}, fmt.Errorf("downloaded file is not a valid ZIP archive")
+		return storage.FileInfo{}, errors.New("downloaded file is not a valid ZIP archive")
 	}
 
 	limited := io.LimitReader(resp.Body, s.maxUploadBytes+1)

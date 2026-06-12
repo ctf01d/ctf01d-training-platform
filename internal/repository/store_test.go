@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
@@ -33,7 +33,7 @@ func TestStore_WithTx_Rollback(t *testing.T) {
 	ctx := context.Background()
 
 	err := store.WithTx(ctx, func(q *db.Queries) error {
-		return fmt.Errorf("forced error")
+		return errors.New("forced error")
 	})
 	if err == nil {
 		t.Fatal("expected error from WithTx rollback")

@@ -13,10 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 )
 
 func createZip(files map[string]string) []byte {

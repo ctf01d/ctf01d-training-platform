@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
-	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
-	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 )
 
 type mockGameQuerier struct {
@@ -243,9 +244,9 @@ func TestComputeScoreboardStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-		got := string(gamesvc.ComputeScoreboardStatus(tt.opensAt, tt.closesAt, now))
-		if got != tt.want {
-			t.Errorf("ComputeScoreboardStatus() = %q, want %q", got, tt.want)
+			got := string(gamesvc.ComputeScoreboardStatus(tt.opensAt, tt.closesAt, now))
+			if got != tt.want {
+				t.Errorf("ComputeScoreboardStatus() = %q, want %q", got, tt.want)
 			}
 		})
 	}

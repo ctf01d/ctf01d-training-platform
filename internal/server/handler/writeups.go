@@ -3,11 +3,12 @@ package handler
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	writeupsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/writeups"
-	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) HandleListWriteups(c *gin.Context) {

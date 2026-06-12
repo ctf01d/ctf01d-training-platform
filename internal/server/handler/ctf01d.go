@@ -1,14 +1,17 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	ctf01dsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/ctf01d"
-	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) HandleGetCtf01dExportOptions(c *gin.Context) {
@@ -64,7 +67,7 @@ func (h *Handler) HandleExportCtf01d(c *gin.Context) {
 	if req.HtmlSourcePath != nil && *req.HtmlSourcePath != "" {
 		abs, err := filepath.Abs(*req.HtmlSourcePath)
 		if err != nil {
-			respondError(c, fmt.Errorf("invalid html_source_path"))
+			respondError(c, errors.New("invalid html_source_path"))
 			return
 		}
 		abs = filepath.Clean(abs)
@@ -74,7 +77,7 @@ func (h *Handler) HandleExportCtf01d(c *gin.Context) {
 			return
 		}
 		if !strings.HasPrefix(abs, allowedBase+string(filepath.Separator)) && abs != allowedBase {
-			respondError(c, fmt.Errorf("html_source_path must be within the storage directory"))
+			respondError(c, errors.New("html_source_path must be within the storage directory"))
 			return
 		}
 		*req.HtmlSourcePath = abs
@@ -125,7 +128,7 @@ func (h *Handler) HandleExportCtf01d(c *gin.Context) {
 	c.Header("Content-Type", "application/zip")
 	safeName := sanitizeFilename(exportResult.Filename)
 	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, safeName))
-	c.Header("Content-Length", fmt.Sprintf("%d", len(exportResult.Data)))
+	c.Header("Content-Length", strconv.Itoa(len(exportResult.Data)))
 	c.Data(http.StatusOK, "application/zip", exportResult.Data)
 }
 

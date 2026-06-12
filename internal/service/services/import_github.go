@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -53,7 +54,7 @@ func NewImportService(q ImportQuerier, store storage.Storage, maxUploadBytes int
 			Timeout: 5 * time.Minute,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				if len(via) >= 10 {
-					return fmt.Errorf("too many redirects")
+					return errors.New("too many redirects")
 				}
 				return nil
 			},
@@ -240,7 +241,7 @@ func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAd
 
 	name := meta.Name
 	if name == "" {
-		return nil, fmt.Errorf("could not determine service name from zip")
+		return nil, errors.New("could not determine service name from zip")
 	}
 	if !serviceNameRe.MatchString(name) {
 		return nil, fmt.Errorf("invalid service name derived from import: %q", name)
@@ -309,7 +310,7 @@ func (s *ImportService) downloadZipBytes(url string) ([]byte, error) {
 		return nil, err
 	}
 	if int64(len(data)) > s.maxUploadBytes {
-		return nil, fmt.Errorf("archive exceeds maximum size")
+		return nil, errors.New("archive exceeds maximum size")
 	}
 	if err := validateZipBytes(data); err != nil {
 		return nil, err
@@ -320,25 +321,25 @@ func (s *ImportService) downloadZipBytes(url string) ([]byte, error) {
 func parseGitHubURL(repoURL string) (owner, repo, ref string, err error) {
 	repoURL = strings.TrimSpace(repoURL)
 	if !strings.HasPrefix(repoURL, "https://") {
-		return "", "", "", fmt.Errorf("invalid URL: must use https")
+		return "", "", "", errors.New("invalid URL: must use https")
 	}
 	schemeEnd := strings.Index(repoURL, "://")
 	if schemeEnd < 0 {
-		return "", "", "", fmt.Errorf("invalid URL")
+		return "", "", "", errors.New("invalid URL")
 	}
 	rest := repoURL[schemeEnd+3:]
 	hostEnd := strings.Index(rest, "/")
 	if hostEnd < 0 {
-		return "", "", "", fmt.Errorf("invalid GitHub URL: expected /owner/repo")
+		return "", "", "", errors.New("invalid GitHub URL: expected /owner/repo")
 	}
 	host := rest[:hostEnd]
 	if host != "github.com" {
-		return "", "", "", fmt.Errorf("not a github.com URL")
+		return "", "", "", errors.New("not a github.com URL")
 	}
 	pathPart := rest[hostEnd+1:]
 	parts := strings.Split(pathPart, "/")
 	if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", "", fmt.Errorf("invalid GitHub URL: expected /owner/repo")
+		return "", "", "", errors.New("invalid GitHub URL: expected /owner/repo")
 	}
 	owner = parts[0]
 	repo = parts[1]

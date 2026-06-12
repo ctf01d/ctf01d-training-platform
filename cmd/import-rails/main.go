@@ -2,15 +2,17 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -23,7 +25,7 @@ func main() {
 func run() error {
 	railsDBURL := os.Getenv("RAILS_DATABASE_URL")
 	if railsDBURL == "" {
-		return fmt.Errorf("RAILS_DATABASE_URL is required")
+		return errors.New("RAILS_DATABASE_URL is required")
 	}
 
 	cfg, err := config.Load()

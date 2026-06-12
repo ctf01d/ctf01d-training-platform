@@ -5,8 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/gin-gonic/gin"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 )
 
 type errorResponse struct {

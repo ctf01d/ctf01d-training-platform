@@ -5,9 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
-	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) HandleListGameTeams(c *gin.Context) {

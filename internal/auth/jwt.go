@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -59,5 +59,5 @@ func (m *Manager) Parse(tokenStr string) (*Claims, error) {
 }
 
 func int64ToString(n int64) string {
-	return fmt.Sprintf("%d", n)
+	return strconv.FormatInt(n, 10)
 }

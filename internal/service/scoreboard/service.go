@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
-	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
-	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	gamesvc "github.com/ctf01d/ctf01d-training-platform/internal/service/games"
 )
 
 type ScoreboardEntry struct {

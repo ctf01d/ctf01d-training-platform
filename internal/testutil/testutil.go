@@ -7,9 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 )
 
 func NewTestStore(t *testing.T) *repository.Store {

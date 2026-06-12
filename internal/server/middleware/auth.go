@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/gin-gonic/gin"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 )
 
 type contextKey string

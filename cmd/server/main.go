@@ -3,12 +3,17 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
+	"go.uber.org/zap"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
@@ -29,9 +34,6 @@ import (
 	writeupsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/writeups"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/pressly/goose/v3"
-	"go.uber.org/zap"
 )
 
 var version = "dev"
@@ -47,7 +49,7 @@ func run() error {
 	if os.Getenv("RUN_MIGRATIONS") == "true" {
 		dbURL := os.Getenv("DATABASE_URL")
 		if dbURL == "" {
-			return fmt.Errorf("DATABASE_URL is required when RUN_MIGRATIONS=true")
+			return errors.New("DATABASE_URL is required when RUN_MIGRATIONS=true")
 		}
 		if err := goose.SetDialect("postgres"); err != nil {
 			return fmt.Errorf("setting goose dialect: %w", err)

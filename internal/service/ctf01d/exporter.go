@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -78,7 +79,7 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 			}
 			clean := filepath.Clean(abs)
 			if strings.Contains(clean, "..") {
-				return nil, fmt.Errorf("invalid html_source_path: must not contain '..' components")
+				return nil, errors.New("invalid html_source_path: must not contain '..' components")
 			}
 			htmlSource = clean
 		}
@@ -388,7 +389,7 @@ func buildYAMLConfig(game GameParams, scoreboard ScoreboardParams, teams []TeamP
 	setMapString(&gameMap, "end", game.EndUTC.UTC().Format("2006-01-02 15:04:05"))
 	setMapInt(&gameMap, "flag_timelive_in_min", game.FlagTTLMin)
 	setMapInt(&gameMap, "basic_costs_stolen_flag_in_points", game.BasicAttackCost)
-	setMapFloat(&gameMap, "cost_defence_flag_in_points", game.DefenceCost)
+	setMapFloat(&gameMap, "cost_defense_flag_in_points", game.DefenceCost)
 	if game.CoffeeBreakStartUTC != nil && game.CoffeeBreakEndUTC != nil {
 		setMapString(&gameMap, "coffee_break_start", game.CoffeeBreakStartUTC.UTC().Format("2006-01-02 15:04:05"))
 		setMapString(&gameMap, "coffee_break_end", game.CoffeeBreakEndUTC.UTC().Format("2006-01-02 15:04:05"))
@@ -602,7 +603,7 @@ func writeDataURLToFile(dataURL string, dir string, preferName string) (string, 
 		return filePath, nil
 	}
 
-	return "", fmt.Errorf("invalid data:image URL")
+	return "", errors.New("invalid data:image URL")
 }
 
 var exporterBlockedNets []*net.IPNet
@@ -662,7 +663,7 @@ func checkDownloadURL(rawURL string) error {
 	}
 	host := u.Hostname()
 	if host == "" {
-		return fmt.Errorf("URL has no host")
+		return errors.New("URL has no host")
 	}
 	return nil
 }
@@ -706,11 +707,11 @@ func downloadURLToFile(rawURL string, dir string, preferName string) (string, er
 		Timeout: 15 * time.Second,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 10 {
-				return fmt.Errorf("too many redirects")
+				return errors.New("too many redirects")
 			}
 			host := req.URL.Hostname()
 			if host == "" {
-				return fmt.Errorf("redirect URL has no host")
+				return errors.New("redirect URL has no host")
 			}
 			return nil
 		},

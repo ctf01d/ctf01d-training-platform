@@ -5,8 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/gin-gonic/gin"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 )
 
 func setupRouter(jwtMgr *auth.Manager, handler gin.HandlerFunc) *gin.Engine {

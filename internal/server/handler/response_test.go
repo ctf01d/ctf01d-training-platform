@@ -9,8 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/gin-gonic/gin"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 )
 
 func setupGin() *gin.Engine {

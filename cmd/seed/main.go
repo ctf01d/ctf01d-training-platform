@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
+
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
-	"github.com/jackc/pgx/v5/pgtype"
-	"go.uber.org/zap"
 )
 
 func main() {

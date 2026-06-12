@@ -1,27 +1,106 @@
-version: 2
-
-formatters:
-  enable:
-    - gofumpt
-    - gci
-
+version: "2"
 run:
-  timeout: 5m
-
+  go: "1.26"
 linters:
   enable:
-    - govet
-    - staticcheck
+    - bodyclose
+    - canonicalheader
+    - copyloopvar
+    - dogsled
+    # - dupl
+    - dupword
     - errcheck
+    - errname
+    # - errorlint
+    - exhaustive
+    - fatcontext
+    # - funlen
+    # - gochecknoglobals
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - goprintffuncname
+    - gosec
+    - govet
+    - inamedparam
+    - ineffassign
+    # - lll
+    - loggercheck
+    - mirror
+    - misspell
+    - mnd
+    - nakedret
+    - noctx
+    - nolintlint
+    - perfsprint
     - revive
-
-linters-settings:
-  revive:
+    - rowserrcheck
+    - staticcheck
+    - testifylint
+    - thelper
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - whitespace
+  settings:
+    misspell:
+      locale: US
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+          arguments:
+            - allowTypesBefore: '*testing.T'
+        - name: dot-imports
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: var-declaration
+        - name: var-naming
+        - name: unused-parameter
+        - name: import-shadowing
+        - name: exported
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: exported
-        disabled: true
-
-issues:
-  exclude-dirs:
-    - gen/
-    - internal/repository/db/
+      - linters:
+          - revive
+        path: (.+)_test.go
+        text: ^(dot-imports|add-constant)
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

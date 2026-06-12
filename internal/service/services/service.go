@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type ServiceModel struct {

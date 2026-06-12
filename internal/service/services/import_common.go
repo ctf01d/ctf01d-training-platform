@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -77,7 +78,7 @@ var (
 	readmeCandidates  = []string{"README.md", "readme.md", "README", "readme"}
 	licenseCandidates = []string{
 		"LICENSE", "LICENSE.txt", "LICENSE.md",
-		"LICENCE", "LICENCE.txt",
+		"LICENSE", "LICENSE.txt",
 		"COPYING", "COPYING.txt",
 	}
 )
@@ -201,7 +202,7 @@ func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 
 func BuildBundle(zipBytes []byte) ([]byte, error) {
 	if len(zipBytes) == 0 {
-		return nil, fmt.Errorf("empty zip")
+		return nil, errors.New("empty zip")
 	}
 
 	srcReader, err := zip.NewReader(bytes.NewReader(zipBytes), int64(len(zipBytes)))
@@ -324,7 +325,7 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 	}
 
 	if !serviceFound {
-		return nil, fmt.Errorf("no service content found in archive")
+		return nil, errors.New("no service content found in archive")
 	}
 
 	return buf.Bytes(), nil
@@ -371,7 +372,7 @@ func copyTree(src *zip.Reader, dst *zip.Writer, fromPrefix, toPrefix string, exc
 
 		*fileCount++
 		if *fileCount > maxFiles {
-			return false, fmt.Errorf("too many files in archive")
+			return false, errors.New("too many files in archive")
 		}
 
 		uncompressedSize := int64(entry.UncompressedSize64)
@@ -576,10 +577,10 @@ func computeSHA256Hex(data []byte) string {
 
 func validateZipBytes(data []byte) error {
 	if len(data) < 4 {
-		return fmt.Errorf("data too short to be a valid zip")
+		return errors.New("data too short to be a valid zip")
 	}
 	if !bytes.Equal(data[:4], zipMagic) {
-		return fmt.Errorf("not a valid ZIP archive")
+		return errors.New("not a valid ZIP archive")
 	}
 	return nil
 }

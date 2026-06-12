@@ -3,9 +3,10 @@ package handler
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
-	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) HandleGetGameScoreboard(c *gin.Context) {

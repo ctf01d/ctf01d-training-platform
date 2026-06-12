@@ -1,7 +1,6 @@
 package ctf01d
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -66,7 +65,7 @@ type ExportError struct {
 }
 
 func (e *ExportError) Error() string {
-	return fmt.Sprintf("export errors: %s", strings.Join(e.Errors, "; "))
+	return "export errors: " + strings.Join(e.Errors, "; ")
 }
 
 func NewExportError(msgs ...string) *ExportError {

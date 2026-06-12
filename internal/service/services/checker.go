@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"strings"
 	"time"
@@ -177,7 +177,7 @@ type limitedReader struct {
 
 func (l *limitedReader) Read(p []byte) (int, error) {
 	if l.n <= 0 {
-		return 0, fmt.Errorf("limit exceeded")
+		return 0, errors.New("limit exceeded")
 	}
 	if int64(len(p)) > l.n {
 		p = p[:l.n]

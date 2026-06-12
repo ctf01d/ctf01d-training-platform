@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
-	"github.com/jackc/pgx/v5"
 )
 
 type mockQuerier struct {

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
@@ -24,7 +26,6 @@ import (
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
 	writeupsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/writeups"
-	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {

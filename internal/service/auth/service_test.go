@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
@@ -21,7 +21,7 @@ func newMockUserStore() *mockUserStore {
 func (m *mockUserStore) GetUserByUserName(_ context.Context, userName string) (db.User, error) {
 	u, ok := m.users[userName]
 	if !ok {
-		return db.User{}, fmt.Errorf("no rows in result set")
+		return db.User{}, errors.New("no rows in result set")
 	}
 	return u, nil
 }
@@ -29,7 +29,7 @@ func (m *mockUserStore) GetUserByUserName(_ context.Context, userName string) (d
 func (m *mockUserStore) GetUserByID(_ context.Context, id int64) (db.User, error) {
 	u, ok := m.byID[id]
 	if !ok {
-		return db.User{}, fmt.Errorf("no rows in result set")
+		return db.User{}, errors.New("no rows in result set")
 	}
 	return u, nil
 }
