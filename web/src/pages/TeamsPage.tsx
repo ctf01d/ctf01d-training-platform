@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as teamsApi from '../api/teams'
 import type { Team, TeamCreate } from '../api/teams'
-import { DataTable } from '../components/DataTable'
-import { ErrorDisplay, ActionButton } from '../components/ErrorDisplay'
+import { CardGrid, EntityCard, CardMeta, Pagination } from '../components/Card'
+import { ErrorDisplay } from '../components/ErrorDisplay'
 import { useAuth } from '../auth/AuthContext'
 
 export default function TeamsPage() {
@@ -64,13 +64,6 @@ export default function TeamsPage() {
     }
   }
 
-  const columns = [
-    { header: 'Name', render: (t: Team) => <a href={`/teams/${t.id}`}>{t.name}</a> },
-    { header: 'Description', render: (t: Team) => t.description ? (t.description.length > 60 ? t.description.slice(0, 60) + '...' : t.description) : '—' },
-    { header: 'Captain', render: (t: Team) => t.captain_id ?? '—' },
-    { header: 'Members', render: (t: Team) => memberCounts[t.id] ?? '...' },
-  ]
-
   return (
     <div className="page">
       <div className="page-header">
@@ -112,19 +105,29 @@ export default function TeamsPage() {
 
       <ErrorDisplay error={error} onRetry={fetchTeams} />
 
-      <DataTable<Team>
-        columns={columns}
-        data={teams}
-        loading={loading}
-        emptyMessage="No teams found"
-        page={page}
-        perPage={perPage}
-        total={total}
-        onPageChange={setPage}
-        actions={(t) => (
-          <ActionButton onClick={() => navigate(`/teams/${t.id}`)}>View</ActionButton>
-        )}
-      />
+      <CardGrid loading={loading} isEmpty={teams.length === 0} emptyMessage="No teams found">
+        {teams.map((t) => (
+          <EntityCard
+            key={t.id}
+            to={`/teams/${t.id}`}
+            avatarUrl={t.avatar_url}
+            avatarText={t.name}
+            title={t.name}
+          >
+            {t.description && <CardMeta label="About">{t.description}</CardMeta>}
+            <CardMeta label="Members">{memberCounts[t.id] ?? '...'}</CardMeta>
+            {t.website && (
+              <CardMeta label="Website">
+                <a href={t.website} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                  {t.website}
+                </a>
+              </CardMeta>
+            )}
+          </EntityCard>
+        ))}
+      </CardGrid>
+
+      <Pagination page={page} perPage={perPage} total={total} onPageChange={setPage} />
     </div>
   )
 }

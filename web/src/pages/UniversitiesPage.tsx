@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import * as universitiesApi from '../api/universities'
 import type { University, UniversityCreate, UniversityUpdate } from '../api/universities'
-import { DataTable } from '../components/DataTable'
+import { CardGrid, EntityCard, CardMeta, Pagination } from '../components/Card'
 import { ErrorDisplay, ActionButton } from '../components/ErrorDisplay'
 
 export default function UniversitiesPage() {
@@ -80,13 +80,6 @@ export default function UniversitiesPage() {
     }
   }
 
-  const columns = [
-    { header: 'ID', render: (u: University) => u.id },
-    { header: 'Name', render: (u: University) => u.name ?? '—' },
-    { header: 'Site URL', render: (u: University) => safeUrl(u.site_url) ? <a href={u.site_url!} target="_blank" rel="noreferrer">{u.site_url}</a> : (u.site_url ?? '—') },
-    { header: 'Avatar', render: (u: University) => safeUrl(u.avatar_url) ? <a href={u.avatar_url!} target="_blank" rel="noreferrer">Link</a> : (u.avatar_url ?? '—') },
-  ]
-
   return (
     <div className="page">
       <div className="page-header">
@@ -139,22 +132,34 @@ export default function UniversitiesPage() {
         </form>
       )}
 
-      <DataTable<University>
-        columns={columns}
-        data={universities}
-        loading={loading}
-        emptyMessage="No universities found"
-        page={page}
-        perPage={perPage}
-        total={total}
-        onPageChange={setPage}
-        actions={(u) => (
-          <>
-            <ActionButton onClick={() => startEdit(u)}>Edit</ActionButton>
-            <ActionButton onClick={() => handleDelete(u.id)} variant="danger" confirm="Delete this university?">Delete</ActionButton>
-          </>
-        )}
-      />
+      <CardGrid loading={loading} isEmpty={universities.length === 0} emptyMessage="No universities found">
+        {universities.map((u) => (
+          <EntityCard
+            key={u.id}
+            avatarUrl={u.avatar_url}
+            avatarText={u.name ?? '?'}
+            title={u.name ?? '—'}
+            footer={
+              <>
+                <ActionButton onClick={() => startEdit(u)}>Edit</ActionButton>
+                <ActionButton onClick={() => handleDelete(u.id)} variant="danger" confirm="Delete this university?">
+                  Delete
+                </ActionButton>
+              </>
+            }
+          >
+            <CardMeta label="Site">
+              {safeUrl(u.site_url) ? (
+                <a href={u.site_url!} target="_blank" rel="noreferrer">{u.site_url}</a>
+              ) : (
+                u.site_url ?? '—'
+              )}
+            </CardMeta>
+          </EntityCard>
+        ))}
+      </CardGrid>
+
+      <Pagination page={page} perPage={perPage} total={total} onPageChange={setPage} />
     </div>
   )
 }

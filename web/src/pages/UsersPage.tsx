@@ -1,22 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import * as usersApi from '../api/users'
 import type { User, UserCreate } from '../api/users'
-import { DataTable } from '../components/DataTable'
+import { CardGrid, EntityCard, CardBadge, CardMeta, Pagination } from '../components/Card'
 import { ErrorDisplay, ActionButton } from '../components/ErrorDisplay'
-
-const roleColors: Record<string, string> = {
-  admin: '#ef4444',
-  player: '#3b82f6',
-  guest: '#6b7280',
-}
-
-function RoleBadge({ role }: { role: string }) {
-  return (
-    <span style={{ backgroundColor: roleColors[role] ?? '#9ca3af', color: '#fff', padding: '2px 8px', borderRadius: 999, fontSize: 12 }}>
-      {role}
-    </span>
-  )
-}
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -64,20 +50,6 @@ export default function UsersPage() {
     await fetchUsers()
   }
 
-  const columns = [
-    { header: 'ID', render: (u: User) => u.id },
-    { header: 'Username', render: (u: User) => u.user_name },
-    { header: 'Display Name', render: (u: User) => u.display_name },
-    { header: 'Role', render: (u: User) => <RoleBadge role={u.role} /> },
-    { header: 'Rating', render: (u: User) => u.rating },
-    {
-      header: 'Avatar',
-      render: (u: User) => u.avatar_url
-        ? <img src={u.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-        : '\u2014',
-    },
-  ]
-
   return (
     <div className="page">
       <div className="page-header">
@@ -121,19 +93,27 @@ export default function UsersPage() {
 
       <ErrorDisplay error={error} onRetry={fetchUsers} />
 
-      <DataTable<User>
-        columns={columns}
-        data={users}
-        loading={loading}
-        emptyMessage="No users found"
-        page={page}
-        perPage={perPage}
-        total={total}
-        onPageChange={setPage}
-        actions={(u) => (
-          <ActionButton onClick={() => handleDelete(u.id)} variant="danger" confirm="Delete this user?">Delete</ActionButton>
-        )}
-      />
+      <CardGrid loading={loading} isEmpty={users.length === 0} emptyMessage="No users found">
+        {users.map((u) => (
+          <EntityCard
+            key={u.id}
+            avatarUrl={u.avatar_url}
+            avatarText={u.display_name || u.user_name}
+            title={u.display_name}
+            badges={<CardBadge variant={u.role}>{u.role}</CardBadge>}
+            footer={
+              <ActionButton onClick={() => handleDelete(u.id)} variant="danger" confirm="Delete this user?">
+                Delete
+              </ActionButton>
+            }
+          >
+            <CardMeta label="Username">@{u.user_name}</CardMeta>
+            <CardMeta label="Rating">{u.rating}</CardMeta>
+          </EntityCard>
+        ))}
+      </CardGrid>
+
+      <Pagination page={page} perPage={perPage} total={total} onPageChange={setPage} />
     </div>
   )
 }

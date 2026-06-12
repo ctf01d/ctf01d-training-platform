@@ -112,6 +112,65 @@ a:hover { text-decoration: underline; }
   color: #666;
 }
 
+/* Entity card grid (list pages) */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.entity-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #ececf0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.07);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.entity-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.12); transform: translateY(-2px); }
+.ecard-link { display: block; color: inherit; padding: 1rem; }
+.ecard-link:hover { text-decoration: none; }
+/* Stretched link: the title anchor covers the whole card. */
+.ecard-stretched { color: inherit; }
+.ecard-stretched:hover { text-decoration: none; }
+.ecard-stretched::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+/* Inner interactive elements stay above the stretched overlay. */
+.ecard-body a, .ecard-footer a, .ecard-footer button { position: relative; z-index: 2; }
+.ecard-head { display: flex; gap: .75rem; align-items: flex-start; }
+.ecard-avatar {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f0f0f0;
+}
+.ecard-avatar--fallback {
+  display: flex; align-items: center; justify-content: center;
+  background: #1a73e8; color: #fff; font-weight: 700; font-size: 1.2rem;
+}
+.ecard-heading { min-width: 0; flex: 1; }
+.ecard-title { font-weight: 600; font-size: 1rem; color: #1a1a2e; word-break: break-word; }
+.ecard-badges { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+.ecard-body { margin-top: .75rem; display: flex; flex-direction: column; gap: .35rem; }
+.ecard-meta { display: flex; gap: .5rem; font-size: .85rem; line-height: 1.4; }
+.ecard-meta-label { color: #888; flex-shrink: 0; min-width: 84px; }
+.ecard-meta-value { color: #333; word-break: break-word; min-width: 0; }
+.ecard-footer {
+  margin-top: auto;
+  padding: .55rem .75rem;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+  display: flex; gap: .4rem; flex-wrap: wrap; justify-content: flex-end;
+}
+
 .badge {
   display: inline-block;
   padding: .15rem .5rem;

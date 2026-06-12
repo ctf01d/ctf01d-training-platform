@@ -2,22 +2,16 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as servicesApi from '../api/services'
 import type { Service, ServiceCreate } from '../api/services'
-import { DataTable } from '../components/DataTable'
-import { ErrorDisplay, ActionButton, handleApiError } from '../components/ErrorDisplay'
+import { CardGrid, EntityCard, CardBadge, CardMeta, Pagination } from '../components/Card'
+import { ErrorDisplay, handleApiError } from '../components/ErrorDisplay'
 import { useAuth } from '../auth/AuthContext'
 
-const checkStatusColors: Record<string, string> = {
-  unknown: '#9ca3af',
-  ok: '#22c55e',
-  failed: '#ef4444',
-}
-
-function Badge({ label, color }: { label: string; color: string }) {
-  return (
-    <span style={{ backgroundColor: color, color: '#fff', padding: '2px 8px', borderRadius: 999, fontSize: 12 }}>
-      {label}
-    </span>
-  )
+const checkBadgeVariant: Record<string, string> = {
+  ok: 'ok',
+  failed: 'failed',
+  fail: 'failed',
+  unknown: 'unknown',
+  queued: 'upcoming',
 }
 
 export default function ServicesPage() {
@@ -111,27 +105,6 @@ export default function ServicesPage() {
     }
   }
 
-  const columns = [
-    { header: 'Name', render: (s: Service) => <a href={`/services/${s.id}`}>{s.name}</a> },
-    { header: 'Author', render: (s: Service) => s.author ?? '—' },
-    {
-      header: 'Public',
-      render: (s: Service) => <Badge label={s.public ? 'Public' : 'Private'} color={s.public ? '#22c55e' : '#6b7280'} />,
-    },
-    {
-      header: 'Check Status',
-      render: (s: Service) => <Badge label={s.check_status} color={checkStatusColors[s.check_status] ?? '#9ca3af'} />,
-    },
-    {
-      header: 'Service Archive',
-      render: (s: Service) => s.service_archive ? 'Yes' : 'No',
-    },
-    {
-      header: 'Checker Archive',
-      render: (s: Service) => s.checker_archive ? 'Yes' : 'No',
-    },
-  ]
-
   return (
     <div className="page">
       <div className="page-header">
@@ -218,19 +191,28 @@ export default function ServicesPage() {
 
       <ErrorDisplay error={error} onRetry={fetchServices} />
 
-      <DataTable<Service>
-        columns={columns}
-        data={services}
-        loading={loading}
-        emptyMessage="No services found"
-        page={page}
-        perPage={perPage}
-        total={total}
-        onPageChange={setPage}
-        actions={(s) => (
-          <ActionButton onClick={() => navigate(`/services/${s.id}`)}>View</ActionButton>
-        )}
-      />
+      <CardGrid loading={loading} isEmpty={services.length === 0} emptyMessage="No services found">
+        {services.map((s) => (
+          <EntityCard
+            key={s.id}
+            to={`/services/${s.id}`}
+            avatarUrl={s.avatar_url}
+            avatarText={s.name}
+            title={s.name}
+            badges={
+              <>
+                <CardBadge variant={s.public ? 'public' : 'private'}>{s.public ? 'public' : 'private'}</CardBadge>
+                <CardBadge variant={checkBadgeVariant[s.check_status] ?? 'unknown'}>{s.check_status}</CardBadge>
+              </>
+            }
+          >
+            <CardMeta label="Author">{s.author ?? '—'}</CardMeta>
+            {s.public_description && <CardMeta label="About">{s.public_description}</CardMeta>}
+          </EntityCard>
+        ))}
+      </CardGrid>
+
+      <Pagination page={page} perPage={perPage} total={total} onPageChange={setPage} />
     </div>
   )
 }

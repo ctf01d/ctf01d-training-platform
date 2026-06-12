@@ -2,38 +2,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as gamesApi from '../api/games'
 import type { Game, GameCreate } from '../api/games'
-import { DataTable } from '../components/DataTable'
-import { ErrorDisplay, ActionButton } from '../components/ErrorDisplay'
+import { CardGrid, EntityCard, CardBadge, CardMeta, Pagination } from '../components/Card'
+import { ErrorDisplay } from '../components/ErrorDisplay'
 import { useAuth } from '../auth/AuthContext'
 
-const statusColors: Record<string, string> = {
-  upcoming: '#3b82f6',
-  ongoing: '#22c55e',
-  past: '#6b7280',
-  unknown: '#9ca3af',
-}
-
-const regStatusColors: Record<string, string> = {
-  unscheduled: '#9ca3af',
-  upcoming: '#3b82f6',
-  open: '#22c55e',
-  closed: '#ef4444',
-}
-
-const sbStatusColors: Record<string, string> = {
-  always: '#22c55e',
-  upcoming: '#3b82f6',
-  open: '#22c55e',
-  closed: '#ef4444',
-}
-
-function Badge({ label, color }: { label: string; color: string }) {
-  return (
-    <span style={{ backgroundColor: color, color: '#fff', padding: '2px 8px', borderRadius: 999, fontSize: 12 }}>
-      {label}
-    </span>
-  )
-}
+const fmtDate = (s?: string | null) => (s ? new Date(s).toLocaleString() : '—')
 
 export default function GamesPage() {
   const { isPlayer } = useAuth()
@@ -79,29 +52,6 @@ export default function GamesPage() {
     }
   }
 
-  const columns = [
-    { header: 'Name', render: (g: Game) => <a href={`/games/${g.id}`}>{g.name ?? '—'}</a> },
-    { header: 'Organizer', render: (g: Game) => g.organizer ?? '—' },
-    { header: 'Starts', render: (g: Game) => g.starts_at ? new Date(g.starts_at).toLocaleString() : '—' },
-    { header: 'Ends', render: (g: Game) => g.ends_at ? new Date(g.ends_at).toLocaleString() : '—' },
-    {
-      header: 'Status',
-      render: (g: Game) => <Badge label={g.status ?? 'unknown'} color={statusColors[g.status ?? 'unknown'] ?? '#9ca3af'} />,
-    },
-    {
-      header: 'Registration',
-      render: (g: Game) => <Badge label={g.registration_status ?? 'unscheduled'} color={regStatusColors[g.registration_status ?? 'unscheduled'] ?? '#9ca3af'} />,
-    },
-    {
-      header: 'Scoreboard',
-      render: (g: Game) => <Badge label={g.scoreboard_status ?? 'closed'} color={sbStatusColors[g.scoreboard_status ?? 'closed'] ?? '#9ca3af'} />,
-    },
-    {
-      header: 'Finalized',
-      render: (g: Game) => g.finalized ? 'Yes' : 'No',
-    },
-  ]
-
   return (
     <div className="page">
       <div className="page-header">
@@ -139,19 +89,39 @@ export default function GamesPage() {
 
       <ErrorDisplay error={error} onRetry={fetchGames} />
 
-      <DataTable<Game>
-        columns={columns}
-        data={games}
-        loading={loading}
-        emptyMessage="No games found"
-        page={page}
-        perPage={perPage}
-        total={total}
-        onPageChange={setPage}
-        actions={(g) => (
-          <ActionButton onClick={() => navigate(`/games/${g.id}`)}>View</ActionButton>
-        )}
-      />
+      <CardGrid loading={loading} isEmpty={games.length === 0} emptyMessage="No games found">
+        {games.map((g) => (
+          <EntityCard
+            key={g.id}
+            to={`/games/${g.id}`}
+            avatarUrl={g.avatar_url}
+            avatarText={g.name ?? '?'}
+            title={g.name ?? '—'}
+            badges={
+              <>
+                <CardBadge variant={g.status ?? 'unknown'}>{g.status ?? 'unknown'}</CardBadge>
+                {g.finalized && <CardBadge variant="approved">finalized</CardBadge>}
+              </>
+            }
+          >
+            <CardMeta label="Organizer">{g.organizer ?? '—'}</CardMeta>
+            <CardMeta label="Starts">{fmtDate(g.starts_at)}</CardMeta>
+            <CardMeta label="Ends">{fmtDate(g.ends_at)}</CardMeta>
+            <CardMeta label="Registration">
+              <CardBadge variant={g.registration_status ?? 'unscheduled'}>
+                {g.registration_status ?? 'unscheduled'}
+              </CardBadge>
+            </CardMeta>
+            <CardMeta label="Scoreboard">
+              <CardBadge variant={g.scoreboard_status ?? 'closed'}>
+                {g.scoreboard_status ?? 'closed'}
+              </CardBadge>
+            </CardMeta>
+          </EntityCard>
+        ))}
+      </CardGrid>
+
+      <Pagination page={page} perPage={perPage} total={total} onPageChange={setPage} />
     </div>
   )
 }
