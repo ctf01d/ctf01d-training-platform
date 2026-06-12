@@ -39,9 +39,9 @@ func setupTest(t *testing.T) (*gin.Engine, *repository.Store, func()) {
 	store := testutil.NewTestStore(t)
 	testutil.TruncateAll(t, store)
 
-	log, _ := zap.NewDevelopment()
+	log := zap.NewNop()
 	cfg := &config.Config{
-		Env: "development",
+		Env: "test",
 		CORS: config.CORSConfig{
 			AllowedOrigins: "http://localhost:5173",
 		},
@@ -137,6 +137,40 @@ func parseJSONArray(t *testing.T, w *httptest.ResponseRecorder) []map[string]int
 		t.Fatalf("parsing JSON array: %v, body: %s", err, w.Body.String())
 	}
 	return result
+}
+
+func parseItems(t *testing.T, w *httptest.ResponseRecorder) []map[string]interface{} {
+	t.Helper()
+	result := parseJSON(t, w)
+	rawItems, ok := result["items"].([]interface{})
+	if !ok {
+		t.Fatalf("response has no items array: %s", w.Body.String())
+	}
+	items := make([]map[string]interface{}, 0, len(rawItems))
+	for _, raw := range rawItems {
+		item, ok := raw.(map[string]interface{})
+		if !ok {
+			t.Fatalf("response item is not an object: %v", raw)
+		}
+		items = append(items, item)
+	}
+	return items
+}
+
+func requireStatus(t *testing.T, w *httptest.ResponseRecorder, want int, action string) {
+	t.Helper()
+	if w.Code != want {
+		t.Fatalf("%s: got status %d, want %d, body: %s", action, w.Code, want, w.Body.String())
+	}
+}
+
+func jsonID(t *testing.T, obj map[string]interface{}) int64 {
+	t.Helper()
+	id, ok := obj["id"].(float64)
+	if !ok {
+		t.Fatalf("response has no numeric id: %v", obj)
+	}
+	return int64(id)
 }
 
 func TestAuthFlow(t *testing.T) {

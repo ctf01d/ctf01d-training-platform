@@ -125,8 +125,18 @@ func TestServicesFlow(t *testing.T) {
 		t.Fatalf("upload archives: %d %s", w.Code, w.Body.String())
 	}
 	svc = parseJSON(t, w)
+	if svc["service_archive"] != nil {
+		t.Errorf("service_archive metadata should be hidden from non-admin, got %v", svc["service_archive"])
+	}
+
+	t.Log("Step: Admin sees uploaded archive metadata")
+	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/services/%d", svcID), nil, adminToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get service after upload as admin: %d %s", w.Code, w.Body.String())
+	}
+	svc = parseJSON(t, w)
 	if svc["service_archive"] == nil {
-		t.Errorf("expected service_archive metadata after upload")
+		t.Errorf("expected service_archive metadata for admin after upload")
 	}
 
 	t.Log("Step: Download service archive")
@@ -151,7 +161,7 @@ func TestServicesFlow(t *testing.T) {
 	t.Log("Step: Import from zip")
 	importZip := createServiceBundleZip(t, "imported-service", "Imported description")
 	w = makeMultipartUpload(t, engine, "/api/v1/services/import/zip", importZip, "archive", "bundle.zip", playerToken)
-	if w.Code != http.StatusOK {
+	if w.Code != http.StatusCreated {
 		t.Fatalf("import from zip: %d %s", w.Code, w.Body.String())
 	}
 	importResult := parseJSON(t, w)

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 )
@@ -67,12 +68,12 @@ var serviceNameRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRequest, isAdmin bool) (*ImportResult, error) {
 	if req.Subdir != "" {
-		return nil, fmt.Errorf("subdir import is not yet supported")
+		return nil, errs.NewValidationError(map[string]string{"subdir": "import is not yet supported"})
 	}
 
 	owner, repo, parsedRef, err := parseGitHubURL(req.RepoURL)
 	if err != nil {
-		return nil, fmt.Errorf("parsing GitHub URL: %w", err)
+		return nil, errs.NewValidationError(map[string]string{"repo_url": "must be a valid GitHub repository URL"})
 	}
 
 	ref := req.Ref

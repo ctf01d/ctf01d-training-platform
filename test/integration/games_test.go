@@ -14,6 +14,7 @@ func TestGamesFlow(t *testing.T) {
 	_, playerToken := seedUser(t, store, "player1", "Player One", "password123", "player")
 	player2ID, _ := seedUser(t, store, "player2", "Player Two", "password123", "player")
 	_, outsiderToken := seedUser(t, store, "guest1", "Guest", "password123", "guest")
+	_, spectatorToken := seedUser(t, store, "spectator", "Spectator", "password123", "guest")
 
 	t.Log("Step: Create a team")
 	w := makeReq(t, engine, http.MethodPost, "/api/v1/teams", map[string]interface{}{
@@ -183,6 +184,12 @@ func TestGamesFlow(t *testing.T) {
 		t.Errorf("expected 2 results, got %d", len(resultItems))
 	}
 
+	t.Log("Step: Get result")
+	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/results/%d", r1ID), nil, playerToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get result: %d %s", w.Code, w.Body.String())
+	}
+
 	t.Log("Step: Update result")
 	w = makeReq(t, engine, http.MethodPatch, fmt.Sprintf("/api/v1/results/%d", r1ID), map[string]interface{}{
 		"score": 600,
@@ -259,7 +266,7 @@ func TestGamesFlow(t *testing.T) {
 	}
 
 	t.Log("Step: access_secret hidden from non-participant")
-	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/games/%d", gameID), nil, outsiderToken)
+	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/games/%d", gameID), nil, spectatorToken)
 	if w.Code != http.StatusOK {
 		t.Fatalf("get game for outsider: %d %s", w.Code, w.Body.String())
 	}

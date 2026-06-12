@@ -2,6 +2,7 @@
 	go-build go-run go-test go-vet go-fmt go-tidy \
 	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
 	migrate-up migrate-down migrate-status migrate-new \
+	database-test-run database-test-stop go-test-e2e \
 	sqlc-gen sqlc-vet seed \
 	web-install web-build web-gen web-dev \
 	lint lint-fix verify-codegen \
@@ -15,6 +16,10 @@
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/ctf01d_development?sslmode=disable
 export DATABASE_URL
+
+GO_TEST_DB_PORT ?= 5433
+TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:$(GO_TEST_DB_PORT)/ctf01d_test?sslmode=disable
+export TEST_DATABASE_URL
 
 # -----------------------------------------------------------------------------
 # Remote deploy helper (rsync with excludes)
@@ -54,6 +59,10 @@ go-run: go-build
 ## go-test: Run all Go tests
 go-test:
 	go test ./...
+
+## go-test-e2e: Run integration tests against a local test database
+go-test-e2e: database-test-run
+	go test -v ./test/integration -count=1
 
 ## go-vet: Run go vet on all packages
 go-vet:
@@ -168,6 +177,35 @@ dev-down:
 ## dev: Run backend (:8080) and frontend (:5173) together
 dev:
 	$(MAKE) -j2 go-run web-dev
+
+## database-test-run: Start local PostgreSQL for e2e tests on GO_TEST_DB_PORT
+database-test-run:
+	@docker container inspect ctf01d_test_db >/dev/null 2>&1 || { \
+		echo "Creating and starting container ctf01d_test_db..."; \
+		docker run -d \
+			--name ctf01d_test_db \
+			-e POSTGRES_DB=ctf01d_test \
+			-e POSTGRES_USER=postgres \
+			-e POSTGRES_PASSWORD=postgres \
+			-p $(GO_TEST_DB_PORT):5432 postgres:16 >/dev/null; \
+	}
+	@docker container inspect -f '{{.State.Running}}' ctf01d_test_db | grep -q true || { \
+		echo "Starting container ctf01d_test_db..."; \
+		docker start ctf01d_test_db >/dev/null; \
+	}
+	@until docker exec ctf01d_test_db pg_isready -U postgres -d ctf01d_test >/dev/null 2>&1; do \
+		echo "Waiting for PostgreSQL ctf01d_test_db to be ready..."; \
+		sleep 1; \
+	done
+
+## database-test-stop: Stop local e2e PostgreSQL
+database-test-stop:
+	@if [ "$$(docker container inspect -f '{{.State.Running}}' ctf01d_test_db 2>/dev/null)" = "true" ]; then \
+		echo "Stopping container ctf01d_test_db..."; \
+		docker stop ctf01d_test_db >/dev/null; \
+	else \
+		echo "Container ctf01d_test_db is not running."; \
+	fi
 
 # -----------------------------------------------------------------------------
 # Linting and codegen verification

@@ -41,7 +41,7 @@ func TestTeamsMembershipsFlow(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("list members: %d %s", w.Code, w.Body.String())
 	}
-	members := parseJSONArray(t, w)
+	members := parseItems(t, w)
 	var inviteID float64
 	for _, m := range members {
 		if int64(m["user_id"].(float64)) == player1ID {
@@ -66,7 +66,7 @@ func TestTeamsMembershipsFlow(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("list members: %d %s", w.Code, w.Body.String())
 	}
-	members = parseJSONArray(t, w)
+	members = parseItems(t, w)
 	var player1MemberID float64
 	for _, m := range members {
 		if int64(m["user_id"].(float64)) == player1ID {
@@ -105,7 +105,7 @@ func TestTeamsMembershipsFlow(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("list members: %d %s", w.Code, w.Body.String())
 	}
-	members = parseJSONArray(t, w)
+	members = parseItems(t, w)
 	var joinReqID float64
 	for _, m := range members {
 		if int64(m["user_id"].(float64)) == player2ID {
