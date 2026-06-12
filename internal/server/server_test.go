@@ -43,7 +43,7 @@ func newTestEngine(store Store) *gin.Engine {
 func TestHealthz_OK(t *testing.T) {
 	engine := newTestEngine(&mockStore{})
 
-	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 
@@ -55,7 +55,7 @@ func TestHealthz_OK(t *testing.T) {
 func TestHealthz_Unhealthy(t *testing.T) {
 	engine := newTestEngine(&mockStore{err: errors.New("db down")})
 
-	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 
@@ -67,7 +67,7 @@ func TestHealthz_Unhealthy(t *testing.T) {
 func TestVersion(t *testing.T) {
 	engine := newTestEngine(&mockStore{})
 
-	req := httptest.NewRequest(http.MethodGet, "/version", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/version", nil)
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 

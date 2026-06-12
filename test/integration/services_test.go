@@ -14,7 +14,7 @@ import (
 )
 
 func TestServicesFlow(t *testing.T) {
-	engine, store, _ := setupTest(t)
+	engine, store := setupTest(t)
 
 	_, adminToken := seedUser(t, store, "admin", "Admin", "admin12345", "admin")
 	_, playerToken := seedUser(t, store, "player1", "Player One", "password123", "player")
@@ -236,7 +236,7 @@ func makeMultipartUpload(t *testing.T, engine *gin.Engine, path string, fileData
 		t.Fatalf("closing multipart writer: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, path, &body)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, path, &body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)

@@ -15,7 +15,10 @@ import (
 
 var requiredCodes = []string{"101", "102", "103", "104"}
 
-const maxCheckerEntryBytes = 2 * 1024 * 1024
+const (
+	checkStatusUnknown   = "unknown"
+	maxCheckerEntryBytes = 2 * 1024 * 1024
+)
 
 type CheckerQuerier interface {
 	GetServiceByID(ctx context.Context, id int64) (db.Service, error)
@@ -34,11 +37,11 @@ func NewCheckerService(q CheckerQuerier, st storage.Storage) *CheckerService {
 func (cs *CheckerService) CheckChecker(ctx context.Context, id int64, isAdmin bool) (*ServiceModel, error) {
 	svc, err := cs.q.GetServiceByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "service")
+		return nil, mapNotFound(err)
 	}
 
 	if svc.CheckerLocalPath == nil || *svc.CheckerLocalPath == "" {
-		status := "unknown"
+		status := checkStatusUnknown
 		svc, err = cs.q.SetCheckStatus(ctx, db.SetCheckStatusParams{
 			ID:          id,
 			CheckStatus: status,
@@ -69,16 +72,16 @@ func (cs *CheckerService) CheckChecker(ctx context.Context, id int64, isAdmin bo
 
 func (cs *CheckerService) inspectCheckerArchive(checkerPath string) CheckerInspectionResult {
 	if cs.st == nil {
-		return CheckerInspectionResult{Status: "unknown"}
+		return CheckerInspectionResult{Status: checkStatusUnknown}
 	}
 	rc, err := cs.st.Open(context.Background(), checkerPath)
 	if err != nil {
-		return CheckerInspectionResult{Status: "unknown"}
+		return CheckerInspectionResult{Status: checkStatusUnknown}
 	}
 	defer rc.Close()
 	data, err := io.ReadAll(io.LimitReader(rc, maxCheckerEntryBytes))
 	if err != nil {
-		return CheckerInspectionResult{Status: "unknown"}
+		return CheckerInspectionResult{Status: checkStatusUnknown}
 	}
 	return InspectCheckerFromBytes(data)
 }
@@ -86,7 +89,7 @@ func (cs *CheckerService) inspectCheckerArchive(checkerPath string) CheckerInspe
 func InspectCheckerFromBytes(data []byte) CheckerInspectionResult {
 	r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
-		return CheckerInspectionResult{Status: "unknown"}
+		return CheckerInspectionResult{Status: checkStatusUnknown}
 	}
 
 	hasChecker := false
@@ -171,7 +174,9 @@ func isDigit(b byte) bool {
 }
 
 type limitedReader struct {
-	r interface{ Read([]byte) (int, error) }
+	r interface {
+		Read(p []byte) (n int, err error)
+	}
 	n int64
 }
 

@@ -283,7 +283,7 @@ func gameToHTTP(g gamesvc.Game, canAccessSecrets bool) httpserver.Game {
 }
 
 func (h *Handler) canAccessGameSecrets(c *gin.Context, gameID int64, role string, hasUser bool, userID int64) bool {
-	if role == "admin" {
+	if role == roleAdmin {
 		return true
 	}
 	if !hasUser {

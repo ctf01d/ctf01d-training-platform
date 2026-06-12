@@ -28,6 +28,15 @@ func newMockQuerier() *mockQuerier {
 	}
 }
 
+func mustCreateService(t *testing.T, svc *Service, params CreateParams) *ServiceModel {
+	t.Helper()
+	result, err := svc.Create(context.Background(), params, true)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	return result
+}
+
 func (m *mockQuerier) CreateService(_ context.Context, arg db.CreateServiceParams) (db.Service, error) {
 	if _, exists := m.byName[arg.Name]; exists {
 		return db.Service{}, &pgconn.PgError{Code: "23505", Message: "duplicate key value violates unique constraint"}
@@ -202,7 +211,7 @@ func TestCreate_DuplicateName(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "test-service"}, true)
+	mustCreateService(t, svc, CreateParams{Name: "test-service"})
 	_, err := svc.Create(context.Background(), CreateParams{Name: "test-service"}, true)
 	if err != errs.ErrConflict {
 		t.Errorf("expected ErrConflict, got %v", err)
@@ -252,7 +261,7 @@ func TestGetByID_Success(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "test-service"}, true)
+	mustCreateService(t, svc, CreateParams{Name: "test-service"})
 
 	result, err := svc.GetByID(context.Background(), 1, true)
 	if err != nil {
@@ -278,10 +287,10 @@ func TestGetByID_AdminMasking(t *testing.T) {
 	svc := NewService(q)
 
 	private := "secret desc"
-	svc.Create(context.Background(), CreateParams{
+	mustCreateService(t, svc, CreateParams{
 		Name:               "test-service",
 		PrivateDescription: &private,
-	}, true)
+	})
 
 	adminResult, _ := svc.GetByID(context.Background(), 1, true)
 	if adminResult.PrivateDescription == nil || *adminResult.PrivateDescription != "secret desc" {
@@ -298,8 +307,8 @@ func TestList(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "svc-public", Public: true}, true)
-	svc.Create(context.Background(), CreateParams{Name: "svc-private", Public: false}, true)
+	mustCreateService(t, svc, CreateParams{Name: "svc-public", Public: true})
+	mustCreateService(t, svc, CreateParams{Name: "svc-private", Public: false})
 
 	result, err := svc.List(context.Background(), 1, 10, nil, nil, true)
 	if err != nil {
@@ -317,8 +326,8 @@ func TestList_PublicFilter(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "svc-public", Public: true}, true)
-	svc.Create(context.Background(), CreateParams{Name: "svc-private", Public: false}, true)
+	mustCreateService(t, svc, CreateParams{Name: "svc-public", Public: true})
+	mustCreateService(t, svc, CreateParams{Name: "svc-private", Public: false})
 
 	result, err := svc.List(context.Background(), 1, 10, boolPtr(true), nil, true)
 	if err != nil {
@@ -336,8 +345,8 @@ func TestList_Search(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "web-nginx"}, true)
-	svc.Create(context.Background(), CreateParams{Name: "crypto-rsa"}, true)
+	mustCreateService(t, svc, CreateParams{Name: "web-nginx"})
+	mustCreateService(t, svc, CreateParams{Name: "crypto-rsa"})
 
 	result, err := svc.List(context.Background(), 1, 10, nil, strPtr("nginx"), true)
 	if err != nil {
@@ -356,10 +365,10 @@ func TestList_Pagination(t *testing.T) {
 	svc := NewService(q)
 
 	for i := 0; i < 5; i++ {
-		svc.Create(context.Background(), CreateParams{
+		mustCreateService(t, svc, CreateParams{
 			Name:   "svc-" + string(rune('0'+i)),
 			Public: true,
-		}, true)
+		})
 	}
 
 	result, err := svc.List(context.Background(), 1, 3, nil, nil, true)
@@ -381,7 +390,7 @@ func TestUpdate_Success(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "test-service"}, true)
+	mustCreateService(t, svc, CreateParams{Name: "test-service"})
 
 	newName := "updated-service"
 	result, err := svc.Update(context.Background(), 1, UpdateParams{
@@ -411,7 +420,7 @@ func TestUpdate_InvalidURL(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "test-service"}, true)
+	mustCreateService(t, svc, CreateParams{Name: "test-service"})
 
 	_, err := svc.Update(context.Background(), 1, UpdateParams{
 		AvatarUrl: strPtr("ftp://bad.com"),
@@ -425,7 +434,7 @@ func TestDelete(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "test-service"}, true)
+	mustCreateService(t, svc, CreateParams{Name: "test-service"})
 
 	err := svc.Delete(context.Background(), 1)
 	if err != nil {
@@ -442,7 +451,7 @@ func TestTogglePublic(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{Name: "test-service", Public: true}, true)
+	mustCreateService(t, svc, CreateParams{Name: "test-service", Public: true})
 
 	result, err := svc.TogglePublic(context.Background(), 1, true)
 	if err != nil {

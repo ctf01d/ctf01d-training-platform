@@ -15,12 +15,14 @@ type LocalStorage struct {
 	baseDir string
 }
 
+const dirMode = 0o755
+
 func NewLocalStorage(baseDir string) (*LocalStorage, error) {
 	abs, err := filepath.Abs(baseDir)
 	if err != nil {
 		return nil, fmt.Errorf("resolving storage path: %w", err)
 	}
-	if err := os.MkdirAll(abs, 0o755); err != nil {
+	if err := os.MkdirAll(abs, dirMode); err != nil {
 		return nil, fmt.Errorf("creating storage directory: %w", err)
 	}
 	return &LocalStorage{baseDir: abs}, nil
@@ -33,7 +35,7 @@ func (s *LocalStorage) Save(_ context.Context, key string, r io.Reader) (FileInf
 
 	fullPath := s.fullPath(key)
 	dir := filepath.Dir(fullPath)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, dirMode); err != nil {
 		return FileInfo{}, fmt.Errorf("creating directories: %w", err)
 	}
 

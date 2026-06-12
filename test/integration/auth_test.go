@@ -34,7 +34,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/testutil"
 )
 
-func setupTest(t *testing.T) (*gin.Engine, *repository.Store, func()) {
+func setupTest(t *testing.T) (*gin.Engine, *repository.Store) {
 	t.Helper()
 
 	store := testutil.NewTestStore(t)
@@ -76,7 +76,7 @@ func setupTest(t *testing.T) (*gin.Engine, *repository.Store, func()) {
 	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, writeupService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
 
 	engine := server.New(cfg, log, store, h)
-	return engine, store, func() {}
+	return engine, store
 }
 
 func seedUser(t *testing.T, store *repository.Store, userName, displayName, password, role string) (int64, string) {
@@ -110,7 +110,7 @@ func makeReq(t *testing.T, engine *gin.Engine, method, path string, body interfa
 		}
 		bodyReader = bytes.NewReader(b)
 	}
-	req := httptest.NewRequest(method, path, bodyReader)
+	req := httptest.NewRequestWithContext(t.Context(), method, path, bodyReader)
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -124,18 +124,9 @@ func makeReq(t *testing.T, engine *gin.Engine, method, path string, body interfa
 
 func parseJSON(t *testing.T, w *httptest.ResponseRecorder) map[string]interface{} {
 	t.Helper()
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("parsing JSON: %v, body: %s", err, w.Body.String())
-	}
-	return result
-}
-
-func parseJSONArray(t *testing.T, w *httptest.ResponseRecorder) []map[string]interface{} {
-	t.Helper()
-	var result []map[string]interface{}
-	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
-		t.Fatalf("parsing JSON array: %v, body: %s", err, w.Body.String())
 	}
 	return result
 }
@@ -175,7 +166,7 @@ func jsonID(t *testing.T, obj map[string]interface{}) int64 {
 }
 
 func TestAuthFlow(t *testing.T) {
-	engine, store, _ := setupTest(t)
+	engine, store := setupTest(t)
 
 	_, adminToken := seedUser(t, store, "admin", "Admin", "admin12345", "admin")
 

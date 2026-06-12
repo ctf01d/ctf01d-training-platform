@@ -19,6 +19,11 @@ const (
 	maxFiles      = 10000
 	maxMetaBytes  = 512 * 1024
 	maxTextBytes  = 512 * 1024
+
+	pathSplitLimit     = 2
+	entryReadOverhead  = 1
+	summaryMaxLength   = 400
+	fieldValueMaxChars = 200
 )
 
 type BundleMetadata struct {
@@ -55,7 +60,7 @@ func detectRootPrefix(zipReader *zip.Reader) string {
 		if n == "" {
 			continue
 		}
-		parts := strings.SplitN(n, "/", 2)
+		parts := strings.SplitN(n, "/", pathSplitLimit)
 		seg := parts[0]
 		if seg == "" {
 			continue
@@ -83,19 +88,19 @@ var (
 	}
 )
 
-func readFirstFromZip(zr *zip.Reader, rootPrefix string, candidates []string) (string, []byte) {
+func readFirstFromZip(zr *zip.Reader, rootPrefix string, candidates []string) []byte {
 	for _, name := range candidates {
 		fullPath := rootPrefix + name
 		for _, f := range zr.File {
 			if f.Name == fullPath && !f.FileInfo().IsDir() {
 				data, err := readSmallZipEntry(f, maxMetaBytes)
 				if err == nil {
-					return name, data
+					return data
 				}
 			}
 		}
 	}
-	return "", nil
+	return nil
 }
 
 func readSmallZipEntry(f *zip.File, maxBytes int64) ([]byte, error) {
@@ -200,6 +205,7 @@ func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 	return meta, nil
 }
 
+//nolint:gocyclo
 func BuildBundle(zipBytes []byte) ([]byte, error) {
 	if len(zipBytes) == 0 {
 		return nil, errors.New("empty zip")
@@ -232,9 +238,9 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 		}
 	}
 
-	_, rootReadme := readFirstFromZip(srcReader, rootPrefix, readmeCandidates)
-	_, rootLicense := readFirstFromZip(srcReader, rootPrefix, licenseCandidates)
-	_, rootTrainingJSON := readFirstFromZip(srcReader, rootPrefix, []string{"ctf01d-training.json"})
+	rootReadme := readFirstFromZip(srcReader, rootPrefix, readmeCandidates)
+	rootLicense := readFirstFromZip(srcReader, rootPrefix, licenseCandidates)
+	rootTrainingJSON := readFirstFromZip(srcReader, rootPrefix, []string{"ctf01d-training.json"})
 
 	serviceHasReadme := false
 	serviceHasLicense := false
@@ -375,6 +381,9 @@ func copyTree(src *zip.Reader, dst *zip.Writer, fromPrefix, toPrefix string, exc
 			return false, errors.New("too many files in archive")
 		}
 
+		if entry.UncompressedSize64 > uint64(maxEntryBytes) {
+			return false, fmt.Errorf("file in archive too large (%d bytes)", entry.UncompressedSize64)
+		}
 		uncompressedSize := int64(entry.UncompressedSize64)
 		if uncompressedSize > maxEntryBytes {
 			return false, fmt.Errorf("file in archive too large (%d bytes)", uncompressedSize)
@@ -388,7 +397,7 @@ func copyTree(src *zip.Reader, dst *zip.Writer, fromPrefix, toPrefix string, exc
 		if err != nil {
 			return false, fmt.Errorf("opening entry %s: %w", entry.Name, err)
 		}
-		data, err := io.ReadAll(io.LimitReader(rc, maxEntryBytes+1))
+		data, err := io.ReadAll(io.LimitReader(rc, maxEntryBytes+entryReadOverhead))
 		rc.Close()
 		if err != nil {
 			return false, fmt.Errorf("reading entry %s: %w", entry.Name, err)
@@ -497,8 +506,8 @@ func summarizeMarkdown(md []byte) string {
 		lines = append(lines, l)
 	}
 	result := strings.TrimSpace(strings.Join(lines, "\n"))
-	if len(result) > 400 {
-		result = result[:400]
+	if len(result) > summaryMaxLength {
+		result = result[:summaryMaxLength]
 	}
 	return result
 }
@@ -518,8 +527,8 @@ func extractCopyright(text string) string {
 		re3 := regexp.MustCompile(`(?i)^copyright\s+`)
 		v = re3.ReplaceAllString(v, "")
 		v = strings.Join(strings.Fields(v), " ")
-		if len(v) > 200 {
-			v = v[:200]
+		if len(v) > fieldValueMaxChars {
+			v = v[:fieldValueMaxChars]
 		}
 		return v
 	}
@@ -576,10 +585,10 @@ func computeSHA256Hex(data []byte) string {
 }
 
 func validateZipBytes(data []byte) error {
-	if len(data) < 4 {
+	if len(data) < zipMagicSize {
 		return errors.New("data too short to be a valid zip")
 	}
-	if !bytes.Equal(data[:4], zipMagic) {
+	if !bytes.Equal(data[:zipMagicSize], zipMagic) {
 		return errors.New("not a valid ZIP archive")
 	}
 	return nil

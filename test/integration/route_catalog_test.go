@@ -6,7 +6,7 @@ import (
 )
 
 func TestHTTPRouteCatalogIsCoveredByIntegrationSuite(t *testing.T) {
-	engine, _, _ := setupTest(t)
+	engine, _ := setupTest(t)
 
 	expected := map[string]bool{
 		"GET /healthz":                                  true,

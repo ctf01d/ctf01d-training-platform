@@ -10,7 +10,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 )
 
-func setupRouter(jwtMgr *auth.Manager, handler gin.HandlerFunc) *gin.Engine {
+func setupRouter(_ *auth.Manager, handler gin.HandlerFunc) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.Use(handler)
@@ -35,7 +35,7 @@ func TestRequireAuth_NoToken(t *testing.T) {
 	mgr := auth.NewManager("test-secret", 24)
 	r := setupRouter(mgr, RequireAuth(mgr))
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -48,7 +48,7 @@ func TestRequireAuth_InvalidToken(t *testing.T) {
 	mgr := auth.NewManager("test-secret", 24)
 	r := setupRouter(mgr, RequireAuth(mgr))
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer invalid-token")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -63,7 +63,7 @@ func TestRequireAuth_ValidToken(t *testing.T) {
 	r := setupRouter(mgr, RequireAuth(mgr))
 
 	token := makeToken(t, mgr, 42, "player", "alice")
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -88,7 +88,7 @@ func TestRequireRole_InsufficientRole(t *testing.T) {
 	})
 
 	token := makeToken(t, mgr, 1, "player", "bob")
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -109,7 +109,7 @@ func TestRequireRole_SufficientRole(t *testing.T) {
 	})
 
 	token := makeToken(t, mgr, 1, "admin", "admin")
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -129,7 +129,7 @@ func TestOptionalAuth_NoToken(t *testing.T) {
 		c.JSON(http.StatusOK, gin.H{"has_user": exists})
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -149,7 +149,7 @@ func TestOptionalAuth_ValidToken(t *testing.T) {
 	})
 
 	token := makeToken(t, mgr, 7, "guest", "visitor")
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -166,7 +166,7 @@ func TestRequireAuth_ExpiredToken(t *testing.T) {
 	validMgr := auth.NewManager("test-secret", 24)
 	r := setupRouter(validMgr, RequireAuth(validMgr))
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)

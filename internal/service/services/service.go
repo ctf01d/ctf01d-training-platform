@@ -119,7 +119,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 		CheckerArchiveUrl:  params.CheckerArchiveUrl,
 		WriteupUrl:         params.WriteupUrl,
 		ExploitsUrl:        params.ExploitsUrl,
-		CheckStatus:        "unknown",
+		CheckStatus:        checkStatusUnknown,
 		Ctf01dTraining:     training,
 	})
 	if err != nil {
@@ -133,7 +133,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 func (s *Service) GetByID(ctx context.Context, id int64, isAdmin bool) (*ServiceModel, error) {
 	dbSvc, err := s.q.GetServiceByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "service")
+		return nil, mapNotFound(err)
 	}
 	svc := fromDB(dbSvc, isAdmin)
 	return &svc, nil
@@ -147,8 +147,14 @@ func (s *Service) List(ctx context.Context, page, perPage int, publicFilter *boo
 		perPage = 20
 	}
 
-	offset := int32((page - 1) * perPage)
-	limit := int32(perPage)
+	offset, err := int32FromInt64(int64(page-1) * int64(perPage))
+	if err != nil {
+		return nil, err
+	}
+	limit, err := int32FromInt64(int64(perPage))
+	if err != nil {
+		return nil, err
+	}
 
 	items, err := s.q.ListServices(ctx, db.ListServicesParams{
 		PublicFilter: publicFilter,
@@ -183,7 +189,7 @@ func (s *Service) List(ctx context.Context, page, perPage int, publicFilter *boo
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isAdmin bool) (*ServiceModel, error) {
 	current, err := s.q.GetServiceByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "service")
+		return nil, mapNotFound(err)
 	}
 
 	avatarUrl := current.AvatarUrl
@@ -257,7 +263,7 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 func (s *Service) TogglePublic(ctx context.Context, id int64, isAdmin bool) (*ServiceModel, error) {
 	current, err := s.q.GetServiceByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "service")
+		return nil, mapNotFound(err)
 	}
 
 	dbSvc, err := s.q.SetPublic(ctx, db.SetPublicParams{
@@ -388,7 +394,7 @@ func validateServiceURLs(avatarUrl, serviceArchiveUrl, checkerArchiveUrl, writeu
 	return nil
 }
 
-func mapNotFound(err error, entity string) error {
+func mapNotFound(err error) error {
 	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
@@ -400,6 +406,13 @@ func mapDBError(err error) error {
 		return errs.ErrConflict
 	}
 	return err
+}
+
+func int32FromInt64(v int64) (int32, error) {
+	if v < 0 || v > maxInt32Value {
+		return 0, errs.NewValidationError(map[string]string{"pagination": "offset must fit int32"})
+	}
+	return int32(v), nil
 }
 
 func isDuplicateKey(err error) bool {

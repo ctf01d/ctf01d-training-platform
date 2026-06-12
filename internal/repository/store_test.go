@@ -32,7 +32,7 @@ func TestStore_WithTx_Rollback(t *testing.T) {
 	TruncateAll(t, store)
 	ctx := context.Background()
 
-	err := store.WithTx(ctx, func(q *db.Queries) error {
+	err := store.WithTx(ctx, func(_ *db.Queries) error {
 		return errors.New("forced error")
 	})
 	if err == nil {

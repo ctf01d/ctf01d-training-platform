@@ -34,11 +34,9 @@ func (m *mockUserStore) GetUserByID(_ context.Context, id int64) (db.User, error
 	return u, nil
 }
 
-type mockJWT struct {
-	secret string
-}
+type mockJWT struct{}
 
-func (m *mockJWT) Generate(userID int64, role, userName string) (string, error) {
+func (m *mockJWT) Generate(_ int64, _, userName string) (string, error) {
 	return "token_" + userName, nil
 }
 

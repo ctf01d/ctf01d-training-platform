@@ -120,7 +120,7 @@ func (h *Handler) HandleDeleteWriteup(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *Handler) ListWriteups(c *gin.Context, params httpserver.ListWriteupsParams) {
+func (h *Handler) ListWriteups(c *gin.Context, _ httpserver.ListWriteupsParams) {
 	h.HandleListWriteups(c)
 }
 

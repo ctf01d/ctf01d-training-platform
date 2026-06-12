@@ -25,6 +25,15 @@ func newMocks() (*mockQuerier, *mockTxRunner) {
 	return q, tx
 }
 
+func mustCreateGameTeam(t *testing.T, svc *Service, params CreateParams) *GameTeam {
+	t.Helper()
+	gt, err := svc.Create(context.Background(), params)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	return gt
+}
+
 func (m *mockTxRunner) RunInTx(_ context.Context, fn func(*db.Queries) error) error {
 	return fn(nil)
 }
@@ -95,8 +104,6 @@ func (m *mockQuerier) UpdateGameTeamOrder(_ context.Context, arg db.UpdateGameTe
 	return nil
 }
 
-func ptrStr(v string) *string { return &v }
-
 func TestCreate_Success(t *testing.T) {
 	q, tx := newMocks()
 	svc := NewService(q, tx)
@@ -135,7 +142,7 @@ func TestGetByID_Success(t *testing.T) {
 	q, tx := newMocks()
 	svc := NewService(q, tx)
 
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Order: 0})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 1, TeamID: 1, Order: 0})
 
 	gt, err := svc.GetByID(context.Background(), 1)
 	if err != nil {
@@ -160,9 +167,9 @@ func TestListByGame(t *testing.T) {
 	q, tx := newMocks()
 	svc := NewService(q, tx)
 
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Order: 1})
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 2, Order: 2})
-	svc.Create(context.Background(), CreateParams{GameID: 2, TeamID: 3, Order: 1})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 1, TeamID: 1, Order: 1})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 1, TeamID: 2, Order: 2})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 2, TeamID: 3, Order: 1})
 
 	items, err := svc.ListByGame(context.Background(), 1)
 	if err != nil {
@@ -177,7 +184,7 @@ func TestUpdate(t *testing.T) {
 	q, tx := newMocks()
 	svc := NewService(q, tx)
 
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Order: 0})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 1, TeamID: 1, Order: 0})
 
 	newIP := "10.0.0.2"
 	orderVal := int32(5)
@@ -194,7 +201,7 @@ func TestDelete(t *testing.T) {
 	q, tx := newMocks()
 	svc := NewService(q, tx)
 
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Order: 0})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 1, TeamID: 1, Order: 0})
 
 	err := svc.Delete(context.Background(), 1)
 	if err != nil {
@@ -210,8 +217,8 @@ func TestReorder(t *testing.T) {
 	q, tx := newMocks()
 	svc := NewService(q, tx)
 
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Order: 1})
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 2, Order: 2})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 1, TeamID: 1, Order: 1})
+	mustCreateGameTeam(t, svc, CreateParams{GameID: 1, TeamID: 2, Order: 2})
 
 	err := svc.Reorder(context.Background(), 1, []ReorderItem{
 		{ID: 1, Order: 2},

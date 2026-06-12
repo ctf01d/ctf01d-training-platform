@@ -24,10 +24,17 @@ func createZip(files map[string]string) []byte {
 	var buf bytes.Buffer
 	w := zip.NewWriter(&buf)
 	for name, content := range files {
-		f, _ := w.Create(name)
-		f.Write([]byte(content))
+		f, err := w.Create(name)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := f.Write([]byte(content)); err != nil {
+			panic(err)
+		}
 	}
-	w.Close()
+	if err := w.Close(); err != nil {
+		panic(err)
+	}
 	return buf.Bytes()
 }
 
@@ -35,10 +42,17 @@ func createZipWithBytes(files map[string][]byte) []byte {
 	var buf bytes.Buffer
 	w := zip.NewWriter(&buf)
 	for name, content := range files {
-		f, _ := w.Create(name)
-		f.Write(content)
+		f, err := w.Create(name)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := f.Write(content); err != nil {
+			panic(err)
+		}
 	}
-	w.Close()
+	if err := w.Close(); err != nil {
+		panic(err)
+	}
 	return buf.Bytes()
 }
 
@@ -305,11 +319,18 @@ func TestBuildBundle_Empty(t *testing.T) {
 func TestBuildBundle_PathTraversal(t *testing.T) {
 	var buf bytes.Buffer
 	w := zip.NewWriter(&buf)
-	f, _ := w.Create("service/../../../etc/passwd")
-	f.Write([]byte("root:x:0:0"))
-	w.Close()
+	f, err := w.Create("service/../../../etc/passwd")
+	if err != nil {
+		t.Fatalf("create entry: %v", err)
+	}
+	if _, err := f.Write([]byte("root:x:0:0")); err != nil {
+		t.Fatalf("write entry: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("close zip: %v", err)
+	}
 
-	_, err := BuildBundle(buf.Bytes())
+	_, err = BuildBundle(buf.Bytes())
 	if err == nil {
 		t.Fatal("expected error for path traversal")
 	}
@@ -445,12 +466,12 @@ func TestDetectLicense_All(t *testing.T) {
 	for _, tt := range tests {
 		result := detectLicense(tt.text)
 		if result != tt.expected {
-			t.Errorf("detectLicense(%q) = %q, want %q", tt.text[:min(30, len(tt.text))], result, tt.expected)
+			t.Errorf("detectLicense(%q) = %q, want %q", tt.text[:minInt(30, len(tt.text))], result, tt.expected)
 		}
 	}
 }
 
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
@@ -613,18 +634,6 @@ func TestCheckerService_CheckChecker_NotFound(t *testing.T) {
 	}
 }
 
-type mockCheckerQuerier struct {
-	*mockImportQuerier
-}
-
-func (m *mockCheckerQuerier) GetServiceByID(ctx context.Context, id int64) (db.Service, error) {
-	return m.mockImportQuerier.GetServiceByID(ctx, id)
-}
-
-func (m *mockCheckerQuerier) SetCheckStatus(ctx context.Context, arg db.SetCheckStatusParams) (db.Service, error) {
-	return m.mockImportQuerier.SetCheckStatus(ctx, arg)
-}
-
 func TestImportFromGithub_BasicFlow(t *testing.T) {
 	repoZip := createBundleZipWithSubdir("myrepo", map[string]string{
 		"README.md": "# TestService\n\nA test service description",
@@ -633,15 +642,17 @@ func TestImportFromGithub_BasicFlow(t *testing.T) {
 		"checker.py": "exit(101)\nexit(102)\nexit(103)\nexit(104)",
 	})
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/zip")
-		w.Write(repoZip)
+		if _, err := w.Write(repoZip); err != nil {
+			t.Fatalf("write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
 	origCodeloadURL := codeloadURL
 	defer func() { codeloadURL = origCodeloadURL }()
-	codeloadURL = func(owner, repo, refPath string) string {
+	codeloadURL = func(_, _, _ string) string {
 		return server.URL
 	}
 
@@ -689,14 +700,16 @@ func TestImportFromGithub_NameFallback(t *testing.T) {
 		"main.py":   "code",
 	})
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(repoZip)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := w.Write(repoZip); err != nil {
+			t.Fatalf("write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
 	origCodeloadURL := codeloadURL
 	defer func() { codeloadURL = origCodeloadURL }()
-	codeloadURL = func(owner, repo, refPath string) string {
+	codeloadURL = func(_, _, _ string) string {
 		return server.URL
 	}
 
@@ -803,7 +816,7 @@ func TestBuildBundle_RootFilesPromoted(t *testing.T) {
 		"main.py": "code",
 	}, nil)
 	r, _ := zip.NewReader(bytes.NewReader(input), int64(len(input)))
-	_, rootReadme := readFirstFromZip(r, "myrepo/", readmeCandidates)
+	rootReadme := readFirstFromZip(r, "myrepo/", readmeCandidates)
 	if rootReadme != nil {
 		t.Fatal("expected no root readme in this test zip")
 	}

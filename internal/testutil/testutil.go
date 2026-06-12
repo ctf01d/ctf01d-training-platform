@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib" // register pgx database/sql driver for goose
 	"github.com/pressly/goose/v3"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"

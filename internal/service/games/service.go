@@ -220,7 +220,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*Game, error
 func (s *Service) GetByID(ctx context.Context, id int64) (*Game, error) {
 	dbGame, err := s.games.GetGameByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "game")
+		return nil, mapNotFound(err)
 	}
 	g := fromDB(dbGame)
 	return &g, nil
@@ -234,8 +234,14 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*GameListResult,
 		perPage = 20
 	}
 
-	offset := int32((page - 1) * perPage)
-	limit := int32(perPage)
+	offset, err := int32FromInt64(int64(page-1) * int64(perPage))
+	if err != nil {
+		return nil, err
+	}
+	limit, err := int32FromInt64(int64(perPage))
+	if err != nil {
+		return nil, err
+	}
 
 	items, err := s.games.ListGames(ctx, db.ListGamesParams{Limit: limit, Offset: offset})
 	if err != nil {
@@ -270,7 +276,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*G
 	}
 	existing, err := s.games.GetGameByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "game")
+		return nil, mapNotFound(err)
 	}
 
 	effectiveStartsAt := params.StartsAt
@@ -304,7 +310,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*G
 		AccessSecret:         params.AccessSecret,
 	})
 	if err != nil {
-		return nil, mapNotFound(err, "game")
+		return nil, mapNotFound(err)
 	}
 	g := fromDB(dbGame)
 	return &g, nil
@@ -329,7 +335,7 @@ func (s *Service) ListServices(ctx context.Context, gameID int64) ([]int64, erro
 func (s *Service) Finalize(ctx context.Context, gameID int64) (*Game, error) {
 	game, err := s.games.GetGameByID(ctx, gameID)
 	if err != nil {
-		return nil, mapNotFound(err, "game")
+		return nil, mapNotFound(err)
 	}
 	if game.Finalized {
 		return nil, errs.ErrConflict
@@ -360,7 +366,11 @@ func (s *Service) Finalize(ctx context.Context, gameID int64) (*Game, error) {
 				score = *r.Score
 			}
 			if i > 0 && score != prevScore {
-				curRank = int32(i + 1)
+				rank, err := int32FromInt64(int64(i + 1))
+				if err != nil {
+					return err
+				}
+				curRank = rank
 			}
 			prevScore = score
 			pos := curRank
@@ -392,7 +402,7 @@ func (s *Service) Finalize(ctx context.Context, gameID int64) (*Game, error) {
 func (s *Service) Unfinalize(ctx context.Context, gameID int64) (*Game, error) {
 	game, err := s.games.GetGameByID(ctx, gameID)
 	if err != nil {
-		return nil, mapNotFound(err, "game")
+		return nil, mapNotFound(err)
 	}
 	if !game.Finalized {
 		return nil, errs.ErrConflict
@@ -483,7 +493,7 @@ func timeToTimestamptz(t *time.Time) pgtype.Timestamptz {
 	return pgtype.Timestamptz{Time: *t, Valid: true}
 }
 
-func mapNotFound(err error, entity string) error {
+func mapNotFound(err error) error {
 	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
@@ -495,4 +505,16 @@ func mapDBError(err error) error {
 		return errs.ErrConflict
 	}
 	return err
+}
+
+const (
+	minInt32 = -1 << 31
+	maxInt32 = 1<<31 - 1
+)
+
+func int32FromInt64(v int64) (int32, error) {
+	if v < minInt32 || v > maxInt32 {
+		return 0, errs.NewValidationError(map[string]string{"pagination": "offset must fit int32"})
+	}
+	return int32(v), nil
 }

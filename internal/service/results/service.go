@@ -86,7 +86,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams, callerRole st
 func (s *Service) GetByID(ctx context.Context, id int64) (*Result, error) {
 	dbResult, err := s.q.GetResultByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "result")
+		return nil, mapNotFound(err)
 	}
 	r := fromDB(dbResult)
 	return &r, nil
@@ -159,7 +159,7 @@ func (s *Service) Upsert(ctx context.Context, gameID, teamID int64, score *int32
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, callerRole string) (*Result, error) {
 	dbResult, err := s.q.GetResultByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "result")
+		return nil, mapNotFound(err)
 	}
 	if err := s.checkNotFinalized(ctx, dbResult.GameID, callerRole); err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, cal
 		Score: params.Score,
 	})
 	if err != nil {
-		return nil, mapNotFound(err, "result")
+		return nil, mapNotFound(err)
 	}
 	r := fromDB(dbResult)
 	return &r, nil
@@ -178,7 +178,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, cal
 func (s *Service) Delete(ctx context.Context, id int64, callerRole string) error {
 	dbResult, err := s.q.GetResultByID(ctx, id)
 	if err != nil {
-		return mapNotFound(err, "result")
+		return mapNotFound(err)
 	}
 	if err := s.checkNotFinalized(ctx, dbResult.GameID, callerRole); err != nil {
 		return err
@@ -197,7 +197,7 @@ func fromDB(r db.Result) Result {
 	}
 }
 
-func mapNotFound(err error, entity string) error {
+func mapNotFound(err error) error {
 	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}

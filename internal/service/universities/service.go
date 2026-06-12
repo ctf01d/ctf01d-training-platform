@@ -74,7 +74,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*University,
 func (s *Service) GetByID(ctx context.Context, id int64) (*University, error) {
 	dbUni, err := s.q.GetUniversityByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "university")
+		return nil, mapNotFound(err)
 	}
 	u := fromDB(dbUni)
 	return &u, nil
@@ -88,8 +88,14 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*UniversityListR
 		perPage = 20
 	}
 
-	offset := int32((page - 1) * perPage)
-	limit := int32(perPage)
+	offset, err := int32FromInt64(int64(page-1) * int64(perPage))
+	if err != nil {
+		return nil, err
+	}
+	limit, err := int32FromInt64(int64(perPage))
+	if err != nil {
+		return nil, err
+	}
 
 	items, err := s.q.ListUniversities(ctx, db.ListUniversitiesParams{
 		Limit:  limit,
@@ -128,7 +134,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*U
 		AvatarUrl: params.AvatarUrl,
 	})
 	if err != nil {
-		return nil, mapNotFound(err, "university")
+		return nil, mapNotFound(err)
 	}
 	u := fromDB(dbUni)
 	return &u, nil
@@ -149,7 +155,7 @@ func fromDB(u db.University) University {
 	}
 }
 
-func mapNotFound(err error, entity string) error {
+func mapNotFound(err error) error {
 	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
@@ -161,6 +167,18 @@ func mapDBError(err error) error {
 		return errs.ErrConflict
 	}
 	return err
+}
+
+const (
+	minInt32 = -1 << 31
+	maxInt32 = 1<<31 - 1
+)
+
+func int32FromInt64(v int64) (int32, error) {
+	if v < minInt32 || v > maxInt32 {
+		return 0, errs.NewValidationError(map[string]string{"pagination": "offset must fit int32"})
+	}
+	return int32(v), nil
 }
 
 func validateURLs(urls ...*string) error {

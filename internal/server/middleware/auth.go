@@ -16,6 +16,10 @@ const (
 	userIDKey   contextKey = "user_id"
 	roleKey     contextKey = "role"
 	userNameKey contextKey = "user_name"
+
+	roleGuestLevel  = 0
+	rolePlayerLevel = 1
+	roleAdminLevel  = 2
 )
 
 func RequireAuth(jwtMgr *auth.Manager) gin.HandlerFunc {
@@ -127,9 +131,9 @@ func CurrentUserName(c *gin.Context) (string, bool) {
 }
 
 var roleLevel = map[string]int{
-	"guest":  0,
-	"player": 1,
-	"admin":  2,
+	"guest":  roleGuestLevel,
+	"player": rolePlayerLevel,
+	"admin":  roleAdminLevel,
 }
 
 func hasRoleLevel(current, required string) bool {

@@ -19,6 +19,8 @@ type Store interface {
 	Ping() error
 }
 
+const corsMaxAge = 12 * time.Hour
+
 func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	if cfg.Env == "development" {
@@ -35,7 +37,7 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Disposition"},
 		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		MaxAge:           corsMaxAge,
 	}))
 	engine.Use(func(c *gin.Context) {
 		start := time.Now()

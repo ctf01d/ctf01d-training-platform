@@ -273,36 +273,63 @@ func (m *mockTeamQuerier) ClearCaptain(_ context.Context, id int64) (db.Team, er
 	return t, nil
 }
 
-func seedOwner(mq *mockQuerier, eq *mockEventQuerier, teamID, userID int64) int64 {
+const (
+	testTeamID        int64 = 1
+	testPendingUserID int64 = 20
+)
+
+func seedOwner(mq *mockQuerier, userID int64) int64 {
 	role := "owner"
 	status := "approved"
-	mem, _ := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
-		TeamID: teamID, UserID: userID, Role: &role, Status: &status,
+	mem, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+		TeamID: testTeamID, UserID: userID, Role: &role, Status: &status,
 	})
+	if err != nil {
+		panic(err)
+	}
 	return mem.ID
 }
 
-func seedPendingMember(mq *mockQuerier, eq *mockEventQuerier, teamID, userID int64, role string) int64 {
+func seedPendingMember(mq *mockQuerier, eq *mockEventQuerier) int64 {
+	role := "player"
 	status := "pending"
-	mem, _ := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
-		TeamID: teamID, UserID: userID, Role: &role, Status: &status,
+	mem, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+		TeamID: testTeamID, UserID: testPendingUserID, Role: &role, Status: &status,
 	})
-	eq.CreateEvent(context.Background(), db.CreateEventParams{
-		TeamID: teamID, UserID: userID, ActorID: int32Ptr(999), Action: "invite",
+	if err != nil {
+		panic(err)
+	}
+	actorID, err := int32Ptr(999)
+	if err != nil {
+		panic(err)
+	}
+	if _, err := eq.CreateEvent(context.Background(), db.CreateEventParams{
+		TeamID: testTeamID, UserID: testPendingUserID, ActorID: actorID, Action: "invite",
 		ToRole: &role, ToStatus: &status,
-	})
+	}); err != nil {
+		panic(err)
+	}
 	return mem.ID
 }
 
-func seedPendingJoinRequest(mq *mockQuerier, eq *mockEventQuerier, teamID, userID int64, role string) int64 {
+func seedPendingJoinRequest(mq *mockQuerier, eq *mockEventQuerier, userID int64, role string) int64 {
 	status := "pending"
-	mem, _ := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
-		TeamID: teamID, UserID: userID, Role: &role, Status: &status,
+	mem, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+		TeamID: testTeamID, UserID: userID, Role: &role, Status: &status,
 	})
-	eq.CreateEvent(context.Background(), db.CreateEventParams{
-		TeamID: teamID, UserID: userID, ActorID: int32Ptr(userID), Action: "join_request",
+	if err != nil {
+		panic(err)
+	}
+	actorID, err := int32Ptr(userID)
+	if err != nil {
+		panic(err)
+	}
+	if _, err := eq.CreateEvent(context.Background(), db.CreateEventParams{
+		TeamID: testTeamID, UserID: userID, ActorID: actorID, Action: "join_request",
 		ToRole: &role, ToStatus: &status,
-	})
+	}); err != nil {
+		panic(err)
+	}
 	return mem.ID
 }
 
@@ -310,7 +337,7 @@ func TestGetByID_Success(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	memID := seedOwner(mq, eq, 1, 1)
+	memID := seedOwner(mq, 1)
 	mem, err := svc.GetByID(context.Background(), memID)
 	if err != nil {
 		t.Fatalf("GetByID: %v", err)
@@ -334,9 +361,9 @@ func TestApprove_Success(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	ownerMemID := seedOwner(mq, eq, 1, 10)
+	ownerMemID := seedOwner(mq, 10)
 	_ = ownerMemID
-	pendingMemID := seedPendingMember(mq, eq, 1, 20, "player")
+	pendingMemID := seedPendingMember(mq, eq)
 
 	err := svc.Approve(context.Background(), pendingMemID, 10, "player")
 	if err != nil {
@@ -364,13 +391,15 @@ func TestApprove_NotManager(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	seedOwner(mq, eq, 1, 10)
-	pendingMemID := seedPendingMember(mq, eq, 1, 20, "player")
+	seedOwner(mq, 10)
+	pendingMemID := seedPendingMember(mq, eq)
 	playerRole := "player"
 	approvedStatus := "approved"
-	mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+	if _, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 30, Role: &playerRole, Status: &approvedStatus,
-	})
+	}); err != nil {
+		t.Fatalf("seed membership: %v", err)
+	}
 
 	err := svc.Approve(context.Background(), pendingMemID, 30, "player")
 	if err != errs.ErrForbidden {
@@ -382,7 +411,7 @@ func TestApprove_Admin(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	pendingMemID := seedPendingMember(mq, eq, 1, 20, "player")
+	pendingMemID := seedPendingMember(mq, eq)
 
 	err := svc.Approve(context.Background(), pendingMemID, 99, "admin")
 	if err != nil {
@@ -394,8 +423,8 @@ func TestReject_Success(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	seedOwner(mq, eq, 1, 10)
-	pendingMemID := seedPendingMember(mq, eq, 1, 20, "player")
+	seedOwner(mq, 10)
+	pendingMemID := seedPendingMember(mq, eq)
 
 	err := svc.Reject(context.Background(), pendingMemID, 10, "player")
 	if err != nil {
@@ -412,7 +441,7 @@ func TestAccept_Success(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	pendingMemID := seedPendingMember(mq, eq, 1, 20, "player")
+	pendingMemID := seedPendingMember(mq, eq)
 
 	err := svc.Accept(context.Background(), pendingMemID, 20)
 	if err != nil {
@@ -429,7 +458,7 @@ func TestAccept_WrongUser(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	pendingMemID := seedPendingMember(mq, eq, 1, 20, "player")
+	pendingMemID := seedPendingMember(mq, eq)
 
 	err := svc.Accept(context.Background(), pendingMemID, 99)
 	if err != errs.ErrForbidden {
@@ -441,7 +470,7 @@ func TestAccept_SelfApprovalRejected(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	pendingMemID := seedPendingJoinRequest(mq, eq, 1, 20, "guest")
+	pendingMemID := seedPendingJoinRequest(mq, eq, 20, "guest")
 
 	err := svc.Accept(context.Background(), pendingMemID, 20)
 	if err != errs.ErrForbidden {
@@ -453,7 +482,7 @@ func TestDecline_Success(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	pendingMemID := seedPendingMember(mq, eq, 1, 20, "player")
+	pendingMemID := seedPendingMember(mq, eq)
 
 	err := svc.Decline(context.Background(), pendingMemID, 20)
 	if err != nil {
@@ -472,14 +501,17 @@ func TestSetRole_ToCaptain(t *testing.T) {
 
 	tq.teams[1] = db.Team{ID: 1, Name: "Team A", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 
-	seedOwner(mq, eq, 1, 10)
+	seedOwner(mq, 10)
 	playerRole := "player"
 	approvedStatus := "approved"
-	mem, _ := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+	mem, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 20, Role: &playerRole, Status: &approvedStatus,
 	})
+	if err != nil {
+		t.Fatalf("seed membership: %v", err)
+	}
 
-	err := svc.SetRole(context.Background(), mem.ID, "captain", 10, "player")
+	err = svc.SetRole(context.Background(), mem.ID, "captain", 10, "player")
 	if err != nil {
 		t.Fatalf("SetRole to captain: %v", err)
 	}
@@ -501,7 +533,7 @@ func TestSetRole_RemoveLastOwner(t *testing.T) {
 
 	tq.teams[1] = db.Team{ID: 1, Name: "Team A", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 
-	ownerMemID := seedOwner(mq, eq, 1, 10)
+	ownerMemID := seedOwner(mq, 10)
 
 	err := svc.SetRole(context.Background(), ownerMemID, "player", 10, "player")
 	if err == nil {
@@ -515,8 +547,8 @@ func TestSetRole_CanRemoveOwnerIfMultiple(t *testing.T) {
 
 	tq.teams[1] = db.Team{ID: 1, Name: "Team A", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 
-	ownerMemID1 := seedOwner(mq, eq, 1, 10)
-	seedOwner(mq, eq, 1, 11)
+	ownerMemID1 := seedOwner(mq, 10)
+	seedOwner(mq, 11)
 
 	err := svc.SetRole(context.Background(), ownerMemID1, "player", 11, "player")
 	if err != nil {
@@ -537,14 +569,17 @@ func TestSetRole_CaptainToOther_ClearsCaptain(t *testing.T) {
 	tq.teams[1] = db.Team{ID: 1, Name: "Team A", CaptainID: &captainID, CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	tq.byCaptain[captainID] = 1
 
-	seedOwner(mq, eq, 1, 10)
+	seedOwner(mq, 10)
 	captainRole := "captain"
 	approvedStatus := "approved"
-	mem, _ := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+	mem, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 20, Role: &captainRole, Status: &approvedStatus,
 	})
+	if err != nil {
+		t.Fatalf("seed membership: %v", err)
+	}
 
-	err := svc.SetRole(context.Background(), mem.ID, "player", 10, "player")
+	err = svc.SetRole(context.Background(), mem.ID, "player", 10, "player")
 	if err != nil {
 		t.Fatalf("SetRole captain to player: %v", err)
 	}
@@ -559,7 +594,7 @@ func TestSetRole_InvalidRole(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	ownerMemID := seedOwner(mq, eq, 1, 10)
+	ownerMemID := seedOwner(mq, 10)
 
 	err := svc.SetRole(context.Background(), ownerMemID, "superadmin", 10, "player")
 	if _, ok := err.(*errs.ValidationError); !ok {
@@ -571,8 +606,8 @@ func TestListByTeam(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	seedOwner(mq, eq, 1, 10)
-	seedOwner(mq, eq, 1, 11)
+	seedOwner(mq, 10)
+	seedOwner(mq, 11)
 
 	items, err := svc.ListByTeam(context.Background(), 1)
 	if err != nil {
@@ -587,9 +622,11 @@ func TestListEvents(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	seedOwner(mq, eq, 1, 10)
-	seedPendingMember(mq, eq, 1, 20, "player")
-	svc.Approve(context.Background(), 2, 10, "player")
+	seedOwner(mq, 10)
+	seedPendingMember(mq, eq)
+	if err := svc.Approve(context.Background(), 2, 10, "player"); err != nil {
+		t.Fatalf("Approve: %v", err)
+	}
 
 	result, err := svc.ListEvents(context.Background(), 1, 1, 10)
 	if err != nil {
@@ -616,7 +653,7 @@ func TestDelete(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	memID := seedOwner(mq, eq, 1, 10)
+	memID := seedOwner(mq, 10)
 	err := svc.Delete(context.Background(), memID)
 	if err != nil {
 		t.Fatalf("Delete: %v", err)

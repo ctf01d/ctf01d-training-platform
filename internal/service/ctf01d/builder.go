@@ -149,10 +149,10 @@ func (b *Builder) BuildOptions(ctx context.Context, gameID int64) (*Ctf01dExport
 	}
 
 	opts := &Ctf01dExportOptions{
-		FlagTtlMin:      10,
-		BasicAttackCost: 100,
-		DefenceCost:     50.0,
-		Port:            8080,
+		FlagTtlMin:      defaultFlagTTLMin,
+		BasicAttackCost: defaultAttackCost,
+		DefenceCost:     defaultDefenceCost,
+		Port:            defaultScorePort,
 		IncludeHtml:     true,
 		HtmlSourcePath:  "",
 		IncludeCompose:  false,
@@ -163,11 +163,11 @@ func (b *Builder) BuildOptions(ctx context.Context, gameID int64) (*Ctf01dExport
 		duration := game.EndsAt.Time.Sub(game.StartsAt.Time)
 		hours := int(duration.Hours())
 		if hours > 0 {
-			ttl := hours * 60 / 10
-			if ttl < 1 {
-				ttl = 1
+			ttl := hours * minutesPerHour / defaultFlagTTLMin
+			if ttl < minFlagTTLMin {
+				ttl = minFlagTTLMin
 			}
-			if ttl <= 25 {
+			if ttl <= maxFlagTTLMin {
 				opts.FlagTtlMin = ttl
 			}
 		}
@@ -180,9 +180,9 @@ func buildGameParams(game db.Game, req Ctf01dExportRequest) GameParams {
 	gp := GameParams{
 		ID:              strconv.FormatInt(game.ID, 10),
 		Name:            strOrDefault(game.Name, "unnamed-game"),
-		FlagTTLMin:      10,
-		BasicAttackCost: 100,
-		DefenceCost:     50.0,
+		FlagTTLMin:      defaultFlagTTLMin,
+		BasicAttackCost: defaultAttackCost,
+		DefenceCost:     defaultDefenceCost,
 	}
 
 	if game.StartsAt.Valid {
@@ -264,8 +264,8 @@ func (b *Builder) buildCheckerParams(ctx context.Context, serviceIDs []int64) ([
 			ID:                normalizeID(svc.Name),
 			Name:              svc.Name,
 			Enabled:           true,
-			ScriptWait:        10,
-			RoundSleep:        30,
+			ScriptWait:        defaultScriptWait,
+			RoundSleep:        defaultRoundSleep,
 			ScriptRel:         "./checker.py",
 			BundlePath:        "",
 			CheckerFromBundle: false,
@@ -325,7 +325,7 @@ func (b *Builder) resolveStoragePath(key string) string {
 
 func buildScoreboardParams(req Ctf01dExportRequest) ScoreboardParams {
 	sp := ScoreboardParams{
-		Port:       8080,
+		Port:       defaultScorePort,
 		HtmlFolder: "./html",
 		Random:     false,
 	}

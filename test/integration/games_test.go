@@ -8,7 +8,7 @@ import (
 )
 
 func TestGamesFlow(t *testing.T) {
-	engine, store, _ := setupTest(t)
+	engine, store := setupTest(t)
 
 	_, adminToken := seedUser(t, store, "admin", "Admin", "admin12345", "admin")
 	_, playerToken := seedUser(t, store, "player1", "Player One", "password123", "player")

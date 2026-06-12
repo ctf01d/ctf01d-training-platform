@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
 )
 
@@ -62,7 +63,12 @@ func (h *Handler) HandleCreateGameTeam(c *gin.Context) {
 
 	order := int32(0)
 	if req.Order != nil {
-		order = int32(*req.Order)
+		v, ok := int32FromInt(*req.Order)
+		if !ok {
+			respondError(c, errs.NewValidationError(map[string]string{"order": "must fit int32"}))
+			return
+		}
+		order = v
 	}
 
 	var overrides json.RawMessage
@@ -105,7 +111,11 @@ func (h *Handler) HandleUpdateGameTeam(c *gin.Context) {
 
 	var order *int32
 	if req.Order != nil {
-		v := int32(*req.Order)
+		v, ok := int32FromInt(*req.Order)
+		if !ok {
+			respondError(c, errs.NewValidationError(map[string]string{"order": "must fit int32"}))
+			return
+		}
 		order = &v
 	}
 

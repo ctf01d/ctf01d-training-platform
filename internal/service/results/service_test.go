@@ -28,6 +28,15 @@ func newMocks() (*mockGameQuerier, *mockQuerier) {
 	return gq, q
 }
 
+func mustCreateResult(t *testing.T, svc *Service, params CreateParams) *Result {
+	t.Helper()
+	result, err := svc.Create(context.Background(), params, "player")
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	return result
+}
+
 func (m *mockGameQuerier) GetGameByID(_ context.Context, id int64) (db.Game, error) {
 	g, ok := m.games[id]
 	if !ok {
@@ -121,8 +130,6 @@ func (m *mockQuerier) DeleteResult(_ context.Context, id int64) error {
 	return nil
 }
 
-func ptrInt32(v int32) *int32 { return &v }
-
 func TestCreate_Success(t *testing.T) {
 	gq, q := newMocks()
 	svc := NewService(q, gq)
@@ -169,7 +176,7 @@ func TestGetByID_Success(t *testing.T) {
 	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	score := int32(100)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &score}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &score})
 
 	r, err := svc.GetByID(context.Background(), 1)
 	if err != nil {
@@ -197,8 +204,8 @@ func TestListByGame(t *testing.T) {
 
 	s1 := int32(100)
 	s2 := int32(200)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 2, Score: &s2}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &s1})
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 2, Score: &s2})
 
 	items, err := svc.ListByGame(context.Background(), 1)
 	if err != nil {
@@ -215,7 +222,7 @@ func TestUpsert(t *testing.T) {
 	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &s1})
 
 	s2 := int32(150)
 	r, err := svc.Upsert(context.Background(), 1, 1, &s2, "player")
@@ -233,7 +240,7 @@ func TestUpdate(t *testing.T) {
 	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &s1})
 
 	s2 := int32(200)
 	r, err := svc.Update(context.Background(), 1, UpdateParams{Score: &s2}, "player")
@@ -251,7 +258,7 @@ func TestUpdate_FinalizedForbidden(t *testing.T) {
 	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &s1})
 
 	gq.games[1] = db.Game{ID: 1, Finalized: true}
 
@@ -268,7 +275,7 @@ func TestDelete(t *testing.T) {
 	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &s1})
 
 	err := svc.Delete(context.Background(), 1, "player")
 	if err != nil {
@@ -286,7 +293,7 @@ func TestDelete_FinalizedForbidden(t *testing.T) {
 	gq.games[1] = db.Game{ID: 1, Finalized: false}
 
 	s1 := int32(100)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &s1})
 
 	gq.games[1] = db.Game{ID: 1, Finalized: true}
 
@@ -304,8 +311,8 @@ func TestListAll(t *testing.T) {
 
 	s1 := int32(100)
 	s2 := int32(200)
-	svc.Create(context.Background(), CreateParams{GameID: 1, TeamID: 1, Score: &s1}, "player")
-	svc.Create(context.Background(), CreateParams{GameID: 2, TeamID: 1, Score: &s2}, "player")
+	mustCreateResult(t, svc, CreateParams{GameID: 1, TeamID: 1, Score: &s1})
+	mustCreateResult(t, svc, CreateParams{GameID: 2, TeamID: 1, Score: &s2})
 
 	items, err := svc.ListAll(context.Background())
 	if err != nil {

@@ -85,10 +85,24 @@ linters:
           - revive
         path: (.+)_test.go
         text: ^(dot-imports|add-constant)
+      - linters:
+          - goconst
+          - gocyclo
+          - gosec
+          - mnd
+        path: (.+)_test.go
+      - linters:
+          - gocyclo
+          - mnd
+        path: cmd/seed/main.go
+      - linters:
+          - revive
+        text: ^(var-naming|exported)
     paths:
       - third_party$
       - builtin$
       - examples$
+      - web/node_modules
 formatters:
   enable:
     - gci
@@ -104,3 +118,4 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+      - web/node_modules

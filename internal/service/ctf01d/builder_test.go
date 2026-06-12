@@ -19,15 +19,15 @@ type mockBuilderQuerier struct {
 	teams      map[int64]db.Team
 }
 
-func (m *mockBuilderQuerier) GetGameByID(_ context.Context, id int64) (db.Game, error) {
+func (m *mockBuilderQuerier) GetGameByID(_ context.Context, _ int64) (db.Game, error) {
 	return m.game, nil
 }
 
-func (m *mockBuilderQuerier) ListGameTeamsByGame(_ context.Context, gameID int64) ([]db.GameTeam, error) {
+func (m *mockBuilderQuerier) ListGameTeamsByGame(_ context.Context, _ int64) ([]db.GameTeam, error) {
 	return m.gameTeams, nil
 }
 
-func (m *mockBuilderQuerier) ListServicesByGame(_ context.Context, gameID int64) ([]int64, error) {
+func (m *mockBuilderQuerier) ListServicesByGame(_ context.Context, _ int64) ([]int64, error) {
 	return m.serviceIDs, nil
 }
 

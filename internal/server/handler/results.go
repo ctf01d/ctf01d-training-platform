@@ -80,10 +80,15 @@ func (h *Handler) HandleCreateResult(c *gin.Context) {
 
 	role, _ := middleware.CurrentRole(c)
 
+	score, ok := int32PtrFromIntPtr(c, req.Score)
+	if !ok {
+		return
+	}
+
 	params := resultsvc.CreateParams{
 		GameID: req.GameId,
 		TeamID: req.TeamId,
-		Score:  int32PtrFromIntPtr(req.Score),
+		Score:  score,
 	}
 
 	result, err := h.results.Create(c.Request.Context(), params, role)
@@ -123,8 +128,13 @@ func (h *Handler) HandleUpdateResult(c *gin.Context) {
 
 	role, _ := middleware.CurrentRole(c)
 
+	score, ok := int32PtrFromIntPtr(c, req.Score)
+	if !ok {
+		return
+	}
+
 	params := resultsvc.UpdateParams{
-		Score: int32PtrFromIntPtr(req.Score),
+		Score: score,
 	}
 
 	result, err := h.results.Update(c.Request.Context(), id, params, role)
@@ -162,12 +172,16 @@ func resultToHTTP(r resultsvc.Result) httpserver.Result {
 	}
 }
 
-func int32PtrFromIntPtr(v *int) *int32 {
+func int32PtrFromIntPtr(c *gin.Context, v *int) (*int32, bool) {
 	if v == nil {
-		return nil
+		return nil, true
 	}
-	r := int32(*v)
-	return &r
+	r, ok := int32FromInt(*v)
+	if !ok {
+		respondError(c, errs.NewValidationError(map[string]string{"score": "must fit int32"}))
+		return nil, false
+	}
+	return &r, true
 }
 
 func intPtrFromInt32Ptr(v *int32) *int {

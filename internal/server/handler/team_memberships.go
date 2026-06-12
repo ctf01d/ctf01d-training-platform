@@ -53,7 +53,7 @@ func (h *Handler) HandleCreateTeamMembership(c *gin.Context) {
 		return
 	}
 
-	role := "guest"
+	role := roleGuest
 	if req.Role != nil {
 		role = string(*req.Role)
 	}
@@ -237,7 +237,7 @@ func (h *Handler) HandleSetTeamMembershipRole(c *gin.Context) {
 }
 
 func membershipToHTTP(m membersvc.Membership) httpserver.TeamMembership {
-	role := "guest"
+	role := roleGuest
 	if m.Role != nil {
 		role = *m.Role
 	}

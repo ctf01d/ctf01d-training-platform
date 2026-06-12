@@ -18,14 +18,25 @@ func createTestBundleZip(t *testing.T, hasChecker bool) string {
 
 	var buf bytes.Buffer
 	w := zip.NewWriter(&buf)
-	w.Create("service/README.md")
-	if hasChecker {
-		fw, _ := w.Create("checker/checker.py")
-		fw.Write([]byte("#!/usr/bin/env python3\nprint('checker')\n"))
+	if _, err := w.Create("service/README.md"); err != nil {
+		t.Fatalf("create README entry: %v", err)
 	}
-	w.Close()
+	if hasChecker {
+		fw, err := w.Create("checker/checker.py")
+		if err != nil {
+			t.Fatalf("create checker entry: %v", err)
+		}
+		if _, err := fw.Write([]byte("#!/usr/bin/env python3\nprint('checker')\n")); err != nil {
+			t.Fatalf("write checker entry: %v", err)
+		}
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("close zip: %v", err)
+	}
 
-	os.WriteFile(bundlePath, buf.Bytes(), 0o644)
+	if err := os.WriteFile(bundlePath, buf.Bytes(), 0o644); err != nil {
+		t.Fatalf("write bundle zip: %v", err)
+	}
 	return bundlePath
 }
 
@@ -67,6 +78,7 @@ func makeTestTeams() []TeamParams {
 }
 
 func makeTestCheckers(t *testing.T) []CheckerParams {
+	t.Helper()
 	bundlePath := createTestBundleZip(t, true)
 	return []CheckerParams{
 		{
@@ -400,7 +412,7 @@ func TestValidateInputs_GameIDEmpty(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for empty game.id")
 	}
-	if !bytes.Contains([]byte(err.Error()), []byte("game.id")) {
+	if !strings.Contains(err.Error(), "game.id") {
 		t.Errorf("error should mention game.id, got: %v", err)
 	}
 }
@@ -613,15 +625,6 @@ func TestExtFromMIME(t *testing.T) {
 	}
 }
 
-func foundFilePattern(found map[string]bool, pattern string) bool {
-	for k := range found {
-		if k == pattern {
-			return true
-		}
-	}
-	return false
-}
-
 func extractFileFromZip(t *testing.T, data []byte, suffix string) []byte {
 	t.Helper()
 	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
@@ -636,7 +639,9 @@ func extractFileFromZip(t *testing.T, data []byte, suffix string) []byte {
 			}
 			defer rc.Close()
 			var buf bytes.Buffer
-			buf.ReadFrom(rc)
+			if _, err := buf.ReadFrom(rc); err != nil {
+				t.Fatalf("read %s: %v", f.Name, err)
+			}
 			return buf.Bytes()
 		}
 	}

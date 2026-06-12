@@ -65,6 +65,8 @@ func NewService(q Querier) *Service {
 	return &Service{q: q}
 }
 
+const minPasswordLength = 6
+
 func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error) {
 	if params.UserName == "" || !userNameRegex.MatchString(params.UserName) {
 		return nil, errs.NewValidationError(map[string]string{
@@ -76,7 +78,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error
 			"display_name": "is required",
 		})
 	}
-	if len(params.Password) < 6 {
+	if len(params.Password) < minPasswordLength {
 		return nil, errs.NewValidationError(map[string]string{
 			"password": "must be at least 6 characters",
 		})
@@ -101,7 +103,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error
 		PasswordDigest: &hash,
 	})
 	if err != nil {
-		return nil, mapDBError(err, "user_name", params.UserName)
+		return nil, mapDBError(err)
 	}
 
 	u := fromDB(dbUser)
@@ -111,7 +113,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error
 func (s *Service) GetByID(ctx context.Context, id int64) (*User, error) {
 	dbUser, err := s.q.GetUserByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "user")
+		return nil, mapNotFound(err)
 	}
 	u := fromDB(dbUser)
 	return &u, nil
@@ -120,7 +122,7 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*User, error) {
 func (s *Service) GetByUserName(ctx context.Context, userName string) (*User, error) {
 	dbUser, err := s.q.GetUserByUserName(ctx, userName)
 	if err != nil {
-		return nil, mapNotFound(err, "user")
+		return nil, mapNotFound(err)
 	}
 	u := fromDB(dbUser)
 	return &u, nil
@@ -134,8 +136,14 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*UserListResult,
 		perPage = 20
 	}
 
-	offset := int32((page - 1) * perPage)
-	limit := int32(perPage)
+	offset, err := int32FromInt64(int64(page-1) * int64(perPage))
+	if err != nil {
+		return nil, err
+	}
+	limit, err := int32FromInt64(int64(perPage))
+	if err != nil {
+		return nil, err
+	}
 
 	items, err := s.q.ListUsers(ctx, db.ListUsersParams{
 		Limit:  limit,
@@ -166,7 +174,7 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*UserListResult,
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*User, error) {
 	existing, err := s.q.GetUserByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "user")
+		return nil, mapNotFound(err)
 	}
 
 	displayName := existing.DisplayName
@@ -213,9 +221,13 @@ func (s *Service) UpdateRole(ctx context.Context, id int64, role string) (*User,
 }
 
 func (s *Service) UpdateRating(ctx context.Context, id int64, rating int) (*User, error) {
+	dbRating, err := int32FromInt64(int64(rating))
+	if err != nil {
+		return nil, err
+	}
 	dbUser, err := s.q.UpdateUserRating(ctx, db.UpdateUserRatingParams{
 		ID:     id,
-		Rating: int32(rating),
+		Rating: dbRating,
 	})
 	if err != nil {
 		return nil, err
@@ -241,16 +253,28 @@ func fromDB(u db.User) User {
 	}
 }
 
-func mapNotFound(err error, entity string) error {
+func mapNotFound(err error) error {
 	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
 	return err
 }
 
-func mapDBError(err error, field, value string) error {
+func mapDBError(err error) error {
 	if repository.IsDuplicateKey(err) {
 		return errs.ErrConflict
 	}
 	return err
+}
+
+const (
+	minInt32 = -1 << 31
+	maxInt32 = 1<<31 - 1
+)
+
+func int32FromInt64(v int64) (int32, error) {
+	if v < minInt32 || v > maxInt32 {
+		return 0, errs.NewValidationError(map[string]string{"value": "must fit int32"})
+	}
+	return int32(v), nil
 }

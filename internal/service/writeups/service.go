@@ -47,6 +47,11 @@ type Service struct {
 	teams TeamManager
 }
 
+const (
+	requiredFieldMessage = "is required"
+	maxTitleLength       = 255
+)
+
 func NewService(q Querier, teams TeamManager) *Service {
 	return &Service{q: q, teams: teams}
 }
@@ -133,18 +138,18 @@ func validateCreate(params CreateParams) error {
 	rawURL := strings.TrimSpace(params.URL)
 
 	if params.GameID <= 0 {
-		fields["game_id"] = "is required"
+		fields["game_id"] = requiredFieldMessage
 	}
 	if params.TeamID <= 0 {
-		fields["team_id"] = "is required"
+		fields["team_id"] = requiredFieldMessage
 	}
 	if title == "" {
-		fields["title"] = "is required"
-	} else if len(title) > 255 {
+		fields["title"] = requiredFieldMessage
+	} else if len(title) > maxTitleLength {
 		fields["title"] = "must be at most 255 characters"
 	}
 	if rawURL == "" {
-		fields["url"] = "is required"
+		fields["url"] = requiredFieldMessage
 	} else if !validHTTPURL(rawURL) {
 		fields["url"] = "must be a valid http(s):// URL"
 	}

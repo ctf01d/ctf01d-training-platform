@@ -133,11 +133,15 @@ func (s *Service) Create(ctx context.Context, creatorID int64, params CreatePara
 			return err
 		}
 
+		actorID, err := int32PtrFromInt64(creatorID)
+		if err != nil {
+			return err
+		}
 		action := "created"
 		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:     team.ID,
 			UserID:     creatorID,
-			ActorID:    int32PtrFromInt64(creatorID),
+			ActorID:    actorID,
 			Action:     action,
 			FromRole:   nil,
 			ToRole:     &ownerRole,
@@ -161,7 +165,7 @@ func (s *Service) Create(ctx context.Context, creatorID int64, params CreatePara
 func (s *Service) GetByID(ctx context.Context, id int64) (*Team, error) {
 	team, err := s.teams.GetTeamByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "team")
+		return nil, mapNotFound(err)
 	}
 	t := fromDB(team)
 	return &t, nil
@@ -175,8 +179,14 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*TeamListResult,
 		perPage = 20
 	}
 
-	offset := int32((page - 1) * perPage)
-	limit := int32(perPage)
+	offset, err := int32FromInt64(int64(page-1) * int64(perPage))
+	if err != nil {
+		return nil, err
+	}
+	limit, err := int32FromInt64(int64(perPage))
+	if err != nil {
+		return nil, err
+	}
 
 	items, err := s.teams.ListTeams(ctx, db.ListTeamsParams{Limit: limit, Offset: offset})
 	if err != nil {
@@ -234,7 +244,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*T
 	} else {
 		existing, err := s.teams.GetTeamByID(ctx, id)
 		if err != nil {
-			return nil, mapNotFound(err, "team")
+			return nil, mapNotFound(err)
 		}
 		name = existing.Name
 	}
@@ -247,7 +257,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*T
 		UniversityID: params.UniversityID,
 	})
 	if err != nil {
-		return nil, mapNotFound(err, "team")
+		return nil, mapNotFound(err)
 	}
 	t := fromDB(team)
 	return &t, nil
@@ -290,10 +300,14 @@ func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
 			return mapDBError(err)
 		}
 
+		actorID, err := int32PtrFromInt64(userID)
+		if err != nil {
+			return err
+		}
 		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:   teamID,
 			UserID:   userID,
-			ActorID:  int32PtrFromInt64(userID),
+			ActorID:  actorID,
 			Action:   action,
 			ToRole:   &role,
 			ToStatus: &status,
@@ -336,10 +350,14 @@ func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64
 			return mapDBError(err)
 		}
 
+		actorID, err := int32PtrFromInt64(inviterID)
+		if err != nil {
+			return err
+		}
 		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
 			TeamID:   teamID,
 			UserID:   inviteeID,
-			ActorID:  int32PtrFromInt64(inviterID),
+			ActorID:  actorID,
 			Action:   action,
 			ToRole:   &role,
 			ToStatus: &status,
@@ -362,12 +380,15 @@ func fromDB(t db.Team) Team {
 	}
 }
 
-func int32PtrFromInt64(v int64) *int32 {
-	i := int32(v)
-	return &i
+func int32PtrFromInt64(v int64) (*int32, error) {
+	i, err := int32FromInt64(v)
+	if err != nil {
+		return nil, err
+	}
+	return &i, nil
 }
 
-func mapNotFound(err error, entity string) error {
+func mapNotFound(err error) error {
 	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
@@ -381,11 +402,24 @@ func mapDBError(err error) error {
 	return err
 }
 
-func ptrStr(v string) *string { return &v }
+const (
+	minInt32 = -1 << 31
+	maxInt32 = 1<<31 - 1
+)
+
+func int32FromInt64(v int64) (int32, error) {
+	if v < minInt32 || v > maxInt32 {
+		return 0, errs.NewValidationError(map[string]string{"id": "must fit int32"})
+	}
+	return int32(v), nil
+}
 
 func EnsureCaptainUnique(ctx context.Context, q TeamQuerier, userID int64) error {
-	captainID := int32(userID)
-	_, err := q.GetTeamByCaptain(ctx, &captainID)
+	captainID, err := int32FromInt64(userID)
+	if err != nil {
+		return err
+	}
+	_, err = q.GetTeamByCaptain(ctx, &captainID)
 	if err == nil {
 		return fmt.Errorf("%w: user %d is already captain of another team", errs.ErrConflict, userID)
 	}

@@ -23,6 +23,15 @@ func newMockQuerier() *mockQuerier {
 	}
 }
 
+func mustCreateUniversity(t *testing.T, svc *Service, params CreateParams) *University {
+	t.Helper()
+	university, err := svc.Create(context.Background(), params)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	return university
+}
+
 func (m *mockQuerier) CreateUniversity(_ context.Context, arg db.CreateUniversityParams) (db.University, error) {
 	id := m.nextID
 	m.nextID++
@@ -112,7 +121,7 @@ func TestGetByID_Success(t *testing.T) {
 	svc := NewService(q)
 
 	name := "MIT"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateUniversity(t, svc, CreateParams{Name: &name})
 
 	u, err := svc.GetByID(context.Background(), 1)
 	if err != nil {
@@ -139,7 +148,7 @@ func TestList(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		n := "Uni" + string(rune('0'+i))
-		svc.Create(context.Background(), CreateParams{Name: &n})
+		mustCreateUniversity(t, svc, CreateParams{Name: &n})
 	}
 
 	result, err := svc.List(context.Background(), 1, 3)
@@ -159,7 +168,7 @@ func TestUpdate(t *testing.T) {
 	svc := NewService(q)
 
 	name := "MIT"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateUniversity(t, svc, CreateParams{Name: &name})
 
 	newName := "Stanford"
 	u, err := svc.Update(context.Background(), 1, UpdateParams{Name: &newName})
@@ -187,7 +196,7 @@ func TestDelete(t *testing.T) {
 	svc := NewService(q)
 
 	name := "MIT"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateUniversity(t, svc, CreateParams{Name: &name})
 
 	err := svc.Delete(context.Background(), 1)
 	if err != nil {

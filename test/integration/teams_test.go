@@ -7,7 +7,7 @@ import (
 )
 
 func TestTeamsMembershipsFlow(t *testing.T) {
-	engine, store, _ := setupTest(t)
+	engine, store := setupTest(t)
 
 	_, adminToken := seedUser(t, store, "admin", "Admin", "admin12345", "admin")
 	_, ownerToken := seedUser(t, store, "owner1", "Owner", "password123", "player")

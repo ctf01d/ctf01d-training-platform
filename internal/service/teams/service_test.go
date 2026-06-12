@@ -43,6 +43,15 @@ func newMocks() (*mockTeamQuerier, *mockMembershipQuerier, *mockEventQuerier, *m
 	return tq, mq, eq, tx
 }
 
+func mustCreateTeam(t *testing.T, svc *Service, captainID int64, params CreateParams) *Team {
+	t.Helper()
+	team, err := svc.Create(context.Background(), captainID, params)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	return team
+}
+
 func (m *mockTeamQuerier) CreateTeam(_ context.Context, arg db.CreateTeamParams) (db.Team, error) {
 	id := m.nextID
 	m.nextID++
@@ -266,7 +275,7 @@ func TestGetByID_Success(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	team, err := svc.GetByID(context.Background(), 1)
 	if err != nil {
@@ -292,7 +301,7 @@ func TestList(t *testing.T) {
 	svc := NewService(tq, mq, eq, tx)
 
 	for i := 0; i < 5; i++ {
-		svc.Create(context.Background(), int64(i+1), CreateParams{Name: "Team " + string(rune('A'+i))})
+		mustCreateTeam(t, svc, int64(i+1), CreateParams{Name: "Team " + string(rune('A'+i))})
 	}
 
 	result, err := svc.List(context.Background(), 1, 3)
@@ -311,7 +320,7 @@ func TestCanManage_Admin(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	err := svc.CanManage(context.Background(), 1, 999, "admin")
 	if err != nil {
@@ -323,7 +332,7 @@ func TestCanManage_Owner(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	err := svc.CanManage(context.Background(), 1, 1, "player")
 	if err != nil {
@@ -335,7 +344,7 @@ func TestCanManage_NotMember(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	err := svc.CanManage(context.Background(), 1, 999, "player")
 	if err != errs.ErrForbidden {
@@ -347,12 +356,14 @@ func TestCanManage_PlayerRole(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 	role := "player"
 	status := "approved"
-	mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+	if _, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 2, Role: &role, Status: &status,
-	})
+	}); err != nil {
+		t.Fatalf("seed membership: %v", err)
+	}
 
 	err := svc.CanManage(context.Background(), 1, 2, "player")
 	if err != errs.ErrForbidden {
@@ -364,7 +375,7 @@ func TestUpdate(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	desc := "Updated description"
 	name := "Team Beta"
@@ -384,7 +395,7 @@ func TestDelete(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	err := svc.Delete(context.Background(), 1)
 	if err != nil {
@@ -400,7 +411,7 @@ func TestRequestJoin(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	err := svc.RequestJoin(context.Background(), 1, 2)
 	if err != nil {
@@ -434,8 +445,10 @@ func TestRequestJoin_Duplicate(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
-	svc.RequestJoin(context.Background(), 1, 2)
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
+	if err := svc.RequestJoin(context.Background(), 1, 2); err != nil {
+		t.Fatalf("RequestJoin: %v", err)
+	}
 
 	err := svc.RequestJoin(context.Background(), 1, 2)
 	if err != errs.ErrConflict {
@@ -447,7 +460,7 @@ func TestInvite_Success(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
 	err := svc.Invite(context.Background(), 1, 1, 2, "owner")
 	if err != nil {
@@ -470,12 +483,14 @@ func TestInvite_NonManager(t *testing.T) {
 	tq, mq, eq, tx := newMocks()
 	svc := NewService(tq, mq, eq, tx)
 
-	svc.Create(context.Background(), 1, CreateParams{Name: "Team Alpha"})
+	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 	role := "player"
 	status := "approved"
-	mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+	if _, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 2, Role: &role, Status: &status,
-	})
+	}); err != nil {
+		t.Fatalf("seed membership: %v", err)
+	}
 
 	err := svc.Invite(context.Background(), 1, 2, 3, "")
 	if err != errs.ErrForbidden {

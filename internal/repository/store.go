@@ -50,7 +50,9 @@ func (s *Store) WithTx(ctx context.Context, fn func(*db.Queries) error) error {
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
 	if err := fn(s.Queries.WithTx(tx)); err != nil {
 		return err
@@ -64,7 +66,9 @@ func (s *Store) RunInTx(ctx context.Context, fn func(queries *db.Queries) error)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
 	if err := fn(db.New(tx)); err != nil {
 		return err

@@ -19,6 +19,13 @@ import (
 
 var zipMagic = []byte{0x50, 0x4B, 0x03, 0x04}
 
+const (
+	archiveDownloadTimeout = 5 * time.Minute
+	maxRedirects           = 10
+	zipMagicSize           = 4
+	uploadLimitOverhead    = 1
+)
+
 type ArchiveQuerier interface {
 	GetServiceByID(ctx context.Context, id int64) (db.Service, error)
 	SetServiceLocal(ctx context.Context, arg db.SetServiceLocalParams) (db.Service, error)
@@ -38,9 +45,9 @@ func NewArchiveService(q ArchiveQuerier, store storage.Storage, maxUploadBytes i
 		store:          store,
 		maxUploadBytes: maxUploadBytes,
 		httpClient: &http.Client{
-			Timeout: 5 * time.Minute,
+			Timeout: archiveDownloadTimeout,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if len(via) >= 10 {
+				if len(via) >= maxRedirects {
 					return errors.New("too many redirects")
 				}
 				host := req.URL.Hostname()
@@ -90,7 +97,7 @@ func ssrfSafeDialContext(ctx context.Context, network, addr string) (net.Conn, e
 func (s *ArchiveService) Redownload(ctx context.Context, id int64, isAdmin bool) (*ServiceModel, error) {
 	svc, err := s.q.GetServiceByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "service")
+		return nil, mapNotFound(err)
 	}
 
 	now := time.Now()
@@ -100,7 +107,10 @@ func (s *ArchiveService) Redownload(ctx context.Context, id int64, isAdmin bool)
 		if err != nil {
 			return nil, fmt.Errorf("downloading service archive: %w", err)
 		}
-		size := int32(info.Size)
+		size, err := int32Size(info.Size)
+		if err != nil {
+			return nil, err
+		}
 		path := fmt.Sprintf("services/%d/service.zip", id)
 		svc, err = s.q.SetServiceLocal(ctx, db.SetServiceLocalParams{
 			ID:                  id,
@@ -119,7 +129,10 @@ func (s *ArchiveService) Redownload(ctx context.Context, id int64, isAdmin bool)
 		if err != nil {
 			return nil, fmt.Errorf("downloading checker archive: %w", err)
 		}
-		size := int32(info.Size)
+		size, err := int32Size(info.Size)
+		if err != nil {
+			return nil, err
+		}
 		path := fmt.Sprintf("services/%d/checker.zip", id)
 		svc, err = s.q.SetCheckerLocal(ctx, db.SetCheckerLocalParams{
 			ID:                  id,
@@ -140,7 +153,7 @@ func (s *ArchiveService) Redownload(ctx context.Context, id int64, isAdmin bool)
 func (s *ArchiveService) UploadArchives(ctx context.Context, id int64, serviceFile, checkerFile io.Reader, isAdmin bool) (*ServiceModel, error) {
 	svc, err := s.q.GetServiceByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "service")
+		return nil, mapNotFound(err)
 	}
 
 	now := time.Now()
@@ -150,7 +163,10 @@ func (s *ArchiveService) UploadArchives(ctx context.Context, id int64, serviceFi
 		if err != nil {
 			return nil, fmt.Errorf("saving service archive: %w", err)
 		}
-		size := int32(info.Size)
+		size, err := int32Size(info.Size)
+		if err != nil {
+			return nil, err
+		}
 		path := fmt.Sprintf("services/%d/service.zip", id)
 		svc, err = s.q.SetServiceLocal(ctx, db.SetServiceLocalParams{
 			ID:                  id,
@@ -169,7 +185,10 @@ func (s *ArchiveService) UploadArchives(ctx context.Context, id int64, serviceFi
 		if err != nil {
 			return nil, fmt.Errorf("saving checker archive: %w", err)
 		}
-		size := int32(info.Size)
+		size, err := int32Size(info.Size)
+		if err != nil {
+			return nil, err
+		}
 		path := fmt.Sprintf("services/%d/checker.zip", id)
 		svc, err = s.q.SetCheckerLocal(ctx, db.SetCheckerLocalParams{
 			ID:                  id,
@@ -190,7 +209,7 @@ func (s *ArchiveService) UploadArchives(ctx context.Context, id int64, serviceFi
 func (s *ArchiveService) OpenLocal(ctx context.Context, id int64, kind string) (io.ReadSeekCloser, string, error) {
 	svc, err := s.q.GetServiceByID(ctx, id)
 	if err != nil {
-		return nil, "", mapNotFound(err, "service")
+		return nil, "", mapNotFound(err)
 	}
 
 	var key string
@@ -288,7 +307,7 @@ func (s *ArchiveService) downloadAndSave(ctx context.Context, archiveURL, key st
 		return storage.FileInfo{}, fmt.Errorf("download returned status %d", resp.StatusCode)
 	}
 
-	header := make([]byte, 4)
+	header := make([]byte, zipMagicSize)
 	n, err := io.ReadFull(resp.Body, header)
 	if err != nil {
 		return storage.FileInfo{}, fmt.Errorf("reading archive header: %w", err)
@@ -297,7 +316,7 @@ func (s *ArchiveService) downloadAndSave(ctx context.Context, archiveURL, key st
 		return storage.FileInfo{}, errors.New("downloaded file is not a valid ZIP archive")
 	}
 
-	limited := io.LimitReader(resp.Body, s.maxUploadBytes+1)
+	limited := io.LimitReader(resp.Body, s.maxUploadBytes+uploadLimitOverhead)
 	reader := io.MultiReader(bytes.NewReader(header), limited)
 
 	info, err := s.store.Save(ctx, key, reader)
@@ -306,7 +325,9 @@ func (s *ArchiveService) downloadAndSave(ctx context.Context, archiveURL, key st
 	}
 
 	if info.Size > s.maxUploadBytes {
-		s.store.Delete(ctx, key)
+		if err := s.store.Delete(ctx, key); err != nil {
+			return storage.FileInfo{}, fmt.Errorf("deleting oversized archive: %w", err)
+		}
 		return storage.FileInfo{}, fmt.Errorf("archive exceeds maximum size (%d bytes)", s.maxUploadBytes)
 	}
 
@@ -314,7 +335,7 @@ func (s *ArchiveService) downloadAndSave(ctx context.Context, archiveURL, key st
 }
 
 func (s *ArchiveService) saveUploaded(ctx context.Context, r io.Reader, key string) (storage.FileInfo, error) {
-	header := make([]byte, 4)
+	header := make([]byte, zipMagicSize)
 	n, err := io.ReadFull(r, header)
 	if err != nil {
 		return storage.FileInfo{}, fmt.Errorf("reading archive header: %w", err)
@@ -325,7 +346,7 @@ func (s *ArchiveService) saveUploaded(ctx context.Context, r io.Reader, key stri
 		})
 	}
 
-	limited := io.LimitReader(r, s.maxUploadBytes+1)
+	limited := io.LimitReader(r, s.maxUploadBytes+uploadLimitOverhead)
 	reader := io.MultiReader(bytes.NewReader(header), limited)
 
 	info, err := s.store.Save(ctx, key, reader)
@@ -334,7 +355,9 @@ func (s *ArchiveService) saveUploaded(ctx context.Context, r io.Reader, key stri
 	}
 
 	if info.Size > s.maxUploadBytes {
-		s.store.Delete(ctx, key)
+		if err := s.store.Delete(ctx, key); err != nil {
+			return storage.FileInfo{}, fmt.Errorf("deleting oversized archive: %w", err)
+		}
 		return storage.FileInfo{}, fmt.Errorf("archive exceeds maximum size (%d bytes)", s.maxUploadBytes)
 	}
 

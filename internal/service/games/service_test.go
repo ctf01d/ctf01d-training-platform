@@ -40,6 +40,15 @@ func newMocks() (*mockGameQuerier, *mockGamesServiceQuerier, *mockResultQuerier,
 	return gq, gsq, rq, frq, tx
 }
 
+func mustCreateGame(t *testing.T, svc *Service, params CreateParams) *Game {
+	t.Helper()
+	game, err := svc.Create(context.Background(), params)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	return game
+}
+
 func (m *mockTxRunner) RunInTx(_ context.Context, fn func(*db.Queries) error) error {
 	return fn(nil)
 }
@@ -134,7 +143,7 @@ func (m *mockGamesServiceQuerier) RemoveService(_ context.Context, arg db.Remove
 	return nil
 }
 
-func (m *mockGamesServiceQuerier) ListServicesByGame(_ context.Context, gameID int64) ([]int64, error) {
+func (m *mockGamesServiceQuerier) ListServicesByGame(_ context.Context, _ int64) ([]int64, error) {
 	var result []int64
 	return result, nil
 }
@@ -200,7 +209,7 @@ func TestGetByID_Success(t *testing.T) {
 	svc := NewService(gq, gsq, rq, frq, tx)
 
 	name := "Test Game"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateGame(t, svc, CreateParams{Name: &name})
 
 	game, err := svc.GetByID(context.Background(), 1)
 	if err != nil {
@@ -227,7 +236,7 @@ func TestList(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		n := fmt.Sprintf("Game %d", i)
-		svc.Create(context.Background(), CreateParams{Name: &n})
+		mustCreateGame(t, svc, CreateParams{Name: &n})
 	}
 
 	result, err := svc.List(context.Background(), 1, 3)
@@ -247,7 +256,7 @@ func TestUpdate(t *testing.T) {
 	svc := NewService(gq, gsq, rq, frq, tx)
 
 	name := "Test Game"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateGame(t, svc, CreateParams{Name: &name})
 
 	newName := "Updated Game"
 	game, err := svc.Update(context.Background(), 1, UpdateParams{Name: &newName})
@@ -264,7 +273,7 @@ func TestDelete(t *testing.T) {
 	svc := NewService(gq, gsq, rq, frq, tx)
 
 	name := "Test Game"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateGame(t, svc, CreateParams{Name: &name})
 
 	err := svc.Delete(context.Background(), 1)
 	if err != nil {
@@ -281,7 +290,7 @@ func TestFinalize_Success(t *testing.T) {
 	svc := NewService(gq, gsq, rq, frq, tx)
 
 	name := "Test Game"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateGame(t, svc, CreateParams{Name: &name})
 
 	score1 := int32(100)
 	score2 := int32(200)
@@ -315,8 +324,10 @@ func TestFinalize_AlreadyFinalized(t *testing.T) {
 	svc := NewService(gq, gsq, rq, frq, tx)
 
 	name := "Test Game"
-	svc.Create(context.Background(), CreateParams{Name: &name})
-	svc.Finalize(context.Background(), 1)
+	mustCreateGame(t, svc, CreateParams{Name: &name})
+	if _, err := svc.Finalize(context.Background(), 1); err != nil {
+		t.Fatalf("Finalize: %v", err)
+	}
 
 	_, err := svc.Finalize(context.Background(), 1)
 	if err != errs.ErrConflict {
@@ -329,8 +340,10 @@ func TestUnfinalize_Success(t *testing.T) {
 	svc := NewService(gq, gsq, rq, frq, tx)
 
 	name := "Test Game"
-	svc.Create(context.Background(), CreateParams{Name: &name})
-	svc.Finalize(context.Background(), 1)
+	mustCreateGame(t, svc, CreateParams{Name: &name})
+	if _, err := svc.Finalize(context.Background(), 1); err != nil {
+		t.Fatalf("Finalize: %v", err)
+	}
 
 	game, err := svc.Unfinalize(context.Background(), 1)
 	if err != nil {
@@ -346,7 +359,7 @@ func TestUnfinalize_NotFinalized(t *testing.T) {
 	svc := NewService(gq, gsq, rq, frq, tx)
 
 	name := "Test Game"
-	svc.Create(context.Background(), CreateParams{Name: &name})
+	mustCreateGame(t, svc, CreateParams{Name: &name})
 
 	_, err := svc.Unfinalize(context.Background(), 1)
 	if err != errs.ErrConflict {
@@ -371,7 +384,9 @@ func TestRemoveService(t *testing.T) {
 	gq, gsq, rq, frq, tx := newMocks()
 	svc := NewService(gq, gsq, rq, frq, tx)
 
-	svc.AddService(context.Background(), 1, 10)
+	if err := svc.AddService(context.Background(), 1, 10); err != nil {
+		t.Fatalf("AddService: %v", err)
+	}
 	err := svc.RemoveService(context.Background(), 1, 10)
 	if err != nil {
 		t.Fatalf("RemoveService: %v", err)

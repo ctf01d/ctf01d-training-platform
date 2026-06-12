@@ -98,7 +98,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*GameTeam, e
 func (s *Service) GetByID(ctx context.Context, id int64) (*GameTeam, error) {
 	dbGT, err := s.q.GetGameTeamByID(ctx, id)
 	if err != nil {
-		return nil, mapNotFound(err, "game_team")
+		return nil, mapNotFound(err)
 	}
 	gt := fromDB(dbGT)
 	return &gt, nil
@@ -130,7 +130,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*G
 		Order:           params.Order,
 	})
 	if err != nil {
-		return nil, mapNotFound(err, "game_team")
+		return nil, mapNotFound(err)
 	}
 	gt := fromDB(dbGT)
 	return &gt, nil
@@ -155,9 +155,13 @@ func (s *Service) Reorder(ctx context.Context, gameID int64, items []ReorderItem
 			if !allowed[item.ID] {
 				return errs.ErrForbidden
 			}
+			order, err := int32FromInt(item.Order)
+			if err != nil {
+				return err
+			}
 			if err := tq.UpdateGameTeamOrder(ctx, db.UpdateGameTeamOrderParams{
 				ID:    item.ID,
-				Order: int32(item.Order),
+				Order: order,
 			}); err != nil {
 				return err
 			}
@@ -181,7 +185,7 @@ func fromDB(gt db.GameTeam) GameTeam {
 	}
 }
 
-func mapNotFound(err error, entity string) error {
+func mapNotFound(err error) error {
 	if repository.IsNoRows(err) {
 		return errs.ErrNotFound
 	}
@@ -193,4 +197,16 @@ func mapDBError(err error) error {
 		return errs.ErrConflict
 	}
 	return err
+}
+
+const (
+	minInt32 = -1 << 31
+	maxInt32 = 1<<31 - 1
+)
+
+func int32FromInt(v int) (int32, error) {
+	if v < minInt32 || v > maxInt32 {
+		return 0, errs.NewValidationError(map[string]string{"order": "must fit int32"})
+	}
+	return int32(v), nil
 }

@@ -35,6 +35,42 @@ var (
 	trailingUnd = regexp.MustCompile(`^_+|_+$`)
 )
 
+const (
+	dirMode         = 0o755
+	privateFileMode = 0o600
+
+	randomSuffixBytes    = 4
+	defaultScriptWait    = 10
+	roundSleepMultiplier = 3
+	defaultRoundSleep    = defaultScriptWait * roundSleepMultiplier
+	checkerDirName       = "checker/"
+	ctf01dYAMLIndent     = 2
+	dataURLMatchCount    = 3
+
+	minFlagTTLMin      = 1
+	maxFlagTTLMin      = 25
+	minBasicAttackCost = 1
+	maxBasicAttackCost = 500
+	defaultFlagTTLMin  = 10
+	defaultAttackCost  = 100
+	defaultDefenceCost = 50.0
+	minScoreboardPort  = 11
+	maxScoreboardPort  = 65535
+	defaultScorePort   = 8080
+	minScriptWait      = 5
+	minutesPerHour     = 60
+
+	logoTextFontSize   = 64
+	logoImageSize      = 128
+	logoFetchTimeout   = 15 * time.Second
+	maxHTTPRedirects   = 10
+	maxLogoBytes       = 5 * 1024 * 1024
+	maxExtractFileSize = 200 * 1024 * 1024
+	fallbackLogoCount  = 10
+
+	pngExt = ".png"
+)
+
 type ExportResult struct {
 	Filename string
 	Data     []byte
@@ -64,14 +100,17 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 
 	root := path.Join(tmpDir, options.Prefix)
 	dataDir := path.Join(root, "data")
-	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+	if err := os.MkdirAll(dataDir, dirMode); err != nil {
 		return nil, fmt.Errorf("create data dir: %w", err)
 	}
 
 	htmlSource := options.HtmlSourcePath
 	if options.IncludeHTML {
 		if htmlSource == "" || !dirExists(htmlSource) {
-			htmlSource = buildFallbackHTML(tmpDir)
+			htmlSource, err = buildFallbackHTML(tmpDir)
+			if err != nil {
+				return nil, fmt.Errorf("build fallback html: %w", err)
+			}
 		} else {
 			abs, err := filepath.Abs(htmlSource)
 			if err != nil {
@@ -83,37 +122,45 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 			}
 			htmlSource = clean
 		}
-		copyTree(htmlSource, path.Join(dataDir, "html"))
+		if err := copyTree(htmlSource, path.Join(dataDir, "html")); err != nil {
+			return nil, fmt.Errorf("copy html: %w", err)
+		}
 	}
 
 	downloadsDir := path.Join(tmpDir, "downloads")
-	if err := os.MkdirAll(downloadsDir, 0o755); err != nil {
+	if err := os.MkdirAll(downloadsDir, dirMode); err != nil {
 		return nil, fmt.Errorf("create downloads dir: %w", err)
 	}
-	ensureTeamLogos(teams, dataDir, downloadsDir)
+	if err := ensureTeamLogos(teams, dataDir, downloadsDir); err != nil {
+		return nil, fmt.Errorf("prepare team logos: %w", err)
+	}
 
-	materializeCheckers(checkers, dataDir)
-	materializeServiceArchives(checkers, root)
+	if err := materializeCheckers(checkers, dataDir); err != nil {
+		return nil, fmt.Errorf("materialize checkers: %w", err)
+	}
+	if err := materializeServiceArchives(checkers, root); err != nil {
+		return nil, fmt.Errorf("materialize service archives: %w", err)
+	}
 
 	cfgPath := path.Join(dataDir, "config.yml")
 	cfgContent, err := buildYAMLConfig(game, scoreboard, teams, checkers)
 	if err != nil {
 		return nil, fmt.Errorf("build config: %w", err)
 	}
-	if err := os.WriteFile(cfgPath, []byte(cfgContent), 0o644); err != nil {
+	if err := os.WriteFile(cfgPath, []byte(cfgContent), privateFileMode); err != nil {
 		return nil, fmt.Errorf("write config: %w", err)
 	}
 
 	if len(options.Warnings) > 0 {
 		warningsPath := path.Join(root, "EXPORT_WARNINGS.txt")
-		if err := os.WriteFile(warningsPath, []byte(strings.Join(options.Warnings, "\n")), 0o644); err != nil {
+		if err := os.WriteFile(warningsPath, []byte(strings.Join(options.Warnings, "\n")), privateFileMode); err != nil {
 			return nil, fmt.Errorf("write warnings: %w", err)
 		}
 	}
 
 	if options.IncludeCompose {
 		composePath := path.Join(root, "docker-compose.yml")
-		if err := os.WriteFile(composePath, []byte(composeYML(scoreboard, options)), 0o644); err != nil {
+		if err := os.WriteFile(composePath, []byte(composeYML(scoreboard, options)), privateFileMode); err != nil {
 			return nil, fmt.Errorf("write compose: %w", err)
 		}
 	}
@@ -132,7 +179,7 @@ func Export(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, ch
 
 func applyOptionDefaults(o Options) Options {
 	if o.Prefix == "" {
-		b := make([]byte, 4)
+		b := make([]byte, randomSuffixBytes)
 		if _, err := rand.Read(b); err != nil {
 			return o
 		}
@@ -148,10 +195,10 @@ func hydrateCheckers(checkers []CheckerParams) {
 			continue
 		}
 		if c.ScriptWait <= 0 {
-			c.ScriptWait = 10
+			c.ScriptWait = defaultScriptWait
 		}
-		if c.RoundSleep < c.ScriptWait*3 {
-			c.RoundSleep = c.ScriptWait * 3
+		if c.RoundSleep < c.ScriptWait*roundSleepMultiplier {
+			c.RoundSleep = c.ScriptWait * roundSleepMultiplier
 		}
 		if c.CheckerFromBundle && c.ScriptRel == "" {
 			entrypoint := detectCheckerEntrypoint(c.BundlePath)
@@ -217,11 +264,12 @@ func detectCheckerEntrypoint(bundlePath string) string {
 	topLevel := filterTopLevel(relFiles)
 	preferred := filterCheckerNamed(topLevel)
 	var pick []string
-	if len(preferred) > 0 {
+	switch {
+	case len(preferred) > 0:
 		pick = preferred
-	} else if len(topLevel) > 0 {
+	case len(topLevel) > 0:
 		pick = topLevel
-	} else {
+	default:
 		pick = relFiles
 	}
 	if len(pick) > 0 {
@@ -232,15 +280,15 @@ func detectCheckerEntrypoint(bundlePath string) string {
 
 func findCheckerDirIndex(name string) int {
 	for {
-		idx := strings.Index(name, "checker/")
+		idx := strings.Index(name, checkerDirName)
 		if idx < 0 {
 			return -1
 		}
-		rel := name[idx+8:]
+		rel := name[idx+len(checkerDirName):]
 		if rel != "" {
-			return idx + 8
+			return idx + len(checkerDirName)
 		}
-		remaining := name[idx+8:]
+		remaining := name[idx+len(checkerDirName):]
 		if remaining == "" {
 			return -1
 		}
@@ -290,6 +338,7 @@ func filterCheckerNamed(files []string) []string {
 	return result
 }
 
+//nolint:gocyclo // validation is intentionally a flat list of request-field checks.
 func validateInputs(game GameParams, scoreboard ScoreboardParams, teams []TeamParams, checkers []CheckerParams) error {
 	var errs []string
 
@@ -312,14 +361,14 @@ func validateInputs(game GameParams, scoreboard ScoreboardParams, teams []TeamPa
 	if !game.StartUTC.IsZero() && !game.EndUTC.IsZero() && !game.EndUTC.After(game.StartUTC) {
 		errs = append(errs, "game.end_utc must be after game.start_utc")
 	}
-	if game.FlagTTLMin < 1 || game.FlagTTLMin > 25 {
+	if game.FlagTTLMin < minFlagTTLMin || game.FlagTTLMin > maxFlagTTLMin {
 		errs = append(errs, "game.flag_ttl_min must be between 1 and 25")
 	}
-	if game.BasicAttackCost < 1 || game.BasicAttackCost > 500 {
+	if game.BasicAttackCost < minBasicAttackCost || game.BasicAttackCost > maxBasicAttackCost {
 		errs = append(errs, "game.basic_attack_cost must be between 1 and 500")
 	}
 
-	if scoreboard.Port < 11 || scoreboard.Port > 65535 {
+	if scoreboard.Port < minScoreboardPort || scoreboard.Port > maxScoreboardPort {
 		errs = append(errs, "scoreboard.port must be between 11 and 65535")
 	}
 	if scoreboard.HtmlFolder == "" {
@@ -332,20 +381,22 @@ func validateInputs(game GameParams, scoreboard ScoreboardParams, teams []TeamPa
 	teamIDs := map[string]bool{}
 	teamIPs := map[string]bool{}
 	for _, t := range teams {
-		if t.ID == "" {
+		switch {
+		case t.ID == "":
 			errs = append(errs, "team.id is required")
-		} else if teamIDs[t.ID] {
+		case teamIDs[t.ID]:
 			errs = append(errs, "duplicate team.id: "+t.ID)
-		} else {
+		default:
 			teamIDs[t.ID] = true
 		}
-		if t.IPAddress == "" {
+		switch {
+		case t.IPAddress == "":
 			errs = append(errs, fmt.Sprintf("team %s: ip_address is required", t.ID))
-		} else if !ipRe.MatchString(t.IPAddress) {
+		case !ipRe.MatchString(t.IPAddress):
 			errs = append(errs, fmt.Sprintf("team %s: ip_address must be IPv4", t.ID))
-		} else if teamIPs[t.IPAddress] {
+		case teamIPs[t.IPAddress]:
 			errs = append(errs, "duplicate ip_address: "+t.IPAddress)
-		} else {
+		default:
 			teamIPs[t.IPAddress] = true
 		}
 	}
@@ -356,17 +407,18 @@ func validateInputs(game GameParams, scoreboard ScoreboardParams, teams []TeamPa
 	chkIDs := map[string]bool{}
 	for _, c := range checkers {
 		cid := normalizeID(c.ID)
-		if cid == "" {
+		switch {
+		case cid == "":
 			errs = append(errs, "checker.id is required")
-		} else if chkIDs[cid] {
+		case chkIDs[cid]:
 			errs = append(errs, "duplicate checker.id: "+cid)
-		} else {
+		default:
 			chkIDs[cid] = true
 		}
-		if c.ScriptWait < 5 {
+		if c.ScriptWait < minScriptWait {
 			errs = append(errs, fmt.Sprintf("checker %s: script_wait >= 5", cid))
 		}
-		if c.RoundSleep < c.ScriptWait*3 {
+		if c.RoundSleep < c.ScriptWait*roundSleepMultiplier {
 			errs = append(errs, fmt.Sprintf("checker %s: round_sleep >= script_wait * 3", cid))
 		}
 		if c.ScriptRel == "" {
@@ -456,7 +508,7 @@ func buildYAMLConfig(game GameParams, scoreboard ScoreboardParams, teams []TeamP
 	buf.WriteString("# Auto-generated: do not edit manually; rebuild the archive instead.\n\n")
 
 	enc := yaml.NewEncoder(&buf)
-	enc.SetIndent(2)
+	enc.SetIndent(ctf01dYAMLIndent)
 	if err := enc.Encode(&data); err != nil {
 		return "", fmt.Errorf("encode yaml: %w", err)
 	}
@@ -486,7 +538,7 @@ func setMapBool(node *yaml.Node, key string, value bool) {
 	node.Content = append(node.Content, makeStringNode(key), makeStringNode(strconv.FormatBool(value)))
 }
 
-func ensureTeamLogos(teams []TeamParams, dataDir string, downloadsDir string) {
+func ensureTeamLogos(teams []TeamParams, dataDir string, downloadsDir string) error {
 	for i := range teams {
 		t := &teams[i]
 		if strings.TrimSpace(t.LogoRel) == "" {
@@ -512,8 +564,12 @@ func ensureTeamLogos(teams []TeamParams, dataDir string, downloadsDir string) {
 		}
 
 		if src == "" {
-			src = generateSVGLogoToFile(firstNonEmpty(t.Name, t.ID), downloadsDir, safeTeamID(t.ID))
-			if strings.ToLower(path.Ext(t.LogoRel)) == ".png" {
+			written, err := generateSVGLogoToFile(firstNonEmpty(t.Name, t.ID), downloadsDir, safeTeamID(t.ID))
+			if err != nil {
+				return err
+			}
+			src = written
+			if strings.ToLower(path.Ext(t.LogoRel)) == pngExt {
 				t.LogoRel = regexp.MustCompile(`\.png$`).ReplaceAllString(t.LogoRel, ".svg")
 			}
 		}
@@ -525,32 +581,35 @@ func ensureTeamLogos(teams []TeamParams, dataDir string, downloadsDir string) {
 		}
 
 		target := path.Join(dataDir, t.LogoRel)
-		os.MkdirAll(path.Dir(target), 0o755)
-		copyFile(src, target)
+		if err := os.MkdirAll(path.Dir(target), dirMode); err != nil {
+			return err
+		}
+		if err := copyFile(src, target); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func generateSVGLogoToFile(text string, dir string, preferName string) string {
+func generateSVGLogoToFile(text string, dir string, preferName string) (string, error) {
 	label := strings.TrimSpace(text)
 	initial := "?"
 	if len(label) > 0 {
 		initial = strings.ToUpper(string(label[0]))
 	}
 	color := paletteColor(label)
-	fontSize := 64
-	size := 128
 	svg := fmt.Sprintf(
 		"<svg xmlns='http://www.w3.org/2000/svg' width='%d' height='%d'>"+
 			"<rect width='100%%' height='100%%' fill='%s' />"+
 			"<text x='50%%' y='56%%' dominant-baseline='middle' text-anchor='middle'"+
 			" font-family='Arial, Helvetica, sans-serif' font-size='%d' fill='#fff'>%s</text>"+
-			"</svg>", size, size, color, fontSize, xmlEscape(initial))
+			"</svg>", logoImageSize, logoImageSize, color, logoTextFontSize, xmlEscape(initial))
 
 	filePath := path.Join(dir, preferName+".svg")
-	if err := os.WriteFile(filePath, []byte(svg), 0o644); err != nil {
-		return ""
+	if err := os.WriteFile(filePath, []byte(svg), privateFileMode); err != nil {
+		return "", err
 	}
-	return filePath
+	return filePath, nil
 }
 
 func xmlEscape(s string) string {
@@ -573,22 +632,22 @@ func paletteColor(s string) string {
 }
 
 func writeDataURLToFile(dataURL string, dir string, preferName string) (string, error) {
-	if m := regexp.MustCompile(`^data:(image/[a-zA-Z0-9.+\-]+);base64,(.+)$`).FindStringSubmatch(dataURL); len(m) == 3 {
+	if m := regexp.MustCompile(`^data:(image/[a-zA-Z0-9.+\-]+);base64,(.+)$`).FindStringSubmatch(dataURL); len(m) == dataURLMatchCount {
 		mime := m[1]
 		payload := m[2]
-		bytes, err := base64.StdEncoding.DecodeString(payload)
+		decoded, err := base64.StdEncoding.DecodeString(payload)
 		if err != nil {
 			return "", fmt.Errorf("invalid base64 in data URL: %w", err)
 		}
 		ext := extFromMIME(mime)
 		filePath := path.Join(dir, preferName+ext)
-		if err := os.WriteFile(filePath, bytes, 0o644); err != nil {
+		if err := os.WriteFile(filePath, decoded, privateFileMode); err != nil {
 			return "", err
 		}
 		return filePath, nil
 	}
 
-	if m := regexp.MustCompile(`^data:(image/[a-zA-Z0-9.+\-]+);utf8,(.+)$`).FindStringSubmatch(dataURL); len(m) == 3 {
+	if m := regexp.MustCompile(`^data:(image/[a-zA-Z0-9.+\-]+);utf8,(.+)$`).FindStringSubmatch(dataURL); len(m) == dataURLMatchCount {
 		mime := m[1]
 		encoded := m[2]
 		raw, err := url.QueryUnescape(encoded)
@@ -597,7 +656,7 @@ func writeDataURLToFile(dataURL string, dir string, preferName string) (string, 
 		}
 		ext := extFromMIME(mime)
 		filePath := path.Join(dir, preferName+ext)
-		if err := os.WriteFile(filePath, []byte(raw), 0o644); err != nil {
+		if err := os.WriteFile(filePath, []byte(raw), privateFileMode); err != nil {
 			return "", err
 		}
 		return filePath, nil
@@ -704,9 +763,9 @@ func downloadURLToFile(rawURL string, dir string, preferName string) (string, er
 		return "", fmt.Errorf("invalid URL: %w", err)
 	}
 	client := &http.Client{
-		Timeout: 15 * time.Second,
+		Timeout: logoFetchTimeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 10 {
+			if len(via) >= maxHTTPRedirects {
 				return errors.New("too many redirects")
 			}
 			host := req.URL.Hostname()
@@ -719,7 +778,11 @@ func downloadURLToFile(rawURL string, dir string, preferName string) (string, er
 			DialContext: ssrfSafeDialContext,
 		},
 	}
-	resp, err := client.Get(rawURL)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, rawURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("create logo request: %w", err)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("download logo: %w", err)
 	}
@@ -728,18 +791,21 @@ func downloadURLToFile(rawURL string, dir string, preferName string) (string, er
 		return "", fmt.Errorf("download logo: HTTP %d", resp.StatusCode)
 	}
 
-	maxBytes := int64(5 * 1024 * 1024)
-	lr := &io.LimitedReader{R: resp.Body, N: maxBytes}
+	lr := &io.LimitedReader{R: resp.Body, N: maxLogoBytes}
 	tmpPath := path.Join(dir, preferName+".part")
 	f, err := os.Create(tmpPath)
 	if err != nil {
 		return "", err
 	}
 	if _, err := io.Copy(f, lr); err != nil {
-		f.Close()
+		_ = f.Close()
+		_ = os.Remove(tmpPath)
 		return "", err
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		_ = os.Remove(tmpPath)
+		return "", err
+	}
 
 	mime := resp.Header.Get("Content-Type")
 	if idx := strings.Index(mime, ";"); idx >= 0 {
@@ -747,14 +813,16 @@ func downloadURLToFile(rawURL string, dir string, preferName string) (string, er
 	}
 	ext := extFromMIME(mime)
 	finalPath := path.Join(dir, preferName+ext)
-	os.Rename(tmpPath, finalPath)
+	if err := os.Rename(tmpPath, finalPath); err != nil {
+		return "", err
+	}
 	return finalPath, nil
 }
 
 func extFromMIME(mime string) string {
 	switch strings.TrimSpace(strings.ToLower(mime)) {
 	case "image/png":
-		return ".png"
+		return pngExt
 	case "image/jpeg", "image/jpg":
 		return ".jpg"
 	case "image/svg+xml":
@@ -762,25 +830,34 @@ func extFromMIME(mime string) string {
 	case "image/gif":
 		return ".gif"
 	default:
-		return ".png"
+		return pngExt
 	}
 }
 
-func materializeCheckers(checkers []CheckerParams, dataDir string) {
+func materializeCheckers(checkers []CheckerParams, dataDir string) error {
 	for _, c := range checkers {
 		cid := normalizeID(c.ID)
 		dir := path.Join(dataDir, "checker_"+cid)
-		os.MkdirAll(dir, 0o755)
+		if err := os.MkdirAll(dir, dirMode); err != nil {
+			return err
+		}
 
 		if c.BundlePath != "" && c.CheckerFromBundle {
-			extracted := extractCheckerDirFromBundle(c.BundlePath, dir)
+			extracted, err := extractCheckerDirFromBundle(c.BundlePath, dir)
+			if err != nil {
+				return err
+			}
 			if !extracted {
-				writeDummyChecker(dir, cid)
+				if err := writeDummyChecker(dir, cid); err != nil {
+					return err
+				}
 			}
 			continue
 		}
 		if c.BundlePath != "" && !c.CheckerFromBundle {
-			writeDummyChecker(dir, cid)
+			if err := writeDummyChecker(dir, cid); err != nil {
+				return err
+			}
 			continue
 		}
 
@@ -797,32 +874,39 @@ func materializeCheckers(checkers []CheckerParams, dataDir string) {
 				rel = "checker.py"
 			}
 			dest := safeJoin(dir, rel)
-			os.MkdirAll(path.Dir(dest), 0o755)
+			if err := os.MkdirAll(path.Dir(dest), dirMode); err != nil {
+				return err
+			}
 			if f.Src != "" && fileExists(f.Src) {
-				copyFile(f.Src, dest)
+				if err := copyFile(f.Src, dest); err != nil {
+					return err
+				}
 			} else {
 				content := fmt.Sprintf("#!/usr/bin/env python3\nprint('dummy checker for %s')\n", cid)
-				os.WriteFile(dest, []byte(content), 0o644)
+				if err := os.WriteFile(dest, []byte(content), privateFileMode); err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }
 
-func extractCheckerDirFromBundle(bundlePath string, destDir string) bool {
+func extractCheckerDirFromBundle(bundlePath string, destDir string) (bool, error) {
 	r, err := os.Open(bundlePath)
 	if err != nil {
-		return false
+		return false, nil
 	}
 	defer r.Close()
 
 	fi, err := r.Stat()
 	if err != nil {
-		return false
+		return false, nil
 	}
 
 	zr, err := zip.NewReader(r, fi.Size())
 	if err != nil {
-		return false
+		return false, nil
 	}
 
 	extracted := false
@@ -839,76 +923,105 @@ func extractCheckerDirFromBundle(bundlePath string, destDir string) bool {
 		}
 		target := safeJoin(destDir, rel)
 		if strings.HasSuffix(name, "/") {
-			os.MkdirAll(target, 0o755)
+			if err := os.MkdirAll(target, dirMode); err != nil {
+				return false, err
+			}
 			continue
 		}
-		os.MkdirAll(path.Dir(target), 0o755)
+		if err := os.MkdirAll(path.Dir(target), dirMode); err != nil {
+			return false, err
+		}
 		rc, err := f.Open()
 		if err != nil {
 			continue
 		}
 		out, err := os.Create(target)
 		if err != nil {
-			rc.Close()
+			_ = rc.Close()
 			continue
 		}
-		_, err = io.Copy(out, io.LimitReader(rc, 200*1024*1024))
-		out.Close()
-		rc.Close()
+		_, copyErr := io.Copy(out, io.LimitReader(rc, maxExtractFileSize))
+		closeOutErr := out.Close()
+		closeRCErr := rc.Close()
+		if copyErr != nil {
+			return false, copyErr
+		}
+		if closeOutErr != nil {
+			return false, closeOutErr
+		}
+		if closeRCErr != nil {
+			return false, closeRCErr
+		}
 	}
-	return extracted
+	return extracted, nil
 }
 
 func containsCheckerDir(name string) bool {
-	return strings.Contains(name, "checker/")
+	return strings.Contains(name, checkerDirName)
 }
 
-func writeDummyChecker(destDir string, cid string) {
+func writeDummyChecker(destDir string, cid string) error {
 	p := path.Join(destDir, "checker.py")
 	if fileExists(p) {
-		return
+		return nil
 	}
 	content := fmt.Sprintf("#!/usr/bin/env python3\nprint('dummy checker for %s')\n", cid)
-	os.WriteFile(p, []byte(content), 0o644)
+	return os.WriteFile(p, []byte(content), privateFileMode)
 }
 
-func materializeServiceArchives(checkers []CheckerParams, rootDir string) {
+func materializeServiceArchives(checkers []CheckerParams, rootDir string) error {
 	dir := path.Join(rootDir, "archives", "services")
 	for _, c := range checkers {
 		if c.BundlePath == "" || !fileExists(c.BundlePath) {
 			continue
 		}
-		os.MkdirAll(dir, 0o755)
+		if err := os.MkdirAll(dir, dirMode); err != nil {
+			return err
+		}
 		cid := normalizeID(c.ID)
 		dest := path.Join(dir, cid+".zip")
-		copyFile(c.BundlePath, dest)
+		if err := copyFile(c.BundlePath, dest); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func copyTree(src string, dst string) {
+func copyTree(src string, dst string) error {
 	if !dirExists(src) {
-		return
+		return nil
 	}
-	os.MkdirAll(dst, 0o755)
+	if err := os.MkdirAll(dst, dirMode); err != nil {
+		return err
+	}
 	entries, err := os.ReadDir(src)
 	if err != nil {
-		return
+		return err
 	}
 	for _, entry := range entries {
 		s := path.Join(src, entry.Name())
 		d := path.Join(dst, entry.Name())
 		if entry.IsDir() {
-			copyTree(s, d)
+			if err := copyTree(s, d); err != nil {
+				return err
+			}
 		} else {
-			os.MkdirAll(path.Dir(d), 0o755)
-			copyFile(s, d)
+			if err := os.MkdirAll(path.Dir(d), dirMode); err != nil {
+				return err
+			}
+			if err := copyFile(s, d); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
-func buildFallbackHTML(tmpdir string) string {
+func buildFallbackHTML(tmpdir string) (string, error) {
 	dir := path.Join(tmpdir, "fallback_html")
-	os.MkdirAll(dir, 0o755)
+	if err := os.MkdirAll(dir, dirMode); err != nil {
+		return "", err
+	}
 
 	indexHTML := `<!doctype html>
 <html>
@@ -921,17 +1034,26 @@ func buildFallbackHTML(tmpdir string) string {
     <p>HTML not found in repository; generated default template.</p>
   </body>
 </html>`
-	os.WriteFile(path.Join(dir, "index-template.html"), []byte(indexHTML), 0o644)
-
-	teamsDir := path.Join(dir, "images", "teams")
-	os.MkdirAll(teamsDir, 0o755)
-
-	minPNG, _ := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+ZzoAAAAASUVORK5CYII=")
-	for i := 1; i <= 10; i++ {
-		os.WriteFile(path.Join(teamsDir, fmt.Sprintf("team%02d.png", i)), minPNG, 0o644)
+	if err := os.WriteFile(path.Join(dir, "index-template.html"), []byte(indexHTML), privateFileMode); err != nil {
+		return "", err
 	}
 
-	return dir
+	teamsDir := path.Join(dir, "images", "teams")
+	if err := os.MkdirAll(teamsDir, dirMode); err != nil {
+		return "", err
+	}
+
+	minPNG, err := base64.StdEncoding.DecodeString("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7+ZzoAAAAASUVORK5CYII=")
+	if err != nil {
+		return "", err
+	}
+	for i := 1; i <= fallbackLogoCount; i++ {
+		if err := os.WriteFile(path.Join(teamsDir, fmt.Sprintf("team%02d.png", i)), minPNG, privateFileMode); err != nil {
+			return "", err
+		}
+	}
+
+	return dir, nil
 }
 
 func composeYML(scoreboard ScoreboardParams, options Options) string {
@@ -978,9 +1100,12 @@ func packZip(rootDir string) ([]byte, error) {
 		if err != nil {
 			return err
 		}
-		_, err = io.Copy(fw, f)
-		f.Close()
-		return err
+		_, copyErr := io.Copy(fw, f)
+		closeErr := f.Close()
+		if copyErr != nil {
+			return copyErr
+		}
+		return closeErr
 	})
 	if err != nil {
 		return nil, err
@@ -1062,14 +1187,19 @@ func copyFile(src string, dst string) error {
 		return err
 	}
 	defer in.Close()
-	os.MkdirAll(path.Dir(dst), 0o755)
+	if err := os.MkdirAll(path.Dir(dst), dirMode); err != nil {
+		return err
+	}
 	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
-	_, err = io.Copy(out, in)
-	return err
+	_, copyErr := io.Copy(out, in)
+	closeErr := out.Close()
+	if copyErr != nil {
+		return copyErr
+	}
+	return closeErr
 }
 
 func firstNonEmpty(a, b string) string {

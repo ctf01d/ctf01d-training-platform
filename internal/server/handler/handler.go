@@ -50,6 +50,17 @@ type Handler struct {
 	storageDir     string
 }
 
+const (
+	roleGuest  = "guest"
+	rolePlayer = "player"
+	roleAdmin  = "admin"
+
+	maxBytesReaderOverhead = 1024
+
+	minInt32 = -1 << 31
+	maxInt32 = 1<<31 - 1
+)
+
 func New(
 	users *usersvc.Service,
 	authSvc *authsvc.Service,
@@ -204,7 +215,7 @@ func (h *Handler) HandleCreateUser(c *gin.Context) {
 		return
 	}
 
-	role := "guest"
+	role := roleGuest
 	if req.Role != nil {
 		role = string(*req.Role)
 	}
@@ -249,7 +260,7 @@ func (h *Handler) HandleUpdateUser(c *gin.Context) {
 
 	userID, _ := middleware.CurrentUserID(c)
 	role, _ := middleware.CurrentRole(c)
-	if role != "admin" && userID != id {
+	if role != roleAdmin && userID != id {
 		respondError(c, errs.ErrForbidden)
 		return
 	}
@@ -310,7 +321,7 @@ func (h *Handler) HandleUpdateUserRole(c *gin.Context) {
 }
 
 // ServerInterface implementation (used for compile-time check)
-func (h *Handler) ListUsers(c *gin.Context, params httpserver.ListUsersParams) {
+func (h *Handler) ListUsers(c *gin.Context, _ httpserver.ListUsersParams) {
 	h.HandleListUsers(c)
 }
 
@@ -356,11 +367,14 @@ func parseIDParam(c *gin.Context, param string) (int64, bool) {
 	return id, true
 }
 
-func notImplemented(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"code": "not_implemented", "message": "not implemented"})
+func int32FromInt(value int) (int32, bool) {
+	if value < minInt32 || value > maxInt32 {
+		return 0, false
+	}
+	return int32(value), true
 }
 
-func (h *Handler) ListUniversities(c *gin.Context, params httpserver.ListUniversitiesParams) {
+func (h *Handler) ListUniversities(c *gin.Context, _ httpserver.ListUniversitiesParams) {
 	h.HandleListUniversities(c)
 }
 
@@ -383,7 +397,7 @@ func (h *Handler) DeleteUniversity(c *gin.Context, id int64) {
 	h.HandleDeleteUniversity(c)
 }
 
-func (h *Handler) ListTeams(c *gin.Context, params httpserver.ListTeamsParams) {
+func (h *Handler) ListTeams(c *gin.Context, _ httpserver.ListTeamsParams) {
 	h.HandleListTeams(c)
 }
 
@@ -406,7 +420,7 @@ func (h *Handler) DeleteTeam(c *gin.Context, id int64) {
 	h.HandleDeleteTeam(c)
 }
 
-func (h *Handler) ListTeamEvents(c *gin.Context, id int64, params httpserver.ListTeamEventsParams) {
+func (h *Handler) ListTeamEvents(c *gin.Context, id int64, _ httpserver.ListTeamEventsParams) {
 	c.Set("id", id)
 	h.HandleListTeamEvents(c)
 }
@@ -426,7 +440,7 @@ func (h *Handler) ListTeamMembers(c *gin.Context, id int64) {
 	h.HandleListTeamMembers(c)
 }
 
-func (h *Handler) ListTeamMemberships(c *gin.Context, params httpserver.ListTeamMembershipsParams) {
+func (h *Handler) ListTeamMemberships(c *gin.Context, _ httpserver.ListTeamMembershipsParams) {
 	h.HandleListTeamMemberships(c)
 }
 
@@ -474,7 +488,7 @@ func (h *Handler) SetTeamMembershipRole(c *gin.Context, id int64) {
 	h.HandleSetTeamMembershipRole(c)
 }
 
-func (h *Handler) ListGames(c *gin.Context, params httpserver.ListGamesParams) {
+func (h *Handler) ListGames(c *gin.Context, _ httpserver.ListGamesParams) {
 	h.HandleListGames(c)
 }
 
@@ -547,7 +561,7 @@ func (h *Handler) DeleteGameTeam(c *gin.Context, id int64) {
 	h.HandleDeleteGameTeam(c)
 }
 
-func (h *Handler) ListResults(c *gin.Context, params httpserver.ListResultsParams) {
+func (h *Handler) ListResults(c *gin.Context, _ httpserver.ListResultsParams) {
 	h.HandleListResults(c)
 }
 
@@ -603,7 +617,7 @@ func (h *Handler) HandleListServices(c *gin.Context) {
 	}
 
 	role, hasRole := middleware.CurrentRole(c)
-	isAdmin := hasRole && role == "admin"
+	isAdmin := hasRole && role == roleAdmin
 
 	if !isAdmin {
 		b := true
@@ -637,7 +651,7 @@ func (h *Handler) HandleCreateService(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 	pub := true
 	if req.Public != nil {
 		pub = *req.Public
@@ -675,7 +689,7 @@ func (h *Handler) HandleGetService(c *gin.Context) {
 		return
 	}
 	role, hasRole := middleware.CurrentRole(c)
-	isAdmin := hasRole && role == "admin"
+	isAdmin := hasRole && role == roleAdmin
 	svc, err := h.svcService.GetByID(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -698,7 +712,7 @@ func (h *Handler) HandleUpdateService(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 	var training json.RawMessage
 	if req.Ctf01dTraining != nil {
 		b, _ := json.Marshal(*req.Ctf01dTraining)
@@ -744,7 +758,7 @@ func (h *Handler) HandleToggleServicePublic(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 	svc, err := h.svcService.TogglePublic(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -759,7 +773,7 @@ func (h *Handler) HandleCheckServiceChecker(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 	svc, err := h.svcChecker.CheckChecker(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -774,7 +788,7 @@ func (h *Handler) HandleRedownloadServiceArchives(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 	svc, err := h.svcArchives.Redownload(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -789,9 +803,9 @@ func (h *Handler) HandleUploadServiceArchives(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, h.maxUploadBytes+1024)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, h.maxUploadBytes+maxBytesReaderOverhead)
 
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -837,8 +851,8 @@ func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
 	kind := c.Param("kind")
 
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
-	isPlayer := role == "player"
+	isAdmin := role == roleAdmin
+	isPlayer := role == rolePlayer
 
 	svc, err := h.svcService.GetByID(c.Request.Context(), id, isAdmin)
 	if err != nil {
@@ -861,7 +875,9 @@ func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
 	safeName := sanitizeFilename(filename)
 	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, safeName))
 	c.Status(http.StatusOK)
-	io.Copy(c.Writer, rc)
+	if _, err := io.Copy(c.Writer, rc); err != nil {
+		_ = c.Error(fmt.Errorf("copy service archive: %w", err))
+	}
 }
 
 func (h *Handler) HandleImportServiceFromGithub(c *gin.Context) {
@@ -870,7 +886,7 @@ func (h *Handler) HandleImportServiceFromGithub(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 	importReq := svcsvc.GithubImportRequest{
 		RepoURL: req.RepoUrl,
 	}
@@ -910,7 +926,7 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
-	isAdmin := role == "admin"
+	isAdmin := role == roleAdmin
 	result, err := h.svcImport.ImportFromZipUpload(c.Request.Context(), zipBytes, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -919,7 +935,7 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 	c.JSON(http.StatusCreated, importResultToHTTP(result))
 }
 
-func (h *Handler) ListServices(c *gin.Context, params httpserver.ListServicesParams) {
+func (h *Handler) ListServices(c *gin.Context, _ httpserver.ListServicesParams) {
 	h.HandleListServices(c)
 }
 

@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ptrTime(t time.Time) *time.Time { return &t }
-
 func TestComputeStatus(t *testing.T) {
 	now := time.Now()
 	past := now.Add(-2 * time.Hour)

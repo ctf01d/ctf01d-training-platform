@@ -15,6 +15,8 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/pkg/logger"
 )
 
+const importTimeout = 5 * time.Minute
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "import-rails error: %v\n", err)
@@ -39,7 +41,7 @@ func run() error {
 	}
 	defer logger.Sync(log)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), importTimeout)
 	defer cancel()
 
 	railsStore, err := repository.NewStore(ctx, railsDBURL)

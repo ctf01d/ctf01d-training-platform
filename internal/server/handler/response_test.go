@@ -34,7 +34,7 @@ func TestRespondError_NotFound(t *testing.T) {
 		respondError(c, errs.ErrNotFound)
 	})
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
@@ -52,7 +52,7 @@ func TestRespondError_Conflict(t *testing.T) {
 		respondError(c, errs.ErrConflict)
 	})
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusConflict {
@@ -66,7 +66,7 @@ func TestRespondError_Forbidden(t *testing.T) {
 		respondError(c, errs.ErrForbidden)
 	})
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusForbidden {
@@ -80,7 +80,7 @@ func TestRespondError_Unauthorized(t *testing.T) {
 		respondError(c, errs.ErrUnauthorized)
 	})
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusUnauthorized {
@@ -94,7 +94,7 @@ func TestRespondError_Validation(t *testing.T) {
 		respondError(c, errs.NewValidationError(map[string]string{"email": "invalid"}))
 	})
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusUnprocessableEntity {
@@ -118,7 +118,7 @@ func TestRespondError_WrappedSentinel(t *testing.T) {
 		respondError(c, fmt.Errorf("user 42: %w", errs.ErrNotFound))
 	})
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
@@ -132,7 +132,7 @@ func TestRespondError_Unknown(t *testing.T) {
 		respondError(c, errors.New("something unexpected"))
 	})
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusInternalServerError {
@@ -160,7 +160,7 @@ func TestBindJSON_Success(t *testing.T) {
 
 	body := `{"name":"test"}`
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/test", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 
@@ -185,7 +185,7 @@ func TestBindJSON_InvalidJSON(t *testing.T) {
 
 	body := `{invalid`
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/test", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 
@@ -210,7 +210,7 @@ func TestBindJSON_ValidationFail(t *testing.T) {
 
 	body := `{"name":""}`
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/test", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 

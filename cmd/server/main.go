@@ -38,6 +38,12 @@ import (
 
 var version = "dev"
 
+const (
+	startupTimeout    = 10 * time.Second
+	readHeaderTimeout = 5 * time.Second
+	shutdownTimeout   = 5 * time.Second
+)
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -46,6 +52,8 @@ func main() {
 }
 
 func run() error {
+	server.Version = version
+
 	if os.Getenv("RUN_MIGRATIONS") == "true" {
 		dbURL := os.Getenv("DATABASE_URL")
 		if dbURL == "" {
@@ -76,7 +84,7 @@ func run() error {
 	}
 	defer logger.Sync(log)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), startupTimeout)
 	defer cancel()
 
 	store, err := repository.NewStore(ctx, cfg.DB.URL)
@@ -114,7 +122,7 @@ func run() error {
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Addr,
 		Handler:           engine,
-		ReadHeaderTimeout: 5 * time.Second,
+		ReadHeaderTimeout: readHeaderTimeout,
 	}
 
 	go func() {
@@ -130,7 +138,7 @@ func run() error {
 
 	log.Info("shutting down server")
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer shutdownCancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {

@@ -51,10 +51,13 @@ func NewImportService(q ImportQuerier, store storage.Storage, maxUploadBytes int
 		store:          store,
 		maxUploadBytes: maxUploadBytes,
 		httpClient: &http.Client{
-			Timeout: 5 * time.Minute,
+			Timeout: archiveDownloadTimeout,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if len(via) >= 10 {
+				if len(via) >= maxRedirects {
 					return errors.New("too many redirects")
+				}
+				if req.URL.Hostname() == "" {
+					return errors.New("redirect URL has no host")
 				}
 				return nil
 			},
@@ -85,7 +88,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 		ref = "main"
 	}
 
-	zipBytes, err := s.fetchRepoZip(owner, repo, ref)
+	zipBytes, err := s.fetchRepoZip(ctx, owner, repo, ref)
 	if err != nil {
 		return nil, fmt.Errorf("downloading repository: %w", err)
 	}
@@ -135,7 +138,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 		Public:            true,
 		ServiceArchiveUrl: &archiveURL,
 		Ctf01dTraining:    training,
-		CheckStatus:       "unknown",
+		CheckStatus:       checkStatusUnknown,
 	})
 	if err != nil {
 		if isDuplicateKey(err) {
@@ -174,18 +177,22 @@ func (s *ImportService) saveBundleArchives(ctx context.Context, id int64, bundle
 	if _, err := s.store.Save(ctx, key, bytes.NewReader(bundleBytes)); err != nil {
 		warnings = append(warnings, fmt.Sprintf("failed to save service archive: %v", err))
 	} else {
-		size := int32(len(bundleBytes))
-		sha := computeSHA256Hex(bundleBytes)
-		path := key
-		updated, err := s.q.SetServiceLocal(ctx, db.SetServiceLocalParams{
-			ID:                  id,
-			ServiceLocalPath:    &path,
-			ServiceLocalSize:    &size,
-			ServiceLocalSha256:  &sha,
-			ServiceDownloadedAt: pgtypeTz(now),
-		})
-		if err == nil {
-			svc = updated
+		size, err := int32Len(len(bundleBytes))
+		if err != nil {
+			warnings = append(warnings, err.Error())
+		} else {
+			sha := computeSHA256Hex(bundleBytes)
+			path := key
+			updated, err := s.q.SetServiceLocal(ctx, db.SetServiceLocalParams{
+				ID:                  id,
+				ServiceLocalPath:    &path,
+				ServiceLocalSize:    &size,
+				ServiceLocalSha256:  &sha,
+				ServiceDownloadedAt: pgtypeTz(now),
+			})
+			if err == nil {
+				svc = updated
+			}
 		}
 	}
 
@@ -195,18 +202,22 @@ func (s *ImportService) saveBundleArchives(ctx context.Context, id int64, bundle
 		if _, err := s.store.Save(ctx, ckKey, bytes.NewReader(checkerBytes)); err != nil {
 			warnings = append(warnings, fmt.Sprintf("failed to save checker archive: %v", err))
 		} else {
-			ckSize := int32(len(checkerBytes))
-			ckSha := computeSHA256Hex(checkerBytes)
-			ckPath := ckKey
-			updated, err := s.q.SetCheckerLocal(ctx, db.SetCheckerLocalParams{
-				ID:                  id,
-				CheckerLocalPath:    &ckPath,
-				CheckerLocalSize:    &ckSize,
-				CheckerLocalSha256:  &ckSha,
-				CheckerDownloadedAt: pgtypeTz(now),
-			})
-			if err == nil {
-				svc = updated
+			ckSize, err := int32Len(len(checkerBytes))
+			if err != nil {
+				warnings = append(warnings, err.Error())
+			} else {
+				ckSha := computeSHA256Hex(checkerBytes)
+				ckPath := ckKey
+				updated, err := s.q.SetCheckerLocal(ctx, db.SetCheckerLocalParams{
+					ID:                  id,
+					CheckerLocalPath:    &ckPath,
+					CheckerLocalSize:    &ckSize,
+					CheckerLocalSha256:  &ckSha,
+					CheckerDownloadedAt: pgtypeTz(now),
+				})
+				if err == nil {
+					svc = updated
+				}
 			}
 		}
 	}
@@ -260,7 +271,7 @@ func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAd
 		Copyright:         &meta.Copyright,
 		Public:            true,
 		Ctf01dTraining:    training,
-		CheckStatus:       "unknown",
+		CheckStatus:       checkStatusUnknown,
 	})
 	if err != nil {
 		if isDuplicateKey(err) {
@@ -273,7 +284,7 @@ func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAd
 	return result, nil
 }
 
-func (s *ImportService) fetchRepoZip(owner, repo, ref string) ([]byte, error) {
+func (s *ImportService) fetchRepoZip(ctx context.Context, owner, repo, ref string) ([]byte, error) {
 	refPaths := []string{
 		"refs/heads/" + ref,
 		"refs/tags/" + ref,
@@ -281,7 +292,7 @@ func (s *ImportService) fetchRepoZip(owner, repo, ref string) ([]byte, error) {
 	}
 	for _, refPath := range refPaths {
 		url := codeloadURL(owner, repo, refPath)
-		data, err := s.downloadZipBytes(url)
+		data, err := s.downloadZipBytes(ctx, url)
 		if err == nil {
 			return data, nil
 		}
@@ -289,8 +300,8 @@ func (s *ImportService) fetchRepoZip(owner, repo, ref string) ([]byte, error) {
 	return nil, fmt.Errorf("failed to download repository archive %s/%s@%s", owner, repo, ref)
 }
 
-func (s *ImportService) downloadZipBytes(url string) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+func (s *ImportService) downloadZipBytes(ctx context.Context, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -301,11 +312,11 @@ func (s *ImportService) downloadZipBytes(url string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		io.Copy(io.Discard, resp.Body)
+		_, _ = io.Copy(io.Discard, resp.Body)
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 
-	data, err := io.ReadAll(io.LimitReader(resp.Body, s.maxUploadBytes+1))
+	data, err := io.ReadAll(io.LimitReader(resp.Body, s.maxUploadBytes+uploadLimitOverhead))
 	if err != nil {
 		return nil, err
 	}

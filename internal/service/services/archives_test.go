@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -22,8 +23,9 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	blockedIPCheck = func(net.IP) bool { return false }
+	os.Exit(m.Run())
 }
 
 type mockArchiveQuerier struct {
@@ -138,9 +140,11 @@ func makeZipData(size int) []byte {
 func TestRedownload_Success(t *testing.T) {
 	zipData := makeZipData(100)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/zip")
-		w.Write(zipData)
+		if _, err := w.Write(zipData); err != nil {
+			t.Fatalf("write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -168,8 +172,10 @@ func TestRedownload_Success(t *testing.T) {
 }
 
 func TestRedownload_NotZip(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("not a zip file"))
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := w.Write([]byte("not a zip file")); err != nil {
+			t.Fatalf("write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -193,8 +199,10 @@ func TestRedownload_NotZip(t *testing.T) {
 func TestRedownload_ExceedsSize(t *testing.T) {
 	zipData := makeZipData(1000)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(zipData)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := w.Write(zipData); err != nil {
+			t.Fatalf("write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -218,8 +226,10 @@ func TestRedownload_ExceedsSize(t *testing.T) {
 func TestRedownload_BothArchives(t *testing.T) {
 	zipData := makeZipData(50)
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(zipData)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := w.Write(zipData); err != nil {
+			t.Fatalf("write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -337,7 +347,9 @@ func TestOpenLocal_Service(t *testing.T) {
 
 	zipData := makeZipData(50)
 	ctx := context.Background()
-	store.Save(ctx, "services/1/service.zip", bytes.NewReader(zipData))
+	if _, err := store.Save(ctx, "services/1/service.zip", bytes.NewReader(zipData)); err != nil {
+		t.Fatalf("save archive: %v", err)
+	}
 
 	path := "services/1/service.zip"
 	q.addService(db.Service{
@@ -371,7 +383,9 @@ func TestOpenLocal_Checker(t *testing.T) {
 
 	zipData := makeZipData(50)
 	ctx := context.Background()
-	store.Save(ctx, "services/1/checker.zip", bytes.NewReader(zipData))
+	if _, err := store.Save(ctx, "services/1/checker.zip", bytes.NewReader(zipData)); err != nil {
+		t.Fatalf("save archive: %v", err)
+	}
 
 	path := "services/1/checker.zip"
 	q.addService(db.Service{
@@ -427,7 +441,7 @@ func TestOpenLocal_NotFound(t *testing.T) {
 }
 
 func TestRedownload_HTTPError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()

@@ -26,6 +26,15 @@ func newMockQuerier() *mockQuerier {
 	}
 }
 
+func mustCreateUser(t *testing.T, svc *Service, params CreateParams) *User {
+	t.Helper()
+	user, err := svc.Create(context.Background(), params)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	return user
+}
+
 func (m *mockQuerier) CreateUser(_ context.Context, arg db.CreateUserParams) (db.User, error) {
 	if _, exists := m.byName[arg.UserName]; exists {
 		return db.User{}, &pgconn.PgError{Code: "23505", Message: "duplicate key value violates unique constraint"}
@@ -256,7 +265,7 @@ func TestGetByUserName_Success(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	svc.Create(context.Background(), CreateParams{
+	mustCreateUser(t, svc, CreateParams{
 		UserName:    "testuser",
 		DisplayName: "Test",
 		Password:    "secret123",
@@ -276,7 +285,7 @@ func TestList(t *testing.T) {
 	svc := NewService(q)
 
 	for i := 0; i < 5; i++ {
-		svc.Create(context.Background(), CreateParams{
+		mustCreateUser(t, svc, CreateParams{
 			UserName:    "user" + string(rune('0'+i)),
 			DisplayName: "User " + string(rune('0'+i)),
 			Password:    "secret123",
