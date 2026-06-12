@@ -4,7 +4,17 @@
 	migrate-up migrate-down migrate-status migrate-new \
 	sqlc-gen sqlc-vet seed \
 	web-install web-build web-gen web-dev \
-	lint lint-fix verify-codegen
+	lint lint-fix verify-codegen \
+	dev dev-up dev-down
+
+# -----------------------------------------------------------------------------
+# Environment: load .env if present, then fall back to dev defaults.
+# (`-include` ignores a missing file; `?=` only sets when not already defined.)
+
+-include .env
+
+DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/ctf01d_development?sslmode=disable
+export DATABASE_URL
 
 # -----------------------------------------------------------------------------
 # Remote deploy helper (rsync with excludes)
@@ -141,6 +151,23 @@ web-gen:
 ## web-dev: Start frontend dev server with HMR
 web-dev:
 	cd web && npm run dev
+
+# -----------------------------------------------------------------------------
+# Local development orchestration
+
+## dev-up: Start dev infra (Postgres) and apply migrations + seed
+dev-up:
+	docker compose -f docker-compose.dev.yml up -d
+	$(MAKE) migrate-up
+	$(MAKE) seed
+
+## dev-down: Stop dev infra
+dev-down:
+	docker compose -f docker-compose.dev.yml down
+
+## dev: Run backend (:8080) and frontend (:5173) together
+dev:
+	$(MAKE) -j2 go-run web-dev
 
 # -----------------------------------------------------------------------------
 # Linting and codegen verification

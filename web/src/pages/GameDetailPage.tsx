@@ -57,10 +57,8 @@ export default function GameDetailPage() {
       const nameMap: Record<number, string> = {}
       const manageable: number[] = []
       for (const tid of ids) {
-        if (!teamNames[tid]) {
-          const r = await teamsApi.getTeam(tid)
-          if (r.data) nameMap[tid] = r.data.name
-        }
+        const r = await teamsApi.getTeam(tid)
+        if (r.data) nameMap[tid] = r.data.name
         if (isAdmin) {
           manageable.push(tid)
         } else if (user) {
@@ -71,10 +69,21 @@ export default function GameDetailPage() {
           }
         }
       }
-      setTeamNames(prev => ({ ...prev, ...nameMap }))
+      setTeamNames(prev => {
+        let changed = false
+        const next = { ...prev }
+        for (const [tid, name] of Object.entries(nameMap)) {
+          const teamId = Number(tid)
+          if (next[teamId] !== name) {
+            next[teamId] = name
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
       setManageableTeamIds(manageable)
     }
-  }, [gameId, isAdmin, teamNames, user])
+  }, [gameId, isAdmin, user])
 
   const fetchServices = useCallback(async () => {
     const { data } = await gamesApi.listGameServices(gameId)

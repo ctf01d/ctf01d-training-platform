@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"math/rand"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
@@ -34,7 +38,7 @@ func seed() error {
 	}
 	defer logger.Sync(log)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	store, err := repository.NewStore(ctx, cfg.DB.URL)
@@ -68,62 +72,685 @@ func seed() error {
 	}
 	logSeed(log, "user", player2.UserName, created)
 
-	uni1, created, err := seedUniversity(ctx, q, "MSU", "https://msu.ru")
-	if err != nil {
-		return fmt.Errorf("seeding university MSU: %w", err)
+	// Real SibirCTF / CyberSibir historical dataset, ported from the legacy
+	// Rails db/seeds.rb: editions by year, real CTFtime scoreboards, rosters,
+	// Siberian universities, services and final standings.
+	if err := seedSibir(ctx, q, log); err != nil {
+		return fmt.Errorf("seeding SibirCTF data: %w", err)
 	}
-	logSeed(log, "university", ptrStr(uni1.Name), created)
-
-	uni2, created, err := seedUniversity(ctx, q, "MIPT", "https://mipt.ru")
-	if err != nil {
-		return fmt.Errorf("seeding university MIPT: %w", err)
-	}
-	logSeed(log, "university", ptrStr(uni2.Name), created)
-
-	team1, created, err := seedTeam(ctx, q, "Team Alpha", "First test team", uni1.ID)
-	if err != nil {
-		return fmt.Errorf("seeding team Alpha: %w", err)
-	}
-	logSeed(log, "team", team1.Name, created)
-
-	team2, created, err := seedTeam(ctx, q, "Team Beta", "Second test team", uni2.ID)
-	if err != nil {
-		return fmt.Errorf("seeding team Beta: %w", err)
-	}
-	logSeed(log, "team", team2.Name, created)
-
-	if created {
-		_, err = q.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
-			TeamID: team1.ID,
-			UserID: player1.ID,
-			Role:   strPtr("owner"),
-			Status: strPtr("approved"),
-		})
-		if err != nil {
-			log.Warn("failed to create team1 membership", zap.Error(err))
-		}
-
-		_, err = q.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
-			TeamID: team2.ID,
-			UserID: player2.ID,
-			Role:   strPtr("owner"),
-			Status: strPtr("approved"),
-		})
-		if err != nil {
-			log.Warn("failed to create team2 membership", zap.Error(err))
-		}
-	}
-
-	game1, created, err := seedGame(ctx, q, "Test CTF 2026", "CTF01D",
-		time.Now().Add(24*time.Hour), time.Now().Add(48*time.Hour))
-	if err != nil {
-		return fmt.Errorf("seeding game: %w", err)
-	}
-	logSeed(log, "game", ptrStr(game1.Name), created)
 
 	log.Info("seed completed successfully")
 	return nil
 }
+
+// -----------------------------------------------------------------------------
+// SibirCTF / CyberSibir dataset (legacy Rails db/seeds.rb port)
+
+var palette = []string{
+	"#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
+	"#06B6D4", "#EC4899", "#84CC16", "#F97316", "#22C55E",
+}
+
+func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
+	rng := rand.New(rand.NewSource(42)) //nolint:gosec // deterministic seed data, not security-sensitive
+	now := time.Now()
+	color := func() string { return palette[rng.Intn(len(palette))] }
+
+	// --- Universities ---------------------------------------------------------
+	const (
+		uniNSU    = "Новосибирский государственный университет (НГУ, NSU)"
+		uniAltSTU = "Алтайский государственный технический университет (АлтГТУ, AltSTU)"
+		uniTUSUR  = "Томский государственный университет систем управления и радиоэлектроники (ТУСУР, TUSUR)"
+		uniTSU    = "Томский государственный университет (ТГУ, TSU)"
+		uniSSUGT  = "Сибирский государственный университет геосистем и технологий (ССУГиТ, SSUGT)"
+		uniNSTU   = "Новосибирский государственный технический университет (НГТУ, NSTU)"
+	)
+	universityNames := []string{
+		"Московский государственный университет имени М.В. Ломоносова",
+		"Санкт-Петербургский государственный университет",
+		uniNSU,
+		"Московский физико-технический институт",
+		"Национальный исследовательский ядерный университет МИФИ",
+		"Бауманский МГТУ",
+		"Университет ИТМО",
+		"Уральский федеральный университет",
+		"Казанский федеральный университет",
+		"Дальневосточный федеральный университет",
+		"Высшая школа экономики",
+		uniAltSTU,
+		uniTUSUR,
+		uniTSU,
+		uniSSUGT,
+		uniNSTU,
+	}
+	uniByName := map[string]db.University{}
+	for _, name := range universityNames {
+		uni, created, err := getOrCreateUniversity(ctx, q, name, svgAvatar(name, color()))
+		if err != nil {
+			return fmt.Errorf("university %q: %w", name, err)
+		}
+		logSeed(log, "university", name, created)
+		uniByName[name] = uni
+	}
+
+	// --- Teams ----------------------------------------------------------------
+	teamByName := map[string]db.Team{}
+	// ctf01d metadata (config id / ip) per game, keyed by lower(team name).
+	rosterMeta := map[string]map[string]struct{ id, ip string }{}
+	addMeta := func(game, name, id, ip string) {
+		m := rosterMeta[game]
+		if m == nil {
+			m = map[string]struct{ id, ip string }{}
+			rosterMeta[game] = m
+		}
+		m[strings.ToLower(name)] = struct{ id, ip string }{id, ip}
+	}
+
+	ensureTeam := func(name, descr string) (db.Team, error) {
+		if t, ok := teamByName[name]; ok {
+			return t, nil
+		}
+		t, created, err := getOrCreateTeam(ctx, q, name, descr, svgAvatar(name, color()))
+		if err != nil {
+			return db.Team{}, err
+		}
+		logSeed(log, "team", t.Name, created)
+		teamByName[name] = t
+		return t, nil
+	}
+
+	type rosterTeam struct{ cfg, name, ip string }
+
+	cyber2025Roster := []rosterTeam{
+		{"t01", "QarabagTeam", "10.10.1.3"}, {"t02", "W@zz4b1", "10.10.2.3"},
+		{"t03", "smiley-from-telega", "10.10.3.3"}, {"t04", "R3T4RD0Z", "10.10.4.3"},
+		{"t05", "химозный рулет", "10.10.5.3"}, {"t06", "SiBears", "10.10.6.3"},
+		{"t07", "kekw", "10.10.7.3"}, {"t08", "CyberCringe", "10.10.8.3"},
+		{"t09", "NFB", "10.10.9.3"}, {"t10", "SharLike", "10.10.10.3"},
+		{"t11", "ScareCrow", "10.10.11.3"}, {"t12", "d34dl1n3", "10.10.12.3"},
+		{"t14", "4Ray", "10.10.14.3"}, {"t15", "N0N@me13", "10.10.15.3"},
+		{"t16", "XAKCET", "10.10.16.3"}, {"t17", "TyumGUard", "10.10.17.3"},
+		{"t18", "datapoison", "10.10.18.3"}, {"t19", "Netoverkill", "10.10.19.3"},
+		{"t20", "CUT", "10.10.20.3"}, {"t21", "Ibeee", "10.10.21.3"},
+		{"t22", "o1d_bu7_go1d", "10.10.22.3"}, {"t23", "CyberPatriots", "10.10.23.3"},
+		{"t24", "vim>nano", "10.10.24.3"}, {"t26", "Циферки", "10.10.26.3"},
+	}
+	for _, r := range cyber2025Roster {
+		descr := fmt.Sprintf("CyberSibir 2025 roster · ctf01d_id: %s · IP: %s · Активна: yes", r.cfg, r.ip)
+		if _, err := ensureTeam(r.name, descr); err != nil {
+			return err
+		}
+		addMeta("CyberSibir 2025", r.name, r.cfg, r.ip)
+	}
+
+	cyber2026Roster := []rosterTeam{
+		{"t01", "SharLike", "10.10.1.3"}, {"t02", "CUT", "10.10.2.3"},
+		{"t03", "SiBears", "10.10.3.3"}, {"t04", "N0N@me13", "10.10.4.3"},
+		{"t05", "4Ray", "10.10.5.3"}, {"t06", "Error Yager", "10.10.6.3"},
+		{"t07", "1sk4nd3r", "10.10.7.3"}, {"t08", "Netrunners", "10.10.8.3"},
+		{"t09", "ufoufo", "10.10.9.3"}, {"t10", "W@zz4bi", "10.10.10.3"},
+		{"t11", "QarabagTeam", "10.10.11.3"}, {"t12", "ыыыыЫЫЫЫЫ", "10.10.12.3"},
+		{"t13", "d34dl1n3", "10.10.13.3"}, {"t14", "...", "10.10.14.3"},
+		{"t15", "Mustang", "10.10.15.3"}, {"t16", "КиберМамонты", "10.10.16.3"},
+		{"t17", "The Power of Elijah", "10.10.17.3"}, {"t18", "Циферки", "10.10.18.3"},
+		{"t19", "avek", "10.10.19.3"}, {"t20", "КиберПатриоты", "10.10.20.3"},
+		{"t21", "NetOverkill", "10.10.21.3"},
+	}
+	for _, r := range cyber2026Roster {
+		descr := fmt.Sprintf("CyberSibir 2026 roster · ctf01d_id: %s · IP: %s · Активна: yes", r.cfg, r.ip)
+		if _, err := ensureTeam(r.name, descr); err != nil {
+			return err
+		}
+		addMeta("CyberSibir 2026", r.name, r.cfg, r.ip)
+	}
+
+	sibir2018Roster := []rosterTeam{
+		{"team1", "Life", "10.218.1.2"}, {"team2", "Void*", "10.218.2.2"},
+		{"team3", "SiBears", "10.218.3.2"}, {"team4", "Novosibirsk SU X", "10.218.4.2"},
+		{"team5", "paperwhale", "10.218.5.2"}, {"team6", "Omaviat", "10.218.6.2"},
+		{"team7", "CatchFM", "10.218.7.2"}, {"team8", "RWX", "10.218.8.2"},
+		{"team9", "SharLike", "10.218.9.2"}, {"team10", "d34dl1n3", "10.218.10.2"},
+		{"team11", "n57u n00bz", "10.218.11.2"}, {"team12", "VoidHack", "10.218.12.2"},
+		{"team13", "Новосибирский Д'Артаньян", "10.218.13.2"}, {"team14", "Trash Querty", "10.218.14.2"},
+		{"team15", "Life (Guest)", "10.218.15.2"}, {"team16", "HawkSquad", "10.218.16.2"},
+		{"team18", "NeosFun", "10.218.18.2"},
+	}
+	for _, r := range sibir2018Roster {
+		descr := fmt.Sprintf("SibirCTF 2018 roster · ctf01d_id: %s · IP: %s · Активна: yes", r.cfg, r.ip)
+		if _, err := ensureTeam(r.name, descr); err != nil {
+			return err
+		}
+		addMeta("SibirCTF 2018", r.name, r.cfg, r.ip)
+	}
+
+	sibir2015Names := []string{
+		"SuSlo.PAS", "Failers", "FTS", "Life", "Mustang", "OMAVIAT", "Sharlike",
+		"SibirTSU", "Zanyato", "TIO", "Luck3rz", "Shikata ga nai", "Hell ZIP", "n57u n00bz",
+	}
+	for _, name := range sibir2015Names {
+		if _, err := ensureTeam(name, "SibirCTF 2015 roster"); err != nil {
+			return err
+		}
+	}
+
+	sibir2014Names := []string{"h34dump", "Yozik", "Brizz", "Mustang", "Сборная АлтГТУ", "Life"}
+	for _, name := range sibir2014Names {
+		if _, err := ensureTeam(name, "SibirCTF 2014 roster"); err != nil {
+			return err
+		}
+	}
+
+	// --- University bindings (manual corrections from the legacy seed) ---------
+	bind := func(teamName, uniName, tag, website string) error {
+		t, ok := teamByName[teamName]
+		if !ok {
+			return nil
+		}
+		uni, ok := uniByName[uniName]
+		if !ok {
+			return nil
+		}
+		descr := ptrStr(t.Description)
+		if !strings.Contains(descr, tag) {
+			if descr != "" {
+				descr += " · "
+			}
+			descr += tag
+		}
+		uid := uni.ID
+		params := db.UpdateTeamParams{ID: t.ID, Name: t.Name, Description: &descr, UniversityID: &uid}
+		if website != "" && (t.Website == nil || *t.Website == "") {
+			params.Website = &website
+		}
+		updated, err := q.UpdateTeam(ctx, params)
+		if err != nil {
+			return fmt.Errorf("binding team %q to university: %w", teamName, err)
+		}
+		teamByName[teamName] = updated
+		return nil
+	}
+	if err := bind("SharLike", uniAltSTU, "Academic team AltSTU", ""); err != nil {
+		return err
+	}
+	if err := bind("SiBears", uniTSU, "Academic team TSU", ""); err != nil {
+		return err
+	}
+	if err := bind("d34dl1n3", uniSSUGT, "Academic team SSUGT", "https://sgugit.ru"); err != nil {
+		return err
+	}
+	if err := bind("QarabagTeam", uniNSTU, "Academic team NSTU", "https://nstu.ru/"); err != nil {
+		return err
+	}
+	if err := bind("SuSlo.PAS", uniNSU, "Academic team Novosibirsk State University (NSU)", ""); err != nil {
+		return err
+	}
+
+	// --- Games (editions by year) ---------------------------------------------
+	utc := func(y int, mo time.Month, d, h, mi int) time.Time {
+		return time.Date(y, mo, d, h, mi, 0, 0, time.UTC)
+	}
+	type gameSeed struct {
+		name, site, ctftime, logo string
+		start, end                time.Time
+	}
+	gamesData := []gameSeed{
+		{name: "SibirCTF 2014", site: "https://sibirctf.org/", start: utc(2014, 4, 19, 6, 0), end: utc(2014, 4, 19, 14, 0)},
+		{name: "SibirCTF 2015", site: "https://sibirctf.org/", logo: "https://sun9-29.userapi.com/s/v1/ig1/YxcZz4g9cU0748u9NKGxsxJPwdJ7j6mRYNpsHKZwrYuncf_UVOtVmPPVgkH7SGOgFyluzE5c.jpg", start: utc(2015, 4, 18, 6, 0), end: utc(2015, 4, 18, 14, 0)},
+		{name: "SibirCTF 2016", site: "https://sibirctf.org/", ctftime: "https://ctftime.org/event/362/", start: utc(2016, 4, 23, 6, 0), end: utc(2016, 4, 23, 14, 0)},
+		{name: "SibirCTF 2018", site: "https://sibirctf.org/", start: utc(2018, 10, 21, 4, 0), end: utc(2018, 10, 21, 12, 30)},
+		{name: "SibirCTF 2019", site: "https://sibirctf.org/", ctftime: "https://ctftime.org/event/889/", logo: "https://ctftime.org/media/events/sibir_logo.png", start: utc(2019, 11, 1, 2, 0), end: utc(2019, 11, 1, 12, 0)},
+		{name: "SibirCTF 2023", site: "https://vk.com/sibirctf", ctftime: "https://ctftime.org/event/2132/", logo: "https://ctftime.org/media/events/glaz2023.jpg", start: utc(2023, 11, 19, 5, 45), end: utc(2023, 11, 19, 13, 0)},
+		{name: "CyberSibir 2025", site: "https://vk.com/sibirctf", ctftime: "https://ctftime.org/event/2742/", logo: "https://ctftime.org/media/events/cybersibir2025logo_1.png", start: utc(2025, 3, 28, 4, 20), end: utc(2025, 3, 28, 12, 20)},
+		{name: "CyberSibir 2026", site: "https://vk.com/sibirctf", start: utc(2026, 6, 9, 4, 30), end: utc(2026, 6, 9, 12, 30)},
+	}
+	gameByName := map[string]db.Game{}
+	games := make([]db.Game, 0, len(gamesData))
+	for _, gd := range gamesData {
+		avatar := gd.logo
+		if avatar == "" {
+			avatar = svgAvatar(gd.name, color())
+		}
+		g, created, err := getOrCreateGame(ctx, q, gd.name, "keva", gd.start, gd.end, gd.site, gd.ctftime, avatar)
+		if err != nil {
+			return fmt.Errorf("game %q: %w", gd.name, err)
+		}
+		logSeed(log, "game", ptrStr(g.Name), created)
+		gameByName[gd.name] = g
+		games = append(games, g)
+	}
+
+	// --- Real CTFtime scoreboards -> results ----------------------------------
+	addResult := func(gameName, teamName string, score int32) error {
+		g := gameByName[gameName]
+		t, ok := teamByName[teamName]
+		if !ok {
+			nt, err := ensureTeam(teamName, "Импортировано из scoreboard "+gameName)
+			if err != nil {
+				return err
+			}
+			t = nt
+		}
+		existing, err := q.ListResultsByGameAndTeam(ctx, db.ListResultsByGameAndTeamParams{GameID: g.ID, TeamID: t.ID})
+		if err != nil {
+			return err
+		}
+		if len(existing) > 0 {
+			return nil
+		}
+		_, err = q.CreateResult(ctx, db.CreateResultParams{GameID: g.ID, TeamID: t.ID, Score: &score})
+		return err
+	}
+
+	type sbRow struct {
+		name   string
+		points float64
+	}
+
+	scoreboard2025 := []sbRow{
+		{"TyumGUard", 8746.5}, {"smiley-from-telega", 8404.6}, {"W@zz4b1", 8145.0},
+		{"QarabagTeam", 4646.7}, {"химозный рулет", 4595.1}, {"datapoison", 4578.5},
+		{"4Ray", 4476.9}, {"SiBears", 4407.6}, {"N0N@me13", 4350.8}, {"CUT", 4318.1},
+		{"Ibeee", 3958.7}, {"vim>nano", 3224.9}, {"NFB", 3190.0}, {"o1d_bu7_go1d", 2891.9},
+		{"Циферки", 2693.1}, {"ScareCrow", 2567.4}, {"d34dl1n3", 2451.2}, {"SharLike", 1826.1},
+		{"R3T4RD0Z", 1518.7}, {"Netoverkill", 1498.4}, {"kekw", 1442.8}, {"CyberCringe", 1390.8},
+		{"CyberPatriots", 1223.8}, {"XAKCET", 810.4},
+	}
+	for _, r := range scoreboard2025 {
+		if err := addResult("CyberSibir 2025", r.name, int32(r.points*1000)); err != nil {
+			return err
+		}
+	}
+
+	// CyberSibir 2026 final scoreboard (jury results, see 2026-cybersibir-jury).
+	scoreboard2026 := []sbRow{
+		{"CUT", 1155889}, {"N0N@me13", 954308}, {"W@zz4bi", 923699}, {"SiBears", 890034},
+		{"1sk4nd3r", 878913}, {"ыыыыЫЫЫЫЫ", 676518}, {"QarabagTeam", 605961}, {"NetOverkill", 564279},
+		{"КиберПатриоты", 513650}, {"SharLike", 510505}, {"Циферки", 467274}, {"ufoufo", 428504},
+		{"Netrunners", 416576}, {"The Power of Elijah", 353371}, {"d34dl1n3", 283019}, {"4Ray", 282953},
+		{"Mustang", 173919}, {"Error Yager", 161678}, {"КиберМамонты", 69414}, {"...", 40230},
+		{"avek", 20697},
+	}
+	for _, r := range scoreboard2026 {
+		if err := addResult("CyberSibir 2026", r.name, int32(r.points)); err != nil {
+			return err
+		}
+	}
+
+	scoreboard2023 := []sbRow{
+		{"SiBears", 7893.1}, {"ыыыыЫЫЫЫЫ", 7386.4}, {"CubaLibre", 5832.6}, {"QarabagTeam", 5570.8},
+		{"Продам гараж за флаги", 5511.9}, {"o1d_bu7_go1d", 4528.1}, {"SharLike", 2817.4},
+		{"d34dl1n3", 2658.4}, {"A4PT Reshetneva", 2569.5}, {"ИнфоБесы", 1783.5}, {"LCD", 897.7},
+	}
+	for _, r := range scoreboard2023 {
+		if err := addResult("SibirCTF 2023", r.name, int32(r.points*1000)); err != nil {
+			return err
+		}
+	}
+
+	scoreboard2019 := []sbRow{
+		{"Суслобатя", 89430.9}, {"Dragon Hat", 88713.5}, {"Tanuki squad", 55170.2}, {"SiBears", 51399.1},
+		{"Omaviat", 47788.8}, {"SharNear", 42291.8}, {"rwx", 41812.4}, {"UkVQ", 36416.3},
+		{"4ерниkа", 32676.4}, {"Keva19", 32497.7}, {"a-cool-team", 26495.9}, {"Life", 26139.0},
+		{"d34dl1n3", 24739.2}, {"CatchFM", 24347.0}, {"BANOЧKA", 6261.2}, {"Team 16", 4727.0},
+	}
+	for _, r := range scoreboard2019 {
+		if err := addResult("SibirCTF 2019", r.name, int32(r.points)); err != nil {
+			return err
+		}
+	}
+
+	scoreboard2016 := []sbRow{
+		{"SiBears", 3250.770}, {"Yozik", 18.790}, {"Team Information Offensive", 45.940},
+		{"FoXXXeS", 304.700}, {"Mu574n9", 359.700}, {"!2day", 982.820}, {"SharLike", 1186.730},
+		{"(_xXx_-=HOBOCu6uPCKuE_IICbl_1337=-_xXx_)", 1436.590}, {"Life", 1753.340},
+		{"xXx_Я_не_ХЛЕБ_я_КОТ_хХх", 1763.670}, {"paperwhale", 0.810},
+	}
+	for _, r := range scoreboard2016 {
+		if err := addResult("SibirCTF 2016", r.name, int32(r.points*1000)); err != nil {
+			return err
+		}
+	}
+
+	// SibirCTF 2015: order from the article; descending synthetic scores keep rank.
+	scoreboard2015 := []string{
+		"SuSlo.PAS", "Failers", "FTS", "Life", "Mustang", "OMAVIAT", "Sharlike",
+		"SibirTSU", "Zanyato", "TIO", "Luck3rz", "Shikata ga nai", "Hell ZIP", "n57u n00bz",
+	}
+	for idx, name := range scoreboard2015 {
+		score := 14000 - 600*idx
+		if score < 600 {
+			score = 600
+		}
+		if err := addResult("SibirCTF 2015", name, int32(score)); err != nil {
+			return err
+		}
+	}
+
+	scoreboard2018 := []sbRow{
+		{"Новосиб", 7760.15}, {"SharLike", 4450.17}, {"VoidHack", 4028.91}, {"SiBears", 3602.50},
+		{"Novosibir", 1736.33}, {"HawkSqu", 1086.32}, {"Void*", 1130.22}, {"RWX", 1068.26},
+		{"NeosFun", 1047.88}, {"Life (Guest)", 932.49}, {"CatchFM", 903.86}, {"paperwhale", 890.19},
+		{"d34dl1n3", 829.86}, {"Omaviat", 780.55}, {"Life", 778.84}, {"Trash Querty", 618.19},
+		{"n57u n00bz", 390.13},
+	}
+	alias2018 := map[string]string{
+		"новосиб": "Новосибирский Д'Артаньян", "novosibir": "Novosibirsk SU X",
+		"hawksqu": "HawkSquad", "life (guest)": "Life (Guest)", "trash querty": "Trash Querty",
+	}
+	for _, r := range scoreboard2018 {
+		name := r.name
+		if alias, ok := alias2018[strings.ToLower(r.name)]; ok {
+			name = alias
+		}
+		if err := addResult("SibirCTF 2018", name, int32(r.points)); err != nil {
+			return err
+		}
+	}
+
+	scoreboard2014 := []sbRow{
+		{"h34dump", 1501}, {"Yozik", 1163}, {"Brizz", 659}, {"Mustang", 626},
+		{"Сборная АлтГТУ", 476}, {"Life", 318},
+	}
+	for _, r := range scoreboard2014 {
+		if err := addResult("SibirCTF 2014", r.name, int32(r.points)); err != nil {
+			return err
+		}
+	}
+
+	// --- GameTeams: game<->team links with rank order and ctf01d metadata ------
+	nameByTeamID := map[int64]string{}
+	for name, t := range teamByName {
+		nameByTeamID[t.ID] = name
+	}
+	for _, g := range games {
+		existing, err := q.ListGameTeamsByGame(ctx, g.ID)
+		if err != nil {
+			return err
+		}
+		if len(existing) > 0 {
+			continue
+		}
+		results, err := q.ListResultsByGame(ctx, g.ID)
+		if err != nil {
+			return err
+		}
+		sortResultsDesc(results)
+		for idx, r := range results {
+			gt := db.CreateGameTeamParams{
+				GameID:          g.ID,
+				TeamID:          r.TeamID,
+				Ctf01dOverrides: json.RawMessage("{}"),
+				Order:           int32(idx + 1),
+			}
+			if meta, ok := rosterMeta[ptrStr(g.Name)][strings.ToLower(nameByTeamID[r.TeamID])]; ok {
+				if meta.id != "" {
+					id := meta.id
+					gt.Ctf01dID = &id
+				}
+				if meta.ip != "" {
+					ip := meta.ip
+					gt.IpAddress = &ip
+				}
+			}
+			if _, err := q.CreateGameTeam(ctx, gt); err != nil {
+				return fmt.Errorf("game_team game %d team %d: %w", g.ID, r.TeamID, err)
+			}
+		}
+	}
+
+	// --- Services + per-game assignment ---------------------------------------
+	type svcSeed struct {
+		name, desc, author, branch, repo, lang, game string
+	}
+	servicesData := []svcSeed{
+		// CyberSibir 2026 (jury config; checker-based, no public repo)
+		{"XenON-market", "CyberSibir 2026 service (XenON-market)", "CyberSibir", "", "", "", "CyberSibir 2026"},
+		{"MSPD2", "CyberSibir 2026 service (MSPD2)", "CyberSibir", "", "", "", "CyberSibir 2026"},
+		{"VaultNotes", "CyberSibir 2026 service (VaultNotes)", "CyberSibir", "", "", "", "CyberSibir 2026"},
+		{"CWC", "CyberSibir 2026 service (CWC)", "CyberSibir", "", "", "", "CyberSibir 2026"},
+		{"IncidentHub", "CyberSibir 2026 service (IncidentHub)", "CyberSibir", "", "", "", "CyberSibir 2026"},
+		// CyberSibir 2025
+		{"EyeSee", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "main", "2025-cybersibir-service-eyesee", "Python", "CyberSibir 2025"},
+		{"MSPD", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "main", "2025-cybersibir-service-mspd", "Go", "CyberSibir 2025"},
+		{"NcDEx", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "main", "2025-cybersibir-service-ncdex", "Crystal", "CyberSibir 2025"},
+		{"Unpleasant", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "master", "2025-cybersibir-service-unpleasant", "HTML", "CyberSibir 2025"},
+		{"WrNum", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "main", "2025-cybersibir-service-wrnum", "Python", "CyberSibir 2025"},
+		{"CyberBank", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "main", "2025-cybersibir-service-bank", "JavaScript", "CyberSibir 2025"},
+		{"NeuroLink234", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "main", "2025-cybersibir-service-neLi234", "C", "CyberSibir 2025"},
+		{"BioGuard", "Service with vulnerabilities for CyberSibir 2025", "CyberSibir", "main", "2025-cybersibir-service-BioGuard", "Python", "CyberSibir 2025"},
+		// SibirCTF 2023
+		{"StickMarket", "SibirCTF 2023 service (StickMarket)", "SibirCTF", "main", "2023-service-sibirctf-stickmarket", "CSS", "SibirCTF 2023"},
+		{"SouthParkChat", "SibirCTF 2023 service (SouthParkChat)", "SibirCTF", "main", "2023-service-sibirctf-southparkchat", "Go", "SibirCTF 2023"},
+		{"SX", "SibirCTF 2023 service (SX)", "SibirCTF", "main", "2023-service-sibirctf-sx", "Python", "SibirCTF 2023"},
+		{"Chef", "SibirCTF 2023 service (Chef)", "SibirCTF", "main", "2023-service-sibirctf-chef", "C", "SibirCTF 2023"},
+		{"Card Vault", "SibirCTF 2023 CardVault service", "SibirCTF", "main", "2023-service-sibirctf-cardvault", "Elixir", "SibirCTF 2023"},
+		// SibirCTF 2018
+		{"maxigram", "SibirCTF 2018 service (maxigram)", "SibirCTF", "master", "2018-service-maxigram", "Python", "SibirCTF 2018"},
+		{"The Fakebook", "SibirCTF 2018 service (The Fakebook)", "SibirCTF", "master", "2018-service-thefakebook", "HTML", "SibirCTF 2018"},
+		{"The Hole", "SibirCTF 2018 service (The Hole)", "SibirCTF", "master", "2018-service-the-hole", "C++", "SibirCTF 2018"},
+		{"Mirai", "SibirCTF 2018 service (Mirai)", "SibirCTF", "master", "2018-service-mirai", "PHP", "SibirCTF 2018"},
+		{"LNKS", "SibirCTF 2018 service (LNKS)", "SibirCTF", "master", "2018-service-lnks", "PHP", "SibirCTF 2018"},
+		{"Lie2Me", "SibirCTF 2018 service (Lie2Me)", "SibirCTF", "master", "2018-service-lie-to-me", "Perl", "SibirCTF 2018"},
+		// SibirCTF 2015
+		{"CryChat", "SibirCTF 2015 service (CryChat)", "SibirCTF", "master", "2015-crychat", "PHP", "SibirCTF 2015"},
+		{"O'Foody", "SibirCTF 2015 service (O’Foody)", "SibirCTF", "master", "2015-ofoody", "Perl", "SibirCTF 2015"},
+		{"CTFGram", "SibirCTF 2015 service (CTFGram)", "SibirCTF", "master", "2015-ctfgram", "JavaScript", "SibirCTF 2015"},
+		{"EasyAs", "SibirCTF 2015 service (EasyAs)", "SibirCTF", "master", "2015-easyas", "Python", "SibirCTF 2015"},
+	}
+
+	// Pre-load existing game<->service links for idempotency.
+	linkedByGame := map[int64]map[int64]bool{}
+	for _, g := range games {
+		ids, err := q.ListServicesByGame(ctx, g.ID)
+		if err != nil {
+			return err
+		}
+		set := map[int64]bool{}
+		for _, id := range ids {
+			set[id] = true
+		}
+		linkedByGame[g.ID] = set
+	}
+
+	for _, sd := range servicesData {
+		archive := ""
+		if sd.repo != "" {
+			archive = fmt.Sprintf("https://github.com/SibirCTF/%s/archive/refs/heads/%s.zip", sd.repo, sd.branch)
+		}
+		training := json.RawMessage("{}")
+		if sd.lang != "" {
+			training = json.RawMessage(fmt.Sprintf(`{"language":%q}`, sd.lang))
+		}
+		svc, created, err := getOrCreateService(ctx, q, sd.name, sd.desc, sd.author, archive, training, svgAvatar(sd.name, color()))
+		if err != nil {
+			return fmt.Errorf("service %q: %w", sd.name, err)
+		}
+		logSeed(log, "service", svc.Name, created)
+
+		g, ok := gameByName[sd.game]
+		if !ok {
+			continue
+		}
+		if linkedByGame[g.ID][svc.ID] {
+			continue
+		}
+		if err := q.AddService(ctx, db.AddServiceParams{GameID: g.ID, ServiceID: svc.ID}); err != nil {
+			return fmt.Errorf("linking service %q to game %q: %w", sd.name, sd.game, err)
+		}
+		linkedByGame[g.ID][svc.ID] = true
+	}
+
+	// --- Final standings for finished games -----------------------------------
+	for _, g := range games {
+		if !g.EndsAt.Time.Before(now) {
+			continue
+		}
+		finals, err := q.ListFinalResultsByGame(ctx, g.ID)
+		if err != nil {
+			return err
+		}
+		if len(finals) > 0 {
+			continue
+		}
+		results, err := q.ListResultsByGame(ctx, g.ID)
+		if err != nil {
+			return err
+		}
+		sortResultsDesc(results)
+		for i, r := range results {
+			score := int32(0)
+			if r.Score != nil {
+				score = *r.Score
+			}
+			pos := int32(i + 1)
+			if _, err := q.InsertFinalResult(ctx, db.InsertFinalResultParams{
+				GameID: g.ID, TeamID: r.TeamID, Score: score, Position: &pos,
+			}); err != nil {
+				return fmt.Errorf("final result game %d team %d: %w", g.ID, r.TeamID, err)
+			}
+		}
+		if _, err := q.SetFinalized(ctx, db.SetFinalizedParams{
+			ID: g.ID, Finalized: true, FinalizedAt: pgTz(now),
+		}); err != nil {
+			return fmt.Errorf("finalizing game %d: %w", g.ID, err)
+		}
+	}
+
+	return nil
+}
+
+// -----------------------------------------------------------------------------
+// SibirCTF helpers
+
+func getOrCreateUniversity(ctx context.Context, q *db.Queries, name, avatarURL string) (db.University, bool, error) {
+	unis, err := q.ListUniversities(ctx, db.ListUniversitiesParams{Limit: 1000, Offset: 0})
+	if err != nil {
+		return db.University{}, false, err
+	}
+	for _, u := range unis {
+		if u.Name != nil && *u.Name == name {
+			return u, false, nil
+		}
+	}
+	uni, err := q.CreateUniversity(ctx, db.CreateUniversityParams{Name: &name, AvatarUrl: &avatarURL})
+	if err != nil {
+		return db.University{}, false, err
+	}
+	return uni, true, nil
+}
+
+func getOrCreateTeam(ctx context.Context, q *db.Queries, name, description, avatarURL string) (db.Team, bool, error) {
+	teams, err := q.ListTeams(ctx, db.ListTeamsParams{Limit: 2000, Offset: 0})
+	if err != nil {
+		return db.Team{}, false, err
+	}
+	for _, t := range teams {
+		if t.Name == name {
+			return t, false, nil
+		}
+	}
+	team, err := q.CreateTeam(ctx, db.CreateTeamParams{
+		Name:        name,
+		Description: &description,
+		AvatarUrl:   &avatarURL,
+	})
+	if err != nil {
+		return db.Team{}, false, err
+	}
+	return team, true, nil
+}
+
+func getOrCreateGame(ctx context.Context, q *db.Queries, name, organizer string, startsAt, endsAt time.Time, siteURL, ctftimeURL, avatarURL string) (db.Game, bool, error) {
+	games, err := q.ListGames(ctx, db.ListGamesParams{Limit: 1000, Offset: 0})
+	if err != nil {
+		return db.Game{}, false, err
+	}
+	for _, g := range games {
+		if g.Name != nil && *g.Name == name {
+			return g, false, nil
+		}
+	}
+	params := db.CreateGameParams{
+		Name:                 &name,
+		Organizer:            &organizer,
+		StartsAt:             pgTz(startsAt),
+		EndsAt:               pgTz(endsAt),
+		AvatarUrl:            &avatarURL,
+		RegistrationOpensAt:  pgTz(startsAt.Add(-7 * 24 * time.Hour)),
+		RegistrationClosesAt: pgTz(startsAt.Add(-1 * 24 * time.Hour)),
+		ScoreboardOpensAt:    pgTz(startsAt),
+		ScoreboardClosesAt:   pgTz(endsAt.Add(7 * 24 * time.Hour)),
+	}
+	if siteURL != "" {
+		params.SiteUrl = &siteURL
+	}
+	if ctftimeURL != "" {
+		params.CtftimeUrl = &ctftimeURL
+	}
+	game, err := q.CreateGame(ctx, params)
+	if err != nil {
+		return db.Game{}, false, err
+	}
+	return game, true, nil
+}
+
+func getOrCreateService(ctx context.Context, q *db.Queries, name, desc, author, archiveURL string, training json.RawMessage, avatarURL string) (db.Service, bool, error) {
+	if existing, err := q.GetServiceByName(ctx, name); err == nil {
+		return existing, false, nil
+	}
+	empty := ""
+	params := db.CreateServiceParams{
+		Name:               name,
+		PublicDescription:  &desc,
+		PrivateDescription: &empty,
+		Author:             &author,
+		AvatarUrl:          &avatarURL,
+		Public:             true,
+		CheckStatus:        "unknown",
+		Ctf01dTraining:     training,
+	}
+	if archiveURL != "" {
+		params.ServiceArchiveUrl = &archiveURL
+	}
+	svc, err := q.CreateService(ctx, params)
+	if err != nil {
+		return db.Service{}, false, err
+	}
+	return svc, true, nil
+}
+
+func sortResultsDesc(results []db.Result) {
+	score := func(r db.Result) int32 {
+		if r.Score == nil {
+			return 0
+		}
+		return *r.Score
+	}
+	// Stable insertion sort: score desc, original (id) order on ties.
+	for i := 1; i < len(results); i++ {
+		for j := i; j > 0 && score(results[j]) > score(results[j-1]); j-- {
+			results[j], results[j-1] = results[j-1], results[j]
+		}
+	}
+}
+
+func svgAvatar(text, bg string) string {
+	initial := "?"
+	if r := []rune(text); len(r) > 0 {
+		initial = strings.ToUpper(string(r[0]))
+	}
+	svg := fmt.Sprintf(
+		"<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'>"+
+			"<rect width='100%%' height='100%%' fill='%s' />"+
+			"<text x='50%%' y='56%%' dominant-baseline='middle' text-anchor='middle' "+
+			"font-family='Arial, Helvetica, sans-serif' font-size='48' fill='#fff'>%s</text></svg>",
+		bg, initial)
+	enc := strings.ReplaceAll(url.QueryEscape(svg), "+", "%20")
+	return "data:image/svg+xml;utf8," + enc
+}
+
+// -----------------------------------------------------------------------------
+// Minimal seed helpers (admin + baseline users)
 
 func seedAdmin(ctx context.Context, q *db.Queries, password string) (db.User, bool, error) {
 	existing, err := q.GetUserByUserName(ctx, "admin")
@@ -173,72 +800,6 @@ func seedUser(ctx context.Context, q *db.Queries, userName, displayName, role, p
 	return user, true, nil
 }
 
-func seedUniversity(ctx context.Context, q *db.Queries, name, siteURL string) (db.University, bool, error) {
-	unis, err := q.ListUniversities(ctx, db.ListUniversitiesParams{Limit: 100, Offset: 0})
-	if err != nil {
-		return db.University{}, false, err
-	}
-	for _, u := range unis {
-		if u.Name != nil && *u.Name == name {
-			return u, false, nil
-		}
-	}
-
-	uni, err := q.CreateUniversity(ctx, db.CreateUniversityParams{
-		Name:    &name,
-		SiteUrl: &siteURL,
-	})
-	if err != nil {
-		return db.University{}, false, err
-	}
-	return uni, true, nil
-}
-
-func seedTeam(ctx context.Context, q *db.Queries, name, description string, universityID int64) (db.Team, bool, error) {
-	teams, err := q.ListTeams(ctx, db.ListTeamsParams{Limit: 100, Offset: 0})
-	if err != nil {
-		return db.Team{}, false, err
-	}
-	for _, t := range teams {
-		if t.Name == name {
-			return t, false, nil
-		}
-	}
-
-	team, err := q.CreateTeam(ctx, db.CreateTeamParams{
-		Name:         name,
-		Description:  &description,
-		UniversityID: &universityID,
-	})
-	if err != nil {
-		return db.Team{}, false, err
-	}
-	return team, true, nil
-}
-
-func seedGame(ctx context.Context, q *db.Queries, name, organizer string, startsAt, endsAt time.Time) (db.Game, bool, error) {
-	games, err := q.ListGames(ctx, db.ListGamesParams{Limit: 100, Offset: 0})
-	if err != nil {
-		return db.Game{}, false, err
-	}
-	for _, g := range games {
-		if g.Name != nil && *g.Name == name {
-			return g, false, nil
-		}
-	}
-
-	game, err := q.CreateGame(ctx, db.CreateGameParams{
-		Name:      &name,
-		Organizer: &organizer,
-		StartsAt:  pgTz(startsAt),
-		EndsAt:    pgTz(endsAt),
-	})
-	if err != nil {
-		return db.Game{}, false, err
-	}
-	return game, true, nil
-}
-
 func logSeed(log *zap.Logger, entity, name string, created bool) {
 	if created {
 		log.Info("created", zap.String("entity", entity), zap.String("name", name))
@@ -247,7 +808,6 @@ func logSeed(log *zap.Logger, entity, name string, created bool) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
 func ptrStr(s *string) string {
 	if s == nil {
 		return ""
