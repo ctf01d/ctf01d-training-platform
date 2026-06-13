@@ -1,9 +1,11 @@
-import client from './client'
+import client from "./client";
 
 export async function getGameScoreboard(gameId: number) {
-  return client.GET('/games/{id}/scoreboard', { params: { path: { id: gameId } } })
+  return client.GET("/games/{id}/scoreboard", {
+    params: { path: { id: gameId } },
+  });
 }
 
 export async function getGlobalScoreboard() {
-  return client.GET('/scoreboard')
+  return client.GET("/scoreboard");
 }

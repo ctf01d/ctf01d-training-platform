@@ -1,21 +1,21 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext'
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 const primaryLinks = [
-  { to: '/games', label: 'Games' },
-  { to: '/services', label: 'Services' },
-  { to: '/teams', label: 'Teams' },
-  { to: '/scoreboard', label: 'Scoreboard' },
-]
+  { to: "/games", label: "Games" },
+  { to: "/services", label: "Services" },
+  { to: "/teams", label: "Teams" },
+  { to: "/scoreboard", label: "Scoreboard" },
+];
 
 export default function Layout() {
-  const { user, logout, isAdmin, isPlayer } = useAuth()
-  const navigate = useNavigate()
+  const { user, logout, isAdmin, isPlayer } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout()
-    navigate('/login')
-  }
+    await logout();
+    navigate("/login");
+  };
 
   return (
     <div className="layout">
@@ -27,7 +27,7 @@ export default function Layout() {
           </Link>
           {user && (
             <nav className="nav" aria-label="Primary navigation">
-              {primaryLinks.map(link => (
+              {primaryLinks.map((link) => (
                 <NavLink key={link.to} to={link.to}>
                   {link.label}
                 </NavLink>
@@ -44,12 +44,18 @@ export default function Layout() {
           <div className="header-right">
             {user ? (
               <div className="user-menu">
-                <Link to="/profile" className="user-link">{user.display_name}</Link>
+                <Link to="/profile" className="user-link">
+                  {user.display_name}
+                </Link>
                 <span className="user-role">{user.role}</span>
-                <button onClick={handleLogout} className="btn btn-sm">Logout</button>
+                <button onClick={handleLogout} className="btn btn-sm">
+                  Logout
+                </button>
               </div>
             ) : (
-              <Link to="/login" className="btn btn-sm">Login</Link>
+              <Link to="/login" className="btn btn-sm">
+                Login
+              </Link>
             )}
           </div>
         </div>
@@ -58,5 +64,5 @@ export default function Layout() {
         <Outlet />
       </main>
     </div>
-  )
+  );
 }
