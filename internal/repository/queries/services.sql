@@ -15,7 +15,7 @@ SELECT * FROM services WHERE name = $1;
 SELECT * FROM services
 WHERE (public = sqlc.narg('public_filter') OR sqlc.narg('public_filter') IS NULL)
   AND (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL)
-ORDER BY id
+ORDER BY created_at DESC, id DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountServices :one

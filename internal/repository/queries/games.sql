@@ -10,7 +10,9 @@ RETURNING *;
 SELECT * FROM games WHERE id = $1;
 
 -- name: ListGames :many
-SELECT * FROM games ORDER BY id LIMIT $1 OFFSET $2;
+SELECT * FROM games
+ORDER BY starts_at DESC NULLS LAST, created_at DESC, id DESC
+LIMIT $1 OFFSET $2;
 
 -- name: CountGames :one
 SELECT count(*) FROM games;

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import * as gamesApi from '../api/games'
 import type { Game, GameCreate } from '../api/games'
-import { CardGrid, EntityCard, CardBadge, CardMeta, Pagination } from '../components/Card'
+import { CardGrid, CardBadge, Pagination } from '../components/Card'
 import { ErrorDisplay } from '../components/ErrorDisplay'
 import { useAuth } from '../auth/AuthContext'
 
@@ -53,7 +53,7 @@ export default function GamesPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page games-page">
       <div className="page-header">
         <h1>Games</h1>
         {isPlayer && (
@@ -91,37 +91,72 @@ export default function GamesPage() {
 
       <CardGrid loading={loading} isEmpty={games.length === 0} emptyMessage="No games found">
         {games.map((g) => (
-          <EntityCard
-            key={g.id}
-            to={`/games/${g.id}`}
-            avatarUrl={g.avatar_url}
-            avatarText={g.name ?? '?'}
-            title={g.name ?? '—'}
-            badges={
-              <>
-                <CardBadge variant={g.status ?? 'unknown'}>{g.status ?? 'unknown'}</CardBadge>
-                {g.finalized && <CardBadge variant="approved">finalized</CardBadge>}
-              </>
-            }
-          >
-            <CardMeta label="Organizer">{g.organizer ?? '—'}</CardMeta>
-            <CardMeta label="Starts">{fmtDate(g.starts_at)}</CardMeta>
-            <CardMeta label="Ends">{fmtDate(g.ends_at)}</CardMeta>
-            <CardMeta label="Registration">
-              <CardBadge variant={g.registration_status ?? 'unscheduled'}>
-                {g.registration_status ?? 'unscheduled'}
-              </CardBadge>
-            </CardMeta>
-            <CardMeta label="Scoreboard">
-              <CardBadge variant={g.scoreboard_status ?? 'closed'}>
-                {g.scoreboard_status ?? 'closed'}
-              </CardBadge>
-            </CardMeta>
-          </EntityCard>
+          <GameCard key={g.id} game={g} />
         ))}
       </CardGrid>
 
       <Pagination page={page} perPage={perPage} total={total} onPageChange={setPage} />
     </div>
+  )
+}
+
+function GameCard({ game }: { game: Game }) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const title = game.name ?? `Game #${game.id}`
+  const hasImage = Boolean(game.avatar_url && !imageFailed)
+
+  return (
+    <article className="game-card">
+      <div className="game-card-content">
+        <div className="game-card-heading">
+          <Link to={`/games/${game.id}`} className="game-card-title">
+            {title}
+          </Link>
+          <div className="game-card-badges">
+            <CardBadge variant={game.status ?? 'unknown'}>{game.status ?? 'unknown'}</CardBadge>
+            {game.finalized && <CardBadge variant="approved">finalized</CardBadge>}
+          </div>
+        </div>
+
+        <dl className="game-card-meta">
+          <div>
+            <dt>Organizer</dt>
+            <dd>{game.organizer ?? '—'}</dd>
+          </div>
+          <div>
+            <dt>Starts</dt>
+            <dd>{fmtDate(game.starts_at)}</dd>
+          </div>
+          <div>
+            <dt>Ends</dt>
+            <dd>{fmtDate(game.ends_at)}</dd>
+          </div>
+          <div>
+            <dt>Registration</dt>
+            <dd>
+              <CardBadge variant={game.registration_status ?? 'unscheduled'}>
+                {game.registration_status ?? 'unscheduled'}
+              </CardBadge>
+            </dd>
+          </div>
+          <div>
+            <dt>Scoreboard</dt>
+            <dd>
+              <CardBadge variant={game.scoreboard_status ?? 'closed'}>
+                {game.scoreboard_status ?? 'closed'}
+              </CardBadge>
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <Link to={`/games/${game.id}`} className="game-card-media" tabIndex={-1} aria-hidden="true">
+        {hasImage ? (
+          <img src={game.avatar_url ?? ''} alt="" loading="lazy" onError={() => setImageFailed(true)} />
+        ) : (
+          <span>{title.trim().charAt(0).toUpperCase() || '?'}</span>
+        )}
+      </Link>
+    </article>
   )
 }

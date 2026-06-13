@@ -139,7 +139,9 @@ func (q *Queries) GetGameByID(ctx context.Context, id int64) (Game, error) {
 }
 
 const listGames = `-- name: ListGames :many
-SELECT id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret FROM games ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret FROM games
+ORDER BY starts_at DESC NULLS LAST, created_at DESC, id DESC
+LIMIT $1 OFFSET $2
 `
 
 type ListGamesParams struct {

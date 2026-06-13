@@ -295,14 +295,14 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		start, end                time.Time
 	}
 	gamesData := []gameSeed{
-		{name: "SibirCTF 2014", site: "https://sibirctf.org/", start: utc(2014, 4, 19, 6, 0), end: utc(2014, 4, 19, 14, 0)},
-		{name: "SibirCTF 2015", site: "https://sibirctf.org/", logo: "https://sun9-29.userapi.com/s/v1/ig1/YxcZz4g9cU0748u9NKGxsxJPwdJ7j6mRYNpsHKZwrYuncf_UVOtVmPPVgkH7SGOgFyluzE5c.jpg", start: utc(2015, 4, 18, 6, 0), end: utc(2015, 4, 18, 14, 0)},
-		{name: "SibirCTF 2016", site: "https://sibirctf.org/", ctftime: "https://ctftime.org/event/362/", start: utc(2016, 4, 23, 6, 0), end: utc(2016, 4, 23, 14, 0)},
+		{name: "SibirCTF 2014", site: "https://sibirctf.org/", logo: "/img/game-logos/sibir-2014.jpg", start: utc(2014, 4, 19, 6, 0), end: utc(2014, 4, 19, 14, 0)},
+		{name: "SibirCTF 2015", site: "https://sibirctf.org/", logo: "/img/game-logos/sibir-2015.jpg", start: utc(2015, 4, 18, 6, 0), end: utc(2015, 4, 18, 14, 0)},
+		{name: "SibirCTF 2016", site: "https://sibirctf.org/", ctftime: "https://ctftime.org/event/362/", logo: "/img/game-logos/sibir-2016.png", start: utc(2016, 4, 23, 6, 0), end: utc(2016, 4, 23, 14, 0)},
 		{name: "SibirCTF 2018", site: "https://sibirctf.org/", start: utc(2018, 10, 21, 4, 0), end: utc(2018, 10, 21, 12, 30)},
-		{name: "SibirCTF 2019", site: "https://sibirctf.org/", ctftime: "https://ctftime.org/event/889/", logo: "https://ctftime.org/media/events/sibir_logo.png", start: utc(2019, 11, 1, 2, 0), end: utc(2019, 11, 1, 12, 0)},
-		{name: "SibirCTF 2023", site: "https://vk.com/sibirctf", ctftime: "https://ctftime.org/event/2132/", logo: "https://ctftime.org/media/events/glaz2023.jpg", start: utc(2023, 11, 19, 5, 45), end: utc(2023, 11, 19, 13, 0)},
-		{name: "CyberSibir 2025", site: "https://vk.com/sibirctf", ctftime: "https://ctftime.org/event/2742/", logo: "https://ctftime.org/media/events/cybersibir2025logo_1.png", start: utc(2025, 3, 28, 4, 20), end: utc(2025, 3, 28, 12, 20)},
-		{name: "CyberSibir 2026", site: "https://vk.com/sibirctf", start: utc(2026, 6, 9, 4, 30), end: utc(2026, 6, 9, 12, 30)},
+		{name: "SibirCTF 2019", site: "https://sibirctf.org/", ctftime: "https://ctftime.org/event/889/", logo: "/img/game-logos/sibir-2019.png", start: utc(2019, 11, 1, 2, 0), end: utc(2019, 11, 1, 12, 0)},
+		{name: "SibirCTF 2023", site: "https://vk.com/sibirctf", ctftime: "https://ctftime.org/event/2132/", logo: "/img/game-logos/sibir-2023.jpg", start: utc(2023, 11, 19, 5, 45), end: utc(2023, 11, 19, 13, 0)},
+		{name: "CyberSibir 2025", site: "https://vk.com/sibirctf", ctftime: "https://ctftime.org/event/2742/", logo: "/img/game-logos/cybersibir-2025.png", start: utc(2025, 3, 28, 4, 20), end: utc(2025, 3, 28, 12, 20)},
+		{name: "CyberSibir 2026", site: "https://vk.com/sibirctf", logo: "/img/game-logos/cyber-2026.jpg", start: utc(2026, 6, 9, 4, 30), end: utc(2026, 6, 9, 12, 30)},
 	}
 	gameByName := map[string]db.Game{}
 	games := make([]db.Game, 0, len(gamesData))

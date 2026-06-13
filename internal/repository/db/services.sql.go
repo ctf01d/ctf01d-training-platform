@@ -188,7 +188,7 @@ const listServices = `-- name: ListServices :many
 SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training FROM services
 WHERE (public = $3 OR $3 IS NULL)
   AND (name ILIKE '%' || $4 || '%' OR $4 IS NULL)
-ORDER BY id
+ORDER BY created_at DESC, id DESC
 LIMIT $1 OFFSET $2
 `
 
