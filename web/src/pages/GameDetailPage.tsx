@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as gamesApi from "../api/games";
 import type { Game, GameUpdate } from "../api/games";
@@ -11,6 +11,7 @@ import type { Result, ResultCreate } from "../api/results";
 import * as writeupsApi from "../api/writeups";
 import type { Writeup, WriteupCreate } from "../api/writeups";
 import * as teamsApi from "../api/teams";
+import type { Team } from "../api/teams";
 import {
   ErrorDisplay,
   ActionButton,
@@ -43,6 +44,8 @@ export default function GameDetailPage() {
   );
   const [results, setResults] = useState<Result[]>([]);
   const [writeups, setWriteups] = useState<Writeup[]>([]);
+  const [allTeams, setAllTeams] = useState<Team[]>([]);
+  const [allServices, setAllServices] = useState<Service[]>([]);
 
   const [addTeamForm, setAddTeamForm] = useState<GameTeamCreate>({
     game_id: gameId,
@@ -133,17 +136,45 @@ export default function GameDetailPage() {
     if (data) setWriteups(data.items);
   }, [gameId]);
 
+  const fetchAllTeams = useCallback(async () => {
+    const { data } = await teamsApi.listTeams({ per_page: 200 });
+    if (data) setAllTeams(data.items);
+  }, []);
+
+  const fetchAllServices = useCallback(async () => {
+    const { data } = await servicesApi.listServices({ per_page: 200 });
+    if (data) setAllServices(data.items);
+  }, []);
+
   useEffect(() => {
     void fetchGame();
     void fetchGameTeams();
     void fetchServices();
     void fetchResults();
     void fetchWriteups();
-  }, [fetchGame, fetchGameTeams, fetchServices, fetchResults, fetchWriteups]);
+    void fetchAllTeams();
+    void fetchAllServices();
+  }, [
+    fetchGame,
+    fetchGameTeams,
+    fetchServices,
+    fetchResults,
+    fetchWriteups,
+    fetchAllTeams,
+    fetchAllServices,
+  ]);
 
   useEffect(() => {
     setImageFailed(false);
   }, [game?.avatar_url]);
+
+  const nameOf = useCallback(
+    (tid: number) =>
+      teamNames[tid] ??
+      allTeams.find((t) => t.id === tid)?.name ??
+      `Team #${tid}`,
+    [teamNames, allTeams],
+  );
 
   const handleSave = async () => {
     setSaving(true);
@@ -327,6 +358,18 @@ export default function GameDetailPage() {
   const title = game.name ?? `Game #${game.id}`;
   const hasLogo = Boolean(game.avatar_url && !imageFailed);
 
+  const rosterTeamIds = new Set(gameTeams.map((gt) => gt.team_id));
+  const availableTeams = allTeams.filter((t) => !rosterTeamIds.has(t.id));
+  const availableServices = allServices.filter(
+    (s) => !serviceIds.includes(s.id),
+  );
+  const rankedResults = [...results].sort(
+    (a, b) => (b.score ?? 0) - (a.score ?? 0),
+  );
+  const writeupTeamOptions = isAdmin
+    ? gameTeams.map((gt) => ({ id: gt.team_id, name: nameOf(gt.team_id) }))
+    : manageableTeamIds.map((tid) => ({ id: tid, name: nameOf(tid) }));
+
   return (
     <div className="page game-detail-page">
       <ErrorDisplay error={error} onRetry={fetchGame} />
@@ -405,7 +448,7 @@ export default function GameDetailPage() {
                   </a>
                 )}
                 {canEdit && (
-                  <button className="btn btn-sm" onClick={startEdit}>
+                  <button className="btn btn-sm btn-primary" onClick={startEdit}>
                     Edit
                   </button>
                 )}
@@ -425,132 +468,86 @@ export default function GameDetailPage() {
             </div>
           </section>
 
-          <div className="detail-card game-detail-info">
-            <div className="detail-card-header">
+          <div className="detail-section">
+            <div className="section-head">
               <h3>Game Info</h3>
             </div>
-            <table className="detail-table">
-              <tbody>
-                <tr>
-                  <td className="label">Name</td>
-                  <td>{game.name ?? "—"}</td>
-                </tr>
-                <tr>
-                  <td className="label">Organizer</td>
-                  <td>{game.organizer ?? "—"}</td>
-                </tr>
-                <tr>
-                  <td className="label">Status</td>
-                  <td>
-                    <CardBadge variant={game.status ?? "unknown"}>
-                      {game.status ?? "unknown"}
+            <div className="info-groups">
+              <InfoGroup title="Schedule">
+                <InfoRow label="Starts at">
+                  {formatDate(game.starts_at)}
+                </InfoRow>
+                <InfoRow label="Ends at">{formatDate(game.ends_at)}</InfoRow>
+              </InfoGroup>
+
+              <InfoGroup title="Registration">
+                <InfoRow label="Status">
+                  <CardBadge
+                    variant={game.registration_status ?? "unscheduled"}
+                  >
+                    {game.registration_status ?? "unscheduled"}
+                  </CardBadge>
+                </InfoRow>
+                <InfoRow label="Opens">
+                  {formatDate(game.registration_opens_at)}
+                </InfoRow>
+                <InfoRow label="Closes">
+                  {formatDate(game.registration_closes_at)}
+                </InfoRow>
+              </InfoGroup>
+
+              <InfoGroup title="Scoreboard">
+                <InfoRow label="Status">
+                  <CardBadge variant={game.scoreboard_status ?? "closed"}>
+                    {game.scoreboard_status ?? "closed"}
+                  </CardBadge>
+                </InfoRow>
+                <InfoRow label="Opens">
+                  {formatDate(game.scoreboard_opens_at)}
+                </InfoRow>
+                <InfoRow label="Closes">
+                  {formatDate(game.scoreboard_closes_at)}
+                </InfoRow>
+              </InfoGroup>
+
+              <InfoGroup title="Links">
+                <InfoRow label="Site">{renderLink(game.site_url)}</InfoRow>
+                <InfoRow label="CTFtime">
+                  {renderLink(game.ctftime_url)}
+                </InfoRow>
+                <InfoRow label="VPN">{renderLink(game.vpn_url)}</InfoRow>
+                <InfoRow label="Logo">{renderLogo(game.avatar_url)}</InfoRow>
+              </InfoGroup>
+
+              <InfoGroup title="Status">
+                <InfoRow label="Finalized">
+                  {game.finalized ? (
+                    <CardBadge variant="approved">
+                      {game.finalized_at
+                        ? formatDate(game.finalized_at)
+                        : "yes"}
                     </CardBadge>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="label">Starts At</td>
-                  <td>{formatDate(game.starts_at)}</td>
-                </tr>
-                <tr>
-                  <td className="label">Ends At</td>
-                  <td>{formatDate(game.ends_at)}</td>
-                </tr>
-                <tr>
-                  <td className="label">Registration Status</td>
-                  <td>
-                    <CardBadge
-                      variant={game.registration_status ?? "unscheduled"}
-                    >
-                      {game.registration_status ?? "unscheduled"}
-                    </CardBadge>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="label">Registration Opens</td>
-                  <td>{formatDate(game.registration_opens_at)}</td>
-                </tr>
-                <tr>
-                  <td className="label">Registration Closes</td>
-                  <td>{formatDate(game.registration_closes_at)}</td>
-                </tr>
-                <tr>
-                  <td className="label">Scoreboard Status</td>
-                  <td>
-                    <CardBadge variant={game.scoreboard_status ?? "closed"}>
-                      {game.scoreboard_status ?? "closed"}
-                    </CardBadge>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="label">Scoreboard Opens</td>
-                  <td>{formatDate(game.scoreboard_opens_at)}</td>
-                </tr>
-                <tr>
-                  <td className="label">Scoreboard Closes</td>
-                  <td>{formatDate(game.scoreboard_closes_at)}</td>
-                </tr>
-                <tr>
-                  <td className="label">Site URL</td>
-                  <td>
-                    {game.site_url ? (
-                      <a
-                        href={safeHref(game.site_url)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {game.site_url}
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="label">CTFtime URL</td>
-                  <td>
-                    {game.ctftime_url ? (
-                      <a
-                        href={safeHref(game.ctftime_url)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {game.ctftime_url}
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="label">VPN URL</td>
-                  <td>{game.vpn_url ?? "—"}</td>
-                </tr>
-                <tr>
-                  <td className="label">Logo URL</td>
-                  <td>{game.avatar_url ?? "—"}</td>
-                </tr>
-                <tr>
-                  <td className="label">Finalized</td>
-                  <td>
-                    {game.finalized
-                      ? `Yes${game.finalized_at ? ` at ${formatDate(game.finalized_at)}` : ""}`
-                      : "No"}
-                  </td>
-                </tr>
-                {isAdmin && game.access_secret && (
-                  <tr>
-                    <td className="label">Access Secret</td>
-                    <td>{game.access_secret}</td>
-                  </tr>
-                )}
-                {isAdmin && game.access_instructions && (
-                  <tr>
-                    <td className="label">Access Instructions</td>
-                    <td>{game.access_instructions}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    "No"
+                  )}
+                </InfoRow>
+              </InfoGroup>
+
+              {isAdmin && (game.access_secret || game.access_instructions) && (
+                <InfoGroup title="Access (admin)">
+                  {game.access_secret && (
+                    <InfoRow label="Secret">
+                      <code>{game.access_secret}</code>
+                    </InfoRow>
+                  )}
+                  {game.access_instructions && (
+                    <InfoRow label="Instructions">
+                      {game.access_instructions}
+                    </InfoRow>
+                  )}
+                </InfoGroup>
+              )}
+            </div>
           </div>
         </>
       ) : (
@@ -630,7 +627,9 @@ export default function GameDetailPage() {
 
       {canEdit && (
         <div className="detail-section">
-          <h3>Actions</h3>
+          <div className="section-head">
+            <h3>Actions</h3>
+          </div>
           <div className="action-buttons">
             {game.finalized ? (
               <ActionButton onClick={handleUnfinalize}>Unfinalize</ActionButton>
@@ -659,57 +658,72 @@ export default function GameDetailPage() {
       )}
 
       <div className="detail-section">
-        <h3>Services</h3>
+        <div className="section-head">
+          <h3>
+            Services <SectionCount n={serviceIds.length} />
+          </h3>
+        </div>
         {serviceIds.length > 0 ? (
-          <ul>
+          <div className="chip-list">
             {serviceIds.map((sid) => (
-              <li key={sid}>
+              <span className="entity-chip" key={sid}>
                 <a href={`/services/${sid}`}>
                   {serviceDetails[sid]?.name ?? `Service #${sid}`}
                 </a>
                 {canEdit && (
-                  <ActionButton
+                  <button
+                    type="button"
+                    className="chip-remove"
+                    title="Unlink service"
                     onClick={() => void handleRemoveService(sid)}
-                    variant="danger"
                   >
-                    Unlink
-                  </ActionButton>
+                    ×
+                  </button>
                 )}
-              </li>
+              </span>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p>No services linked.</p>
+          <p className="section-empty">No services linked.</p>
         )}
         {canEdit && (
           <form
             onSubmit={(e) => void handleAddService(e)}
             className="inline-form"
           >
-            <input
-              type="number"
-              placeholder="Service ID"
+            <select
               value={addServiceId}
               onChange={(e) => setAddServiceId(e.target.value)}
               required
-            />
+            >
+              <option value="">Select service…</option>
+              {availableServices.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
             <button type="submit" className="btn btn-sm">
-              Link Service
+              Link service
             </button>
           </form>
         )}
       </div>
 
       <div className="detail-section">
-        <h3>Roster (Game Teams)</h3>
+        <div className="section-head">
+          <h3>
+            Roster <SectionCount n={gameTeams.length} />
+          </h3>
+        </div>
         {gameTeams.length > 0 ? (
           <table className="data-table">
             <thead>
               <tr>
-                <th>Order</th>
+                <th className="rank-cell">#</th>
                 <th>Team</th>
-                <th>IP Address</th>
-                <th>Actions</th>
+                <th>IP address</th>
+                {canEdit && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -717,82 +731,104 @@ export default function GameDetailPage() {
                 .sort((a, b) => a.order - b.order)
                 .map((gt) => (
                   <tr key={gt.id}>
-                    <td>{gt.order}</td>
-                    <td>{teamNames[gt.team_id] ?? `Team #${gt.team_id}`}</td>
-                    <td>{gt.ip_address ?? "—"}</td>
+                    <td className="rank-cell">{gt.order}</td>
+                    <td>{nameOf(gt.team_id)}</td>
                     <td>
-                      {canEdit && (
+                      {gt.ip_address ? (
+                        <code>{gt.ip_address}</code>
+                      ) : (
+                        <span className="muted-dash">—</span>
+                      )}
+                    </td>
+                    {canEdit && (
+                      <td className="actions-cell">
                         <ActionButton
                           onClick={() => void handleRemoveTeam(gt.id)}
                           variant="danger"
                         >
                           Remove
                         </ActionButton>
-                      )}
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
             </tbody>
           </table>
         ) : (
-          <p>No teams in roster.</p>
+          <p className="section-empty">No teams in roster.</p>
         )}
         {canEdit && (
-          <>
-            <form
-              onSubmit={(e) => void handleAddTeam(e)}
-              className="inline-form"
+          <form onSubmit={(e) => void handleAddTeam(e)} className="inline-form">
+            <select
+              value={addTeamForm.team_id || ""}
+              onChange={(e) =>
+                setAddTeamForm((f) => ({
+                  ...f,
+                  team_id: Number(e.target.value),
+                }))
+              }
+              required
             >
-              <input
-                type="number"
-                placeholder="Team ID"
-                value={addTeamForm.team_id || ""}
-                onChange={(e) =>
-                  setAddTeamForm((f) => ({
-                    ...f,
-                    team_id: Number(e.target.value),
-                  }))
-                }
-                required
-              />
-              <input
-                placeholder="IP Address"
-                value={addTeamForm.ip_address ?? ""}
-                onChange={(e) =>
-                  setAddTeamForm((f) => ({ ...f, ip_address: e.target.value }))
-                }
-              />
-              <button type="submit" className="btn btn-sm">
-                Add Team
-              </button>
-            </form>
-            <button className="btn btn-sm" onClick={() => void handleReorder()}>
+              <option value="">Select team…</option>
+              {availableTeams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="IP address (optional)"
+              value={addTeamForm.ip_address ?? ""}
+              onChange={(e) =>
+                setAddTeamForm((f) => ({ ...f, ip_address: e.target.value }))
+              }
+            />
+            <button type="submit" className="btn btn-sm">
+              Add team
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => void handleReorder()}
+            >
               Reorder
             </button>
-          </>
+          </form>
         )}
       </div>
 
       <div className="detail-section">
-        <h3>Results</h3>
-        {results.length > 0 ? (
+        <div className="section-head">
+          <h3>
+            Results <SectionCount n={results.length} />
+          </h3>
+        </div>
+        {rankedResults.length > 0 ? (
           <table className="data-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Team ID</th>
-                <th>Score</th>
-                <th>Actions</th>
+                <th className="rank-cell">Rank</th>
+                <th>Team</th>
+                <th className="numeric">Score</th>
+                {canEdit && <th></th>}
               </tr>
             </thead>
             <tbody>
-              {results.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>{r.team_id}</td>
-                  <td>{r.score ?? "—"}</td>
-                  <td>
-                    {canEdit && (
+              {rankedResults.map((r, i) => (
+                <tr key={r.id} className={i < 3 ? `is-podium podium-${i + 1}` : undefined}>
+                  <td className="rank-cell">
+                    {i < 3 ? (
+                      <span className={`medal medal-${i + 1}`}>{i + 1}</span>
+                    ) : (
+                      i + 1
+                    )}
+                  </td>
+                  <td>{nameOf(r.team_id)}</td>
+                  <td className="numeric score-cell">
+                    {r.score?.toLocaleString() ?? "—"}
+                  </td>
+                  {canEdit && (
+                    <td className="actions-cell">
                       <ActionButton
                         onClick={() => void handleDeleteResult(r.id)}
                         variant="danger"
@@ -800,23 +836,21 @@ export default function GameDetailPage() {
                       >
                         Delete
                       </ActionButton>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p>No results.</p>
+          <p className="section-empty">No results yet.</p>
         )}
         {canEdit && (
           <form
             onSubmit={(e) => void handleAddResult(e)}
             className="inline-form"
           >
-            <input
-              type="number"
-              placeholder="Team ID"
+            <select
               value={addResultForm.team_id || ""}
               onChange={(e) =>
                 setAddResultForm((f) => ({
@@ -825,7 +859,14 @@ export default function GameDetailPage() {
                 }))
               }
               required
-            />
+            >
+              <option value="">Select team…</option>
+              {gameTeams.map((gt) => (
+                <option key={gt.id} value={gt.team_id}>
+                  {nameOf(gt.team_id)}
+                </option>
+              ))}
+            </select>
             <input
               type="number"
               placeholder="Score"
@@ -839,60 +880,64 @@ export default function GameDetailPage() {
               required
             />
             <button type="submit" className="btn btn-sm">
-              Add Result
+              Add result
             </button>
           </form>
         )}
       </div>
 
       <div className="detail-section">
-        <h3>Writeups</h3>
+        <div className="section-head">
+          <h3>
+            Writeups <SectionCount n={writeups.length} />
+          </h3>
+        </div>
         {writeups.length > 0 ? (
           <table className="data-table">
             <thead>
               <tr>
                 <th>Team</th>
                 <th>Title</th>
-                <th>URL</th>
-                <th>Actions</th>
+                <th>Link</th>
+                {canManageWriteups && <th></th>}
               </tr>
             </thead>
             <tbody>
               {writeups.map((w) => (
                 <tr key={w.id}>
-                  <td>{teamNames[w.team_id] ?? `Team #${w.team_id}`}</td>
+                  <td>{nameOf(w.team_id)}</td>
                   <td>{w.title}</td>
                   <td>
                     <a href={safeHref(w.url)} target="_blank" rel="noreferrer">
-                      {w.url}
+                      Open ↗
                     </a>
                   </td>
-                  <td>
-                    {(isAdmin || manageableTeamIds.includes(w.team_id)) && (
-                      <ActionButton
-                        onClick={() => void handleDeleteWriteup(w.id)}
-                        variant="danger"
-                        confirm="Delete this writeup?"
-                      >
-                        Delete
-                      </ActionButton>
-                    )}
-                  </td>
+                  {canManageWriteups && (
+                    <td className="actions-cell">
+                      {(isAdmin || manageableTeamIds.includes(w.team_id)) && (
+                        <ActionButton
+                          onClick={() => void handleDeleteWriteup(w.id)}
+                          variant="danger"
+                          confirm="Delete this writeup?"
+                        >
+                          Delete
+                        </ActionButton>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p>No writeups.</p>
+          <p className="section-empty">No writeups yet.</p>
         )}
         {canManageWriteups && (
           <form
             onSubmit={(e) => void handleAddWriteup(e)}
             className="inline-form"
           >
-            <input
-              type="number"
-              placeholder="Team ID"
+            <select
               value={addWriteupForm.team_id || ""}
               onChange={(e) =>
                 setAddWriteupForm((f) => ({
@@ -901,7 +946,14 @@ export default function GameDetailPage() {
                 }))
               }
               required
-            />
+            >
+              <option value="">Select team…</option>
+              {writeupTeamOptions.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
             <input
               placeholder="Title"
               value={addWriteupForm.title}
@@ -919,13 +971,56 @@ export default function GameDetailPage() {
               required
             />
             <button type="submit" className="btn btn-sm">
-              Add Writeup
+              Add writeup
             </button>
           </form>
         )}
       </div>
     </div>
   );
+}
+
+function InfoGroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="info-group">
+      <h4>{title}</h4>
+      <dl className="info-dl">{children}</dl>
+    </div>
+  );
+}
+
+function InfoRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="info-row">
+      <dt>{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
+
+function SectionCount({ n }: { n: number }) {
+  return <span className="section-count">{n}</span>;
+}
+
+function renderLink(url?: string | null): ReactNode {
+  if (!url) return <span className="muted-dash">—</span>;
+  return (
+    <a href={safeHref(url)} target="_blank" rel="noreferrer" title={url}>
+      {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+    </a>
+  );
+}
+
+function renderLogo(url?: string | null): ReactNode {
+  if (!url) return <span className="muted-dash">—</span>;
+  if (url.startsWith("data:")) return <em className="muted-dash">embedded image</em>;
+  return renderLink(url);
 }
 
 function formatDate(value?: string | null): string {
