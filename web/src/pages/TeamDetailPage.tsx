@@ -1,15 +1,29 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import * as teamsApi from "../api/teams";
 import type { Team, TeamUpdate } from "../api/teams";
 import * as membershipsApi from "../api/team-memberships";
 import type { TeamMembership, SetRoleRequest } from "../api/team-memberships";
 import * as gamesApi from "../api/games";
+import * as usersApi from "../api/users";
+import type { User } from "../api/users";
+import * as universitiesApi from "../api/universities";
 import * as writeupsApi from "../api/writeups";
 import type { Writeup } from "../api/writeups";
 import type { components } from "../api/schema";
 import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
+import {
+  DetailHero,
+  InfoGroups,
+  InfoGroup,
+  InfoRow,
+  SectionCount,
+  renderLink,
+  renderLogo,
+  formatDateTime,
+  safeHref,
+} from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
 
 type TeamMembershipEvent = components["schemas"]["TeamMembershipEvent"];
@@ -41,6 +55,9 @@ export default function TeamDetailPage() {
   const [roleForm, setRoleForm] = useState<Record<number, string>>({});
   const [writeups, setWriteups] = useState<Writeup[]>([]);
   const [gameNames, setGameNames] = useState<Record<number, string>>({});
+  const [users, setUsers] = useState<Record<number, User>>({});
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [universityName, setUniversityName] = useState<string | null>(null);
 
   const fetchTeam = useCallback(async () => {
     setLoading(true);
@@ -80,15 +97,42 @@ export default function TeamDetailPage() {
     }
   }, [teamId]);
 
+  const fetchUsers = useCallback(async () => {
+    const { data } = await usersApi.listUsers({ per_page: 200 });
+    if (data) {
+      setAllUsers(data.items);
+      const map: Record<number, User> = {};
+      for (const u of data.items) map[u.id] = u;
+      setUsers(map);
+    }
+  }, []);
+
   useEffect(() => {
     void fetchTeam();
     void fetchMembers();
     void fetchWriteups();
-  }, [fetchTeam, fetchMembers, fetchWriteups]);
+    void fetchUsers();
+  }, [fetchTeam, fetchMembers, fetchWriteups, fetchUsers]);
 
   useEffect(() => {
     void fetchEvents();
   }, [fetchEvents]);
+
+  useEffect(() => {
+    if (team?.university_id == null) {
+      setUniversityName(null);
+      return;
+    }
+    void universitiesApi.getUniversity(team.university_id).then((r) => {
+      if (r.data) setUniversityName(r.data.name);
+    });
+  }, [team?.university_id]);
+
+  const userLabel = useCallback(
+    (uid: number) =>
+      users[uid]?.display_name ?? users[uid]?.user_name ?? `User #${uid}`,
+    [users],
+  );
 
   const isManager =
     isAdmin ||
@@ -197,97 +241,112 @@ export default function TeamDetailPage() {
   if (loading) return <div className="loading">Loading...</div>;
   if (!team) return <ErrorDisplay error={error} onRetry={fetchTeam} />;
 
-  return (
-    <div className="page">
-      <div className="page-header">
-        <h1>{team.name}</h1>
-        <button className="btn btn-sm" onClick={() => navigate("/teams")}>
-          Back
-        </button>
-      </div>
+  const myMembership = members.find((m) => m.user_id === user?.id);
+  const approvedCount = members.filter((m) => m.status === "approved").length;
+  const memberUserIds = new Set(members.map((m) => m.user_id));
+  const invitableUsers = allUsers.filter((u) => !memberUserIds.has(u.id));
 
+  return (
+    <div className="page detail-page">
       <ErrorDisplay error={error} />
 
       {!editing ? (
-        <div className="detail-card">
-          <table className="detail-table">
-            <tbody>
-              <tr>
-                <td className="label">Name</td>
-                <td>{team.name}</td>
-              </tr>
-              <tr>
-                <td className="label">Description</td>
-                <td>{team.description ?? "—"}</td>
-              </tr>
-              <tr>
-                <td className="label">Website</td>
-                <td>
-                  {team.website ? (
-                    <a
-                      href={safeUrl(team.website)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {team.website}
-                    </a>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-              </tr>
-              <tr>
-                <td className="label">Avatar</td>
-                <td>
-                  {team.avatar_url ? (
-                    <a
-                      href={safeUrl(team.avatar_url)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Link
-                    </a>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-              </tr>
-              <tr>
-                <td className="label">Captain ID</td>
-                <td>{team.captain_id ?? "—"}</td>
-              </tr>
-              <tr>
-                <td className="label">University ID</td>
-                <td>{team.university_id ?? "—"}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div className="action-buttons">
-            {isManager && (
-              <button className="btn btn-sm" onClick={startEdit}>
-                Edit
-              </button>
-            )}
-            {user && !isManager && (
-              <button
-                className="btn btn-primary"
-                onClick={() => void handleJoin()}
-                disabled={joinLoading}
-              >
-                {joinLoading ? "Requesting..." : "Request to Join"}
-              </button>
-            )}
-            {isManager && (
-              <ActionButton
-                onClick={handleDelete}
-                variant="danger"
-                confirm="Delete this team?"
-              >
-                Delete Team
-              </ActionButton>
-            )}
+        <>
+          <DetailHero
+            kicker={`Team #${team.id}`}
+            title={team.name}
+            avatarUrl={team.avatar_url}
+            avatarText={team.name}
+            badges={
+              myMembership ? (
+                <>
+                  <CardBadge variant={myMembership.role}>
+                    {myMembership.role}
+                  </CardBadge>
+                  <CardBadge variant={myMembership.status}>
+                    {myMembership.status}
+                  </CardBadge>
+                </>
+              ) : undefined
+            }
+            summary={[
+              {
+                label: "Members",
+                value: `${approvedCount} approved · ${members.length} total`,
+              },
+              {
+                label: "Captain",
+                value: team.captain_id ? userLabel(team.captain_id) : "—",
+              },
+              { label: "University", value: universityName ?? "—" },
+            ]}
+            actions={
+              <>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => navigate("/teams")}
+                >
+                  Back
+                </button>
+                {team.website && (
+                  <a
+                    className="btn btn-sm"
+                    href={safeHref(team.website)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Website
+                  </a>
+                )}
+                {isManager && (
+                  <button className="btn btn-sm btn-primary" onClick={startEdit}>
+                    Edit
+                  </button>
+                )}
+                {user && !myMembership && !isManager && (
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => void handleJoin()}
+                    disabled={joinLoading}
+                  >
+                    {joinLoading ? "Requesting..." : "Request to Join"}
+                  </button>
+                )}
+                {isManager && (
+                  <ActionButton
+                    onClick={handleDelete}
+                    variant="danger"
+                    confirm="Delete this team?"
+                  >
+                    Delete
+                  </ActionButton>
+                )}
+              </>
+            }
+          />
+
+          <div className="detail-section">
+            <div className="section-head">
+              <h3>Team Info</h3>
+            </div>
+            <InfoGroups>
+              <InfoGroup title="About">
+                <InfoRow label="Description">
+                  {team.description ?? "—"}
+                </InfoRow>
+                <InfoRow label="Website">{renderLink(team.website)}</InfoRow>
+                <InfoRow label="Avatar">{renderLogo(team.avatar_url)}</InfoRow>
+              </InfoGroup>
+
+              <InfoGroup title="Details">
+                <InfoRow label="Captain">
+                  {team.captain_id ? userLabel(team.captain_id) : "—"}
+                </InfoRow>
+                <InfoRow label="University">{universityName ?? "—"}</InfoRow>
+              </InfoGroup>
+            </InfoGroups>
           </div>
-        </div>
+        </>
       ) : (
         <form
           onSubmit={(e) => {
@@ -361,21 +420,29 @@ export default function TeamDetailPage() {
       )}
 
       <div className="detail-section">
-        <h3>Members</h3>
+        <div className="section-head">
+          <h3>
+            Members <SectionCount n={members.length} />
+          </h3>
+        </div>
         {members.length > 0 ? (
           <table className="data-table">
             <thead>
               <tr>
-                <th>User ID</th>
+                <th>Member</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Actions</th>
+                {isManager && <th></th>}
               </tr>
             </thead>
             <tbody>
               {members.map((m) => (
                 <tr key={m.id}>
-                  <td>{m.user_id}</td>
+                  <td>
+                    <Link to={`/users/${m.user_id}`}>
+                      {userLabel(m.user_id)}
+                    </Link>
+                  </td>
                   <td>
                     {isManager ? (
                       <select
@@ -407,62 +474,62 @@ export default function TeamDetailPage() {
                         ))}
                       </select>
                     ) : (
-                      m.role
+                      <CardBadge variant={m.role}>{m.role}</CardBadge>
                     )}
                   </td>
                   <td>
                     <CardBadge variant={m.status}>{m.status}</CardBadge>
                   </td>
-                  <td>
-                    {isManager && m.status === "pending" && (
-                      <>
-                        <ActionButton
-                          onClick={() =>
-                            void handleMembershipAction(() =>
-                              membershipsApi.approveTeamMembership(m.id),
-                            )
-                          }
-                          variant="success"
-                        >
-                          Approve
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() =>
-                            void handleMembershipAction(() =>
-                              membershipsApi.rejectTeamMembership(m.id),
-                            )
-                          }
-                          variant="danger"
-                        >
-                          Reject
-                        </ActionButton>
-                      </>
-                    )}
-                    {m.user_id === user?.id && m.status === "pending" && (
-                      <>
-                        <ActionButton
-                          onClick={() =>
-                            void handleMembershipAction(() =>
-                              membershipsApi.acceptTeamMembership(m.id),
-                            )
-                          }
-                          variant="success"
-                        >
-                          Accept
-                        </ActionButton>
-                        <ActionButton
-                          onClick={() =>
-                            void handleMembershipAction(() =>
-                              membershipsApi.declineTeamMembership(m.id),
-                            )
-                          }
-                          variant="danger"
-                        >
-                          Decline
-                        </ActionButton>
-                      </>
-                    )}
-                    {isManager && (
+                  {isManager && (
+                    <td className="actions-cell">
+                      {m.status === "pending" && (
+                        <>
+                          <ActionButton
+                            onClick={() =>
+                              void handleMembershipAction(() =>
+                                membershipsApi.approveTeamMembership(m.id),
+                              )
+                            }
+                            variant="success"
+                          >
+                            Approve
+                          </ActionButton>
+                          <ActionButton
+                            onClick={() =>
+                              void handleMembershipAction(() =>
+                                membershipsApi.rejectTeamMembership(m.id),
+                              )
+                            }
+                            variant="danger"
+                          >
+                            Reject
+                          </ActionButton>
+                        </>
+                      )}
+                      {m.user_id === user?.id && m.status === "pending" && (
+                        <>
+                          <ActionButton
+                            onClick={() =>
+                              void handleMembershipAction(() =>
+                                membershipsApi.acceptTeamMembership(m.id),
+                              )
+                            }
+                            variant="success"
+                          >
+                            Accept
+                          </ActionButton>
+                          <ActionButton
+                            onClick={() =>
+                              void handleMembershipAction(() =>
+                                membershipsApi.declineTeamMembership(m.id),
+                              )
+                            }
+                            variant="danger"
+                          >
+                            Decline
+                          </ActionButton>
+                        </>
+                      )}
                       <ActionButton
                         onClick={() =>
                           void handleMembershipAction(() =>
@@ -474,25 +541,30 @@ export default function TeamDetailPage() {
                       >
                         Remove
                       </ActionButton>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p>No members.</p>
+          <p className="section-empty">No members.</p>
         )}
 
         {isManager && (
           <form onSubmit={(e) => void handleInvite(e)} className="inline-form">
-            <input
-              type="number"
-              placeholder="User ID to invite"
+            <select
               value={inviteUserId}
               onChange={(e) => setInviteUserId(e.target.value)}
               required
-            />
+            >
+              <option value="">Invite user…</option>
+              {invitableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.display_name} ({u.user_name})
+                </option>
+              ))}
+            </select>
             <button
               type="submit"
               className="btn btn-sm"
@@ -505,29 +577,37 @@ export default function TeamDetailPage() {
       </div>
 
       <div className="detail-section">
-        <h3>Writeups</h3>
+        <div className="section-head">
+          <h3>
+            Writeups <SectionCount n={writeups.length} />
+          </h3>
+        </div>
         {writeups.length > 0 ? (
           <table className="data-table">
             <thead>
               <tr>
                 <th>Game</th>
                 <th>Title</th>
-                <th>URL</th>
-                <th>Actions</th>
+                <th>Link</th>
+                {isManager && <th></th>}
               </tr>
             </thead>
             <tbody>
               {writeups.map((w) => (
                 <tr key={w.id}>
-                  <td>{gameNames[w.game_id] ?? `Game #${w.game_id}`}</td>
+                  <td>
+                    <Link to={`/games/${w.game_id}`}>
+                      {gameNames[w.game_id] ?? `Game #${w.game_id}`}
+                    </Link>
+                  </td>
                   <td>{w.title}</td>
                   <td>
-                    <a href={safeUrl(w.url)} target="_blank" rel="noreferrer">
-                      {w.url}
+                    <a href={safeHref(w.url)} target="_blank" rel="noreferrer">
+                      Open ↗
                     </a>
                   </td>
-                  <td>
-                    {isManager && (
+                  {isManager && (
+                    <td className="actions-cell">
                       <ActionButton
                         onClick={() => void handleDeleteWriteup(w.id)}
                         variant="danger"
@@ -535,40 +615,40 @@ export default function TeamDetailPage() {
                       >
                         Delete
                       </ActionButton>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p>No writeups.</p>
+          <p className="section-empty">No writeups.</p>
         )}
       </div>
 
       <div className="detail-section">
-        <h3>Events</h3>
+        <div className="section-head">
+          <h3>
+            Events <SectionCount n={eventsTotal} />
+          </h3>
+        </div>
         {events.length > 0 ? (
           <>
             <table className="data-table">
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>User ID</th>
+                  <th>Member</th>
                   <th>Action</th>
-                  <th>Role Change</th>
-                  <th>Status Change</th>
+                  <th>Role change</th>
+                  <th>Status change</th>
                 </tr>
               </thead>
               <tbody>
                 {events.map((ev) => (
                   <tr key={ev.id}>
-                    <td>
-                      {ev.created_at
-                        ? new Date(ev.created_at).toLocaleString()
-                        : "—"}
-                    </td>
-                    <td>{ev.user_id}</td>
+                    <td>{formatDateTime(ev.created_at)}</td>
+                    <td>{userLabel(ev.user_id)}</td>
                     <td>{ev.action}</td>
                     <td>
                       {ev.from_role && ev.to_role
@@ -609,14 +689,9 @@ export default function TeamDetailPage() {
             )}
           </>
         ) : (
-          <p>No events.</p>
+          <p className="section-empty">No events.</p>
         )}
       </div>
     </div>
   );
-}
-
-function safeUrl(url: string): string {
-  if (/^https?:\/\//i.test(url)) return url;
-  return "about:blank";
 }
