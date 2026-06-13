@@ -43,12 +43,16 @@ type StorageConfig struct {
 	MaxUploadBytes int64  `env:"STORAGE_MAX_UPLOAD_BYTES" env-default:"209715200"`
 }
 
+const (
+	envProduction = "production"
+)
+
 func Load() (*Config, error) {
 	var cfg Config
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
 		return nil, fmt.Errorf("reading config: %w", err)
 	}
-	if cfg.Env == "production" {
+	if cfg.Env == envProduction {
 		if cfg.JWT.Secret == "" {
 			return nil, errors.New("JWT_SECRET is required in production")
 		}

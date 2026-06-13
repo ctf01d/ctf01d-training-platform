@@ -214,12 +214,12 @@ func (s *ArchiveService) OpenLocal(ctx context.Context, id int64, kind string) (
 
 	var key string
 	switch strings.ToLower(kind) {
-	case "service":
+	case kindService:
 		if svc.ServiceLocalPath == nil {
 			return nil, "", errs.ErrNotFound
 		}
 		key = *svc.ServiceLocalPath
-	case "checker":
+	case kindChecker:
 		if svc.CheckerLocalPath == nil {
 			return nil, "", errs.ErrNotFound
 		}

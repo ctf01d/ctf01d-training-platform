@@ -71,7 +71,7 @@ func detectRootPrefix(zipReader *zip.Reader) string {
 		return ""
 	}
 	for seg := range seen {
-		if seg == "service" || seg == "checker" {
+		if seg == kindService || seg == kindChecker {
 			return ""
 		}
 		return seg + "/"
@@ -79,11 +79,23 @@ func detectRootPrefix(zipReader *zip.Reader) string {
 	return ""
 }
 
+const (
+	licenseMIT          = "MIT"
+	licenseApache20     = "Apache-2.0"
+	licenseFileBasename = "LICENSE"
+
+	kindService   = "service"
+	kindChecker   = "checker"
+	readmeMD      = "README.md"
+	statusPresent = "present"
+	defaultGitRef = "main"
+)
+
 var (
-	readmeCandidates  = []string{"README.md", "readme.md", "README", "readme"}
+	readmeCandidates  = []string{readmeMD, "readme.md", "README", "readme"}
 	licenseCandidates = []string{
-		"LICENSE", "LICENSE.txt", "LICENSE.md",
-		"LICENSE", "LICENSE.txt",
+		licenseFileBasename, "LICENSE.txt", "LICENSE.md",
+		licenseFileBasename, "LICENSE.txt",
 		"COPYING", "COPYING.txt",
 	}
 )
@@ -541,10 +553,10 @@ func detectLicense(text string) string {
 		return ""
 	}
 	if strings.Contains(t, "mit license") || strings.Contains(t, "permission is hereby granted, free of charge") {
-		return "MIT"
+		return licenseMIT
 	}
 	if (strings.Contains(t, "apache license") && strings.Contains(t, "version 2.0")) || strings.Contains(t, "apache-2.0") {
-		return "Apache-2.0"
+		return licenseApache20
 	}
 	if strings.Contains(t, "redistribution and use in source and binary forms") {
 		if strings.Contains(t, "neither the name of the") || strings.Contains(t, "neither the name nor the names") {

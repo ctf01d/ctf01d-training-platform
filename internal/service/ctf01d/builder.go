@@ -266,7 +266,7 @@ func (b *Builder) buildCheckerParams(ctx context.Context, serviceIDs []int64) ([
 			Enabled:           true,
 			ScriptWait:        defaultScriptWait,
 			RoundSleep:        defaultRoundSleep,
-			ScriptRel:         "./checker.py",
+			ScriptRel:         defaultCheckerScript,
 			BundlePath:        "",
 			CheckerFromBundle: false,
 		}

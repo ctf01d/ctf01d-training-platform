@@ -20,29 +20,40 @@ const (
 	roleGuestLevel  = 0
 	rolePlayerLevel = 1
 	roleAdminLevel  = 2
+
+	roleGuest  = "guest"
+	rolePlayer = "player"
+	roleAdmin  = "admin"
+
+	jsonKeyCode         = "code"
+	jsonKeyMessage      = "message"
+	errCodeUnauthorized = "unauthorized"
+	errCodeForbidden    = "forbidden"
 )
+
+func abortWithJSON(c *gin.Context, status int, code, msg string) {
+	c.JSON(status, gin.H{jsonKeyCode: code, jsonKeyMessage: msg})
+	c.Abort()
+}
 
 func RequireAuth(jwtMgr *auth.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if header == "" || !strings.HasPrefix(header, "Bearer ") {
-			c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "missing or invalid authorization header"})
-			c.Abort()
+			abortWithJSON(c, http.StatusUnauthorized, errCodeUnauthorized, "missing or invalid authorization header")
 			return
 		}
 
 		tokenStr := strings.TrimPrefix(header, "Bearer ")
 		claims, err := jwtMgr.Parse(tokenStr)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "invalid token"})
-			c.Abort()
+			abortWithJSON(c, http.StatusUnauthorized, errCodeUnauthorized, "invalid token")
 			return
 		}
 
 		var userID int64
 		if _, err := fmt.Sscanf(claims.Subject, "%d", &userID); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "invalid token subject"})
-			c.Abort()
+			abortWithJSON(c, http.StatusUnauthorized, errCodeUnauthorized, "invalid token subject")
 			return
 		}
 
@@ -57,21 +68,18 @@ func RequireRole(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		val, exists := c.Get(string(roleKey))
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
-			c.Abort()
+			abortWithJSON(c, http.StatusUnauthorized, errCodeUnauthorized, "not authenticated")
 			return
 		}
 
 		currentRole, ok := val.(string)
 		if !ok {
-			c.JSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "insufficient permissions"})
-			c.Abort()
+			abortWithJSON(c, http.StatusForbidden, errCodeForbidden, "insufficient permissions")
 			return
 		}
 
 		if !hasRoleLevel(currentRole, role) {
-			c.JSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "insufficient permissions"})
-			c.Abort()
+			abortWithJSON(c, http.StatusForbidden, errCodeForbidden, "insufficient permissions")
 			return
 		}
 		c.Next()
@@ -131,9 +139,9 @@ func CurrentUserName(c *gin.Context) (string, bool) {
 }
 
 var roleLevel = map[string]int{
-	"guest":  roleGuestLevel,
-	"player": rolePlayerLevel,
-	"admin":  roleAdminLevel,
+	roleGuest:  roleGuestLevel,
+	rolePlayer: rolePlayerLevel,
+	roleAdmin:  roleAdminLevel,
 }
 
 func hasRoleLevel(current, required string) bool {

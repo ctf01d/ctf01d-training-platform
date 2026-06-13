@@ -85,7 +85,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 		ref = parsedRef
 	}
 	if ref == "" {
-		ref = "main"
+		ref = defaultGitRef
 	}
 
 	zipBytes, err := s.fetchRepoZip(ctx, owner, repo, ref)

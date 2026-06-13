@@ -49,14 +49,30 @@ type EventListResult struct {
 }
 
 var managingRoles = map[string]bool{
-	"owner":        true,
-	"captain":      true,
-	"vice_captain": true,
+	memRoleOwner:       true,
+	memRoleCaptain:     true,
+	memRoleViceCaptain: true,
 }
 
 const (
 	minInt32 = -1 << 31
 	maxInt32 = 1<<31 - 1
+
+	memRoleOwner       = "owner"
+	memRoleCaptain     = "captain"
+	memRoleViceCaptain = "vice_captain"
+	memRolePlayer      = "player"
+	memRoleGuest       = "guest"
+
+	memStatusPending  = "pending"
+	memStatusApproved = "approved"
+	memStatusRejected = "rejected"
+
+	memActionInvite   = "invite"
+	memActionAccepted = "accepted"
+
+	msgMembershipNotPending = "membership is not pending"
+	fieldStatus             = "status"
 )
 
 type Querier interface {
@@ -277,14 +293,14 @@ func (s *Service) Approve(ctx context.Context, membershipID int64, actorID int64
 		if err != nil {
 			return mapNotFound(err)
 		}
-		if mem.Status == nil || *mem.Status != "pending" {
-			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
+		if mem.Status == nil || *mem.Status != memStatusPending {
+			return errs.NewValidationError(map[string]string{fieldStatus: msgMembershipNotPending})
 		}
 		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole, tq.q); err != nil {
 			return err
 		}
 
-		approved := "approved"
+		approved := memStatusApproved
 		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &approved})
 		if err != nil {
 			return err
@@ -298,7 +314,7 @@ func (s *Service) Approve(ctx context.Context, membershipID int64, actorID int64
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    actorID32,
-			Action:     "approved",
+			Action:     memStatusApproved,
 			FromRole:   mem.Role,
 			ToRole:     updated.Role,
 			FromStatus: mem.Status,
@@ -315,14 +331,14 @@ func (s *Service) Reject(ctx context.Context, membershipID int64, actorID int64,
 		if err != nil {
 			return mapNotFound(err)
 		}
-		if mem.Status == nil || *mem.Status != "pending" {
-			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
+		if mem.Status == nil || *mem.Status != memStatusPending {
+			return errs.NewValidationError(map[string]string{fieldStatus: msgMembershipNotPending})
 		}
 		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole, tq.q); err != nil {
 			return err
 		}
 
-		rejected := "rejected"
+		rejected := memStatusRejected
 		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &rejected})
 		if err != nil {
 			return err
@@ -336,7 +352,7 @@ func (s *Service) Reject(ctx context.Context, membershipID int64, actorID int64,
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    actorID32,
-			Action:     "rejected",
+			Action:     memStatusRejected,
 			FromRole:   mem.Role,
 			ToRole:     updated.Role,
 			FromStatus: mem.Status,
@@ -356,8 +372,8 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 		if mem.UserID != userID {
 			return errs.ErrForbidden
 		}
-		if mem.Status == nil || *mem.Status != "pending" {
-			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
+		if mem.Status == nil || *mem.Status != memStatusPending {
+			return errs.NewValidationError(map[string]string{fieldStatus: msgMembershipNotPending})
 		}
 
 		evt, err := tq.events.GetLatestEventForMember(ctx, db.GetLatestEventForMemberParams{
@@ -370,11 +386,11 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 			}
 			return fmt.Errorf("checking membership source: %w", err)
 		}
-		if evt.Action != "invite" {
+		if evt.Action != memActionInvite {
 			return errs.ErrForbidden
 		}
 
-		approved := "approved"
+		approved := memStatusApproved
 		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &approved})
 		if err != nil {
 			return err
@@ -388,7 +404,7 @@ func (s *Service) Accept(ctx context.Context, membershipID int64, userID int64) 
 			TeamID:     mem.TeamID,
 			UserID:     mem.UserID,
 			ActorID:    userID32,
-			Action:     "accepted",
+			Action:     memActionAccepted,
 			FromRole:   mem.Role,
 			ToRole:     updated.Role,
 			FromStatus: mem.Status,
@@ -408,8 +424,8 @@ func (s *Service) Decline(ctx context.Context, membershipID int64, userID int64)
 		if mem.UserID != userID {
 			return errs.ErrForbidden
 		}
-		if mem.Status == nil || *mem.Status != "pending" {
-			return errs.NewValidationError(map[string]string{"status": "membership is not pending"})
+		if mem.Status == nil || *mem.Status != memStatusPending {
+			return errs.NewValidationError(map[string]string{fieldStatus: msgMembershipNotPending})
 		}
 
 		evt, err := tq.events.GetLatestEventForMember(ctx, db.GetLatestEventForMemberParams{
@@ -422,11 +438,11 @@ func (s *Service) Decline(ctx context.Context, membershipID int64, userID int64)
 			}
 			return fmt.Errorf("checking membership source: %w", err)
 		}
-		if evt.Action != "invite" {
+		if evt.Action != memActionInvite {
 			return errs.ErrForbidden
 		}
 
-		rejected := "rejected"
+		rejected := memStatusRejected
 		updated, err := tq.q.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{ID: membershipID, Status: &rejected})
 		if err != nil {
 			return err
@@ -451,7 +467,7 @@ func (s *Service) Decline(ctx context.Context, membershipID int64, userID int64)
 }
 
 func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole string, actorID int64, globalRole string) error {
-	if !managingRoles[newRole] && newRole != "player" && newRole != "guest" {
+	if !managingRoles[newRole] && newRole != memRolePlayer && newRole != memRoleGuest {
 		return errs.NewValidationError(map[string]string{"role": "invalid role"})
 	}
 
@@ -470,14 +486,14 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 			oldRole = *mem.Role
 		}
 
-		if oldRole == "owner" && newRole != "owner" {
+		if oldRole == memRoleOwner && newRole != memRoleOwner {
 			ownerCount := int64(0)
 			members, err := tq.q.ListTeamMembershipsByTeam(ctx, mem.TeamID)
 			if err != nil {
 				return err
 			}
 			for _, m := range members {
-				if m.Role != nil && *m.Role == "owner" && m.Status != nil && *m.Status == "approved" {
+				if m.Role != nil && *m.Role == memRoleOwner && m.Status != nil && *m.Status == memStatusApproved {
 					ownerCount++
 				}
 			}
@@ -509,7 +525,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 			return err
 		}
 
-		if newRole == "captain" {
+		if newRole == memRoleCaptain {
 			captainID, err := int32FromInt64(mem.UserID)
 			if err != nil {
 				return err
@@ -529,7 +545,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 			}
 		}
 
-		if oldRole == "captain" && newRole != "captain" {
+		if oldRole == memRoleCaptain && newRole != memRoleCaptain {
 			_, err = tq.teams.ClearCaptain(ctx, mem.TeamID)
 			if err != nil {
 				return err
@@ -548,7 +564,7 @@ func (s *Service) canManageMembership(ctx context.Context, teamID, actorID int64
 	if err != nil {
 		return errs.ErrForbidden
 	}
-	if mem.Status == nil || *mem.Status != "approved" {
+	if mem.Status == nil || *mem.Status != memStatusApproved {
 		return errs.ErrForbidden
 	}
 	if mem.Role == nil || !managingRoles[*mem.Role] {

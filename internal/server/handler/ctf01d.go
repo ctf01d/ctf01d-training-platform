@@ -115,7 +115,7 @@ func (h *Handler) HandleExportCtf01d(c *gin.Context) {
 	if err != nil {
 		if exportErr, ok := err.(*ctf01dsvc.ExportError); ok {
 			c.JSON(http.StatusUnprocessableEntity, httpserver.Ctf01dExportError{
-				Code:    "validation_error",
+				Code:    codeValidationError,
 				Errors:  exportErr.Errors,
 				Message: strPtr("export validation failed"),
 			})

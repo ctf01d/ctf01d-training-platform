@@ -221,7 +221,7 @@ func (h *Handler) HandleAddGameService(c *gin.Context) {
 		ServiceId int64 `json:"service_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"code": "validation_error", "message": "invalid JSON"})
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "invalid JSON"})
 		return
 	}
 

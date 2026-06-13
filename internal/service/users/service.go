@@ -45,6 +45,8 @@ type UpdateParams struct {
 
 var userNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
+const defaultRole = "guest"
+
 type Querier interface {
 	CreateUser(ctx context.Context, arg db.CreateUserParams) (db.User, error)
 	GetUserByID(ctx context.Context, id int64) (db.User, error)
@@ -86,7 +88,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error
 
 	role := params.Role
 	if role == "" {
-		role = "guest"
+		role = defaultRole
 	}
 
 	hash, err := auth.HashPassword(params.Password)

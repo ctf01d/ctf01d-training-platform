@@ -139,7 +139,7 @@ func InspectCheckerFromBytes(data []byte) CheckerInspectionResult {
 	if len(found) == len(requiredCodes) {
 		return CheckerInspectionResult{Status: "codes", FoundCodes: requiredCodes}
 	}
-	return CheckerInspectionResult{Status: "present", FoundCodes: foundCodes}
+	return CheckerInspectionResult{Status: statusPresent, FoundCodes: foundCodes}
 }
 
 func hasCheckerDir(name string) bool {

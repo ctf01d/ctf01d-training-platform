@@ -99,12 +99,14 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 
 	// --- Universities ---------------------------------------------------------
 	const (
-		uniNSU    = "Новосибирский государственный университет (НГУ, NSU)"
-		uniAltSTU = "Алтайский государственный технический университет (АлтГТУ, AltSTU)"
-		uniTUSUR  = "Томский государственный университет систем управления и радиоэлектроники (ТУСУР, TUSUR)"
-		uniTSU    = "Томский государственный университет (ТГУ, TSU)"
-		uniSSUGT  = "Сибирский государственный университет геосистем и технологий (ССУГиТ, SSUGT)"
-		uniNSTU   = "Новосибирский государственный технический университет (НГТУ, NSTU)"
+		uniNSU     = "Новосибирский государственный университет (НГУ, NSU)"
+		uniAltSTU  = "Алтайский государственный технический университет (АлтГТУ, AltSTU)"
+		uniTUSUR   = "Томский государственный университет систем управления и радиоэлектроники (ТУСУР, TUSUR)"
+		uniTSU     = "Томский государственный университет (ТГУ, TSU)"
+		uniSSUGT   = "Сибирский государственный университет геосистем и технологий (ССУГиТ, SSUGT)"
+		uniNSTU    = "Новосибирский государственный технический университет (НГТУ, NSTU)"
+		uniCentral = "Центральный университет"
+		uniFSO     = "Академия Федеральной службы охраны Российской Федерации"
 	)
 	universityNames := []string{
 		"Московский государственный университет имени М.В. Ломоносова",
@@ -123,6 +125,8 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniTSU,
 		uniSSUGT,
 		uniNSTU,
+		uniCentral,
+		uniFSO,
 	}
 	// Real logos for select universities (served from web/public/img/...).
 	universityLogos := map[string]string{
@@ -302,6 +306,16 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		return err
 	}
 	if err := bind("SuSlo.PAS", uniNSU, "Academic team Novosibirsk State University (NSU)", ""); err != nil {
+		return err
+	}
+	// CyberSibir 2026 podium: university + city affiliations.
+	if err := bind("CUT", uniCentral, "Центральный университет · г. Москва", ""); err != nil {
+		return err
+	}
+	if err := bind("N0N@me13", uniFSO, "Академия ФСО России · г. Орёл", ""); err != nil {
+		return err
+	}
+	if err := bind("W@zz4bi", uniNSTU, "НГТУ · г. Новосибирск", ""); err != nil {
 		return err
 	}
 

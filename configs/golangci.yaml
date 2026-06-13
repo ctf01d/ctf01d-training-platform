@@ -92,6 +92,7 @@ linters:
           - mnd
         path: (.+)_test.go
       - linters:
+          - goconst
           - gocyclo
           - mnd
         path: cmd/seed/main.go

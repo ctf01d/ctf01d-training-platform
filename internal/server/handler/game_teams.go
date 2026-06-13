@@ -65,7 +65,7 @@ func (h *Handler) HandleCreateGameTeam(c *gin.Context) {
 	if req.Order != nil {
 		v, ok := int32FromInt(*req.Order)
 		if !ok {
-			respondError(c, errs.NewValidationError(map[string]string{"order": "must fit int32"}))
+			respondError(c, errs.NewValidationError(map[string]string{"order": msgMustFitInt32}))
 			return
 		}
 		order = v
@@ -113,7 +113,7 @@ func (h *Handler) HandleUpdateGameTeam(c *gin.Context) {
 	if req.Order != nil {
 		v, ok := int32FromInt(*req.Order)
 		if !ok {
-			respondError(c, errs.NewValidationError(map[string]string{"order": "must fit int32"}))
+			respondError(c, errs.NewValidationError(map[string]string{"order": msgMustFitInt32}))
 			return
 		}
 		order = &v

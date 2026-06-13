@@ -49,7 +49,7 @@ func (h *Handler) HandleListTeams(c *gin.Context) {
 func (h *Handler) HandleCreateTeam(c *gin.Context) {
 	userID, ok := middleware.CurrentUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *Handler) HandleUpdateTeam(c *gin.Context) {
 
 	userID, ok := middleware.CurrentUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
@@ -143,7 +143,7 @@ func (h *Handler) HandleDeleteTeam(c *gin.Context) {
 
 	userID, ok := middleware.CurrentUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
@@ -168,7 +168,7 @@ func (h *Handler) HandleRequestJoinTeam(c *gin.Context) {
 
 	userID, ok := middleware.CurrentUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
 		return
 	}
 
@@ -187,7 +187,7 @@ func (h *Handler) HandleInviteToTeam(c *gin.Context) {
 
 	userID, ok := middleware.CurrentUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
 		return
 	}
 

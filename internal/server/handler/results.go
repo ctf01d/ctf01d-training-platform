@@ -178,7 +178,7 @@ func int32PtrFromIntPtr(c *gin.Context, v *int) (*int32, bool) {
 	}
 	r, ok := int32FromInt(*v)
 	if !ok {
-		respondError(c, errs.NewValidationError(map[string]string{"score": "must fit int32"}))
+		respondError(c, errs.NewValidationError(map[string]string{"score": msgMustFitInt32}))
 		return nil, false
 	}
 	return &r, true

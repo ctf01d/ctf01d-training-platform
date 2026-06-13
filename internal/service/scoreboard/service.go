@@ -78,9 +78,9 @@ func (s *Service) ForGame(ctx context.Context, gameID int64, viewerRole string) 
 		scClosesAt = &game.ScoreboardClosesAt.Time
 	}
 
-	sbStatus := string(gamesvc.ComputeScoreboardStatus(scOpensAt, scClosesAt, now))
+	sbStatus := gamesvc.ComputeScoreboardStatus(scOpensAt, scClosesAt, now)
 
-	if viewerRole != "admin" && (sbStatus == "closed" || sbStatus == "upcoming") {
+	if viewerRole != "admin" && (sbStatus == gamesvc.ScoreClosed || sbStatus == gamesvc.ScoreUpcoming) {
 		return nil, errs.ErrForbidden
 	}
 
@@ -142,7 +142,7 @@ func (s *Service) ForGame(ctx context.Context, gameID int64, viewerRole string) 
 
 	return &Scoreboard{
 		GameID:  gameID,
-		Status:  sbStatus,
+		Status:  string(sbStatus),
 		Entries: entries,
 	}, nil
 }

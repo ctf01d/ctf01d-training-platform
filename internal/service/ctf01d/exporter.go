@@ -44,6 +44,8 @@ const (
 	roundSleepMultiplier = 3
 	defaultRoundSleep    = defaultScriptWait * roundSleepMultiplier
 	checkerDirName       = "checker/"
+	checkerPyFile        = "checker.py"
+	defaultCheckerScript = "./" + checkerPyFile
 	ctf01dYAMLIndent     = 2
 	dataURLMatchCount    = 3
 
@@ -205,10 +207,10 @@ func hydrateCheckers(checkers []CheckerParams) {
 			if entrypoint != "" {
 				c.ScriptRel = entrypoint
 			} else {
-				c.ScriptRel = "./checker.py"
+				c.ScriptRel = defaultCheckerScript
 			}
 		} else if c.ScriptRel == "" {
-			c.ScriptRel = "./checker.py"
+			c.ScriptRel = defaultCheckerScript
 		}
 	}
 }
@@ -250,7 +252,7 @@ func detectCheckerEntrypoint(bundlePath string) string {
 	}
 
 	candidates := []string{
-		"checker.py", "checker.rb", "checker.pl", "checker.sh",
+		checkerPyFile, "checker.rb", "checker.pl", "checker.sh",
 		"checker.php", "checker.go", "checker.cr", "checker.js", "checker.ts",
 	}
 
@@ -863,7 +865,7 @@ func materializeCheckers(checkers []CheckerParams, dataDir string) error {
 
 		files := c.Files
 		if len(files) == 0 {
-			files = []CheckerFile{{Src: "", Rel: "checker.py"}}
+			files = []CheckerFile{{Src: "", Rel: checkerPyFile}}
 		}
 		for _, f := range files {
 			rel := f.Rel
@@ -871,7 +873,7 @@ func materializeCheckers(checkers []CheckerParams, dataDir string) error {
 				rel = path.Base(f.Src)
 			}
 			if rel == "" {
-				rel = "checker.py"
+				rel = checkerPyFile
 			}
 			dest := safeJoin(dir, rel)
 			if err := os.MkdirAll(path.Dir(dest), dirMode); err != nil {
@@ -961,7 +963,7 @@ func containsCheckerDir(name string) bool {
 }
 
 func writeDummyChecker(destDir string, cid string) error {
-	p := path.Join(destDir, "checker.py")
+	p := path.Join(destDir, checkerPyFile)
 	if fileExists(p) {
 		return nil
 	}

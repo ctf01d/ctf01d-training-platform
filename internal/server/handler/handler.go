@@ -134,7 +134,7 @@ func (h *Handler) Logout(c *gin.Context) {
 func (h *Handler) GetProfile(c *gin.Context) {
 	userID, ok := middleware.CurrentUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
 		return
 	}
 
@@ -150,7 +150,7 @@ func (h *Handler) GetProfile(c *gin.Context) {
 func (h *Handler) UpdateProfile(c *gin.Context) {
 	userID, ok := middleware.CurrentUserID(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": "unauthorized", "message": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
 		return
 	}
 
@@ -361,7 +361,7 @@ func parseIDParam(c *gin.Context, param string) (int64, bool) {
 	s := c.Param(param)
 	id, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"code": "bad_request", "message": "invalid id parameter"})
+		c.JSON(http.StatusBadRequest, errorResponse{Code: codeBadRequest, Message: "invalid id parameter"})
 		return 0, false
 	}
 	return id, true
@@ -809,7 +809,7 @@ func (h *Handler) HandleUploadServiceArchives(c *gin.Context) {
 
 	form, err := c.MultipartForm()
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"code": "validation_error", "message": "expected multipart form"})
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "expected multipart form"})
 		return
 	}
 
@@ -860,7 +860,7 @@ func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
 		return
 	}
 	if !svc.Public && !isAdmin && !isPlayer {
-		c.JSON(http.StatusForbidden, gin.H{"code": "forbidden", "message": "service is not public"})
+		c.JSON(http.StatusForbidden, errorResponse{Code: codeForbidden, Message: "service is not public"})
 		return
 	}
 
@@ -907,7 +907,7 @@ func (h *Handler) HandleImportServiceFromGithub(c *gin.Context) {
 func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 	file, err := c.FormFile("archive")
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"code": "validation_error", "message": "archive file is required"})
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "archive file is required"})
 		return
 	}
 	f, err := file.Open()
@@ -922,7 +922,7 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 		return
 	}
 	if int64(len(zipBytes)) > h.maxUploadBytes {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"code": "validation_error", "message": "archive file too large"})
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "archive file too large"})
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
