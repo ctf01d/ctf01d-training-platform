@@ -299,7 +299,10 @@ export default function TeamDetailPage() {
                   </a>
                 )}
                 {isManager && (
-                  <button className="btn btn-sm btn-primary" onClick={startEdit}>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={startEdit}
+                  >
                     Edit
                   </button>
                 )}
@@ -331,9 +334,7 @@ export default function TeamDetailPage() {
             </div>
             <InfoGroups>
               <InfoGroup title="About">
-                <InfoRow label="Description">
-                  {team.description ?? "—"}
-                </InfoRow>
+                <InfoRow label="Description">{team.description ?? "—"}</InfoRow>
                 <InfoRow label="Website">{renderLink(team.website)}</InfoRow>
                 <InfoRow label="Avatar">{renderLogo(team.avatar_url)}</InfoRow>
               </InfoGroup>

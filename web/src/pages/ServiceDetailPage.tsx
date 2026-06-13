@@ -256,7 +256,10 @@ export default function ServiceDetailPage() {
                   </a>
                 )}
                 {canEdit && (
-                  <button className="btn btn-sm btn-primary" onClick={startEdit}>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={startEdit}
+                  >
                     Edit
                   </button>
                 )}
@@ -562,11 +565,7 @@ function ArchiveCard({
       ) : (
         <p className="archive-card-empty">Not uploaded</p>
       )}
-      <button
-        className="btn btn-sm"
-        onClick={onDownload}
-        disabled={!present}
-      >
+      <button className="btn btn-sm" onClick={onDownload} disabled={!present}>
         Download
       </button>
     </div>

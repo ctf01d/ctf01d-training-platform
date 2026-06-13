@@ -409,7 +409,10 @@ export default function GameDetailPage() {
             ]}
             actions={
               <>
-                <button className="btn btn-sm" onClick={() => navigate("/games")}>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => navigate("/games")}
+                >
                   Back
                 </button>
                 {game.site_url && (
@@ -443,7 +446,10 @@ export default function GameDetailPage() {
                   </a>
                 )}
                 {canEdit && (
-                  <button className="btn btn-sm btn-primary" onClick={startEdit}>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={startEdit}
+                  >
                     Edit
                   </button>
                 )}
@@ -798,7 +804,10 @@ export default function GameDetailPage() {
             </thead>
             <tbody>
               {rankedResults.map((r, i) => (
-                <tr key={r.id} className={i < 3 ? `is-podium podium-${i + 1}` : undefined}>
+                <tr
+                  key={r.id}
+                  className={i < 3 ? `is-podium podium-${i + 1}` : undefined}
+                >
                   <td className="rank-cell">
                     {i < 3 ? (
                       <span className={`medal medal-${i + 1}`}>{i + 1}</span>
