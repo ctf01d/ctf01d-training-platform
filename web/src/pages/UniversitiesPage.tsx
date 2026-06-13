@@ -211,6 +211,7 @@ export default function UniversitiesPage() {
         {universities.map((u) => (
           <EntityCard
             key={u.id}
+            to={`/universities/${u.id}`}
             avatarUrl={u.avatar_url}
             avatarText={u.name ?? "?"}
             title={u.name ?? "—"}

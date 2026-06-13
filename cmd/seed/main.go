@@ -124,11 +124,30 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniSSUGT,
 		uniNSTU,
 	}
+	// Real logos for select universities (served from web/public/img/...).
+	universityLogos := map[string]string{
+		uniAltSTU: "/img/university-logos/altstu.png",
+		uniTUSUR:  "/img/university-logos/tusur.jpg",
+		uniTSU:    "/img/university-logos/tsu.png",
+		uniNSTU:   "/img/university-logos/nstu.jpg",
+	}
 	uniByName := map[string]db.University{}
 	for _, name := range universityNames {
-		uni, created, err := getOrCreateUniversity(ctx, q, name, svgAvatar(name, color()))
+		logo, hasLogo := universityLogos[name]
+		avatar := svgAvatar(name, color())
+		if hasLogo {
+			avatar = logo
+		}
+		uni, created, err := getOrCreateUniversity(ctx, q, name, avatar)
 		if err != nil {
 			return fmt.Errorf("university %q: %w", name, err)
+		}
+		// Backfill the logo on universities seeded before logos existed.
+		if !created && hasLogo && (uni.AvatarUrl == nil || *uni.AvatarUrl != logo) {
+			uni, err = q.UpdateUniversity(ctx, db.UpdateUniversityParams{ID: uni.ID, AvatarUrl: &logo})
+			if err != nil {
+				return fmt.Errorf("university %q logo: %w", name, err)
+			}
 		}
 		logSeed(log, "university", name, created)
 		uniByName[name] = uni

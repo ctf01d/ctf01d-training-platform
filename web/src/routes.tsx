@@ -9,6 +9,7 @@ import ServiceDetailPage from "./pages/ServiceDetailPage";
 import TeamsPage from "./pages/TeamsPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
 import UniversitiesPage from "./pages/UniversitiesPage";
+import UniversityDetailPage from "./pages/UniversityDetailPage";
 import UsersPage from "./pages/UsersPage";
 import ResultsPage from "./pages/ResultsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -41,6 +42,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <UniversitiesPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "universities/:id",
+        element: (
+          <AdminRoute>
+            <UniversityDetailPage />
           </AdminRoute>
         ),
       },
