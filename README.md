@@ -31,7 +31,10 @@ Production (Docker Compose)
 - Requirements: Docker 24+, Docker Compose v2
 - Setup:
   1. cp .env.sample .env and set POSTGRES_PASSWORD, JWT_SECRET, ACME_EMAIL
-  2. docker compose -f docker-compose.prod.yml up -d --build
+  2. docker compose -f docker-compose.prod.yml pull
+  3. docker compose -f docker-compose.prod.yml up -d
+- Images are built and pushed to GitHub Container Registry by CI
+  (ghcr.io/ctf01d/ctf01d-training-platform). Override the tag via APP_IMAGE in .env.
 - Services:
   - db: PostgreSQL 16 with healthcheck
   - app: Go server with auto-migrations (RUN_MIGRATIONS=true)

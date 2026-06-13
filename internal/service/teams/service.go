@@ -45,10 +45,23 @@ type UpdateParams struct {
 	UniversityID *int64  `json:"university_id"`
 }
 
+const (
+	roleOwner       = "owner"
+	roleCaptain     = "captain"
+	roleViceCaptain = "vice_captain"
+	rolePlayer      = "player"
+	roleGuest       = "guest"
+	roleAdmin       = "admin"
+
+	statusApproved = "approved"
+	statusPending  = "pending"
+	statusRejected = "rejected"
+)
+
 var managingRoles = map[string]bool{
-	"owner":        true,
-	"captain":      true,
-	"vice_captain": true,
+	roleOwner:       true,
+	roleCaptain:     true,
+	roleViceCaptain: true,
 }
 
 type TeamQuerier interface {
@@ -121,8 +134,8 @@ func (s *Service) Create(ctx context.Context, creatorID int64, params CreatePara
 			return mapDBError(err)
 		}
 
-		ownerRole := "owner"
-		approved := "approved"
+		ownerRole := roleOwner
+		approved := statusApproved
 		_, err = tq.members.CreateTeamMembership(ctx, db.CreateTeamMembershipParams{
 			TeamID: team.ID,
 			UserID: creatorID,
@@ -215,7 +228,7 @@ func (s *Service) CanManage(ctx context.Context, teamID, userID int64, globalRol
 }
 
 func (s *Service) canManageWithQuerier(ctx context.Context, teamID, userID int64, globalRole string, members MembershipQuerier) error {
-	if globalRole == "admin" {
+	if globalRole == roleAdmin {
 		return nil
 	}
 	membership, err := members.GetMembership(ctx, db.GetMembershipParams{
@@ -225,7 +238,7 @@ func (s *Service) canManageWithQuerier(ctx context.Context, teamID, userID int64
 	if err != nil {
 		return errs.ErrForbidden
 	}
-	if membership.Status == nil || *membership.Status != "approved" {
+	if membership.Status == nil || *membership.Status != statusApproved {
 		return errs.ErrForbidden
 	}
 	if membership.Role == nil || !managingRoles[*membership.Role] {
@@ -275,12 +288,12 @@ func (s *Service) RequestJoin(ctx context.Context, teamID, userID int64) error {
 			TeamID: teamID,
 			UserID: userID,
 		})
-		if err == nil && existing.Status != nil && *existing.Status != "rejected" {
+		if err == nil && existing.Status != nil && *existing.Status != statusRejected {
 			return errs.ErrConflict
 		}
 
-		role := "guest"
-		status := "pending"
+		role := roleGuest
+		status := statusPending
 		action := "join_request"
 
 		if err == nil {
@@ -322,8 +335,8 @@ func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64
 		if err := s.canManageWithQuerier(ctx, teamID, inviterID, globalRole, tq.members); err != nil {
 			return err
 		}
-		role := "player"
-		status := "pending"
+		role := rolePlayer
+		status := statusPending
 		action := "invite"
 
 		existing, err := tq.members.GetMembership(ctx, db.GetMembershipParams{
@@ -331,7 +344,7 @@ func (s *Service) Invite(ctx context.Context, teamID, inviterID, inviteeID int64
 			UserID: inviteeID,
 		})
 		if err == nil {
-			if existing.Status != nil && *existing.Status != "rejected" {
+			if existing.Status != nil && *existing.Status != statusRejected {
 				return errs.ErrConflict
 			}
 			_, err = tq.members.UpdateMembershipStatus(ctx, db.UpdateMembershipStatusParams{

@@ -203,7 +203,7 @@ func (m *mockMembershipQuerier) UpdateMembershipStatus(_ context.Context, arg db
 func (m *mockMembershipQuerier) CountApprovedManagers(_ context.Context, teamID int64) (int64, error) {
 	var count int64
 	for _, mem := range m.members {
-		if mem.TeamID == teamID && mem.Status != nil && *mem.Status == "approved" && mem.Role != nil {
+		if mem.TeamID == teamID && mem.Status != nil && *mem.Status == statusApproved && mem.Role != nil {
 			if managingRoles[*mem.Role] {
 				count++
 			}
@@ -246,10 +246,10 @@ func TestCreate_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("membership not found: %v", err)
 	}
-	if mem.Role == nil || *mem.Role != "owner" {
+	if mem.Role == nil || *mem.Role != roleOwner {
 		t.Errorf("membership role = %v, want owner", mem.Role)
 	}
-	if mem.Status == nil || *mem.Status != "approved" {
+	if mem.Status == nil || *mem.Status != statusApproved {
 		t.Errorf("membership status = %v, want approved", mem.Status)
 	}
 
@@ -322,7 +322,7 @@ func TestCanManage_Admin(t *testing.T) {
 
 	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
-	err := svc.CanManage(context.Background(), 1, 999, "admin")
+	err := svc.CanManage(context.Background(), 1, 999, roleAdmin)
 	if err != nil {
 		t.Errorf("admin should be able to manage, got %v", err)
 	}
@@ -334,7 +334,7 @@ func TestCanManage_Owner(t *testing.T) {
 
 	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
-	err := svc.CanManage(context.Background(), 1, 1, "player")
+	err := svc.CanManage(context.Background(), 1, 1, rolePlayer)
 	if err != nil {
 		t.Errorf("owner should be able to manage, got %v", err)
 	}
@@ -346,7 +346,7 @@ func TestCanManage_NotMember(t *testing.T) {
 
 	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
-	err := svc.CanManage(context.Background(), 1, 999, "player")
+	err := svc.CanManage(context.Background(), 1, 999, rolePlayer)
 	if err != errs.ErrForbidden {
 		t.Errorf("expected ErrForbidden, got %v", err)
 	}
@@ -357,15 +357,15 @@ func TestCanManage_PlayerRole(t *testing.T) {
 	svc := NewService(tq, mq, eq, tx)
 
 	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
-	role := "player"
-	status := "approved"
+	role := rolePlayer
+	status := statusApproved
 	if _, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 2, Role: &role, Status: &status,
 	}); err != nil {
 		t.Fatalf("seed membership: %v", err)
 	}
 
-	err := svc.CanManage(context.Background(), 1, 2, "player")
+	err := svc.CanManage(context.Background(), 1, 2, rolePlayer)
 	if err != errs.ErrForbidden {
 		t.Errorf("player role should not manage, got %v", err)
 	}
@@ -422,10 +422,10 @@ func TestRequestJoin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("membership not found: %v", err)
 	}
-	if mem.Role == nil || *mem.Role != "guest" {
+	if mem.Role == nil || *mem.Role != roleGuest {
 		t.Errorf("role = %v, want guest", mem.Role)
 	}
-	if mem.Status == nil || *mem.Status != "pending" {
+	if mem.Status == nil || *mem.Status != statusPending {
 		t.Errorf("status = %v, want pending", mem.Status)
 	}
 
@@ -462,7 +462,7 @@ func TestInvite_Success(t *testing.T) {
 
 	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
 
-	err := svc.Invite(context.Background(), 1, 1, 2, "owner")
+	err := svc.Invite(context.Background(), 1, 1, 2, roleOwner)
 	if err != nil {
 		t.Fatalf("Invite: %v", err)
 	}
@@ -471,10 +471,10 @@ func TestInvite_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("membership not found: %v", err)
 	}
-	if mem.Role == nil || *mem.Role != "player" {
+	if mem.Role == nil || *mem.Role != rolePlayer {
 		t.Errorf("role = %v, want player", mem.Role)
 	}
-	if mem.Status == nil || *mem.Status != "pending" {
+	if mem.Status == nil || *mem.Status != statusPending {
 		t.Errorf("status = %v, want pending", mem.Status)
 	}
 }
@@ -484,8 +484,8 @@ func TestInvite_NonManager(t *testing.T) {
 	svc := NewService(tq, mq, eq, tx)
 
 	mustCreateTeam(t, svc, 1, CreateParams{Name: "Team Alpha"})
-	role := "player"
-	status := "approved"
+	role := rolePlayer
+	status := statusApproved
 	if _, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
 		TeamID: 1, UserID: 2, Role: &role, Status: &status,
 	}); err != nil {
