@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 export function CardGrid({
@@ -22,8 +22,19 @@ export function CardBadge({ variant, children }: { variant: string; children: Re
 }
 
 function CardAvatar({ url, text }: { url?: string | null; text?: string }) {
+  const [failed, setFailed] = useState(false)
   const initial = (text ?? '?').trim().charAt(0).toUpperCase() || '?'
-  if (url) return <img className="ecard-avatar" src={url} alt="" loading="lazy" />
+  if (url && !failed) {
+    return (
+      <img
+        className="ecard-avatar"
+        src={url}
+        alt=""
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
+    )
+  }
   return <span className="ecard-avatar ecard-avatar--fallback">{initial}</span>
 }
 

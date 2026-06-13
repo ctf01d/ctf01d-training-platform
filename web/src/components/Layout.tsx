@@ -1,5 +1,12 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+
+const primaryLinks = [
+  { to: '/games', label: 'Games' },
+  { to: '/services', label: 'Services' },
+  { to: '/teams', label: 'Teams' },
+  { to: '/scoreboard', label: 'Scoreboard' },
+]
 
 export default function Layout() {
   const { user, logout, isAdmin, isPlayer } = useAuth()
@@ -14,26 +21,30 @@ export default function Layout() {
     <div className="layout">
       <header className="header">
         <div className="header-inner">
-          <Link to="/" className="logo">CTF01D Training Platform</Link>
+          <Link to="/" className="logo" aria-label="CTF01D Training Platform">
+            <span className="logo-mark">01</span>
+            <span className="logo-text">CTF01D</span>
+          </Link>
           {user && (
-            <nav className="nav">
-              <Link to="/games">Games</Link>
-              <Link to="/services">Services</Link>
-              <Link to="/teams">Teams</Link>
-              <Link to="/scoreboard">Scoreboard</Link>
+            <nav className="nav" aria-label="Primary navigation">
+              {primaryLinks.map(link => (
+                <NavLink key={link.to} to={link.to}>
+                  {link.label}
+                </NavLink>
+              ))}
               {isAdmin && (
                 <>
-                  <Link to="/universities">Universities</Link>
-                  <Link to="/users">Users</Link>
+                  <NavLink to="/universities">Universities</NavLink>
+                  <NavLink to="/users">Users</NavLink>
                 </>
               )}
-              {isPlayer && <Link to="/results">Results</Link>}
+              {isPlayer && <NavLink to="/results">Results</NavLink>}
             </nav>
           )}
           <div className="header-right">
             {user ? (
               <div className="user-menu">
-                <Link to="/profile">{user.display_name}</Link>
+                <Link to="/profile" className="user-link">{user.display_name}</Link>
                 <span className="user-role">{user.role}</span>
                 <button onClick={handleLogout} className="btn btn-sm">Logout</button>
               </div>

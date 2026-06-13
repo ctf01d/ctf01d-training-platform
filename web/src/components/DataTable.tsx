@@ -35,7 +35,7 @@ export function DataTable<T extends { id?: number }>({
   if (data.length === 0) return <div className="empty-state">{emptyMessage}</div>
 
   return (
-    <div>
+    <div className="table-shell">
       <table className="data-table">
         <thead>
           <tr>
@@ -58,9 +58,9 @@ export function DataTable<T extends { id?: number }>({
       </table>
       {totalPages > 1 && (
         <div className="pagination">
-          <button disabled={page <= 1} onClick={() => onPageChange(page - 1)}>Prev</button>
+          <button className="btn btn-sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>Prev</button>
           <span>Page {page} of {totalPages} ({total} items)</span>
-          <button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>Next</button>
+          <button className="btn btn-sm" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>Next</button>
         </div>
       )}
     </div>

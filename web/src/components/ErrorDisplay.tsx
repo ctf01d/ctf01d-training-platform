@@ -62,6 +62,6 @@ export function ActionButton({ onClick, children, variant = 'default', disabled,
     if (confirm && !window.confirm(confirm)) return
     onClick()
   }
-  const cls = variant === 'danger' ? 'btn btn-danger' : variant === 'success' ? 'btn btn-success' : 'btn btn-sm'
+  const cls = variant === 'danger' ? 'btn btn-sm btn-danger' : variant === 'success' ? 'btn btn-sm btn-success' : 'btn btn-sm'
   return <button className={cls} onClick={handleClick} disabled={disabled}>{children}</button>
 }

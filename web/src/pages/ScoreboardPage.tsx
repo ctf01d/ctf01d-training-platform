@@ -4,25 +4,17 @@ import * as gamesApi from '../api/games'
 import type { Game } from '../api/games'
 import type { components } from '../api/schema'
 import { ErrorDisplay } from '../components/ErrorDisplay'
+import { CardBadge } from '../components/Card'
 
 type ScoreboardEntry = components['schemas']['ScoreboardEntry']
 type GlobalScoreboard = components['schemas']['GlobalScoreboard']
 type Scoreboard = components['schemas']['Scoreboard']
 
-const statusColors: Record<string, string> = {
-  always: '#22c55e',
-  upcoming: '#3b82f6',
-  open: '#22c55e',
-  closed: '#ef4444',
+function StatusBadge({ status }: { status: string }) {
+  return <CardBadge variant={status}>{status}</CardBadge>
 }
 
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <span style={{ backgroundColor: statusColors[status] ?? '#9ca3af', color: '#fff', padding: '2px 8px', borderRadius: 999, fontSize: 12 }}>
-      {status}
-    </span>
-  )
-}
+const fmtScore = (score: number) => score.toLocaleString()
 
 export default function ScoreboardPage() {
   const [tab, setTab] = useState<'global' | 'game'>('global')
@@ -77,9 +69,9 @@ export default function ScoreboardPage() {
         <h1>Scoreboard</h1>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div className="tabs" role="tablist" aria-label="Scoreboard scope">
         <button className={`btn btn-sm ${tab === 'global' ? 'btn-primary' : ''}`} onClick={() => setTab('global')}>Global</button>
-        <button className={`btn btn-sm ${tab === 'game' ? 'btn-primary' : ''}`} onClick={() => setTab('game')} style={{ marginLeft: 8 }}>By Game</button>
+        <button className={`btn btn-sm ${tab === 'game' ? 'btn-primary' : ''}`} onClick={() => setTab('game')}>By Game</button>
       </div>
 
       {tab === 'global' && (
@@ -91,26 +83,28 @@ export default function ScoreboardPage() {
           ) : globalEntries.length === 0 ? (
             <div className="empty-state">No scoreboard entries</div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Position</th>
-                  <th>Team</th>
-                  <th>Total Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {globalEntries
-                  .sort((a, b) => b.total_score - a.total_score)
-                  .map((entry, idx) => (
-                    <tr key={entry.team_id}>
-                      <td>{idx + 1}</td>
-                      <td>{entry.team_name}</td>
-                      <td>{entry.total_score}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+            <div className="table-shell table-shell-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Position</th>
+                    <th>Team</th>
+                    <th className="numeric">Total Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {globalEntries
+                    .sort((a, b) => b.total_score - a.total_score)
+                    .map((entry, idx) => (
+                      <tr key={entry.team_id}>
+                        <td className="rank-cell">{idx + 1}</td>
+                        <td>{entry.team_name}</td>
+                        <td className="numeric score-cell">{fmtScore(entry.total_score)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -118,7 +112,7 @@ export default function ScoreboardPage() {
       {tab === 'game' && (
         <div className="detail-section">
           <h3>Game Scoreboard</h3>
-          <div className="form-group" style={{ marginBottom: 16 }}>
+          <div className="form-group">
             <select value={selectedGameId} onChange={e => setSelectedGameId(e.target.value)}>
               <option value="">Select a game...</option>
               {games.map(g => (
@@ -133,33 +127,35 @@ export default function ScoreboardPage() {
             <div className="loading">Loading...</div>
           ) : gameScoreboard ? (
             <>
-              <div style={{ marginBottom: 12 }}>
-                <span style={{ marginRight: 8 }}>Status:</span>
+              <div className="status-line">
+                <span>Status:</span>
                 <StatusBadge status={gameScoreboard.status} />
               </div>
               {gameScoreboard.entries.length === 0 ? (
                 <div className="empty-state">No entries for this game</div>
               ) : (
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Position</th>
-                      <th>Team</th>
-                      <th>Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {gameScoreboard.entries
-                      .sort((a, b) => a.position - b.position)
-                      .map((entry: ScoreboardEntry) => (
-                        <tr key={entry.team_id}>
-                          <td>{entry.position}</td>
-                          <td>{entry.team_name}</td>
-                          <td>{entry.score}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+                <div className="table-shell table-shell-scroll">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Position</th>
+                        <th>Team</th>
+                        <th className="numeric">Score</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gameScoreboard.entries
+                        .sort((a, b) => a.position - b.position)
+                        .map((entry: ScoreboardEntry) => (
+                          <tr key={entry.team_id}>
+                            <td className="rank-cell">{entry.position}</td>
+                            <td>{entry.team_name}</td>
+                            <td className="numeric score-cell">{fmtScore(entry.score)}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </>
           ) : selectedGameId ? null : (

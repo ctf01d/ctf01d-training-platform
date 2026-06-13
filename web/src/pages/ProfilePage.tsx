@@ -49,7 +49,7 @@ export default function ProfilePage() {
       </div>
 
       <ErrorDisplay error={error} />
-      {success && <div className="success-message" style={{ color: '#22c55e', marginBottom: 12 }}>Profile updated successfully.</div>}
+      {success && <div className="success-message">Profile updated successfully.</div>}
 
       {!editing ? (
         <div className="detail-card">
@@ -64,7 +64,7 @@ export default function ProfilePage() {
                 <td className="label">Avatar</td>
                 <td>
                   {user.avatar_url ? (
-                    <img src={user.avatar_url} alt="Avatar" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+                    <img src={user.avatar_url} alt="Avatar" className="profile-avatar" />
                   ) : '—'}
                 </td>
               </tr>

@@ -9,6 +9,7 @@ import * as writeupsApi from '../api/writeups'
 import type { Writeup } from '../api/writeups'
 import type { components } from '../api/schema'
 import { ErrorDisplay, ActionButton } from '../components/ErrorDisplay'
+import { CardBadge } from '../components/Card'
 import { useAuth } from '../auth/AuthContext'
 
 type TeamMembershipEvent = components['schemas']['TeamMembershipEvent']
@@ -252,12 +253,7 @@ export default function TeamDetailPage() {
                     ) : m.role}
                   </td>
                   <td>
-                    <span style={{
-                      backgroundColor: m.status === 'approved' ? '#22c55e' : m.status === 'pending' ? '#f59e0b' : '#ef4444',
-                      color: '#fff', padding: '2px 8px', borderRadius: 999, fontSize: 12,
-                    }}>
-                      {m.status}
-                    </span>
+                    <CardBadge variant={m.status}>{m.status}</CardBadge>
                   </td>
                   <td>
                     {isManager && m.status === 'pending' && (
@@ -285,7 +281,7 @@ export default function TeamDetailPage() {
         )}
 
         {isManager && (
-          <form onSubmit={e => void handleInvite(e)} className="inline-form" style={{ marginTop: 12 }}>
+          <form onSubmit={e => void handleInvite(e)} className="inline-form">
             <input
               type="number"
               placeholder="User ID to invite"
@@ -360,9 +356,9 @@ export default function TeamDetailPage() {
             </table>
             {Math.ceil(eventsTotal / eventsPerPage) > 1 && (
               <div className="pagination">
-                <button disabled={eventsPage <= 1} onClick={() => setEventsPage(eventsPage - 1)}>Prev</button>
+                <button className="btn btn-sm" disabled={eventsPage <= 1} onClick={() => setEventsPage(eventsPage - 1)}>Prev</button>
                 <span>Page {eventsPage} of {Math.ceil(eventsTotal / eventsPerPage)}</span>
-                <button disabled={eventsPage >= Math.ceil(eventsTotal / eventsPerPage)} onClick={() => setEventsPage(eventsPage + 1)}>Next</button>
+                <button className="btn btn-sm" disabled={eventsPage >= Math.ceil(eventsTotal / eventsPerPage)} onClick={() => setEventsPage(eventsPage + 1)}>Next</button>
               </div>
             )}
           </>

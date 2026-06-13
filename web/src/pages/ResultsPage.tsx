@@ -84,7 +84,7 @@ export default function ResultsPage() {
         )}
       </div>
 
-      <div className="inline-form" style={{ marginBottom: 16 }}>
+      <div className="inline-form">
         <input
           type="number"
           placeholder="Filter by Game ID"
@@ -143,37 +143,41 @@ export default function ResultsPage() {
       ) : results.length === 0 ? (
         <div className="empty-state">No results found</div>
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Game ID</th>
-              <th>Team ID</th>
-              <th>Score</th>
-              <th>Created</th>
-              <th>Updated</th>
-              {isPlayer && <th>Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {results.map(r => (
-              <tr key={r.id}>
-                <td>{r.id}</td>
-                <td>{r.game_id}</td>
-                <td>{r.team_id}</td>
-                <td>{r.score ?? '—'}</td>
-                <td>{r.created_at ? new Date(r.created_at).toLocaleString() : '—'}</td>
-                <td>{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
-                {isPlayer && (
-                  <td>
-                    <ActionButton onClick={() => startEdit(r)}>Edit</ActionButton>
-                    <ActionButton onClick={() => handleDelete(r.id)} variant="danger" confirm="Delete this result?">Delete</ActionButton>
-                  </td>
-                )}
+        <div className="table-shell table-shell-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Game ID</th>
+                <th>Team ID</th>
+                <th className="numeric">Score</th>
+                <th>Created</th>
+                <th>Updated</th>
+                {isPlayer && <th>Actions</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {results.map(r => (
+                <tr key={r.id}>
+                  <td>{r.id}</td>
+                  <td>{r.game_id}</td>
+                  <td>{r.team_id}</td>
+                  <td className="numeric score-cell">{r.score?.toLocaleString() ?? '—'}</td>
+                  <td>{r.created_at ? new Date(r.created_at).toLocaleString() : '—'}</td>
+                  <td>{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
+                  {isPlayer && (
+                    <td>
+                      <div className="actions-cell">
+                        <ActionButton onClick={() => startEdit(r)}>Edit</ActionButton>
+                        <ActionButton onClick={() => handleDelete(r.id)} variant="danger" confirm="Delete this result?">Delete</ActionButton>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
