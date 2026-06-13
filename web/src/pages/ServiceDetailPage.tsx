@@ -7,7 +7,25 @@ import {
   ActionButton,
   handleApiError,
 } from "../components/ErrorDisplay";
+import { CardBadge } from "../components/Card";
+import {
+  DetailHero,
+  InfoGroups,
+  InfoGroup,
+  InfoRow,
+  renderLink,
+  formatDateTime,
+  safeHref,
+} from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
+
+const checkBadgeVariant: Record<string, string> = {
+  ok: "ok",
+  failed: "failed",
+  fail: "failed",
+  unknown: "unknown",
+  queued: "upcoming",
+};
 
 export default function ServiceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -176,97 +194,132 @@ export default function ServiceDetailPage() {
   if (!service) return <ErrorDisplay error={error} onRetry={fetchService} />;
 
   const canEdit = isPlayer;
+  const checkVariant = checkBadgeVariant[service.check_status] ?? "unknown";
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>{service.name}</h1>
-        <button className="btn btn-sm" onClick={() => navigate("/services")}>
-          Back
-        </button>
-      </div>
-
+    <div className="page detail-page">
       <ErrorDisplay error={error} onRetry={fetchService} />
 
       {!editing ? (
-        <div className="detail-card">
-          <table className="detail-table">
-            <tbody>
-              <tr>
-                <td className="label">Name</td>
-                <td>{service.name}</td>
-              </tr>
-              <tr>
-                <td className="label">Author</td>
-                <td>{service.author ?? "—"}</td>
-              </tr>
-              <tr>
-                <td className="label">Copyright</td>
-                <td>{service.copyright ?? "—"}</td>
-              </tr>
-              <tr>
-                <td className="label">Public</td>
-                <td>{service.public ? "Yes" : "No"}</td>
-              </tr>
-              <tr>
-                <td className="label">Public Description</td>
-                <td>{service.public_description ?? "—"}</td>
-              </tr>
-              {isAdmin && service.private_description && (
-                <tr>
-                  <td className="label">Private Description</td>
-                  <td>{service.private_description}</td>
-                </tr>
-              )}
-              <tr>
-                <td className="label">Check Status</td>
-                <td>
-                  {service.check_status}
+        <>
+          <DetailHero
+            kicker={`Service #${service.id}`}
+            title={service.name}
+            avatarUrl={service.avatar_url}
+            avatarText={service.name}
+            badges={
+              <>
+                <CardBadge variant={service.public ? "public" : "private"}>
+                  {service.public ? "public" : "private"}
+                </CardBadge>
+                <CardBadge variant={checkVariant}>
+                  check {service.check_status}
+                </CardBadge>
+              </>
+            }
+            summary={[
+              { label: "Author", value: service.author ?? "—" },
+              { label: "Copyright", value: service.copyright ?? "—" },
+              {
+                label: "Last check",
+                value: service.checked_at
+                  ? formatDateTime(service.checked_at)
+                  : "—",
+              },
+            ]}
+            actions={
+              <>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => navigate("/services")}
+                >
+                  Back
+                </button>
+                {service.writeup_url && (
+                  <a
+                    className="btn btn-sm"
+                    href={safeHref(service.writeup_url)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Writeup
+                  </a>
+                )}
+                {service.exploits_url && (
+                  <a
+                    className="btn btn-sm"
+                    href={safeHref(service.exploits_url)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Exploits
+                  </a>
+                )}
+                {canEdit && (
+                  <button className="btn btn-sm btn-primary" onClick={startEdit}>
+                    Edit
+                  </button>
+                )}
+              </>
+            }
+          />
+
+          <div className="detail-section">
+            <div className="section-head">
+              <h3>Service Info</h3>
+            </div>
+            <InfoGroups>
+              <InfoGroup title="Overview">
+                <InfoRow label="Author">{service.author ?? "—"}</InfoRow>
+                <InfoRow label="Copyright">{service.copyright ?? "—"}</InfoRow>
+                <InfoRow label="Visibility">
+                  <CardBadge variant={service.public ? "public" : "private"}>
+                    {service.public ? "public" : "private"}
+                  </CardBadge>
+                </InfoRow>
+              </InfoGroup>
+
+              <InfoGroup title="Check">
+                <InfoRow label="Status">
+                  <CardBadge variant={checkVariant}>
+                    {service.check_status}
+                  </CardBadge>
+                </InfoRow>
+                <InfoRow label="Checked">
                   {service.checked_at
-                    ? ` (checked ${new Date(service.checked_at).toLocaleString()})`
-                    : ""}
-                </td>
-              </tr>
-              <tr>
-                <td className="label">Service Archive URL</td>
-                <td>{service.service_archive_url ?? "—"}</td>
-              </tr>
-              <tr>
-                <td className="label">Checker Archive URL</td>
-                <td>{service.checker_archive_url ?? "—"}</td>
-              </tr>
-              <tr>
-                <td className="label">Service Archive</td>
-                <td>
-                  {service.service_archive
-                    ? `${service.service_archive.sha256 ?? "present"} (${formatSize(service.service_archive.size)})`
-                    : "None"}
-                </td>
-              </tr>
-              <tr>
-                <td className="label">Checker Archive</td>
-                <td>
-                  {service.checker_archive
-                    ? `${service.checker_archive.sha256 ?? "present"} (${formatSize(service.checker_archive.size)})`
-                    : "None"}
-                </td>
-              </tr>
-              <tr>
-                <td className="label">Writeup URL</td>
-                <td>{service.writeup_url ?? "—"}</td>
-              </tr>
-              <tr>
-                <td className="label">Exploits URL</td>
-                <td>{service.exploits_url ?? "—"}</td>
-              </tr>
-            </tbody>
-          </table>
-          {canEdit && (
-            <button className="btn btn-sm" onClick={startEdit}>
-              Edit
-            </button>
-          )}
-        </div>
+                    ? formatDateTime(service.checked_at)
+                    : "—"}
+                </InfoRow>
+              </InfoGroup>
+
+              <InfoGroup title="Description">
+                <InfoRow label="Public">
+                  {service.public_description ?? "—"}
+                </InfoRow>
+                {isAdmin && service.private_description && (
+                  <InfoRow label="Private">
+                    {service.private_description}
+                  </InfoRow>
+                )}
+              </InfoGroup>
+
+              <InfoGroup title="Sources">
+                <InfoRow label="Service URL">
+                  {renderLink(service.service_archive_url)}
+                </InfoRow>
+                <InfoRow label="Checker URL">
+                  {renderLink(service.checker_archive_url)}
+                </InfoRow>
+                <InfoRow label="Writeup">
+                  {renderLink(service.writeup_url)}
+                </InfoRow>
+                <InfoRow label="Exploits">
+                  {renderLink(service.exploits_url)}
+                </InfoRow>
+              </InfoGroup>
+            </InfoGroups>
+          </div>
+        </>
       ) : (
         <form
           onSubmit={(e) => {
@@ -395,7 +448,9 @@ export default function ServiceDetailPage() {
 
       {canEdit && (
         <div className="detail-section">
-          <h3>Actions</h3>
+          <div className="section-head">
+            <h3>Actions</h3>
+          </div>
           <div className="action-buttons">
             <ActionButton onClick={handleTogglePublic}>
               {service.public ? "Make Private" : "Make Public"}
@@ -418,22 +473,20 @@ export default function ServiceDetailPage() {
       )}
 
       <div className="detail-section">
-        <h3>Archives</h3>
-        <div className="archive-buttons">
-          <button
-            className="btn btn-sm"
-            onClick={() => void handleDownload("service")}
-            disabled={!service.service_archive}
-          >
-            Download Service Archive
-          </button>
-          <button
-            className="btn btn-sm"
-            onClick={() => void handleDownload("checker")}
-            disabled={!service.checker_archive}
-          >
-            Download Checker Archive
-          </button>
+        <div className="section-head">
+          <h3>Archives</h3>
+        </div>
+        <div className="archive-grid">
+          <ArchiveCard
+            title="Service archive"
+            meta={service.service_archive}
+            onDownload={() => void handleDownload("service")}
+          />
+          <ArchiveCard
+            title="Checker archive"
+            meta={service.checker_archive}
+            onDownload={() => void handleDownload("checker")}
+          />
         </div>
         {canEdit && (
           <form onSubmit={(e) => void handleUpload(e)} className="upload-form">
@@ -469,6 +522,53 @@ export default function ServiceDetailPage() {
           </form>
         )}
       </div>
+    </div>
+  );
+}
+
+function ArchiveCard({
+  title,
+  meta,
+  onDownload,
+}: {
+  title: string;
+  meta?: Service["service_archive"];
+  onDownload: () => void;
+}) {
+  const present = Boolean(meta);
+  return (
+    <div className={`archive-card${present ? "" : " is-empty"}`}>
+      <div className="archive-card-head">
+        <span className="archive-card-title">{title}</span>
+        <CardBadge variant={present ? "ok" : "unknown"}>
+          {present ? "present" : "none"}
+        </CardBadge>
+      </div>
+      {present ? (
+        <dl className="archive-card-meta">
+          <div>
+            <dt>Size</dt>
+            <dd>{formatSize(meta?.size)}</dd>
+          </div>
+          {meta?.sha256 && (
+            <div>
+              <dt>SHA-256</dt>
+              <dd>
+                <code title={meta.sha256}>{meta.sha256.slice(0, 16)}…</code>
+              </dd>
+            </div>
+          )}
+        </dl>
+      ) : (
+        <p className="archive-card-empty">Not uploaded</p>
+      )}
+      <button
+        className="btn btn-sm"
+        onClick={onDownload}
+        disabled={!present}
+      >
+        Download
+      </button>
     </div>
   );
 }

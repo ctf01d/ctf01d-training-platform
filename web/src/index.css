@@ -447,9 +447,10 @@ a:focus-visible {
   color: #fff;
   font-size: 4rem;
   font-weight: 900;
-}
 
-.game-detail-hero {
+  \\}
+
+.detail-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   min-height: 320px;
@@ -460,7 +461,7 @@ a:focus-visible {
   overflow: hidden;
 }
 
-.game-detail-hero-content {
+.detail-hero-content {
   min-width: 0;
   padding: 28px 30px;
   display: flex;
@@ -469,7 +470,7 @@ a:focus-visible {
   gap: 18px;
 }
 
-.game-detail-kicker {
+.detail-hero-kicker {
   color: var(--muted);
   font-size: .78rem;
   font-weight: 900;
@@ -477,7 +478,7 @@ a:focus-visible {
   text-transform: uppercase;
 }
 
-.game-detail-hero h1 {
+.detail-hero h1 {
   margin: 0;
   color: var(--text);
   font-size: 3.35rem;
@@ -486,22 +487,22 @@ a:focus-visible {
   overflow-wrap: anywhere;
 }
 
-.game-detail-badges,
-.game-detail-links {
+.detail-hero-badges,
+.detail-hero-links {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.game-detail-summary {
+.detail-hero-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   margin-top: 2px;
 }
 
-.game-detail-summary div {
+.detail-hero-summary div {
   min-width: 0;
   padding: 12px 14px;
   background: #f8fafc;
@@ -509,7 +510,7 @@ a:focus-visible {
   border-radius: var(--radius-sm);
 }
 
-.game-detail-summary span {
+.detail-hero-summary span {
   display: block;
   margin-bottom: 5px;
   color: var(--muted);
@@ -518,7 +519,7 @@ a:focus-visible {
   text-transform: uppercase;
 }
 
-.game-detail-summary strong {
+.detail-hero-summary strong {
   display: block;
   color: var(--text);
   font-size: .96rem;
@@ -526,7 +527,7 @@ a:focus-visible {
   word-break: break-word;
 }
 
-.game-detail-logo {
+.detail-hero-logo {
   min-height: 320px;
   display: grid;
   place-items: center;
@@ -535,14 +536,14 @@ a:focus-visible {
   overflow: hidden;
 }
 
-.game-detail-logo img {
+.detail-hero-logo img {
   width: 100%;
   height: 100%;
   display: block;
   object-fit: cover;
 }
 
-.game-detail-logo span {
+.detail-hero-logo span {
   width: 100%;
   height: 100%;
   display: grid;
@@ -565,10 +566,6 @@ a:focus-visible {
   margin: 0;
   color: #1f2937;
   font-size: 1.05rem;
-}
-
-.game-detail-info .detail-table td:last-child {
-  word-break: break-word;
 }
 
 .entity-card {
@@ -1476,11 +1473,11 @@ a:focus-visible {
     grid-template-columns: 104px minmax(0, 1fr);
   }
 
-  .game-detail-hero {
+  .detail-hero {
     grid-template-columns: minmax(0, 1fr) 280px;
   }
 
-  .game-detail-summary {
+  .detail-hero-summary {
     grid-template-columns: 1fr;
   }
 }
@@ -1536,11 +1533,11 @@ a:focus-visible {
     min-height: 180px;
   }
 
-  .game-detail-hero {
+  .detail-hero {
     grid-template-columns: 1fr;
   }
 
-  .game-detail-logo {
+  .detail-hero-logo {
     order: -1;
     min-height: 220px;
     height: 220px;
@@ -1548,11 +1545,11 @@ a:focus-visible {
     border-bottom: 1px solid var(--line-soft);
   }
 
-  .game-detail-hero-content {
+  .detail-hero-content {
     padding: 22px;
   }
 
-  .game-detail-hero h1 {
+  .detail-hero h1 {
     font-size: 2rem;
   }
 
@@ -1604,11 +1601,11 @@ a:focus-visible {
     padding: 16px;
   }
 
-  .game-detail-hero-content {
+  .detail-hero-content {
     padding: 18px;
   }
 
-  .game-detail-logo {
+  .detail-hero-logo {
     height: 190px;
     min-height: 190px;
   }

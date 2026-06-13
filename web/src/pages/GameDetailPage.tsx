@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as gamesApi from "../api/games";
 import type { Game, GameUpdate } from "../api/games";
@@ -18,6 +18,17 @@ import {
   handleApiError,
 } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
+import {
+  DetailHero,
+  InfoGroups,
+  InfoGroup,
+  InfoRow,
+  SectionCount,
+  renderLink,
+  renderLogo,
+  formatDateTime as formatDate,
+  safeHref,
+} from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
 
 export default function GameDetailPage() {
@@ -29,7 +40,6 @@ export default function GameDetailPage() {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
-  const [imageFailed, setImageFailed] = useState(false);
 
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<GameUpdate>({});
@@ -163,10 +173,6 @@ export default function GameDetailPage() {
     fetchAllTeams,
     fetchAllServices,
   ]);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [game?.avatar_url]);
 
   const nameOf = useCallback(
     (tid: number) =>
@@ -356,7 +362,6 @@ export default function GameDetailPage() {
   const canEdit = isPlayer;
   const canManageWriteups = isAdmin || manageableTeamIds.length > 0;
   const title = game.name ?? `Game #${game.id}`;
-  const hasLogo = Boolean(game.avatar_url && !imageFailed);
 
   const rosterTeamIds = new Set(gameTeams.map((gt) => gt.team_id));
   const availableTeams = allTeams.filter((t) => !rosterTeamIds.has(t.id));
@@ -371,16 +376,18 @@ export default function GameDetailPage() {
     : manageableTeamIds.map((tid) => ({ id: tid, name: nameOf(tid) }));
 
   return (
-    <div className="page game-detail-page">
+    <div className="page detail-page">
       <ErrorDisplay error={error} onRetry={fetchGame} />
 
       {!editing ? (
         <>
-          <section className="game-detail-hero">
-            <div className="game-detail-hero-content">
-              <div className="game-detail-kicker">Game #{game.id}</div>
-              <h1>{title}</h1>
-              <div className="game-detail-badges">
+          <DetailHero
+            kicker={`Game #${game.id}`}
+            title={title}
+            avatarUrl={game.avatar_url}
+            avatarText={title}
+            badges={
+              <>
                 <CardBadge variant={game.status ?? "unknown"}>
                   {game.status ?? "unknown"}
                 </CardBadge>
@@ -393,28 +400,16 @@ export default function GameDetailPage() {
                 <CardBadge variant={game.scoreboard_status ?? "closed"}>
                   scoreboard {game.scoreboard_status ?? "closed"}
                 </CardBadge>
-              </div>
-
-              <div className="game-detail-summary">
-                <div>
-                  <span>Organizer</span>
-                  <strong>{game.organizer ?? "—"}</strong>
-                </div>
-                <div>
-                  <span>Starts</span>
-                  <strong>{formatDate(game.starts_at)}</strong>
-                </div>
-                <div>
-                  <span>Ends</span>
-                  <strong>{formatDate(game.ends_at)}</strong>
-                </div>
-              </div>
-
-              <div className="game-detail-links">
-                <button
-                  className="btn btn-sm"
-                  onClick={() => navigate("/games")}
-                >
+              </>
+            }
+            summary={[
+              { label: "Organizer", value: game.organizer ?? "—" },
+              { label: "Starts", value: formatDate(game.starts_at) },
+              { label: "Ends", value: formatDate(game.ends_at) },
+            ]}
+            actions={
+              <>
+                <button className="btn btn-sm" onClick={() => navigate("/games")}>
                   Back
                 </button>
                 {game.site_url && (
@@ -452,27 +447,15 @@ export default function GameDetailPage() {
                     Edit
                   </button>
                 )}
-              </div>
-            </div>
-
-            <div className="game-detail-logo" aria-hidden="true">
-              {hasLogo ? (
-                <img
-                  src={game.avatar_url ?? ""}
-                  alt=""
-                  onError={() => setImageFailed(true)}
-                />
-              ) : (
-                <span>{title.trim().charAt(0).toUpperCase() || "?"}</span>
-              )}
-            </div>
-          </section>
+              </>
+            }
+          />
 
           <div className="detail-section">
             <div className="section-head">
               <h3>Game Info</h3>
             </div>
-            <div className="info-groups">
+            <InfoGroups>
               <InfoGroup title="Schedule">
                 <InfoRow label="Starts at">
                   {formatDate(game.starts_at)}
@@ -547,7 +530,7 @@ export default function GameDetailPage() {
                   )}
                 </InfoGroup>
               )}
-            </div>
+            </InfoGroups>
           </div>
         </>
       ) : (
@@ -978,56 +961,4 @@ export default function GameDetailPage() {
       </div>
     </div>
   );
-}
-
-function InfoGroup({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="info-group">
-      <h4>{title}</h4>
-      <dl className="info-dl">{children}</dl>
-    </div>
-  );
-}
-
-function InfoRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="info-row">
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
-
-function SectionCount({ n }: { n: number }) {
-  return <span className="section-count">{n}</span>;
-}
-
-function renderLink(url?: string | null): ReactNode {
-  if (!url) return <span className="muted-dash">—</span>;
-  return (
-    <a href={safeHref(url)} target="_blank" rel="noreferrer" title={url}>
-      {url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-    </a>
-  );
-}
-
-function renderLogo(url?: string | null): ReactNode {
-  if (!url) return <span className="muted-dash">—</span>;
-  if (url.startsWith("data:")) return <em className="muted-dash">embedded image</em>;
-  return renderLink(url);
-}
-
-function formatDate(value?: string | null): string {
-  return value ? new Date(value).toLocaleString() : "—";
-}
-
-function safeHref(url: string): string {
-  if (/^https?:\/\//i.test(url)) return url;
-  return "about:blank";
 }
