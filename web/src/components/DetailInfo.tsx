@@ -25,8 +25,7 @@ export function DetailHero({
   }, [avatarUrl]);
 
   const hasLogo = Boolean(avatarUrl && !failed);
-  const initial =
-    (avatarText ?? title).trim().charAt(0).toUpperCase() || "?";
+  const initial = (avatarText ?? title).trim().charAt(0).toUpperCase() || "?";
 
   return (
     <section className="detail-hero">

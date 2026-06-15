@@ -36,9 +36,8 @@ export default function UniversityDetailPage() {
 
   const fetchUniversity = useCallback(async () => {
     setLoading(true);
-    const { data, error: err } = await universitiesApi.getUniversity(
-      universityId,
-    );
+    const { data, error: err } =
+      await universitiesApi.getUniversity(universityId);
     if (err) setError(err);
     else if (data) setUniversity(data);
     setLoading(false);
@@ -136,7 +135,10 @@ export default function UniversityDetailPage() {
                   </a>
                 )}
                 {isAdmin && (
-                  <button className="btn btn-sm btn-primary" onClick={startEdit}>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={startEdit}
+                  >
                     Edit
                   </button>
                 )}
@@ -160,8 +162,12 @@ export default function UniversityDetailPage() {
             <InfoGroups>
               <InfoGroup title="Profile">
                 <InfoRow label="Name">{university.name ?? "—"}</InfoRow>
-                <InfoRow label="Site">{renderLink(university.site_url)}</InfoRow>
-                <InfoRow label="Logo">{renderLogo(university.avatar_url)}</InfoRow>
+                <InfoRow label="Site">
+                  {renderLink(university.site_url)}
+                </InfoRow>
+                <InfoRow label="Logo">
+                  {renderLogo(university.avatar_url)}
+                </InfoRow>
               </InfoGroup>
 
               <InfoGroup title="Meta">

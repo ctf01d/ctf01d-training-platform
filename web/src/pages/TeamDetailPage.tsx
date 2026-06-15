@@ -124,7 +124,7 @@ export default function TeamDetailPage() {
       return;
     }
     void universitiesApi.getUniversity(team.university_id).then((r) => {
-      if (r.data) setUniversityName(r.data.name);
+      if (r.data) setUniversityName(r.data.name ?? null);
     });
   }, [team?.university_id]);
 
