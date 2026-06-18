@@ -72,7 +72,10 @@ export default function TeamDetailPage() {
     if (data) setMembers(data.items);
   }, [teamId]);
 
+  // Membership history, writeups and the user directory are only available to
+  // authenticated viewers; guests browse the public team page without them.
   const fetchEvents = useCallback(async () => {
+    if (!user) return;
     const { data } = await teamsApi.listTeamEvents(teamId, {
       page: eventsPage,
       per_page: eventsPerPage,
@@ -81,9 +84,10 @@ export default function TeamDetailPage() {
       setEvents(data.items);
       setEventsTotal(data.pagination.total);
     }
-  }, [teamId, eventsPage]);
+  }, [teamId, eventsPage, user]);
 
   const fetchWriteups = useCallback(async () => {
+    if (!user) return;
     const { data } = await writeupsApi.listWriteups({ team_id: teamId });
     if (data) {
       setWriteups(data.items);
@@ -95,9 +99,10 @@ export default function TeamDetailPage() {
       }
       setGameNames((prev) => ({ ...prev, ...names }));
     }
-  }, [teamId]);
+  }, [teamId, user]);
 
   const fetchUsers = useCallback(async () => {
+    if (!user) return;
     const { data } = await usersApi.listUsers({ per_page: 200 });
     if (data) {
       setAllUsers(data.items);
@@ -105,7 +110,7 @@ export default function TeamDetailPage() {
       for (const u of data.items) map[u.id] = u;
       setUsers(map);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     void fetchTeam();
@@ -577,122 +582,131 @@ export default function TeamDetailPage() {
         )}
       </div>
 
-      <div className="detail-section">
-        <div className="section-head">
-          <h3>
-            Writeups <SectionCount n={writeups.length} />
-          </h3>
-        </div>
-        {writeups.length > 0 ? (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Game</th>
-                <th>Title</th>
-                <th>Link</th>
-                {isManager && <th></th>}
-              </tr>
-            </thead>
-            <tbody>
-              {writeups.map((w) => (
-                <tr key={w.id}>
-                  <td>
-                    <Link to={`/games/${w.game_id}`}>
-                      {gameNames[w.game_id] ?? `Game #${w.game_id}`}
-                    </Link>
-                  </td>
-                  <td>{w.title}</td>
-                  <td>
-                    <a href={safeHref(w.url)} target="_blank" rel="noreferrer">
-                      Open ↗
-                    </a>
-                  </td>
-                  {isManager && (
-                    <td className="actions-cell">
-                      <ActionButton
-                        onClick={() => void handleDeleteWriteup(w.id)}
-                        variant="danger"
-                        confirm="Delete this writeup?"
-                      >
-                        Delete
-                      </ActionButton>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="section-empty">No writeups.</p>
-        )}
-      </div>
-
-      <div className="detail-section">
-        <div className="section-head">
-          <h3>
-            Events <SectionCount n={eventsTotal} />
-          </h3>
-        </div>
-        {events.length > 0 ? (
-          <>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Member</th>
-                  <th>Action</th>
-                  <th>Role change</th>
-                  <th>Status change</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((ev) => (
-                  <tr key={ev.id}>
-                    <td>{formatDateTime(ev.created_at)}</td>
-                    <td>{userLabel(ev.user_id)}</td>
-                    <td>{ev.action}</td>
-                    <td>
-                      {ev.from_role && ev.to_role
-                        ? `${ev.from_role} → ${ev.to_role}`
-                        : "—"}
-                    </td>
-                    <td>
-                      {ev.from_status && ev.to_status
-                        ? `${ev.from_status} → ${ev.to_status}`
-                        : "—"}
-                    </td>
+      {user && (
+        <>
+          <div className="detail-section">
+            <div className="section-head">
+              <h3>
+                Writeups <SectionCount n={writeups.length} />
+              </h3>
+            </div>
+            {writeups.length > 0 ? (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Game</th>
+                    <th>Title</th>
+                    <th>Link</th>
+                    {isManager && <th></th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {Math.ceil(eventsTotal / eventsPerPage) > 1 && (
-              <div className="pagination">
-                <button
-                  className="btn btn-sm"
-                  disabled={eventsPage <= 1}
-                  onClick={() => setEventsPage(eventsPage - 1)}
-                >
-                  Prev
-                </button>
-                <span>
-                  Page {eventsPage} of {Math.ceil(eventsTotal / eventsPerPage)}
-                </span>
-                <button
-                  className="btn btn-sm"
-                  disabled={
-                    eventsPage >= Math.ceil(eventsTotal / eventsPerPage)
-                  }
-                  onClick={() => setEventsPage(eventsPage + 1)}
-                >
-                  Next
-                </button>
-              </div>
+                </thead>
+                <tbody>
+                  {writeups.map((w) => (
+                    <tr key={w.id}>
+                      <td>
+                        <Link to={`/games/${w.game_id}`}>
+                          {gameNames[w.game_id] ?? `Game #${w.game_id}`}
+                        </Link>
+                      </td>
+                      <td>{w.title}</td>
+                      <td>
+                        <a
+                          href={safeHref(w.url)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open ↗
+                        </a>
+                      </td>
+                      {isManager && (
+                        <td className="actions-cell">
+                          <ActionButton
+                            onClick={() => void handleDeleteWriteup(w.id)}
+                            variant="danger"
+                            confirm="Delete this writeup?"
+                          >
+                            Delete
+                          </ActionButton>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="section-empty">No writeups.</p>
             )}
-          </>
-        ) : (
-          <p className="section-empty">No events.</p>
-        )}
-      </div>
+          </div>
+
+          <div className="detail-section">
+            <div className="section-head">
+              <h3>
+                Events <SectionCount n={eventsTotal} />
+              </h3>
+            </div>
+            {events.length > 0 ? (
+              <>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Member</th>
+                      <th>Action</th>
+                      <th>Role change</th>
+                      <th>Status change</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {events.map((ev) => (
+                      <tr key={ev.id}>
+                        <td>{formatDateTime(ev.created_at)}</td>
+                        <td>{userLabel(ev.user_id)}</td>
+                        <td>{ev.action}</td>
+                        <td>
+                          {ev.from_role && ev.to_role
+                            ? `${ev.from_role} → ${ev.to_role}`
+                            : "—"}
+                        </td>
+                        <td>
+                          {ev.from_status && ev.to_status
+                            ? `${ev.from_status} → ${ev.to_status}`
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {Math.ceil(eventsTotal / eventsPerPage) > 1 && (
+                  <div className="pagination">
+                    <button
+                      className="btn btn-sm"
+                      disabled={eventsPage <= 1}
+                      onClick={() => setEventsPage(eventsPage - 1)}
+                    >
+                      Prev
+                    </button>
+                    <span>
+                      Page {eventsPage} of{" "}
+                      {Math.ceil(eventsTotal / eventsPerPage)}
+                    </span>
+                    <button
+                      className="btn btn-sm"
+                      disabled={
+                        eventsPage >= Math.ceil(eventsTotal / eventsPerPage)
+                      }
+                      onClick={() => setEventsPage(eventsPage + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="section-empty">No events.</p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

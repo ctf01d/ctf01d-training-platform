@@ -89,8 +89,7 @@ paths:
       tags:
         - teams
       summary: List teams
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PerPageParam'
@@ -137,8 +136,7 @@ paths:
       tags:
         - teams
       summary: Get a team by ID
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
@@ -284,8 +282,7 @@ paths:
       tags:
         - teams
       summary: List team members
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path

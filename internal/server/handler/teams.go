@@ -217,9 +217,16 @@ func (h *Handler) HandleListTeamMembers(c *gin.Context) {
 		return
 	}
 
-	items := make([]httpserver.TeamMembership, len(members))
-	for i, m := range members {
-		items[i] = membershipToHTTP(m)
+	// Unauthenticated viewers only see the approved roster; pending/rejected
+	// join requests must not leak to the public team page.
+	_, hasUser := middleware.CurrentUserID(c)
+
+	items := make([]httpserver.TeamMembership, 0, len(members))
+	for _, m := range members {
+		if !hasUser && (m.Status == nil || *m.Status != memStatusApproved) {
+			continue
+		}
+		items = append(items, membershipToHTTP(m))
 	}
 
 	c.JSON(http.StatusOK, httpserver.TeamMembershipList{

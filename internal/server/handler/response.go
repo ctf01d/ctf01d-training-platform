@@ -27,6 +27,8 @@ const (
 
 	msgMustFitInt32     = "must fit int32"
 	msgNotAuthenticated = "not authenticated"
+
+	memStatusApproved = "approved"
 )
 
 func respondError(c *gin.Context, err error) {

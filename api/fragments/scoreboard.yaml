@@ -92,8 +92,7 @@ paths:
       tags:
         - scoreboard
       summary: Get global scoreboard
-      security:
-        - BearerAuth: []
+      security: []
       responses:
         '200':
           description: Global scoreboard

@@ -9,6 +9,7 @@ import (
 
 	"github.com/ctf01d/ctf01d-training-platform/gen/httpserver"
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
+	"github.com/ctf01d/ctf01d-training-platform/internal/server/middleware"
 	gameteamsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/gameteams"
 )
 
@@ -24,9 +25,13 @@ func (h *Handler) HandleListGameTeams(c *gin.Context) {
 		return
 	}
 
+	viewerRole, _ := middleware.CurrentRole(c)
+	userID, hasUser := middleware.CurrentUserID(c)
+	includeSensitive := h.canAccessGameSecrets(c, gameID, viewerRole, hasUser, userID)
+
 	result := make([]httpserver.GameTeam, len(items))
 	for i, gt := range items {
-		result[i] = gameTeamToHTTP(gt)
+		result[i] = gameTeamToHTTP(gt, includeSensitive)
 	}
 
 	c.JSON(http.StatusOK, httpserver.GameTeamList{Items: result})
@@ -95,7 +100,7 @@ func (h *Handler) HandleCreateGameTeam(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gameTeamToHTTP(*gt))
+	c.JSON(http.StatusCreated, gameTeamToHTTP(*gt, true))
 }
 
 func (h *Handler) HandleUpdateGameTeam(c *gin.Context) {
@@ -140,7 +145,7 @@ func (h *Handler) HandleUpdateGameTeam(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gameTeamToHTTP(*gt))
+	c.JSON(http.StatusOK, gameTeamToHTTP(*gt, true))
 }
 
 func (h *Handler) HandleDeleteGameTeam(c *gin.Context) {
@@ -156,7 +161,22 @@ func (h *Handler) HandleDeleteGameTeam(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func gameTeamToHTTP(gt gameteamsvc.GameTeam) httpserver.GameTeam {
+// gameTeamToHTTP maps a game-team to its API representation. Infrastructure
+// and competition details (IP, ctf01d wiring, team type) are only included for
+// viewers allowed to see game secrets; public viewers get a redacted view.
+func gameTeamToHTTP(gt gameteamsvc.GameTeam, includeSensitive bool) httpserver.GameTeam {
+	result := httpserver.GameTeam{
+		Id:        gt.ID,
+		GameId:    gt.GameID,
+		TeamId:    gt.TeamID,
+		Order:     int(gt.Order),
+		CreatedAt: &gt.CreatedAt,
+		UpdatedAt: &gt.UpdatedAt,
+	}
+	if !includeSensitive {
+		return result
+	}
+
 	var overrides *map[string]interface{}
 	if gt.Ctf01dOverrides != nil {
 		var m map[string]interface{}
@@ -166,16 +186,9 @@ func gameTeamToHTTP(gt gameteamsvc.GameTeam) httpserver.GameTeam {
 			overrides = &m
 		}
 	}
-	return httpserver.GameTeam{
-		Id:              gt.ID,
-		GameId:          gt.GameID,
-		TeamId:          gt.TeamID,
-		IpAddress:       gt.IpAddress,
-		Ctf01dId:        gt.Ctf01dID,
-		Ctf01dOverrides: overrides,
-		TeamType:        gt.TeamType,
-		Order:           int(gt.Order),
-		CreatedAt:       &gt.CreatedAt,
-		UpdatedAt:       &gt.UpdatedAt,
-	}
+	result.IpAddress = gt.IpAddress
+	result.Ctf01dId = gt.Ctf01dID
+	result.Ctf01dOverrides = overrides
+	result.TeamType = gt.TeamType
+	return result
 }

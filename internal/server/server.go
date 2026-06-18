@@ -99,7 +99,7 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.POST("/teams/:id/join-request", requireAuth, h.HandleRequestJoinTeam)
 	api.POST("/teams/:id/invite", requireAuth, h.HandleInviteToTeam)
 	api.GET("/teams/:id/members", optionalAuth, h.HandleListTeamMembers)
-	api.GET("/teams/:id/events", optionalAuth, h.HandleListTeamEvents)
+	api.GET("/teams/:id/events", requireAuth, h.HandleListTeamEvents)
 
 	api.GET("/team-memberships", requireAuth, h.HandleListTeamMemberships)
 	api.POST("/team-memberships", append(requireAdmin, h.HandleCreateTeamMembership)...)

@@ -283,8 +283,7 @@ paths:
       tags:
         - games
       summary: List games
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PerPageParam'
@@ -329,8 +328,7 @@ paths:
       tags:
         - games
       summary: Get a game by ID
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
@@ -412,8 +410,7 @@ paths:
       tags:
         - games
       summary: List services linked to a game
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path

@@ -119,8 +119,7 @@ paths:
       tags:
         - game-teams
       summary: List teams in a game
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
@@ -258,8 +257,7 @@ paths:
       tags:
         - games
       summary: List games
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PerPageParam'
@@ -304,8 +302,7 @@ paths:
       tags:
         - games
       summary: Get a game by ID
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
@@ -387,8 +384,7 @@ paths:
       tags:
         - games
       summary: List services linked to a game
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
@@ -770,8 +766,7 @@ paths:
       tags:
         - scoreboard
       summary: Get global scoreboard
-      security:
-        - BearerAuth: []
+      security: []
       responses:
         '200':
           description: Global scoreboard
@@ -788,8 +783,7 @@ paths:
       tags:
         - services
       summary: List services
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PerPageParam'
@@ -844,8 +838,7 @@ paths:
       tags:
         - services
       summary: Get a service by ID
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
@@ -1438,8 +1431,7 @@ paths:
       tags:
         - teams
       summary: List teams
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PerPageParam'
@@ -1486,8 +1478,7 @@ paths:
       tags:
         - teams
       summary: Get a team by ID
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
@@ -1633,8 +1624,7 @@ paths:
       tags:
         - teams
       summary: List team members
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path

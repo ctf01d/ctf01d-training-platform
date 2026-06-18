@@ -136,15 +136,19 @@ export default function GameDetailPage() {
     }
   }, [gameId]);
 
+  // Results and writeups are only available to authenticated viewers; guests
+  // browse the public game page without them.
   const fetchResults = useCallback(async () => {
+    if (!user) return;
     const { data } = await resultsApi.listResults({ game_id: gameId });
     if (data) setResults(data.items);
-  }, [gameId]);
+  }, [gameId, user]);
 
   const fetchWriteups = useCallback(async () => {
+    if (!user) return;
     const { data } = await writeupsApi.listWriteups({ game_id: gameId });
     if (data) setWriteups(data.items);
-  }, [gameId]);
+  }, [gameId, user]);
 
   const fetchAllTeams = useCallback(async () => {
     const { data } = await teamsApi.listTeams({ per_page: 200 });
@@ -786,188 +790,201 @@ export default function GameDetailPage() {
         )}
       </div>
 
-      <div className="detail-section">
-        <div className="section-head">
-          <h3>
-            Results <SectionCount n={results.length} />
-          </h3>
-        </div>
-        {rankedResults.length > 0 ? (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th className="rank-cell">Rank</th>
-                <th>Team</th>
-                <th className="numeric">Score</th>
-                {canEdit && <th></th>}
-              </tr>
-            </thead>
-            <tbody>
-              {rankedResults.map((r, i) => (
-                <tr
-                  key={r.id}
-                  className={i < 3 ? `is-podium podium-${i + 1}` : undefined}
-                >
-                  <td className="rank-cell">
-                    {i < 3 ? (
-                      <span className={`medal medal-${i + 1}`}>{i + 1}</span>
-                    ) : (
-                      i + 1
-                    )}
-                  </td>
-                  <td>{nameOf(r.team_id)}</td>
-                  <td className="numeric score-cell">
-                    {r.score?.toLocaleString() ?? "—"}
-                  </td>
-                  {canEdit && (
-                    <td className="actions-cell">
-                      <ActionButton
-                        onClick={() => void handleDeleteResult(r.id)}
-                        variant="danger"
-                        confirm="Delete this result?"
-                      >
-                        Delete
-                      </ActionButton>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="section-empty">No results yet.</p>
-        )}
-        {canEdit && (
-          <form
-            onSubmit={(e) => void handleAddResult(e)}
-            className="inline-form"
-          >
-            <select
-              value={addResultForm.team_id || ""}
-              onChange={(e) =>
-                setAddResultForm((f) => ({
-                  ...f,
-                  team_id: Number(e.target.value),
-                }))
-              }
-              required
-            >
-              <option value="">Select team…</option>
-              {gameTeams.map((gt) => (
-                <option key={gt.id} value={gt.team_id}>
-                  {nameOf(gt.team_id)}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              placeholder="Score"
-              value={addResultForm.score ?? ""}
-              onChange={(e) =>
-                setAddResultForm((f) => ({
-                  ...f,
-                  score: Number(e.target.value),
-                }))
-              }
-              required
-            />
-            <button type="submit" className="btn btn-sm">
-              Add result
-            </button>
-          </form>
-        )}
-      </div>
-
-      <div className="detail-section">
-        <div className="section-head">
-          <h3>
-            Writeups <SectionCount n={writeups.length} />
-          </h3>
-        </div>
-        {writeups.length > 0 ? (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Team</th>
-                <th>Title</th>
-                <th>Link</th>
-                {canManageWriteups && <th></th>}
-              </tr>
-            </thead>
-            <tbody>
-              {writeups.map((w) => (
-                <tr key={w.id}>
-                  <td>{nameOf(w.team_id)}</td>
-                  <td>{w.title}</td>
-                  <td>
-                    <a href={safeHref(w.url)} target="_blank" rel="noreferrer">
-                      Open ↗
-                    </a>
-                  </td>
-                  {canManageWriteups && (
-                    <td className="actions-cell">
-                      {(isAdmin || manageableTeamIds.includes(w.team_id)) && (
-                        <ActionButton
-                          onClick={() => void handleDeleteWriteup(w.id)}
-                          variant="danger"
-                          confirm="Delete this writeup?"
-                        >
-                          Delete
-                        </ActionButton>
+      {user && (
+        <>
+          <div className="detail-section">
+            <div className="section-head">
+              <h3>
+                Results <SectionCount n={results.length} />
+              </h3>
+            </div>
+            {rankedResults.length > 0 ? (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th className="rank-cell">Rank</th>
+                    <th>Team</th>
+                    <th className="numeric">Score</th>
+                    {canEdit && <th></th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankedResults.map((r, i) => (
+                    <tr
+                      key={r.id}
+                      className={
+                        i < 3 ? `is-podium podium-${i + 1}` : undefined
+                      }
+                    >
+                      <td className="rank-cell">
+                        {i < 3 ? (
+                          <span className={`medal medal-${i + 1}`}>
+                            {i + 1}
+                          </span>
+                        ) : (
+                          i + 1
+                        )}
+                      </td>
+                      <td>{nameOf(r.team_id)}</td>
+                      <td className="numeric score-cell">
+                        {r.score?.toLocaleString() ?? "—"}
+                      </td>
+                      {canEdit && (
+                        <td className="actions-cell">
+                          <ActionButton
+                            onClick={() => void handleDeleteResult(r.id)}
+                            variant="danger"
+                            confirm="Delete this result?"
+                          >
+                            Delete
+                          </ActionButton>
+                        </td>
                       )}
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="section-empty">No writeups yet.</p>
-        )}
-        {canManageWriteups && (
-          <form
-            onSubmit={(e) => void handleAddWriteup(e)}
-            className="inline-form"
-          >
-            <select
-              value={addWriteupForm.team_id || ""}
-              onChange={(e) =>
-                setAddWriteupForm((f) => ({
-                  ...f,
-                  team_id: Number(e.target.value),
-                }))
-              }
-              required
-            >
-              <option value="">Select team…</option>
-              {writeupTeamOptions.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-            <input
-              placeholder="Title"
-              value={addWriteupForm.title}
-              onChange={(e) =>
-                setAddWriteupForm((f) => ({ ...f, title: e.target.value }))
-              }
-              required
-            />
-            <input
-              placeholder="https://..."
-              value={addWriteupForm.url}
-              onChange={(e) =>
-                setAddWriteupForm((f) => ({ ...f, url: e.target.value }))
-              }
-              required
-            />
-            <button type="submit" className="btn btn-sm">
-              Add writeup
-            </button>
-          </form>
-        )}
-      </div>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="section-empty">No results yet.</p>
+            )}
+            {canEdit && (
+              <form
+                onSubmit={(e) => void handleAddResult(e)}
+                className="inline-form"
+              >
+                <select
+                  value={addResultForm.team_id || ""}
+                  onChange={(e) =>
+                    setAddResultForm((f) => ({
+                      ...f,
+                      team_id: Number(e.target.value),
+                    }))
+                  }
+                  required
+                >
+                  <option value="">Select team…</option>
+                  {gameTeams.map((gt) => (
+                    <option key={gt.id} value={gt.team_id}>
+                      {nameOf(gt.team_id)}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Score"
+                  value={addResultForm.score ?? ""}
+                  onChange={(e) =>
+                    setAddResultForm((f) => ({
+                      ...f,
+                      score: Number(e.target.value),
+                    }))
+                  }
+                  required
+                />
+                <button type="submit" className="btn btn-sm">
+                  Add result
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div className="detail-section">
+            <div className="section-head">
+              <h3>
+                Writeups <SectionCount n={writeups.length} />
+              </h3>
+            </div>
+            {writeups.length > 0 ? (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Team</th>
+                    <th>Title</th>
+                    <th>Link</th>
+                    {canManageWriteups && <th></th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {writeups.map((w) => (
+                    <tr key={w.id}>
+                      <td>{nameOf(w.team_id)}</td>
+                      <td>{w.title}</td>
+                      <td>
+                        <a
+                          href={safeHref(w.url)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open ↗
+                        </a>
+                      </td>
+                      {canManageWriteups && (
+                        <td className="actions-cell">
+                          {(isAdmin ||
+                            manageableTeamIds.includes(w.team_id)) && (
+                            <ActionButton
+                              onClick={() => void handleDeleteWriteup(w.id)}
+                              variant="danger"
+                              confirm="Delete this writeup?"
+                            >
+                              Delete
+                            </ActionButton>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="section-empty">No writeups yet.</p>
+            )}
+            {canManageWriteups && (
+              <form
+                onSubmit={(e) => void handleAddWriteup(e)}
+                className="inline-form"
+              >
+                <select
+                  value={addWriteupForm.team_id || ""}
+                  onChange={(e) =>
+                    setAddWriteupForm((f) => ({
+                      ...f,
+                      team_id: Number(e.target.value),
+                    }))
+                  }
+                  required
+                >
+                  <option value="">Select team…</option>
+                  {writeupTeamOptions.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  placeholder="Title"
+                  value={addWriteupForm.title}
+                  onChange={(e) =>
+                    setAddWriteupForm((f) => ({ ...f, title: e.target.value }))
+                  }
+                  required
+                />
+                <input
+                  placeholder="https://..."
+                  value={addWriteupForm.url}
+                  onChange={(e) =>
+                    setAddWriteupForm((f) => ({ ...f, url: e.target.value }))
+                  }
+                  required
+                />
+                <button type="submit" className="btn btn-sm">
+                  Add writeup
+                </button>
+              </form>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

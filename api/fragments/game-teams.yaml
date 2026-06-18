@@ -102,8 +102,7 @@ paths:
       tags:
         - game-teams
       summary: List teams in a game
-      security:
-        - BearerAuth: []
+      security: []
       parameters:
         - name: id
           in: path
