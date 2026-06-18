@@ -27,6 +27,7 @@ paths:
       tags:
         - auth
       summary: Login
+      x-required-role: public
       security: []
       requestBody:
         required: true
@@ -49,6 +50,7 @@ paths:
       tags:
         - auth
       summary: Logout
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       responses:
@@ -80,6 +82,7 @@ paths:
       tags:
         - auth
       summary: Update current user profile
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       requestBody:

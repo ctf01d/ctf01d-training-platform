@@ -298,6 +298,7 @@ paths:
       tags:
         - team-memberships
       summary: Approve a pending team membership
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:
@@ -327,6 +328,7 @@ paths:
       tags:
         - team-memberships
       summary: Reject a pending team membership
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:
@@ -356,6 +358,7 @@ paths:
       tags:
         - team-memberships
       summary: Accept a team membership invitation
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:
@@ -385,6 +388,7 @@ paths:
       tags:
         - team-memberships
       summary: Decline a team membership invitation
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:
@@ -414,6 +418,7 @@ paths:
       tags:
         - team-memberships
       summary: Set the role of a team member
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:

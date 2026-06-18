@@ -2,7 +2,7 @@
 
 package httpserver
 
-// OperationRequiredRoles maps OpenAPI operation keys to the minimum role declared via x-required-role.
+// OperationRequiredRoles maps OpenAPI operation keys to the minimum hierarchy role declared via x-required-role.
 var OperationRequiredRoles = map[string]string{
 	"DELETE /game-teams/{id}":                  "player",
 	"DELETE /games/{id}":                       "player",

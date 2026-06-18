@@ -92,12 +92,26 @@ gen-all: openapi sqlc-gen
 
 OPENAPI_FILE := api/openapi.yaml
 OPENAPI_FRAGMENTS_DIR := api/fragments
+OPENAPI_FRAGMENTS := \
+	$(OPENAPI_FRAGMENTS_DIR)/00-base.schema.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/10-components.schema.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/auth.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/games.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/game-teams.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/results.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/scoreboard.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/services.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/team-memberships.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/teams.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/universities.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/users.yaml \
+	$(OPENAPI_FRAGMENTS_DIR)/writeups.yaml
 OAPI_CODEGEN := go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 OPENAPI_ROLES := go run ./scripts/openapi-required-roles.go
 
 ## openapi-merge: Merge API fragments into a single OpenAPI file
 openapi-merge:
-	yq eval-all '. as $$item ireduce ({}; . * $$item )' $(OPENAPI_FRAGMENTS_DIR)/*.yaml > $(OPENAPI_FILE)
+	yq eval-all '. as $$item ireduce ({}; . * $$item )' $(OPENAPI_FRAGMENTS) > $(OPENAPI_FILE)
 
 ## openapi-codegen: Generate Go server code from OpenAPI spec
 openapi-codegen:

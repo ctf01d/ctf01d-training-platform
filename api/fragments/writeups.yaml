@@ -89,6 +89,7 @@ paths:
       tags:
         - writeups
       summary: Create a writeup
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       requestBody:
@@ -145,6 +146,7 @@ paths:
       tags:
         - writeups
       summary: Delete a writeup
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:

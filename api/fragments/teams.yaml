@@ -112,6 +112,7 @@ paths:
       tags:
         - teams
       summary: Create a team
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       requestBody:
@@ -165,6 +166,7 @@ paths:
       tags:
         - teams
       summary: Update a team
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:
@@ -201,6 +203,7 @@ paths:
       tags:
         - teams
       summary: Delete a team
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:
@@ -224,6 +227,7 @@ paths:
       tags:
         - teams
       summary: Request to join a team
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:
@@ -251,6 +255,7 @@ paths:
       tags:
         - teams
       summary: Invite a user to a team
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:

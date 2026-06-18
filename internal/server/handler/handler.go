@@ -346,8 +346,7 @@ func (h *Handler) UpdateUser(c *gin.Context, id int64) {
 	h.HandleUpdateUser(c)
 }
 
-func (h *Handler) UpdateUserRole(c *gin.Context, id int64) {
-	c.Set("id", id)
+func (h *Handler) UpdateUserRole(c *gin.Context, _ int64) {
 	h.HandleUpdateUserRole(c)
 }
 
