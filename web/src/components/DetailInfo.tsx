@@ -80,7 +80,7 @@ export function InfoRow({
   label,
   children,
 }: {
-  label: string;
+  label: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -113,6 +113,54 @@ export function renderLogo(url?: string | null): ReactNode {
 
 export function formatDateTime(value?: string | null): string {
   return value ? new Date(value).toLocaleString() : "—";
+}
+
+/** GitHub-style relative phrasing: "4 days ago", "in 8 hours", "just now". */
+export function formatRelativeTime(value?: string | null): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  const diffMs = date.getTime() - Date.now();
+  const future = diffMs > 0;
+  const abs = Math.abs(diffMs);
+  const units: [number, string][] = [
+    [365 * 24 * 3600e3, "year"],
+    [30 * 24 * 3600e3, "month"],
+    [7 * 24 * 3600e3, "week"],
+    [24 * 3600e3, "day"],
+    [3600e3, "hour"],
+    [60e3, "minute"],
+    [1e3, "second"],
+  ];
+  for (const [ms, name] of units) {
+    const n = Math.floor(abs / ms);
+    if (n >= 1) {
+      const label = `${n} ${name}${n === 1 ? "" : "s"}`;
+      return future ? `in ${label}` : `${label} ago`;
+    }
+  }
+  return "just now";
+}
+
+/** Full date/time including the timezone, e.g. for tooltips. */
+export function formatDateTimeWithZone(value: string): string {
+  return new Date(value).toLocaleString(undefined, {
+    dateStyle: "full",
+    timeStyle: "long",
+  });
+}
+
+/**
+ * Renders a timestamp GitHub-style: relative text in the page, exact date,
+ * time and timezone shown on hover.
+ */
+export function RelativeTime({ value }: { value?: string | null }) {
+  if (!value) return <span className="muted-dash">—</span>;
+  return (
+    <time dateTime={value} title={formatDateTimeWithZone(value)}>
+      {formatRelativeTime(value)}
+    </time>
+  );
 }
 
 export function safeHref(url: string): string {

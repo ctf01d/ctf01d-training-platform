@@ -2,11 +2,17 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as gamesApi from "../api/games";
 import type { Game, GameCreate } from "../api/games";
+import * as teamsApi from "../api/teams";
 import { CardGrid, CardBadge, Pagination } from "../components/Card";
 import { ErrorDisplay } from "../components/ErrorDisplay";
+import { RelativeTime } from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
 
-const fmtDate = (s?: string | null) => (s ? new Date(s).toLocaleString() : "—");
+/**
+ * Map of lower-cased organizer name -> team (or null when no team matches).
+ * Misses are recorded as null so we don't keep re-querying them.
+ */
+type OrganizerTeams = Record<string, { id: number; name: string } | null>;
 
 export default function GamesPage() {
   const { isPlayer } = useAuth();
@@ -21,6 +27,7 @@ export default function GamesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<GameCreate>({});
   const [creating, setCreating] = useState(false);
+  const [organizerTeams, setOrganizerTeams] = useState<OrganizerTeams>({});
 
   const fetchGames = useCallback(async () => {
     setLoading(true);
@@ -42,6 +49,34 @@ export default function GamesPage() {
   useEffect(() => {
     void fetchGames();
   }, [fetchGames]);
+
+  // Resolve organizer names to teams so they can be rendered as links.
+  useEffect(() => {
+    const names = Array.from(
+      new Set(
+        games
+          .map((g) => g.organizer?.trim())
+          .filter((n): n is string => !!n)
+          .map((n) => n.toLowerCase()),
+      ),
+    ).filter((n) => !(n in organizerTeams));
+    if (names.length === 0) return;
+    void Promise.all(
+      names.map(async (name) => {
+        const { data } = await teamsApi.listTeams({ q: name, per_page: 20 });
+        const match = data?.items.find((t) => t.name.toLowerCase() === name);
+        return [name, match] as const;
+      }),
+    ).then((pairs) => {
+      setOrganizerTeams((prev) => {
+        const next = { ...prev };
+        for (const [name, match] of pairs) {
+          next[name] = match ? { id: match.id, name: match.name } : null;
+        }
+        return next;
+      });
+    });
+  }, [games, organizerTeams]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +169,7 @@ export default function GamesPage() {
         emptyMessage="No games found"
       >
         {games.map((g) => (
-          <GameCard key={g.id} game={g} />
+          <GameCard key={g.id} game={g} organizerTeams={organizerTeams} />
         ))}
       </CardGrid>
 
@@ -148,10 +183,19 @@ export default function GamesPage() {
   );
 }
 
-function GameCard({ game }: { game: Game }) {
+function GameCard({
+  game,
+  organizerTeams,
+}: {
+  game: Game;
+  organizerTeams: OrganizerTeams;
+}) {
   const [imageFailed, setImageFailed] = useState(false);
   const title = game.name ?? `Game #${game.id}`;
   const hasImage = Boolean(game.avatar_url && !imageFailed);
+  const organizerTeam = game.organizer
+    ? organizerTeams[game.organizer.trim().toLowerCase()]
+    : null;
 
   return (
     <article className="game-card">
@@ -173,15 +217,27 @@ function GameCard({ game }: { game: Game }) {
         <dl className="game-card-meta">
           <div>
             <dt>Organizer</dt>
-            <dd>{game.organizer ?? "—"}</dd>
+            <dd>
+              {organizerTeam ? (
+                <Link to={`/teams/${organizerTeam.id}`}>
+                  {organizerTeam.name}
+                </Link>
+              ) : (
+                (game.organizer ?? "—")
+              )}
+            </dd>
           </div>
           <div>
             <dt>Starts</dt>
-            <dd>{fmtDate(game.starts_at)}</dd>
+            <dd>
+              <RelativeTime value={game.starts_at} />
+            </dd>
           </div>
           <div>
             <dt>Ends</dt>
-            <dd>{fmtDate(game.ends_at)}</dd>
+            <dd>
+              <RelativeTime value={game.ends_at} />
+            </dd>
           </div>
           <div>
             <dt>Registration</dt>

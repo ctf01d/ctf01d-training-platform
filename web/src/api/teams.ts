@@ -13,6 +13,23 @@ export async function listTeams(query?: {
   return client.GET("/teams", { params: { query } });
 }
 
+/**
+ * Fetch every team across all pages. The list endpoint caps per_page at 100
+ * (and silently falls back to 20 above that), so callers needing the full set
+ * must paginate rather than request a huge page.
+ */
+export async function listAllTeams(query?: { q?: string }): Promise<Team[]> {
+  const perPage = 100;
+  const items: Team[] = [];
+  for (let page = 1; ; page++) {
+    const { data } = await listTeams({ page, per_page: perPage, q: query?.q });
+    if (!data) break;
+    items.push(...data.items);
+    if (items.length >= data.pagination.total || data.items.length === 0) break;
+  }
+  return items;
+}
+
 export async function getTeam(id: number) {
   return client.GET("/teams/{id}", { params: { path: { id } } });
 }

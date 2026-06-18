@@ -396,6 +396,23 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		}
 	}
 
+	// keva is the TUSUR team that organizes the SibirCTF / CyberSibir editions
+	// (every seeded game lists "keva" as its organizer).
+	kevaTeam, err := ensureTeam("keva", "Команда ТУСУР, организатор SibirCTF / CyberSibir")
+	if err != nil {
+		return err
+	}
+	// Bundled logo, served from web/public/img/team-logos. Only replaces the
+	// generated placeholder so a manually set avatar is preserved.
+	kevaLogo := "/img/team-logos/keva.png"
+	if shouldBackfillAvatar(kevaTeam.AvatarUrl) {
+		updated, err := q.UpdateTeam(ctx, db.UpdateTeamParams{ID: kevaTeam.ID, Name: kevaTeam.Name, AvatarUrl: &kevaLogo})
+		if err != nil {
+			return fmt.Errorf("keva avatar: %w", err)
+		}
+		teamByName["keva"] = updated
+	}
+
 	// --- University bindings (manual corrections from the legacy seed) ---------
 	bind := func(teamName, uniName, tag, website string) error {
 		t, ok := teamByName[teamName]
@@ -451,6 +468,9 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		return err
 	}
 	if err := bind("Mustang", uniTUSUR, "Academic team TUSUR", "https://tusur.ru/"); err != nil {
+		return err
+	}
+	if err := bind("keva", uniTUSUR, "Academic team TUSUR", "https://tusur.ru/"); err != nil {
 		return err
 	}
 	if err := bind("4Ray", uniMIREA, "CTFtime academic team MIREA", "https://www.mirea.ru/"); err != nil {

@@ -13,6 +13,22 @@ export async function listGames(query?: {
   return client.GET("/games", { params: { query } });
 }
 
+/**
+ * Fetch every game across all pages. The list endpoint caps per_page at 100,
+ * so callers needing the full set must paginate.
+ */
+export async function listAllGames(query?: { q?: string }): Promise<Game[]> {
+  const perPage = 100;
+  const items: Game[] = [];
+  for (let page = 1; ; page++) {
+    const { data } = await listGames({ page, per_page: perPage, q: query?.q });
+    if (!data) break;
+    items.push(...data.items);
+    if (items.length >= data.pagination.total || data.items.length === 0) break;
+  }
+  return items;
+}
+
 export async function getGame(id: number) {
   return client.GET("/games/{id}", { params: { path: { id } } });
 }

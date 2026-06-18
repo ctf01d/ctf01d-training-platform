@@ -19,12 +19,14 @@ import {
 } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
 import { TeamLink } from "../components/TeamLink";
+import { FilterSelect } from "../components/FilterSelect";
 import {
   DetailHero,
   InfoGroups,
   InfoGroup,
   InfoRow,
   SectionCount,
+  RelativeTime,
   renderLink,
   renderLogo,
   formatDateTime as formatDate,
@@ -57,6 +59,7 @@ export default function GameDetailPage() {
   const [writeups, setWriteups] = useState<Writeup[]>([]);
   const [allTeams, setAllTeams] = useState<Team[]>([]);
   const [allServices, setAllServices] = useState<Service[]>([]);
+  const [organizerTeam, setOrganizerTeam] = useState<Team | null>(null);
 
   const [addTeamForm, setAddTeamForm] = useState<GameTeamCreate>({
     game_id: gameId,
@@ -152,13 +155,11 @@ export default function GameDetailPage() {
   }, [gameId, user]);
 
   const fetchAllTeams = useCallback(async () => {
-    const { data } = await teamsApi.listTeams({ per_page: 200 });
-    if (data) setAllTeams(data.items);
+    setAllTeams(await teamsApi.listAllTeams());
   }, []);
 
   const fetchAllServices = useCallback(async () => {
-    const { data } = await servicesApi.listServices({ per_page: 200 });
-    if (data) setAllServices(data.items);
+    setAllServices(await servicesApi.listAllServices());
   }, []);
 
   useEffect(() => {
@@ -178,6 +179,23 @@ export default function GameDetailPage() {
     fetchAllTeams,
     fetchAllServices,
   ]);
+
+  // The organizer is free text; if it names a team, link to it. The team list
+  // endpoint caps per_page, so resolve it via a targeted search rather than
+  // scanning the (truncated) full list.
+  useEffect(() => {
+    const org = game?.organizer?.trim();
+    if (!org) {
+      setOrganizerTeam(null);
+      return;
+    }
+    void teamsApi.listTeams({ q: org, per_page: 20 }).then((r) => {
+      const match =
+        r.data?.items.find((t) => t.name.toLowerCase() === org.toLowerCase()) ??
+        null;
+      setOrganizerTeam(match);
+    });
+  }, [game?.organizer]);
 
   const nameOf = useCallback(
     (tid: number) =>
@@ -368,6 +386,16 @@ export default function GameDetailPage() {
   const canManageWriteups = isAdmin || manageableTeamIds.length > 0;
   const title = game.name ?? `Game #${game.id}`;
 
+  const organizerNode = game.organizer ? (
+    organizerTeam ? (
+      <TeamLink id={organizerTeam.id} name={organizerTeam.name} />
+    ) : (
+      game.organizer
+    )
+  ) : (
+    "—"
+  );
+
   const rosterTeamIds = new Set(gameTeams.map((gt) => gt.team_id));
   const availableTeams = allTeams.filter((t) => !rosterTeamIds.has(t.id));
   const availableServices = allServices.filter(
@@ -408,9 +436,12 @@ export default function GameDetailPage() {
               </>
             }
             summary={[
-              { label: "Organizer", value: game.organizer ?? "—" },
-              { label: "Starts", value: formatDate(game.starts_at) },
-              { label: "Ends", value: formatDate(game.ends_at) },
+              { label: "Organizer", value: organizerNode },
+              {
+                label: "Starts",
+                value: <RelativeTime value={game.starts_at} />,
+              },
+              { label: "Ends", value: <RelativeTime value={game.ends_at} /> },
             ]}
             actions={
               <>
@@ -469,9 +500,11 @@ export default function GameDetailPage() {
             <InfoGroups>
               <InfoGroup title="Schedule">
                 <InfoRow label="Starts at">
-                  {formatDate(game.starts_at)}
+                  <RelativeTime value={game.starts_at} />
                 </InfoRow>
-                <InfoRow label="Ends at">{formatDate(game.ends_at)}</InfoRow>
+                <InfoRow label="Ends at">
+                  <RelativeTime value={game.ends_at} />
+                </InfoRow>
               </InfoGroup>
 
               <InfoGroup title="Registration">
@@ -685,18 +718,19 @@ export default function GameDetailPage() {
             onSubmit={(e) => void handleAddService(e)}
             className="inline-form"
           >
-            <select
-              value={addServiceId}
-              onChange={(e) => setAddServiceId(e.target.value)}
+            <FilterSelect
+              placeholder="Search services…"
               required
-            >
-              <option value="">Select service…</option>
-              {availableServices.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+              value={addServiceId ? Number(addServiceId) : null}
+              onChange={(id) => setAddServiceId(id ? String(id) : "")}
+              options={availableServices.map((s) => ({
+                id: s.id,
+                label: s.name,
+                search: `${s.public_description ?? ""} ${
+                  s.private_description ?? ""
+                }`,
+              }))}
+            />
             <button type="submit" className="btn btn-sm">
               Link service
             </button>

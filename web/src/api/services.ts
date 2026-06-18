@@ -14,6 +14,30 @@ export async function listServices(query?: {
   return client.GET("/services", { params: { query } });
 }
 
+/**
+ * Fetch every service across all pages. The list endpoint caps per_page at
+ * 100, so callers needing the full set must paginate.
+ */
+export async function listAllServices(query?: {
+  public?: boolean;
+  q?: string;
+}): Promise<Service[]> {
+  const perPage = 100;
+  const items: Service[] = [];
+  for (let page = 1; ; page++) {
+    const { data } = await listServices({
+      page,
+      per_page: perPage,
+      public: query?.public,
+      q: query?.q,
+    });
+    if (!data) break;
+    items.push(...data.items);
+    if (items.length >= data.pagination.total || data.items.length === 0) break;
+  }
+  return items;
+}
+
 export async function getService(id: number) {
   return client.GET("/services/{id}", { params: { path: { id } } });
 }

@@ -44,9 +44,8 @@ export default function UniversityDetailPage() {
   }, [universityId]);
 
   const fetchTeams = useCallback(async () => {
-    const { data } = await teamsApi.listTeams({ per_page: 200 });
-    if (data)
-      setTeams(data.items.filter((t) => t.university_id === universityId));
+    const all = await teamsApi.listAllTeams();
+    setTeams(all.filter((t) => t.university_id === universityId));
   }, [universityId]);
 
   useEffect(() => {

@@ -876,6 +876,12 @@ a:focus-visible {
   overflow-x: auto;
 }
 
+/* A section holding a filterable picker must not clip its dropdown menu
+   (overflow-x:auto would otherwise hide the menu behind the next section). */
+.detail-section:has(.filter-select) {
+  overflow: visible;
+}
+
 .detail-section h3 {
   margin: 0 0 14px;
   color: #1f2937;
@@ -1323,6 +1329,102 @@ a:focus-visible {
 .inline-form input,
 .inline-form select {
   max-width: 220px;
+}
+
+.filter-select {
+  position: relative;
+  max-width: 220px;
+  width: 100%;
+}
+
+.filter-select > input {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #cfd8e3;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text);
+  font-size: .9rem;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.filter-select > input:hover {
+  border-color: #b8c4d2;
+}
+
+/* Hidden but still focusable so the browser can anchor its "please select"
+   validation bubble to the picker. Not display:none (that breaks validation). */
+.filter-select-validity {
+  position: absolute;
+  left: 10px;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filter-select-clear {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted);
+  padding: 2px 4px;
+}
+
+.filter-select-clear:hover {
+  color: var(--text);
+}
+
+.filter-select-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #cfd8e3;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .12);
+}
+
+.filter-select-menu li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 9px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: .9rem;
+  color: var(--text);
+}
+
+.filter-select-menu li button:hover,
+.filter-select-menu li button.is-selected {
+  background: var(--surface-2, #f1f5f9);
+}
+
+.filter-select-empty {
+  padding: 8px 9px;
+  color: var(--muted);
+  font-size: .88rem;
 }
 
 .filters {

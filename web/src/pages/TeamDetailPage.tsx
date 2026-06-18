@@ -8,11 +8,14 @@ import * as gamesApi from "../api/games";
 import * as usersApi from "../api/users";
 import type { User } from "../api/users";
 import * as universitiesApi from "../api/universities";
+import type { University } from "../api/universities";
 import * as writeupsApi from "../api/writeups";
 import type { Writeup } from "../api/writeups";
+import * as scoreboardApi from "../api/scoreboard";
 import type { components } from "../api/schema";
 import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
+import { FilterSelect } from "../components/FilterSelect";
 import {
   DetailHero,
   InfoGroups,
@@ -58,6 +61,10 @@ export default function TeamDetailPage() {
   const [users, setUsers] = useState<Record<number, User>>({});
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [universityName, setUniversityName] = useState<string | null>(null);
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [playedGames, setPlayedGames] = useState<
+    { gameId: number; name: string; rank?: number; total?: number }[]
+  >([]);
 
   const fetchTeam = useCallback(async () => {
     setLoading(true);
@@ -103,7 +110,7 @@ export default function TeamDetailPage() {
 
   const fetchUsers = useCallback(async () => {
     if (!user) return;
-    const { data } = await usersApi.listUsers({ per_page: 200 });
+    const { data } = await usersApi.listUsers({ per_page: 100 });
     if (data) {
       setAllUsers(data.items);
       const map: Record<number, User> = {};
@@ -112,12 +119,56 @@ export default function TeamDetailPage() {
     }
   }, [user]);
 
+  const fetchUniversities = useCallback(async () => {
+    setUniversities(await universitiesApi.listAllUniversities());
+  }, []);
+
+  // Games the team has taken part in. Participation is the game roster (a team
+  // can be entered without a recorded result), and the placement comes from the
+  // game scoreboard endpoint, which is tie-aware and uses final results for
+  // finalized games.
+  const fetchGames = useCallback(async () => {
+    if (!user) return;
+    const allGames = await gamesApi.listAllGames();
+    const played: typeof playedGames = [];
+    const names: Record<number, string> = {};
+    for (const g of allGames) {
+      const sb = await scoreboardApi.getGameScoreboard(g.id);
+      const entry = sb.data?.entries.find((e) => e.team_id === teamId);
+      let participated = !!entry;
+      if (!participated) {
+        const roster = await gamesApi.listGameTeams(g.id);
+        participated =
+          roster.data?.items.some((gt) => gt.team_id === teamId) ?? false;
+      }
+      if (!participated) continue;
+      names[g.id] = g.name ?? `Game #${g.id}`;
+      played.push({
+        gameId: g.id,
+        name: names[g.id],
+        rank: entry?.position,
+        total: sb.data ? sb.data.entries.length : undefined,
+      });
+    }
+    setGameNames((prev) => ({ ...prev, ...names }));
+    setPlayedGames(played);
+  }, [teamId, user]);
+
   useEffect(() => {
     void fetchTeam();
     void fetchMembers();
     void fetchWriteups();
     void fetchUsers();
-  }, [fetchTeam, fetchMembers, fetchWriteups, fetchUsers]);
+    void fetchUniversities();
+    void fetchGames();
+  }, [
+    fetchTeam,
+    fetchMembers,
+    fetchWriteups,
+    fetchUsers,
+    fetchUniversities,
+    fetchGames,
+  ]);
 
   useEffect(() => {
     void fetchEvents();
@@ -251,6 +302,15 @@ export default function TeamDetailPage() {
   const memberUserIds = new Set(members.map((m) => m.user_id));
   const invitableUsers = allUsers.filter((u) => !memberUserIds.has(u.id));
 
+  const universityNode =
+    team.university_id != null ? (
+      <Link to={`/universities/${team.university_id}`}>
+        {universityName ?? `University #${team.university_id}`}
+      </Link>
+    ) : (
+      "—"
+    );
+
   return (
     <div className="page detail-page">
       <ErrorDisplay error={error} />
@@ -283,7 +343,7 @@ export default function TeamDetailPage() {
                 label: "Captain",
                 value: team.captain_id ? userLabel(team.captain_id) : "—",
               },
-              { label: "University", value: universityName ?? "—" },
+              { label: "University", value: universityNode },
             ]}
             actions={
               <>
@@ -348,7 +408,7 @@ export default function TeamDetailPage() {
                 <InfoRow label="Captain">
                   {team.captain_id ? userLabel(team.captain_id) : "—"}
                 </InfoRow>
-                <InfoRow label="University">{universityName ?? "—"}</InfoRow>
+                <InfoRow label="University">{universityNode}</InfoRow>
               </InfoGroup>
             </InfoGroups>
           </div>
@@ -398,16 +458,18 @@ export default function TeamDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>University ID</label>
-            <input
-              type="number"
-              value={editForm.university_id ?? ""}
-              onChange={(e) =>
-                setEditForm((f) => ({
-                  ...f,
-                  university_id: e.target.value ? Number(e.target.value) : null,
-                }))
+            <label>University</label>
+            <FilterSelect
+              placeholder="Search universities…"
+              allowClear
+              value={editForm.university_id ?? null}
+              onChange={(id) =>
+                setEditForm((f) => ({ ...f, university_id: id }))
               }
+              options={universities.map((u) => ({
+                id: u.id,
+                label: u.name ?? `University #${u.id}`,
+              }))}
             />
           </div>
           <div className="form-actions">
@@ -584,6 +646,41 @@ export default function TeamDetailPage() {
 
       {user && (
         <>
+          <div className="detail-section">
+            <div className="section-head">
+              <h3>
+                Games <SectionCount n={playedGames.length} />
+              </h3>
+            </div>
+            {playedGames.length > 0 ? (
+              <InfoGroups>
+                <InfoGroup title="Played">
+                  {playedGames.map((g) => (
+                    <InfoRow
+                      key={g.gameId}
+                      label={
+                        <Link to={`/games/${g.gameId}`}>{g.name}</Link>
+                      }
+                    >
+                      {g.rank != null && g.total != null ? (
+                        <span
+                          className="score-cell"
+                          title={`Placed ${g.rank} of ${g.total} teams`}
+                        >
+                          {g.rank} / {g.total}
+                        </span>
+                      ) : (
+                        <span className="muted-dash">—</span>
+                      )}
+                    </InfoRow>
+                  ))}
+                </InfoGroup>
+              </InfoGroups>
+            ) : (
+              <p className="section-empty">No games played yet.</p>
+            )}
+          </div>
+
           <div className="detail-section">
             <div className="section-head">
               <h3>
