@@ -2,9 +2,11 @@ import { useState, useCallback } from "react";
 import * as usersApi from "../api/users";
 import type { UserUpdate } from "../api/users";
 import { ErrorDisplay } from "../components/ErrorDisplay";
+import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 
 export default function ProfilePage() {
+  usePageTitle("Profile");
   const { user, refreshUser } = useAuth();
 
   const [editing, setEditing] = useState(false);

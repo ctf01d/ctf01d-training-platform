@@ -201,10 +201,18 @@ textarea {
 .page-header {
   min-height: 48px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 2px;
+}
+
+/* Search/filters sit on the left of the header, the primary action on the
+   right, on a single row. */
+.page-header .filters,
+.page-header .inline-form {
+  flex: 1;
+  margin-bottom: 0;
 }
 
 .page-header h1 {
@@ -416,6 +424,14 @@ a:focus-visible {
   font-size: .98rem;
   font-weight: 500;
   word-break: break-word;
+}
+
+.game-card-duration {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 400;
 }
 
 .game-card-media {

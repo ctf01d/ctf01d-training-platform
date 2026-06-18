@@ -5,6 +5,7 @@ import type { University, UniversityUpdate } from "../api/universities";
 import * as teamsApi from "../api/teams";
 import type { Team } from "../api/teams";
 import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
+import { usePageTitle } from "../components/usePageTitle";
 import {
   DetailHero,
   InfoGroups,
@@ -25,6 +26,7 @@ export default function UniversityDetailPage() {
   const { isAdmin } = useAuth();
 
   const [university, setUniversity] = useState<University | null>(null);
+  usePageTitle(university?.name ?? undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
 

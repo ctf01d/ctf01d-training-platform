@@ -142,6 +142,28 @@ export function formatRelativeTime(value?: string | null): string {
   return "just now";
 }
 
+/**
+ * Human-readable span between two timestamps, e.g. "7h", "1d 4h", "45m".
+ * Returns null when either bound is missing or the range is non-positive.
+ */
+export function formatDuration(
+  start?: string | null,
+  end?: string | null,
+): string | null {
+  if (!start || !end) return null;
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  const totalMinutes = Math.round(ms / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days) parts.push(`${days}d`);
+  if (hours) parts.push(`${hours}h`);
+  if (minutes && !days) parts.push(`${minutes}m`);
+  return parts.join(" ") || "0m";
+}
+
 /** Full date/time including the timezone, e.g. for tooltips. */
 export function formatDateTimeWithZone(value: string): string {
   return new Date(value).toLocaleString(undefined, {

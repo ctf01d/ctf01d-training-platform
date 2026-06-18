@@ -17,6 +17,7 @@ import {
   formatDateTime,
   safeHref,
 } from "../components/DetailInfo";
+import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 
 const checkBadgeVariant: Record<string, string> = {
@@ -34,6 +35,7 @@ export default function ServiceDetailPage() {
   const { user, isPlayer, isAdmin } = useAuth();
 
   const [service, setService] = useState<Service | null>(null);
+  usePageTitle(service?.name);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
 

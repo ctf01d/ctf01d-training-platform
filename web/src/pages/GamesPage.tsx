@@ -5,7 +5,8 @@ import type { Game, GameCreate } from "../api/games";
 import * as teamsApi from "../api/teams";
 import { CardGrid, CardBadge, Pagination } from "../components/Card";
 import { ErrorDisplay } from "../components/ErrorDisplay";
-import { RelativeTime } from "../components/DetailInfo";
+import { RelativeTime, formatDuration } from "../components/DetailInfo";
+import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 
 /**
@@ -15,6 +16,7 @@ import { useAuth } from "../auth/AuthContext";
 type OrganizerTeams = Record<string, { id: number; name: string } | null>;
 
 export default function GamesPage() {
+  usePageTitle("Games");
   const { isPlayer } = useAuth();
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
@@ -95,7 +97,16 @@ export default function GamesPage() {
   return (
     <div className="page games-page">
       <div className="page-header">
-        <h1>Games</h1>
+        <div className="filters">
+          <input
+            placeholder="Search games..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
         {isPlayer && (
           <button
             className="btn btn-primary"
@@ -104,17 +115,6 @@ export default function GamesPage() {
             {showCreate ? "Cancel" : "Create Game"}
           </button>
         )}
-      </div>
-
-      <div className="filters">
-        <input
-          placeholder="Search games..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1);
-          }}
-        />
       </div>
 
       {showCreate && (
@@ -196,6 +196,7 @@ function GameCard({
   const organizerTeam = game.organizer
     ? organizerTeams[game.organizer.trim().toLowerCase()]
     : null;
+  const duration = formatDuration(game.starts_at, game.ends_at);
 
   return (
     <article className="game-card">
@@ -228,15 +229,12 @@ function GameCard({
             </dd>
           </div>
           <div>
-            <dt>Starts</dt>
+            <dt>Date</dt>
             <dd>
               <RelativeTime value={game.starts_at} />
-            </dd>
-          </div>
-          <div>
-            <dt>Ends</dt>
-            <dd>
-              <RelativeTime value={game.ends_at} />
+              {duration && (
+                <span className="game-card-duration">{duration}</span>
+              )}
             </dd>
           </div>
           <div>

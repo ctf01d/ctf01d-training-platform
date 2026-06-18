@@ -20,6 +20,7 @@ import {
 import { CardBadge } from "../components/Card";
 import { TeamLink } from "../components/TeamLink";
 import { FilterSelect } from "../components/FilterSelect";
+import { usePageTitle } from "../components/usePageTitle";
 import {
   DetailHero,
   InfoGroups,
@@ -41,6 +42,7 @@ export default function GameDetailPage() {
   const { user, isPlayer, isAdmin } = useAuth();
 
   const [game, setGame] = useState<Game | null>(null);
+  usePageTitle(game?.name);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
 

@@ -4,9 +4,11 @@ import * as teamsApi from "../api/teams";
 import type { Team, TeamCreate } from "../api/teams";
 import { CardGrid, EntityCard, CardMeta, Pagination } from "../components/Card";
 import { ErrorDisplay } from "../components/ErrorDisplay";
+import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 
 export default function TeamsPage() {
+  usePageTitle("Teams");
   const { isPlayer } = useAuth();
   const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -72,7 +74,16 @@ export default function TeamsPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Teams</h1>
+        <div className="filters">
+          <input
+            placeholder="Search teams..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
         {isPlayer && (
           <button
             className="btn btn-primary"
@@ -81,17 +92,6 @@ export default function TeamsPage() {
             {showCreate ? "Cancel" : "Create Team"}
           </button>
         )}
-      </div>
-
-      <div className="filters">
-        <input
-          placeholder="Search teams..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1);
-          }}
-        />
       </div>
 
       {showCreate && (

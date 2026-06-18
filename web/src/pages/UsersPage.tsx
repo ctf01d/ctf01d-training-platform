@@ -9,8 +9,10 @@ import {
   Pagination,
 } from "../components/Card";
 import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
+import { usePageTitle } from "../components/usePageTitle";
 
 export default function UsersPage() {
+  usePageTitle("Users");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
@@ -80,24 +82,22 @@ export default function UsersPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Users</h1>
+        <div className="filters">
+          <input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
         <button
           className="btn btn-primary"
           onClick={() => setShowCreate(!showCreate)}
         >
           {showCreate ? "Cancel" : "Create User"}
         </button>
-      </div>
-
-      <div className="filters">
-        <input
-          placeholder="Search users..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1);
-          }}
-        />
       </div>
 
       {showCreate && (

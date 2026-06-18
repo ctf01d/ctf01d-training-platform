@@ -4,8 +4,10 @@ import * as universitiesApi from "../api/universities";
 import type { University, UniversityCreate } from "../api/universities";
 import { CardGrid, Pagination } from "../components/Card";
 import { ErrorDisplay } from "../components/ErrorDisplay";
+import { usePageTitle } from "../components/usePageTitle";
 
 export default function UniversitiesPage() {
+  usePageTitle("Universities");
   const [universities, setUniversities] = useState<University[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
@@ -56,24 +58,22 @@ export default function UniversitiesPage() {
   return (
     <div className="page universities-page">
       <div className="page-header">
-        <h1>Universities</h1>
+        <div className="filters">
+          <input
+            placeholder="Search universities..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
         <button
           className="btn btn-primary"
           onClick={() => setShowCreate(!showCreate)}
         >
           {showCreate ? "Cancel" : "Create University"}
         </button>
-      </div>
-
-      <div className="filters">
-        <input
-          placeholder="Search universities..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1);
-          }}
-        />
       </div>
 
       {showCreate && (

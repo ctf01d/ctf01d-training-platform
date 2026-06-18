@@ -16,6 +16,7 @@ import type { components } from "../api/schema";
 import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
 import { FilterSelect } from "../components/FilterSelect";
+import { usePageTitle } from "../components/usePageTitle";
 import {
   DetailHero,
   InfoGroups,
@@ -38,6 +39,7 @@ export default function TeamDetailPage() {
   const { user, isAdmin } = useAuth();
 
   const [team, setTeam] = useState<Team | null>(null);
+  usePageTitle(team?.name);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
 

@@ -10,6 +10,7 @@ import {
   Pagination,
 } from "../components/Card";
 import { ErrorDisplay, handleApiError } from "../components/ErrorDisplay";
+import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 
 const checkBadgeVariant: Record<string, string> = {
@@ -21,6 +22,7 @@ const checkBadgeVariant: Record<string, string> = {
 };
 
 export default function ServicesPage() {
+  usePageTitle("Services");
   const { isPlayer } = useAuth();
   const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
@@ -122,7 +124,31 @@ export default function ServicesPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Services</h1>
+        <div className="filters">
+          <select
+            value={
+              publicFilter === undefined ? "" : publicFilter ? "true" : "false"
+            }
+            onChange={(e) => {
+              setPublicFilter(
+                e.target.value === "" ? undefined : e.target.value === "true",
+              );
+              setPage(1);
+            }}
+          >
+            <option value="">All</option>
+            <option value="true">Public</option>
+            <option value="false">Private</option>
+          </select>
+          <input
+            placeholder="Search services..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
         {isPlayer && (
           <div className="action-buttons">
             <button
@@ -145,32 +171,6 @@ export default function ServicesPage() {
             </button>
           </div>
         )}
-      </div>
-
-      <div className="filters">
-        <select
-          value={
-            publicFilter === undefined ? "" : publicFilter ? "true" : "false"
-          }
-          onChange={(e) => {
-            setPublicFilter(
-              e.target.value === "" ? undefined : e.target.value === "true",
-            );
-            setPage(1);
-          }}
-        >
-          <option value="">All</option>
-          <option value="true">Public</option>
-          <option value="false">Private</option>
-        </select>
-        <input
-          placeholder="Search services..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1);
-          }}
-        />
       </div>
 
       {showCreate && (

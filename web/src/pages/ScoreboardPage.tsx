@@ -6,6 +6,7 @@ import type { components } from "../api/schema";
 import { ErrorDisplay } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
 import { TeamLink } from "../components/TeamLink";
+import { usePageTitle } from "../components/usePageTitle";
 
 type ScoreboardEntry = components["schemas"]["ScoreboardEntry"];
 type GlobalScoreboard = components["schemas"]["GlobalScoreboard"];
@@ -18,6 +19,7 @@ function StatusBadge({ status }: { status: string }) {
 const fmtScore = (score: number) => score.toLocaleString();
 
 export default function ScoreboardPage() {
+  usePageTitle("Scoreboard");
   const [tab, setTab] = useState<"global" | "game">("global");
 
   const [globalEntries, setGlobalEntries] = useState<
@@ -73,10 +75,6 @@ export default function ScoreboardPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Scoreboard</h1>
-      </div>
-
       <div className="tabs" role="tablist" aria-label="Scoreboard scope">
         <button
           className={`btn btn-sm ${tab === "global" ? "btn-primary" : ""}`}

@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import * as resultsApi from "../api/results";
 import type { Result, ResultCreate, ResultUpdate } from "../api/results";
 import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
+import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 
 export default function ResultsPage() {
+  usePageTitle("Results");
   const { isPlayer } = useAuth();
 
   const [results, setResults] = useState<Result[]>([]);
@@ -89,42 +91,40 @@ export default function ResultsPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Results</h1>
+        <div className="inline-form">
+          <input
+            type="number"
+            placeholder="Filter by Game ID"
+            value={filterGameId}
+            onChange={(e) => setFilterGameId(e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Filter by Team ID"
+            value={filterTeamId}
+            onChange={(e) => setFilterTeamId(e.target.value)}
+          />
+          <button className="btn btn-sm" onClick={() => void fetchResults()}>
+            Filter
+          </button>
+          {(filterGameId || filterTeamId) && (
+            <button
+              className="btn btn-sm"
+              onClick={() => {
+                setFilterGameId("");
+                setFilterTeamId("");
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
         {isPlayer && (
           <button
             className="btn btn-primary"
             onClick={() => setShowCreate(!showCreate)}
           >
             {showCreate ? "Cancel" : "Create Result"}
-          </button>
-        )}
-      </div>
-
-      <div className="inline-form">
-        <input
-          type="number"
-          placeholder="Filter by Game ID"
-          value={filterGameId}
-          onChange={(e) => setFilterGameId(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Filter by Team ID"
-          value={filterTeamId}
-          onChange={(e) => setFilterTeamId(e.target.value)}
-        />
-        <button className="btn btn-sm" onClick={() => void fetchResults()}>
-          Filter
-        </button>
-        {(filterGameId || filterTeamId) && (
-          <button
-            className="btn btn-sm"
-            onClick={() => {
-              setFilterGameId("");
-              setFilterTeamId("");
-            }}
-          >
-            Clear
           </button>
         )}
       </div>
