@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 )
@@ -40,7 +42,10 @@ func (m *mockUserStore) SetUserLastLogin(_ context.Context, _ db.SetUserLastLogi
 }
 
 type mockSessionStore struct {
-	created []db.CreateSessionParams
+	created    []db.CreateSessionParams
+	authRow    db.GetSessionForAuthRow
+	authErr    error
+	touchCalls int
 }
 
 func (m *mockSessionStore) CreateSession(_ context.Context, arg db.CreateSessionParams) (db.UserSession, error) {
@@ -48,15 +53,21 @@ func (m *mockSessionStore) CreateSession(_ context.Context, arg db.CreateSession
 	return db.UserSession{ID: int64(len(m.created)), Jti: arg.Jti, UserID: arg.UserID}, nil
 }
 
-func (m *mockSessionStore) GetSessionByJTI(_ context.Context, _ string) (db.UserSession, error) {
-	return db.UserSession{}, errors.New("no rows in result set")
+func (m *mockSessionStore) GetSessionForAuth(_ context.Context, _ string) (db.GetSessionForAuthRow, error) {
+	if m.authErr != nil {
+		return db.GetSessionForAuthRow{}, m.authErr
+	}
+	return m.authRow, nil
 }
 
 func (m *mockSessionStore) ListActiveSessionsByUser(_ context.Context, _ int64) ([]db.UserSession, error) {
 	return nil, nil
 }
 
-func (m *mockSessionStore) TouchSession(_ context.Context, _ db.TouchSessionParams) error { return nil }
+func (m *mockSessionStore) TouchSession(_ context.Context, _ db.TouchSessionParams) error {
+	m.touchCalls++
+	return nil
+}
 
 func (m *mockSessionStore) RevokeSession(_ context.Context, _ string) error { return nil }
 
@@ -156,6 +167,70 @@ func TestMe_Success(t *testing.T) {
 	if user.UserName != "alice" {
 		t.Errorf("expected alice, got %s", user.UserName)
 	}
+}
+
+func TestValidateAndTouch(t *testing.T) {
+	now := time.Now()
+	mk := func(row db.GetSessionForAuthRow) (*Service, *mockSessionStore) {
+		ss := &mockSessionStore{authRow: row}
+		return NewService(newMockUserStore(), ss, &mockJWT{}, &mockChecker{}), ss
+	}
+
+	t.Run("valid stale session is touched", func(t *testing.T) {
+		svc, ss := mk(db.GetSessionForAuthRow{ExpiresAt: now.Add(time.Hour), LastSeenAt: now.Add(-10 * time.Minute)})
+		if !svc.ValidateAndTouch(context.Background(), "jti", "1.2.3.4") {
+			t.Fatal("expected valid")
+		}
+		if ss.touchCalls != 1 {
+			t.Errorf("touchCalls = %d, want 1", ss.touchCalls)
+		}
+	})
+
+	t.Run("valid recent session is not touched", func(t *testing.T) {
+		svc, ss := mk(db.GetSessionForAuthRow{ExpiresAt: now.Add(time.Hour), LastSeenAt: now.Add(-time.Minute)})
+		if !svc.ValidateAndTouch(context.Background(), "jti", "1.2.3.4") {
+			t.Fatal("expected valid")
+		}
+		if ss.touchCalls != 0 {
+			t.Errorf("touchCalls = %d, want 0 (throttled)", ss.touchCalls)
+		}
+	})
+
+	t.Run("blocked owner is rejected", func(t *testing.T) {
+		svc, _ := mk(db.GetSessionForAuthRow{ExpiresAt: now.Add(time.Hour), LastSeenAt: now, IsBlocked: true})
+		if svc.ValidateAndTouch(context.Background(), "jti", "") {
+			t.Error("blocked owner must be invalid")
+		}
+	})
+
+	t.Run("expired is rejected", func(t *testing.T) {
+		svc, _ := mk(db.GetSessionForAuthRow{ExpiresAt: now.Add(-time.Hour), LastSeenAt: now})
+		if svc.ValidateAndTouch(context.Background(), "jti", "") {
+			t.Error("expired session must be invalid")
+		}
+	})
+
+	t.Run("revoked is rejected", func(t *testing.T) {
+		svc, _ := mk(db.GetSessionForAuthRow{ExpiresAt: now.Add(time.Hour), LastSeenAt: now, RevokedAt: pgtype.Timestamptz{Time: now, Valid: true}})
+		if svc.ValidateAndTouch(context.Background(), "jti", "") {
+			t.Error("revoked session must be invalid")
+		}
+	})
+
+	t.Run("empty jti is rejected", func(t *testing.T) {
+		svc, _ := mk(db.GetSessionForAuthRow{ExpiresAt: now.Add(time.Hour), LastSeenAt: now})
+		if svc.ValidateAndTouch(context.Background(), "", "") {
+			t.Error("empty jti must be invalid")
+		}
+	})
+
+	t.Run("missing session is rejected", func(t *testing.T) {
+		ss := &mockSessionStore{authErr: errors.New("no rows in result set")}
+		svc := NewService(newMockUserStore(), ss, &mockJWT{}, &mockChecker{})
+		if svc.ValidateAndTouch(context.Background(), "jti", "") {
+			t.Error("missing session must be invalid")
+		}
+	})
 }
 
 func TestMe_NotFound(t *testing.T) {

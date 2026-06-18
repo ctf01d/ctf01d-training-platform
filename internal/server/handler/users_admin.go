@@ -60,6 +60,15 @@ func (h *Handler) HandleSetUserBlocked(c *gin.Context) {
 		return
 	}
 
+	// Block is authoritative on the next request, so an admin blocking their own
+	// account would immediately lock themselves out. Disallow it.
+	if req.Blocked {
+		if adminID, ok := middleware.CurrentUserID(c); ok && adminID == id {
+			c.JSON(http.StatusForbidden, errorResponse{Code: codeForbidden, Message: "you cannot block your own account"})
+			return
+		}
+	}
+
 	user, err := h.users.SetBlocked(c.Request.Context(), id, req.Blocked)
 	if err != nil {
 		respondError(c, err)
@@ -104,11 +113,14 @@ func (h *Handler) HandleUploadUserAvatar(c *gin.Context) {
 
 	scaled, err := imageutil.ScaleAvatar(f, avatarMaxDimension)
 	if err != nil {
-		if errors.Is(err, imageutil.ErrInvalidImage) {
+		switch {
+		case errors.Is(err, imageutil.ErrInvalidImage):
 			c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "uploaded file is not a valid image"})
-			return
+		case errors.Is(err, imageutil.ErrImageTooLarge):
+			c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "image dimensions are too large"})
+		default:
+			respondError(c, err)
 		}
-		respondError(c, err)
 		return
 	}
 

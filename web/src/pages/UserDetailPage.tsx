@@ -248,13 +248,15 @@ export default function UserDetailPage() {
             </InfoRow>
             <InfoRow label="Blocked">
               {user.is_blocked ? "Yes" : "No"}
-              <button
-                className={`btn btn-sm ${user.is_blocked ? "" : "btn-danger"}`}
-                style={{ marginLeft: "0.5rem" }}
-                onClick={handleToggleBlock}
-              >
-                {user.is_blocked ? "Unblock" : "Block"}
-              </button>
+              {user.id !== currentUser?.id && (
+                <button
+                  className={`btn btn-sm ${user.is_blocked ? "" : "btn-danger"}`}
+                  style={{ marginLeft: "0.5rem" }}
+                  onClick={handleToggleBlock}
+                >
+                  {user.is_blocked ? "Unblock" : "Block"}
+                </button>
+              )}
             </InfoRow>
           </InfoGroup>
           <InfoGroup title="Meta">

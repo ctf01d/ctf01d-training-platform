@@ -8,12 +8,11 @@ import (
 
 type contextKey string
 
-// SessionChecker validates and refreshes server-side sessions. It is satisfied
-// by the auth service; a nil checker disables session enforcement (used in
-// lightweight tests).
+// SessionChecker validates and refreshes server-side sessions in a single call.
+// It is satisfied by the auth service; a nil checker disables session
+// enforcement (used in lightweight tests).
 type SessionChecker interface {
-	ValidateSession(ctx context.Context, jti string) bool
-	TouchSession(ctx context.Context, jti, ipAddress string)
+	ValidateAndTouch(ctx context.Context, jti, ipAddress string) bool
 }
 
 const (

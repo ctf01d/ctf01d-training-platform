@@ -6,14 +6,15 @@ import (
 	"math"
 )
 
-// bilinearSample returns the interpolated color at fractional coordinates
-// (sx, sy) within src, clamped to the source bounds. Channels are returned as
-// 8-bit values (0-255).
+// bilinearSample returns the interpolated color at exact source coordinates
+// (sx, sy) within src, clamped to the source bounds. The caller is responsible
+// for the pixel-center (half-pixel) mapping. Channels are returned as 8-bit
+// values (0-255).
 func bilinearSample(src image.Image, b image.Rectangle, sx, sy float64) (r, g, bl, a uint32) {
-	x0 := int(math.Floor(sx - 0.5))
-	y0 := int(math.Floor(sy - 0.5))
-	dx := sx - 0.5 - float64(x0)
-	dy := sy - 0.5 - float64(y0)
+	x0 := int(math.Floor(sx))
+	y0 := int(math.Floor(sy))
+	dx := sx - float64(x0)
+	dy := sy - float64(y0)
 
 	r00, g00, b00, a00 := at(src, b, x0, y0)
 	r10, g10, b10, a10 := at(src, b, x0+1, y0)

@@ -119,6 +119,12 @@ func run() error {
 
 	engine := server.New(cfg, log, store, h)
 
+	// Periodically purge expired sessions so user_sessions does not grow without
+	// bound. Tied to the process lifetime via context.
+	sessionCleanupCtx, stopSessionCleanup := context.WithCancel(context.Background())
+	defer stopSessionCleanup()
+	go runSessionCleanup(sessionCleanupCtx, store.Queries, log)
+
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Addr,
 		Handler:           engine,
@@ -151,4 +157,34 @@ func run() error {
 
 	log.Info("server stopped")
 	return nil
+}
+
+const sessionCleanupInterval = time.Hour
+
+// expiredSessionDeleter is the slice of the data store needed by the cleanup
+// loop (satisfied by *db.Queries) — declared here to avoid importing db.
+type expiredSessionDeleter interface {
+	DeleteExpiredSessions(ctx context.Context) error
+}
+
+// runSessionCleanup deletes expired sessions on startup and then on an interval
+// until ctx is canceled.
+func runSessionCleanup(ctx context.Context, store expiredSessionDeleter, log *zap.Logger) {
+	purge := func() {
+		if err := store.DeleteExpiredSessions(ctx); err != nil && ctx.Err() == nil {
+			log.Warn("expired session cleanup failed", zap.Error(err))
+		}
+	}
+	purge()
+
+	ticker := time.NewTicker(sessionCleanupInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			purge()
+		}
+	}
 }

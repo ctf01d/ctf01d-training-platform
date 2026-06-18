@@ -19,13 +19,17 @@ type UserStore interface {
 
 type SessionStore interface {
 	CreateSession(ctx context.Context, arg db.CreateSessionParams) (db.UserSession, error)
-	GetSessionByJTI(ctx context.Context, jti string) (db.UserSession, error)
+	GetSessionForAuth(ctx context.Context, jti string) (db.GetSessionForAuthRow, error)
 	ListActiveSessionsByUser(ctx context.Context, userID int64) ([]db.UserSession, error)
 	TouchSession(ctx context.Context, arg db.TouchSessionParams) error
 	RevokeSession(ctx context.Context, jti string) error
 	RevokeSessionByID(ctx context.Context, arg db.RevokeSessionByIDParams) error
 	RevokeAllUserSessions(ctx context.Context, userID int64) error
 }
+
+// sessionTouchInterval throttles last-seen updates so a read endpoint does not
+// turn into a row write on every request.
+const sessionTouchInterval = 5 * time.Minute
 
 type JWTManager interface {
 	Generate(userID int64, role, userName, jti string) (string, error)
@@ -77,12 +81,19 @@ func (s *Service) Login(ctx context.Context, userName, password, ipAddress, user
 		return "", nil, fmt.Errorf("generating session id: %w", err)
 	}
 
+	ip := strToPtr(ipAddress)
+	// Order matters: record login and sign the token before the session row.
+	// CreateSession runs last so a failure leaves no orphan session, and a
+	// returned token always has a backing session.
+	if err := s.store.SetUserLastLogin(ctx, db.SetUserLastLoginParams{ID: dbUser.ID, LastLoginIp: ip}); err != nil {
+		return "", nil, fmt.Errorf("recording login: %w", err)
+	}
+
 	token, err := s.jwt.Generate(dbUser.ID, dbUser.Role, dbUser.UserName, jti)
 	if err != nil {
 		return "", nil, fmt.Errorf("generating token: %w", err)
 	}
 
-	ip := strToPtr(ipAddress)
 	if _, err := s.sessions.CreateSession(ctx, db.CreateSessionParams{
 		UserID:    dbUser.ID,
 		Jti:       jti,
@@ -91,10 +102,6 @@ func (s *Service) Login(ctx context.Context, userName, password, ipAddress, user
 		ExpiresAt: time.Now().Add(s.jwt.TTL()),
 	}); err != nil {
 		return "", nil, fmt.Errorf("creating session: %w", err)
-	}
-
-	if err := s.store.SetUserLastLogin(ctx, db.SetUserLastLoginParams{ID: dbUser.ID, LastLoginIp: ip}); err != nil {
-		return "", nil, fmt.Errorf("recording login: %w", err)
 	}
 
 	u := userFromDB(dbUser)
@@ -120,28 +127,29 @@ func (s *Service) Me(ctx context.Context, userID int64) (*usersvc.User, error) {
 	return &u, nil
 }
 
-// ValidateSession reports whether the session identified by jti is still active
-// (exists, not revoked, not expired). An empty jti is treated as invalid.
-func (s *Service) ValidateSession(ctx context.Context, jti string) bool {
+// ValidateAndTouch reports whether the session identified by jti is usable
+// (exists, not revoked, not expired, owner not blocked) using a single read. It
+// also refreshes last-seen/IP, but at most once per sessionTouchInterval so a
+// read request is not turned into a write on every call. An empty jti is
+// invalid.
+//
+// Checking the blocked flag here makes blocking effective immediately even if
+// the bulk session revocation that accompanies it fails.
+func (s *Service) ValidateAndTouch(ctx context.Context, jti, ipAddress string) bool {
 	if jti == "" {
 		return false
 	}
-	sess, err := s.sessions.GetSessionByJTI(ctx, jti)
+	row, err := s.sessions.GetSessionForAuth(ctx, jti)
 	if err != nil {
 		return false
 	}
-	if sess.RevokedAt.Valid || time.Now().After(sess.ExpiresAt) {
+	if row.RevokedAt.Valid || time.Now().After(row.ExpiresAt) || row.IsBlocked {
 		return false
 	}
-	return true
-}
-
-// TouchSession records the latest activity time and client IP for a session.
-func (s *Service) TouchSession(ctx context.Context, jti, ipAddress string) {
-	if jti == "" {
-		return
+	if time.Since(row.LastSeenAt) >= sessionTouchInterval {
+		_ = s.sessions.TouchSession(ctx, db.TouchSessionParams{Jti: jti, IpAddress: strToPtr(ipAddress)})
 	}
-	_ = s.sessions.TouchSession(ctx, db.TouchSessionParams{Jti: jti, IpAddress: strToPtr(ipAddress)})
+	return true
 }
 
 // Logout revokes the session tied to the current token.

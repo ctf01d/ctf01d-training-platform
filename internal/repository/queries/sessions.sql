@@ -7,6 +7,14 @@ RETURNING *;
 SELECT * FROM user_sessions
 WHERE jti = $1;
 
+-- name: GetSessionForAuth :one
+-- Single read used on every authenticated request: session validity plus the
+-- owner's blocked flag, avoiding a second query/lookup.
+SELECT s.revoked_at, s.expires_at, s.last_seen_at, u.is_blocked
+FROM user_sessions s
+JOIN users u ON u.id = s.user_id
+WHERE s.jti = $1;
+
 -- name: ListActiveSessionsByUser :many
 SELECT * FROM user_sessions
 WHERE user_id = $1

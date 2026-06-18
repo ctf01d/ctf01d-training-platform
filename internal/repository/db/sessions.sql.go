@@ -8,6 +8,8 @@ package db
 import (
 	"context"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createSession = `-- name: CreateSession :one
@@ -75,6 +77,34 @@ func (q *Queries) GetSessionByJTI(ctx context.Context, jti string) (UserSession,
 		&i.LastSeenAt,
 		&i.ExpiresAt,
 		&i.RevokedAt,
+	)
+	return i, err
+}
+
+const getSessionForAuth = `-- name: GetSessionForAuth :one
+SELECT s.revoked_at, s.expires_at, s.last_seen_at, u.is_blocked
+FROM user_sessions s
+JOIN users u ON u.id = s.user_id
+WHERE s.jti = $1
+`
+
+type GetSessionForAuthRow struct {
+	RevokedAt  pgtype.Timestamptz `json:"revoked_at"`
+	ExpiresAt  time.Time          `json:"expires_at"`
+	LastSeenAt time.Time          `json:"last_seen_at"`
+	IsBlocked  bool               `json:"is_blocked"`
+}
+
+// Single read used on every authenticated request: session validity plus the
+// owner's blocked flag, avoiding a second query/lookup.
+func (q *Queries) GetSessionForAuth(ctx context.Context, jti string) (GetSessionForAuthRow, error) {
+	row := q.db.QueryRow(ctx, getSessionForAuth, jti)
+	var i GetSessionForAuthRow
+	err := row.Scan(
+		&i.RevokedAt,
+		&i.ExpiresAt,
+		&i.LastSeenAt,
+		&i.IsBlocked,
 	)
 	return i, err
 }

@@ -331,11 +331,14 @@ func (s *Service) UpdateRating(ctx context.Context, id int64, rating int) (*User
 // Team memberships and membership events cascade via foreign keys; team
 // captaincy has no FK so it is cleared explicitly first.
 func (s *Service) Delete(ctx context.Context, id int64) error {
-	if captainID, err := int32FromInt64(id); err == nil {
-		cid := captainID
-		if err := s.q.ClearUserTeamCaptaincy(ctx, &cid); err != nil {
-			return err
-		}
+	// teams.captain_id is an int32 column; converting first surfaces an error
+	// rather than silently leaving a dangling captain reference behind.
+	captainID, err := int32FromInt64(id)
+	if err != nil {
+		return err
+	}
+	if err := s.q.ClearUserTeamCaptaincy(ctx, &captainID); err != nil {
+		return err
 	}
 	return s.q.DeleteUser(ctx, id)
 }

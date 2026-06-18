@@ -49,17 +49,17 @@ func OpenAPIAuth(jwtMgr *auth.Manager, sessions SessionChecker) httpserver.Middl
 			return
 		}
 
-		// Reject tokens whose session was revoked (logout) or invalidated
-		// (user blocked). Tokens issued before sessions existed have no jti
-		// and are treated as revoked once enforcement is enabled.
+		// Reject tokens whose session was revoked (logout), expired, or whose
+		// owner is blocked. A single read validates and refreshes last-seen.
+		// Tokens issued before sessions existed have no jti and are treated as
+		// revoked once enforcement is enabled.
 		if sessions != nil {
-			if !sessions.ValidateSession(c.Request.Context(), claims.ID) {
+			if !sessions.ValidateAndTouch(c.Request.Context(), claims.ID, c.ClientIP()) {
 				if requiresAuth {
 					abortWithJSON(c, http.StatusUnauthorized, errCodeUnauthorized, "session expired or revoked")
 				}
 				return
 			}
-			sessions.TouchSession(c.Request.Context(), claims.ID, c.ClientIP())
 		}
 
 		c.Set(string(userIDKey), userID)
