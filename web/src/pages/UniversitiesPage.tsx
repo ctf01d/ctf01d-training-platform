@@ -143,7 +143,10 @@ function UniversityCard({ university }: { university: University }) {
     <article className="game-card university-card">
       <div className="game-card-content">
         <div className="game-card-heading">
-          <Link to={`/universities/${university.id}`} className="game-card-title">
+          <Link
+            to={`/universities/${university.id}`}
+            className="game-card-title"
+          >
             {title}
           </Link>
         </div>

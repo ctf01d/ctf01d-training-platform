@@ -1,78 +1,90 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-import { getToken, setToken, clearToken } from '../api/auth'
-import * as usersApi from '../api/users'
-import type { User } from '../api/users'
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from "react";
+import { getToken, setToken, clearToken } from "../api/auth";
+import * as usersApi from "../api/users";
+import type { User } from "../api/users";
 
 interface AuthContextValue {
-  user: User | null
-  loading: boolean
-  login: (userName: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  refreshUser: () => Promise<void>
-  isAdmin: boolean
-  isPlayer: boolean
+  user: User | null;
+  loading: boolean;
+  login: (userName: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  isAdmin: boolean;
+  isPlayer: boolean;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
-    const token = getToken()
+    const token = getToken();
     if (!token) {
-      setUser(null)
-      setLoading(false)
-      return
+      setUser(null);
+      setLoading(false);
+      return;
     }
     try {
-      const { data } = await usersApi.getProfile()
+      const { data } = await usersApi.getProfile();
       if (data) {
-        setUser(data)
+        setUser(data);
       } else {
-        clearToken()
-        setUser(null)
+        clearToken();
+        setUser(null);
       }
     } catch {
-      clearToken()
-      setUser(null)
+      clearToken();
+      setUser(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    void refreshUser()
-  }, [refreshUser])
+    void refreshUser();
+  }, [refreshUser]);
 
   const login = useCallback(async (userName: string, password: string) => {
-    const { data, error } = await usersApi.login({ user_name: userName, password })
+    const { data, error } = await usersApi.login({
+      user_name: userName,
+      password,
+    });
     if (error || !data) {
-      throw new Error(error?.message ?? 'Login failed')
+      throw new Error(error?.message ?? "Login failed");
     }
-    setToken(data.token)
-    setUser(data.user)
-  }, [])
+    setToken(data.token);
+    setUser(data.user);
+  }, []);
 
   const logout = useCallback(async () => {
-    await usersApi.logout()
-    clearToken()
-    setUser(null)
-  }, [])
+    await usersApi.logout();
+    clearToken();
+    setUser(null);
+  }, []);
 
-  const isAdmin = user?.role === 'admin'
-  const isPlayer = user?.role === 'player' || user?.role === 'admin'
+  const isAdmin = user?.role === "admin";
+  const isPlayer = user?.role === "player" || user?.role === "admin";
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, isAdmin, isPlayer }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, logout, refreshUser, isAdmin, isPlayer }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }
