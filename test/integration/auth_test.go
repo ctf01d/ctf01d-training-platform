@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -16,6 +17,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
 	"github.com/ctf01d/ctf01d-training-platform/internal/config"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
+	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server"
 	"github.com/ctf01d/ctf01d-training-platform/internal/server/handler"
 	authsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/auth"
@@ -59,7 +61,7 @@ func setupTest(t *testing.T) (*gin.Engine, *repository.Store) {
 
 	jwtMgr := auth.NewManager("test-integration-secret", 24)
 	userService := usersvc.NewService(store.Queries)
-	authService := authsvc.NewService(store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
+	authService := authsvc.NewService(store.Queries, store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
 	universityService := unisvc.NewService(store.Queries)
 	teamService := teamsvc.NewService(store.Queries, store.Queries, store.Queries, store)
 	membershipService := membersvc.NewService(store.Queries, store.Queries, store.Queries, store)
@@ -73,7 +75,7 @@ func setupTest(t *testing.T) (*gin.Engine, *repository.Store) {
 	svcChecker := svcsvc.NewCheckerService(store.Queries, fileStorage)
 	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
 	ctf01dBuilder := ctf01dsvc.NewBuilder(store.Queries)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, writeupService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, writeupService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir, fileStorage)
 
 	engine := server.New(cfg, log, store, h)
 	return engine, store
@@ -93,7 +95,18 @@ func seedUser(t *testing.T, store *repository.Store, userName, displayName, pass
 		t.Fatalf("seed user %s: %v", userName, err)
 	}
 	jwtMgr := auth.NewManager("test-integration-secret", 24)
-	token, err := jwtMgr.Generate(user.ID, user.Role, user.UserName)
+	jti, err := auth.NewSessionID()
+	if err != nil {
+		t.Fatalf("session id for %s: %v", userName, err)
+	}
+	if _, err := store.CreateSession(ctx, db.CreateSessionParams{
+		UserID:    user.ID,
+		Jti:       jti,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}); err != nil {
+		t.Fatalf("create session for %s: %v", userName, err)
+	}
+	token, err := jwtMgr.Generate(user.ID, user.Role, user.UserName, jti)
 	if err != nil {
 		t.Fatalf("generate token for %s: %v", userName, err)
 	}
@@ -234,7 +247,9 @@ func TestAuthFlow(t *testing.T) {
 		t.Errorf("expected 401 without token, got %d", w.Code)
 	}
 
-	w = makeReq(t, engine, http.MethodDelete, fmt.Sprintf("/api/v1/users/%d", playerID), nil, loginToken)
+	w = makeReq(t, engine, http.MethodDelete, fmt.Sprintf("/api/v1/users/%d", playerID), map[string]interface{}{
+		"password": "admin12345",
+	}, loginToken)
 	if w.Code != http.StatusNoContent {
 		t.Fatalf("delete user: %d %s", w.Code, w.Body.String())
 	}

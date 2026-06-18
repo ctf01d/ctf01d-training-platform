@@ -145,15 +145,35 @@ type University struct {
 }
 
 type User struct {
-	ID             int64     `json:"id"`
-	UserName       string    `json:"user_name"`
-	DisplayName    string    `json:"display_name"`
-	Role           string    `json:"role"`
-	Rating         int32     `json:"rating"`
-	AvatarUrl      *string   `json:"avatar_url"`
-	PasswordDigest *string   `json:"password_digest"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID             int64              `json:"id"`
+	UserName       string             `json:"user_name"`
+	DisplayName    string             `json:"display_name"`
+	Role           string             `json:"role"`
+	Rating         int32              `json:"rating"`
+	AvatarUrl      *string            `json:"avatar_url"`
+	PasswordDigest *string            `json:"password_digest"`
+	CreatedAt      time.Time          `json:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at"`
+	Bio            *string            `json:"bio"`
+	Telegram       *string            `json:"telegram"`
+	Github         *string            `json:"github"`
+	Email          *string            `json:"email"`
+	IsBlocked      bool               `json:"is_blocked"`
+	BlockedAt      pgtype.Timestamptz `json:"blocked_at"`
+	LastLoginIp    *string            `json:"last_login_ip"`
+	LastLoginAt    pgtype.Timestamptz `json:"last_login_at"`
+}
+
+type UserSession struct {
+	ID         int64              `json:"id"`
+	UserID     int64              `json:"user_id"`
+	Jti        string             `json:"jti"`
+	IpAddress  *string            `json:"ip_address"`
+	UserAgent  *string            `json:"user_agent"`
+	CreatedAt  time.Time          `json:"created_at"`
+	LastSeenAt time.Time          `json:"last_seen_at"`
+	ExpiresAt  time.Time          `json:"expires_at"`
+	RevokedAt  pgtype.Timestamptz `json:"revoked_at"`
 }
 
 type Writeup struct {

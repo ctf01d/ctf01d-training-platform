@@ -14,7 +14,7 @@ import (
 // OpenAPIAuth enforces BearerAuth only when the generated wrapper marks the
 // operation as secured. For public operations it still accepts a valid token so
 // handlers can render privileged fields for authenticated viewers.
-func OpenAPIAuth(jwtMgr *auth.Manager) httpserver.MiddlewareFunc {
+func OpenAPIAuth(jwtMgr *auth.Manager, sessions SessionChecker) httpserver.MiddlewareFunc {
 	return func(c *gin.Context) {
 		requiresAuth := openAPIRequiresBearer(c)
 		header := c.GetHeader("Authorization")
@@ -49,9 +49,23 @@ func OpenAPIAuth(jwtMgr *auth.Manager) httpserver.MiddlewareFunc {
 			return
 		}
 
+		// Reject tokens whose session was revoked (logout) or invalidated
+		// (user blocked). Tokens issued before sessions existed have no jti
+		// and are treated as revoked once enforcement is enabled.
+		if sessions != nil {
+			if !sessions.ValidateSession(c.Request.Context(), claims.ID) {
+				if requiresAuth {
+					abortWithJSON(c, http.StatusUnauthorized, errCodeUnauthorized, "session expired or revoked")
+				}
+				return
+			}
+			sessions.TouchSession(c.Request.Context(), claims.ID, c.ClientIP())
+		}
+
 		c.Set(string(userIDKey), userID)
 		c.Set(string(roleKey), claims.Role)
 		c.Set(string(userNameKey), claims.UserName)
+		c.Set(string(sessionKey), claims.ID)
 	}
 }
 

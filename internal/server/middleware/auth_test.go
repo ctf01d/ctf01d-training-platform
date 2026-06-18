@@ -18,7 +18,7 @@ type authResponse struct {
 	UserID  int64  `json:"user_id"`
 }
 
-func setupOpenAPIRouter(mgr *auth.Manager, method, path string, requiresBearer bool, middlewares ...httpserver.MiddlewareFunc) *gin.Engine {
+func setupOpenAPIRouter(_ *auth.Manager, method, path string, requiresBearer bool, middlewares ...httpserver.MiddlewareFunc) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 
 	r := gin.New()
@@ -47,7 +47,7 @@ func setupOpenAPIRouter(mgr *auth.Manager, method, path string, requiresBearer b
 func makeToken(t *testing.T, mgr *auth.Manager, userID int64, role, userName string) string {
 	t.Helper()
 
-	token, err := mgr.Generate(userID, role, userName)
+	token, err := mgr.Generate(userID, role, userName, "test-jti")
 	if err != nil {
 		t.Fatalf("generating token: %v", err)
 	}
@@ -66,7 +66,7 @@ func readAuthResponse(t *testing.T, w *httptest.ResponseRecorder) authResponse {
 
 func TestOpenAPIAuth_RequiredBearerMissingToken(t *testing.T) {
 	mgr := auth.NewManager("test-secret", 24)
-	r := setupOpenAPIRouter(mgr, http.MethodGet, "/test", true, OpenAPIAuth(mgr))
+	r := setupOpenAPIRouter(mgr, http.MethodGet, "/test", true, OpenAPIAuth(mgr, nil))
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	w := httptest.NewRecorder()
@@ -79,7 +79,7 @@ func TestOpenAPIAuth_RequiredBearerMissingToken(t *testing.T) {
 
 func TestOpenAPIAuth_PublicRouteWithoutToken(t *testing.T) {
 	mgr := auth.NewManager("test-secret", 24)
-	r := setupOpenAPIRouter(mgr, http.MethodGet, "/test", false, OpenAPIAuth(mgr))
+	r := setupOpenAPIRouter(mgr, http.MethodGet, "/test", false, OpenAPIAuth(mgr, nil))
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	w := httptest.NewRecorder()
@@ -96,7 +96,7 @@ func TestOpenAPIAuth_PublicRouteWithoutToken(t *testing.T) {
 
 func TestOpenAPIAuth_ValidToken(t *testing.T) {
 	mgr := auth.NewManager("test-secret", 24)
-	r := setupOpenAPIRouter(mgr, http.MethodGet, "/test", true, OpenAPIAuth(mgr))
+	r := setupOpenAPIRouter(mgr, http.MethodGet, "/test", true, OpenAPIAuth(mgr, nil))
 
 	token := makeToken(t, mgr, 42, "player", "alice")
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
@@ -118,7 +118,7 @@ func TestOpenAPIAuth_ExpiredToken(t *testing.T) {
 	token := makeToken(t, expiredMgr, 1, "player", "alice")
 
 	validMgr := auth.NewManager("test-secret", 24)
-	r := setupOpenAPIRouter(validMgr, http.MethodGet, "/test", true, OpenAPIAuth(validMgr))
+	r := setupOpenAPIRouter(validMgr, http.MethodGet, "/test", true, OpenAPIAuth(validMgr, nil))
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -137,7 +137,7 @@ func TestOpenAPIRole_InsufficientRole(t *testing.T) {
 		http.MethodPatch,
 		"/users/:id/role",
 		true,
-		OpenAPIAuth(mgr),
+		OpenAPIAuth(mgr, nil),
 		OpenAPIRole(),
 	)
 
@@ -159,7 +159,7 @@ func TestOpenAPIRole_SufficientRole(t *testing.T) {
 		http.MethodPatch,
 		"/users/:id/role",
 		true,
-		OpenAPIAuth(mgr),
+		OpenAPIAuth(mgr, nil),
 		OpenAPIRole(),
 	)
 

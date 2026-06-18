@@ -874,17 +874,27 @@ type UniversityUpdate struct {
 // User defines model for User.
 type User struct {
 	AvatarUrl   *string    `json:"avatar_url,omitempty"`
+	Bio         *string    `json:"bio,omitempty"`
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
 	DisplayName string     `json:"display_name"`
+	Email       *string    `json:"email,omitempty"`
+	Github      *string    `json:"github,omitempty"`
 	Id          int64      `json:"id"`
+	IsBlocked   bool       `json:"is_blocked"`
 	Rating      int        `json:"rating"`
 	Role        UserRole   `json:"role"`
+	Telegram    *string    `json:"telegram,omitempty"`
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
 	UserName    string     `json:"user_name"`
 }
 
 // UserRole defines model for User.Role.
 type UserRole string
+
+// UserBlockUpdate defines model for UserBlockUpdate.
+type UserBlockUpdate struct {
+	Blocked bool `json:"blocked"`
+}
 
 // UserCreate defines model for UserCreate.
 type UserCreate struct {
@@ -898,10 +908,26 @@ type UserCreate struct {
 // UserCreateRole defines model for UserCreate.Role.
 type UserCreateRole string
 
+// UserDeleteRequest defines model for UserDeleteRequest.
+type UserDeleteRequest struct {
+	// Password The acting admin's password, required to confirm deletion.
+	Password string `json:"password"`
+}
+
 // UserList defines model for UserList.
 type UserList struct {
 	Items      []User     `json:"items"`
 	Pagination Pagination `json:"pagination"`
+}
+
+// UserProfileUpdate defines model for UserProfileUpdate.
+type UserProfileUpdate struct {
+	Bio         *string `json:"bio,omitempty"`
+	DisplayName *string `json:"display_name,omitempty"`
+	Email       *string `json:"email,omitempty"`
+	Github      *string `json:"github,omitempty"`
+	Password    *string `json:"password,omitempty"`
+	Telegram    *string `json:"telegram,omitempty"`
 }
 
 // UserRoleUpdate defines model for UserRoleUpdate.
@@ -911,6 +937,22 @@ type UserRoleUpdate struct {
 
 // UserRoleUpdateRole defines model for UserRoleUpdate.Role.
 type UserRoleUpdateRole string
+
+// UserSession defines model for UserSession.
+type UserSession struct {
+	CreatedAt  time.Time `json:"created_at"`
+	Current    bool      `json:"current"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	Id         int64     `json:"id"`
+	IpAddress  *string   `json:"ip_address,omitempty"`
+	LastSeenAt time.Time `json:"last_seen_at"`
+	UserAgent  *string   `json:"user_agent,omitempty"`
+}
+
+// UserSessionList defines model for UserSessionList.
+type UserSessionList struct {
+	Items []UserSession `json:"items"`
+}
 
 // UserUpdate defines model for UserUpdate.
 type UserUpdate struct {
@@ -1040,6 +1082,11 @@ type ListUsersParams struct {
 	Q       *string       `form:"q,omitempty" json:"q,omitempty"`
 }
 
+// UploadUserAvatarMultipartBody defines parameters for UploadUserAvatar.
+type UploadUserAvatarMultipartBody struct {
+	Avatar openapi_types.File `json:"avatar"`
+}
+
 // ListWriteupsParams defines parameters for ListWriteups.
 type ListWriteupsParams struct {
 	GameId *int64 `form:"game_id,omitempty" json:"game_id,omitempty"`
@@ -1121,8 +1168,20 @@ type UpdateUniversityJSONRequestBody = UniversityUpdate
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = UserCreate
 
+// DeleteUserJSONRequestBody defines body for DeleteUser for application/json ContentType.
+type DeleteUserJSONRequestBody = UserDeleteRequest
+
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
 type UpdateUserJSONRequestBody = UserUpdate
+
+// UploadUserAvatarMultipartRequestBody defines body for UploadUserAvatar for multipart/form-data ContentType.
+type UploadUserAvatarMultipartRequestBody UploadUserAvatarMultipartBody
+
+// SetUserBlockedJSONRequestBody defines body for SetUserBlocked for application/json ContentType.
+type SetUserBlockedJSONRequestBody = UserBlockUpdate
+
+// UpdateUserProfileAdminJSONRequestBody defines body for UpdateUserProfileAdmin for application/json ContentType.
+type UpdateUserProfileAdminJSONRequestBody = UserProfileUpdate
 
 // UpdateUserRoleJSONRequestBody defines body for UpdateUserRole for application/json ContentType.
 type UpdateUserRoleJSONRequestBody = UserRoleUpdate
@@ -1339,9 +1398,27 @@ type ServerInterface interface {
 	// Update a user
 	// (PATCH /users/{id})
 	UpdateUser(c *gin.Context, id int64)
+	// Get a user's avatar image
+	// (GET /users/{id}/avatar)
+	GetUserAvatar(c *gin.Context, id int64)
+	// Upload a user's avatar
+	// (POST /users/{id}/avatar)
+	UploadUserAvatar(c *gin.Context, id int64)
+	// Block or unblock a user
+	// (POST /users/{id}/block)
+	SetUserBlocked(c *gin.Context, id int64)
+	// Update a user's profile (admin)
+	// (PATCH /users/{id}/profile)
+	UpdateUserProfileAdmin(c *gin.Context, id int64)
 	// Update a user's role
 	// (PATCH /users/{id}/role)
 	UpdateUserRole(c *gin.Context, id int64)
+	// List a user's active sessions
+	// (GET /users/{id}/sessions)
+	ListUserSessions(c *gin.Context, id int64)
+	// Revoke a user's session
+	// (DELETE /users/{id}/sessions/{sessionId})
+	RevokeUserSession(c *gin.Context, id int64, sessionId int64)
 	// List writeups
 	// (GET /writeups)
 	ListWriteups(c *gin.Context, params ListWriteupsParams)
@@ -3179,6 +3256,112 @@ func (siw *ServerInterfaceWrapper) UpdateUser(c *gin.Context) {
 	siw.Handler.UpdateUser(c, id)
 }
 
+// GetUserAvatar operation middleware
+func (siw *ServerInterfaceWrapper) GetUserAvatar(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetUserAvatar(c, id)
+}
+
+// UploadUserAvatar operation middleware
+func (siw *ServerInterfaceWrapper) UploadUserAvatar(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UploadUserAvatar(c, id)
+}
+
+// SetUserBlocked operation middleware
+func (siw *ServerInterfaceWrapper) SetUserBlocked(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SetUserBlocked(c, id)
+}
+
+// UpdateUserProfileAdmin operation middleware
+func (siw *ServerInterfaceWrapper) UpdateUserProfileAdmin(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateUserProfileAdmin(c, id)
+}
+
 // UpdateUserRole operation middleware
 func (siw *ServerInterfaceWrapper) UpdateUserRole(c *gin.Context) {
 
@@ -3204,6 +3387,69 @@ func (siw *ServerInterfaceWrapper) UpdateUserRole(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateUserRole(c, id)
+}
+
+// ListUserSessions operation middleware
+func (siw *ServerInterfaceWrapper) ListUserSessions(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListUserSessions(c, id)
+}
+
+// RevokeUserSession operation middleware
+func (siw *ServerInterfaceWrapper) RevokeUserSession(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "sessionId" -------------
+	var sessionId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sessionId", c.Param("sessionId"), &sessionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter sessionId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RevokeUserSession(c, id, sessionId)
 }
 
 // ListWriteups operation middleware
@@ -3408,7 +3654,13 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.DELETE(options.BaseURL+"/users/:id", wrapper.DeleteUser)
 	router.GET(options.BaseURL+"/users/:id", wrapper.GetUser)
 	router.PATCH(options.BaseURL+"/users/:id", wrapper.UpdateUser)
+	router.GET(options.BaseURL+"/users/:id/avatar", wrapper.GetUserAvatar)
+	router.POST(options.BaseURL+"/users/:id/avatar", wrapper.UploadUserAvatar)
+	router.POST(options.BaseURL+"/users/:id/block", wrapper.SetUserBlocked)
+	router.PATCH(options.BaseURL+"/users/:id/profile", wrapper.UpdateUserProfileAdmin)
 	router.PATCH(options.BaseURL+"/users/:id/role", wrapper.UpdateUserRole)
+	router.GET(options.BaseURL+"/users/:id/sessions", wrapper.ListUserSessions)
+	router.DELETE(options.BaseURL+"/users/:id/sessions/:sessionId", wrapper.RevokeUserSession)
 	router.GET(options.BaseURL+"/writeups", wrapper.ListWriteups)
 	router.POST(options.BaseURL+"/writeups", wrapper.CreateWriteup)
 	router.DELETE(options.BaseURL+"/writeups/:id", wrapper.DeleteWriteup)

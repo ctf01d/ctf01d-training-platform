@@ -8,7 +8,7 @@ import {
   CardMeta,
   Pagination,
 } from "../components/Card";
-import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
+import { ErrorDisplay } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
 
 export default function UsersPage() {
@@ -67,15 +67,6 @@ export default function UsersPage() {
       role: "guest",
     });
     setShowCreate(false);
-    await fetchUsers();
-  };
-
-  const handleDelete = async (id: number) => {
-    const { error: err } = await usersApi.deleteUser(id);
-    if (err) {
-      setError(err);
-      return;
-    }
     await fetchUsers();
   };
 
@@ -177,18 +168,17 @@ export default function UsersPage() {
         {users.map((u) => (
           <EntityCard
             key={u.id}
+            to={`/users/${u.id}`}
             avatarUrl={u.avatar_url}
             avatarText={u.display_name || u.user_name}
             title={u.display_name}
-            badges={<CardBadge variant={u.role}>{u.role}</CardBadge>}
-            footer={
-              <ActionButton
-                onClick={() => handleDelete(u.id)}
-                variant="danger"
-                confirm="Delete this user?"
-              >
-                Delete
-              </ActionButton>
+            badges={
+              <>
+                <CardBadge variant={u.role}>{u.role}</CardBadge>
+                {u.is_blocked && (
+                  <CardBadge variant="danger">blocked</CardBadge>
+                )}
+              </>
             }
           >
             <CardMeta label="Username">@{u.user_name}</CardMeta>

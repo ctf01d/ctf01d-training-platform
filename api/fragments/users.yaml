@@ -10,6 +10,7 @@ components:
             - display_name
             - role
             - rating
+            - is_blocked
           properties:
             id:
               type: integer
@@ -29,6 +30,20 @@ components:
             avatar_url:
               type: string
               nullable: true
+            bio:
+              type: string
+              nullable: true
+            telegram:
+              type: string
+              nullable: true
+            github:
+              type: string
+              nullable: true
+            email:
+              type: string
+              nullable: true
+            is_blocked:
+              type: boolean
     UserCreate:
       type: object
       required:
@@ -76,6 +91,79 @@ components:
             - guest
             - player
             - admin
+    UserProfileUpdate:
+      type: object
+      properties:
+        display_name:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        bio:
+          type: string
+          nullable: true
+        telegram:
+          type: string
+          nullable: true
+        github:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+    UserBlockUpdate:
+      type: object
+      required:
+        - blocked
+      properties:
+        blocked:
+          type: boolean
+    UserDeleteRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          description: The acting admin's password, required to confirm deletion.
+    UserSession:
+      type: object
+      required:
+        - id
+        - created_at
+        - last_seen_at
+        - expires_at
+        - current
+      properties:
+        id:
+          type: integer
+          format: int64
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        last_seen_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        current:
+          type: boolean
+    UserSessionList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSession'
     UserList:
       type: object
       required:
@@ -221,14 +309,219 @@ paths:
           schema:
             type: integer
             format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDeleteRequest'
       responses:
         '204':
           description: User deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Delete a user and all references to them, confirmed with the admin's password.
+  /users/{id}/profile:
+    patch:
+      operationId: updateUserProfileAdmin
+      tags:
+        - users
+      summary: Update a user's profile (admin)
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdate'
+      responses:
+        '200':
+          description: User profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Update a user's profile fields and password
+  /users/{id}/block:
+    post:
+      operationId: setUserBlocked
+      tags:
+        - users
+      summary: Block or unblock a user
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBlockUpdate'
+      responses:
+        '200':
+          description: User block state updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
-      description: Delete a user
+      description: Block (revoking all sessions) or unblock a user
+  /users/{id}/avatar:
+    get:
+      operationId: getUserAvatar
+      tags:
+        - users
+      summary: Get a user's avatar image
+      x-required-role: public
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Avatar image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+      description: Returns the stored avatar image for a user
+    post:
+      operationId: uploadUserAvatar
+      tags:
+        - users
+      summary: Upload a user's avatar
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded; the image is scaled and stored server-side
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Upload an avatar image which is scaled and stored on the server
+  /users/{id}/sessions:
+    get:
+      operationId: listUserSessions
+      tags:
+        - users
+      summary: List a user's active sessions
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Active sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSessionList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: List the active sessions for a user
+  /users/{id}/sessions/{sessionId}:
+    delete:
+      operationId: revokeUserSession
+      tags:
+        - users
+      summary: Revoke a user's session
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Session revoked
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Revoke a single active session for a user
   /users/{id}/role:
     patch:
       operationId: updateUserRole

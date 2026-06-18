@@ -25,7 +25,10 @@ func TestRemainingHTTPRoutesFlow(t *testing.T) {
 	requireStatus(t, makeReq(t, engine, http.MethodGet, "/version", nil, ""), http.StatusOK, "version")
 
 	t.Log("Step: logout and profile update")
-	requireStatus(t, makeReq(t, engine, http.MethodDelete, "/api/v1/session", nil, ownerToken), http.StatusNoContent, "logout")
+	// Logout now revokes the session, so use a throwaway token for it and keep
+	// the owner token valid for the remaining steps.
+	_, logoutToken := seedUser(t, store, "logout_member", "Logout Member", "password123", "player")
+	requireStatus(t, makeReq(t, engine, http.MethodDelete, "/api/v1/session", nil, logoutToken), http.StatusNoContent, "logout")
 	w := makeReq(t, engine, http.MethodPatch, "/api/v1/profile", map[string]interface{}{
 		"display_name": "Owner Updated",
 	}, ownerToken)

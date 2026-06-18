@@ -7,6 +7,9 @@ export type LoginRequest = components["schemas"]["LoginRequest"];
 export type LoginResponse = components["schemas"]["LoginResponse"];
 export type UserCreate = components["schemas"]["UserCreate"];
 export type UserUpdate = components["schemas"]["UserUpdate"];
+export type UserProfileUpdate = components["schemas"]["UserProfileUpdate"];
+export type UserSession = components["schemas"]["UserSession"];
+export type UserRole = User["role"];
 
 export async function login(body: LoginRequest) {
   const { data, error } = await client.POST("/session", {
@@ -48,6 +51,57 @@ export async function updateUser(id: number, body: UserUpdate) {
   return client.PATCH("/users/{id}", { params: { path: { id } }, body });
 }
 
-export async function deleteUser(id: number) {
-  return client.DELETE("/users/{id}", { params: { path: { id } } });
+export async function deleteUser(id: number, password: string) {
+  return client.DELETE("/users/{id}", {
+    params: { path: { id } },
+    body: { password },
+  });
+}
+
+export async function updateUserProfileAdmin(
+  id: number,
+  body: UserProfileUpdate,
+) {
+  return client.PATCH("/users/{id}/profile", {
+    params: { path: { id } },
+    body,
+  });
+}
+
+export async function updateUserRole(id: number, role: UserRole) {
+  return client.PATCH("/users/{id}/role", {
+    params: { path: { id } },
+    body: { role },
+  });
+}
+
+export async function setUserBlocked(id: number, blocked: boolean) {
+  return client.POST("/users/{id}/block", {
+    params: { path: { id } },
+    body: { blocked },
+  });
+}
+
+export async function listUserSessions(id: number) {
+  return client.GET("/users/{id}/sessions", { params: { path: { id } } });
+}
+
+export async function revokeUserSession(id: number, sessionId: number) {
+  return client.DELETE("/users/{id}/sessions/{sessionId}", {
+    params: { path: { id, sessionId } },
+  });
+}
+
+// Avatar upload uses multipart/form-data which openapi-fetch does not model, so
+// post the file directly with the auth header.
+export async function uploadUserAvatar(id: number, file: File) {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  const token = localStorage.getItem("auth_token");
+  const response = await fetch(`/api/v1/users/${id}/avatar`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  return response;
 }

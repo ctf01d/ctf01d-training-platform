@@ -106,6 +106,53 @@ func (m *mockQuerier) UpdateUserProfile(_ context.Context, arg db.UpdateUserProf
 	return u, nil
 }
 
+func (m *mockQuerier) UpdateUserProfileAdmin(_ context.Context, arg db.UpdateUserProfileAdminParams) (db.User, error) {
+	u, ok := m.users[arg.ID]
+	if !ok {
+		return db.User{}, pgx.ErrNoRows
+	}
+	u.DisplayName = arg.DisplayName
+	if arg.AvatarUrl != nil {
+		u.AvatarUrl = arg.AvatarUrl
+	}
+	if arg.PasswordDigest != nil {
+		u.PasswordDigest = arg.PasswordDigest
+	}
+	u.Bio = arg.Bio
+	u.Telegram = arg.Telegram
+	u.Github = arg.Github
+	u.Email = arg.Email
+	u.UpdatedAt = time.Now()
+	m.users[arg.ID] = u
+	return u, nil
+}
+
+func (m *mockQuerier) SetUserAvatar(_ context.Context, arg db.SetUserAvatarParams) (db.User, error) {
+	u, ok := m.users[arg.ID]
+	if !ok {
+		return db.User{}, pgx.ErrNoRows
+	}
+	u.AvatarUrl = arg.AvatarUrl
+	u.UpdatedAt = time.Now()
+	m.users[arg.ID] = u
+	return u, nil
+}
+
+func (m *mockQuerier) SetUserBlocked(_ context.Context, arg db.SetUserBlockedParams) (db.User, error) {
+	u, ok := m.users[arg.ID]
+	if !ok {
+		return db.User{}, pgx.ErrNoRows
+	}
+	u.IsBlocked = arg.IsBlocked
+	u.UpdatedAt = time.Now()
+	m.users[arg.ID] = u
+	return u, nil
+}
+
+func (m *mockQuerier) ClearUserTeamCaptaincy(_ context.Context, _ *int32) error {
+	return nil
+}
+
 func (m *mockQuerier) UpdateUserRole(_ context.Context, arg db.UpdateUserRoleParams) (db.User, error) {
 	u, ok := m.users[arg.ID]
 	if !ok {

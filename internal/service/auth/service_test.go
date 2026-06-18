@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
@@ -34,11 +35,44 @@ func (m *mockUserStore) GetUserByID(_ context.Context, id int64) (db.User, error
 	return u, nil
 }
 
+func (m *mockUserStore) SetUserLastLogin(_ context.Context, _ db.SetUserLastLoginParams) error {
+	return nil
+}
+
+type mockSessionStore struct {
+	created []db.CreateSessionParams
+}
+
+func (m *mockSessionStore) CreateSession(_ context.Context, arg db.CreateSessionParams) (db.UserSession, error) {
+	m.created = append(m.created, arg)
+	return db.UserSession{ID: int64(len(m.created)), Jti: arg.Jti, UserID: arg.UserID}, nil
+}
+
+func (m *mockSessionStore) GetSessionByJTI(_ context.Context, _ string) (db.UserSession, error) {
+	return db.UserSession{}, errors.New("no rows in result set")
+}
+
+func (m *mockSessionStore) ListActiveSessionsByUser(_ context.Context, _ int64) ([]db.UserSession, error) {
+	return nil, nil
+}
+
+func (m *mockSessionStore) TouchSession(_ context.Context, _ db.TouchSessionParams) error { return nil }
+
+func (m *mockSessionStore) RevokeSession(_ context.Context, _ string) error { return nil }
+
+func (m *mockSessionStore) RevokeSessionByID(_ context.Context, _ db.RevokeSessionByIDParams) error {
+	return nil
+}
+
+func (m *mockSessionStore) RevokeAllUserSessions(_ context.Context, _ int64) error { return nil }
+
 type mockJWT struct{}
 
-func (m *mockJWT) Generate(_ int64, _, userName string) (string, error) {
+func (m *mockJWT) Generate(_ int64, _, userName, _ string) (string, error) {
 	return "token_" + userName, nil
 }
+
+func (m *mockJWT) TTL() time.Duration { return time.Hour }
 
 type mockChecker struct{}
 
@@ -63,8 +97,8 @@ func TestLogin_Success(t *testing.T) {
 	store := newMockUserStore()
 	addTestUser(store, 1, "alice", "password123")
 
-	svc := NewService(store, &mockJWT{}, &mockChecker{})
-	token, user, err := svc.Login(context.Background(), "alice", "password123")
+	svc := NewService(store, &mockSessionStore{}, &mockJWT{}, &mockChecker{})
+	token, user, err := svc.Login(context.Background(), "alice", "password123", "1.2.3.4", "ua")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -78,8 +112,8 @@ func TestLogin_Success(t *testing.T) {
 
 func TestLogin_UserNotFound(t *testing.T) {
 	store := newMockUserStore()
-	svc := NewService(store, &mockJWT{}, &mockChecker{})
-	_, _, err := svc.Login(context.Background(), "nobody", "pass")
+	svc := NewService(store, &mockSessionStore{}, &mockJWT{}, &mockChecker{})
+	_, _, err := svc.Login(context.Background(), "nobody", "pass", "", "")
 	if err != errs.ErrUnauthorized {
 		t.Errorf("expected ErrUnauthorized, got %v", err)
 	}
@@ -89,8 +123,8 @@ func TestLogin_WrongPassword(t *testing.T) {
 	store := newMockUserStore()
 	addTestUser(store, 1, "alice", "password123")
 
-	svc := NewService(store, &mockJWT{}, &mockChecker{})
-	_, _, err := svc.Login(context.Background(), "alice", "wrong")
+	svc := NewService(store, &mockSessionStore{}, &mockJWT{}, &mockChecker{})
+	_, _, err := svc.Login(context.Background(), "alice", "wrong", "", "")
 	if err != errs.ErrUnauthorized {
 		t.Errorf("expected ErrUnauthorized, got %v", err)
 	}
@@ -103,8 +137,8 @@ func TestLogin_NilPasswordDigest(t *testing.T) {
 	}
 	store.byID[2] = store.users["bob"]
 
-	svc := NewService(store, &mockJWT{}, &mockChecker{})
-	_, _, err := svc.Login(context.Background(), "bob", "any")
+	svc := NewService(store, &mockSessionStore{}, &mockJWT{}, &mockChecker{})
+	_, _, err := svc.Login(context.Background(), "bob", "any", "", "")
 	if err != errs.ErrUnauthorized {
 		t.Errorf("expected ErrUnauthorized, got %v", err)
 	}
@@ -114,7 +148,7 @@ func TestMe_Success(t *testing.T) {
 	store := newMockUserStore()
 	addTestUser(store, 1, "alice", "password123")
 
-	svc := NewService(store, &mockJWT{}, &mockChecker{})
+	svc := NewService(store, &mockSessionStore{}, &mockJWT{}, &mockChecker{})
 	user, err := svc.Me(context.Background(), 1)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -126,7 +160,7 @@ func TestMe_Success(t *testing.T) {
 
 func TestMe_NotFound(t *testing.T) {
 	store := newMockUserStore()
-	svc := NewService(store, &mockJWT{}, &mockChecker{})
+	svc := NewService(store, &mockSessionStore{}, &mockJWT{}, &mockChecker{})
 	_, err := svc.Me(context.Background(), 999)
 	if err != errs.ErrNotFound {
 		t.Errorf("expected ErrNotFound, got %v", err)

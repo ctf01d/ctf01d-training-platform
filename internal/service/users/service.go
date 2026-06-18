@@ -18,6 +18,11 @@ type User struct {
 	Role        string    `json:"role"`
 	Rating      int       `json:"rating"`
 	AvatarUrl   *string   `json:"avatar_url,omitempty"`
+	Bio         *string   `json:"bio,omitempty"`
+	Telegram    *string   `json:"telegram,omitempty"`
+	Github      *string   `json:"github,omitempty"`
+	Email       *string   `json:"email,omitempty"`
+	IsBlocked   bool      `json:"is_blocked"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -43,6 +48,18 @@ type UpdateParams struct {
 	Password    *string `json:"password,omitempty"`
 }
 
+// AdminUpdateParams carries the full set of fields an admin may edit on the
+// user management page. Optional profile fields are set verbatim (a nil pointer
+// clears the column).
+type AdminUpdateParams struct {
+	DisplayName *string `json:"display_name,omitempty"`
+	Password    *string `json:"password,omitempty"`
+	Bio         *string `json:"bio,omitempty"`
+	Telegram    *string `json:"telegram,omitempty"`
+	Github      *string `json:"github,omitempty"`
+	Email       *string `json:"email,omitempty"`
+}
+
 var userNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
 const defaultRole = "guest"
@@ -54,8 +71,12 @@ type Querier interface {
 	ListUsers(ctx context.Context, arg db.ListUsersParams) ([]db.User, error)
 	CountUsers(ctx context.Context, searchQuery *string) (int64, error)
 	UpdateUserProfile(ctx context.Context, arg db.UpdateUserProfileParams) (db.User, error)
+	UpdateUserProfileAdmin(ctx context.Context, arg db.UpdateUserProfileAdminParams) (db.User, error)
 	UpdateUserRole(ctx context.Context, arg db.UpdateUserRoleParams) (db.User, error)
 	UpdateUserRating(ctx context.Context, arg db.UpdateUserRatingParams) (db.User, error)
+	SetUserAvatar(ctx context.Context, arg db.SetUserAvatarParams) (db.User, error)
+	SetUserBlocked(ctx context.Context, arg db.SetUserBlockedParams) (db.User, error)
+	ClearUserTeamCaptaincy(ctx context.Context, captainID *int32) error
 	DeleteUser(ctx context.Context, id int64) error
 }
 
@@ -211,6 +232,73 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*U
 	return &u, nil
 }
 
+// UpdateAdmin applies an admin's edits, setting optional profile fields
+// verbatim. display_name falls back to the existing value when omitted.
+func (s *Service) UpdateAdmin(ctx context.Context, id int64, params AdminUpdateParams) (*User, error) {
+	existing, err := s.q.GetUserByID(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err)
+	}
+
+	displayName := existing.DisplayName
+	if params.DisplayName != nil {
+		if *params.DisplayName == "" {
+			return nil, errs.NewValidationError(map[string]string{"display_name": "must not be empty"})
+		}
+		displayName = *params.DisplayName
+	}
+
+	var passwordDigest *string
+	if params.Password != nil {
+		if len(*params.Password) < minPasswordLength {
+			return nil, errs.NewValidationError(map[string]string{"password": "must be at least 6 characters"})
+		}
+		hash, err := auth.HashPassword(*params.Password)
+		if err != nil {
+			return nil, err
+		}
+		passwordDigest = &hash
+	}
+
+	dbUser, err := s.q.UpdateUserProfileAdmin(ctx, db.UpdateUserProfileAdminParams{
+		ID:             id,
+		DisplayName:    displayName,
+		AvatarUrl:      nil, // avatar managed via dedicated upload endpoint
+		PasswordDigest: passwordDigest,
+		Bio:            normalizeOptional(params.Bio),
+		Telegram:       normalizeOptional(params.Telegram),
+		Github:         normalizeOptional(params.Github),
+		Email:          normalizeOptional(params.Email),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	u := fromDB(dbUser)
+	return &u, nil
+}
+
+// SetAvatar updates the stored avatar URL for a user.
+func (s *Service) SetAvatar(ctx context.Context, id int64, url *string) (*User, error) {
+	dbUser, err := s.q.SetUserAvatar(ctx, db.SetUserAvatarParams{ID: id, AvatarUrl: url})
+	if err != nil {
+		return nil, mapNotFound(err)
+	}
+	u := fromDB(dbUser)
+	return &u, nil
+}
+
+// SetBlocked toggles the blocked flag for a user. Revoking active sessions is
+// the caller's responsibility (handled in the auth service).
+func (s *Service) SetBlocked(ctx context.Context, id int64, blocked bool) (*User, error) {
+	dbUser, err := s.q.SetUserBlocked(ctx, db.SetUserBlockedParams{ID: id, IsBlocked: blocked})
+	if err != nil {
+		return nil, mapNotFound(err)
+	}
+	u := fromDB(dbUser)
+	return &u, nil
+}
+
 func (s *Service) UpdateRole(ctx context.Context, id int64, role string) (*User, error) {
 	dbUser, err := s.q.UpdateUserRole(ctx, db.UpdateUserRoleParams{
 		ID:   id,
@@ -239,7 +327,16 @@ func (s *Service) UpdateRating(ctx context.Context, id int64, rating int) (*User
 	return &u, nil
 }
 
+// Delete removes a user along with references that would otherwise dangle.
+// Team memberships and membership events cascade via foreign keys; team
+// captaincy has no FK so it is cleared explicitly first.
 func (s *Service) Delete(ctx context.Context, id int64) error {
+	if captainID, err := int32FromInt64(id); err == nil {
+		cid := captainID
+		if err := s.q.ClearUserTeamCaptaincy(ctx, &cid); err != nil {
+			return err
+		}
+	}
 	return s.q.DeleteUser(ctx, id)
 }
 
@@ -251,9 +348,23 @@ func fromDB(u db.User) User {
 		Role:        u.Role,
 		Rating:      int(u.Rating),
 		AvatarUrl:   u.AvatarUrl,
+		Bio:         u.Bio,
+		Telegram:    u.Telegram,
+		Github:      u.Github,
+		Email:       u.Email,
+		IsBlocked:   u.IsBlocked,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
 	}
+}
+
+// normalizeOptional treats empty strings as cleared (nil) values so the DB
+// stores NULL rather than an empty string for optional profile fields.
+func normalizeOptional(v *string) *string {
+	if v == nil || *v == "" {
+		return nil
+	}
+	return v
 }
 
 func mapNotFound(err error) error {

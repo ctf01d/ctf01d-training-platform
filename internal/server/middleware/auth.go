@@ -1,13 +1,26 @@
 package middleware
 
-import "github.com/gin-gonic/gin"
+import (
+	"context"
+
+	"github.com/gin-gonic/gin"
+)
 
 type contextKey string
+
+// SessionChecker validates and refreshes server-side sessions. It is satisfied
+// by the auth service; a nil checker disables session enforcement (used in
+// lightweight tests).
+type SessionChecker interface {
+	ValidateSession(ctx context.Context, jti string) bool
+	TouchSession(ctx context.Context, jti, ipAddress string)
+}
 
 const (
 	userIDKey   contextKey = "user_id"
 	roleKey     contextKey = "role"
 	userNameKey contextKey = "user_name"
+	sessionKey  contextKey = "session_jti"
 
 	roleGuestLevel  = 0
 	rolePlayerLevel = 1
@@ -50,6 +63,15 @@ func CurrentUserName(c *gin.Context) (string, bool) {
 		return "", false
 	}
 	return name.(string), true
+}
+
+// CurrentSessionJTI returns the session identifier from the caller's token.
+func CurrentSessionJTI(c *gin.Context) (string, bool) {
+	jti, exists := c.Get(string(sessionKey))
+	if !exists {
+		return "", false
+	}
+	return jti.(string), true
 }
 
 var roleLevel = map[string]int{

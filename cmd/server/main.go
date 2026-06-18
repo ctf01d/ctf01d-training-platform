@@ -100,7 +100,7 @@ func run() error {
 
 	jwtMgr := auth.NewManager(cfg.JWT.Secret, cfg.JWT.TTLHours)
 	userService := usersvc.NewService(store.Queries)
-	authService := authsvc.NewService(store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
+	authService := authsvc.NewService(store.Queries, store.Queries, jwtMgr, &auth.PasswordCheckerImpl{})
 	universityService := unisvc.NewService(store.Queries)
 	teamService := teamsvc.NewService(store, store, store, store)
 	membershipService := membersvc.NewService(store, store, store, store)
@@ -115,7 +115,7 @@ func run() error {
 	svcImport := svcsvc.NewImportService(store.Queries, fileStorage, cfg.Storage.MaxUploadBytes)
 	ctf01dBuilder := ctf01dsvc.NewBuilder(store.Queries)
 	ctf01dBuilder.SetStorageDir(cfg.Storage.Dir)
-	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, writeupService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir)
+	h := handler.New(userService, authService, jwtMgr, universityService, teamService, membershipService, gameService, gameTeamService, resultService, writeupService, scoreboardService, store.Queries, svcService, svcArchives, svcChecker, svcImport, ctf01dBuilder, cfg.Storage.MaxUploadBytes, cfg.Storage.Dir, fileStorage)
 
 	engine := server.New(cfg, log, store, h)
 

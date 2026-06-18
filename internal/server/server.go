@@ -72,7 +72,7 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	httpserver.RegisterHandlersWithOptions(engine, h, httpserver.GinServerOptions{
 		BaseURL: "/api/v1",
 		Middlewares: []httpserver.MiddlewareFunc{
-			middleware.OpenAPIAuth(h.JWTMgr()),
+			middleware.OpenAPIAuth(h.JWTMgr(), h.SessionChecker()),
 			middleware.OpenAPIRole(),
 		},
 		ErrorHandler: middleware.OpenAPIErrorHandler,

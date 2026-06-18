@@ -26,6 +26,7 @@ import (
 	unisvc "github.com/ctf01d/ctf01d-training-platform/internal/service/universities"
 	usersvc "github.com/ctf01d/ctf01d-training-platform/internal/service/users"
 	writeupsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/writeups"
+	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 )
 
 type Handler struct {
@@ -48,6 +49,7 @@ type Handler struct {
 	ctf01dBuilder  *ctf01dsvc.Builder
 	maxUploadBytes int64
 	storageDir     string
+	fileStorage    storage.Storage
 }
 
 const (
@@ -81,6 +83,7 @@ func New(
 	ctf01dBuilder *ctf01dsvc.Builder,
 	maxUploadBytes int64,
 	storageDir string,
+	fileStorage storage.Storage,
 ) *Handler {
 	return &Handler{
 		users:          users,
@@ -102,11 +105,21 @@ func New(
 		ctf01dBuilder:  ctf01dBuilder,
 		maxUploadBytes: maxUploadBytes,
 		storageDir:     storageDir,
+		fileStorage:    fileStorage,
 	}
 }
 
 func (h *Handler) JWTMgr() *auth.Manager {
 	return h.jwtMgr
+}
+
+// SessionChecker exposes the auth service for session enforcement in
+// middleware. It returns nil when no auth service is configured (tests).
+func (h *Handler) SessionChecker() middleware.SessionChecker {
+	if h.auth == nil {
+		return nil
+	}
+	return h.auth
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -115,7 +128,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	token, user, err := h.auth.Login(c.Request.Context(), req.UserName, req.Password)
+	token, user, err := h.auth.Login(c.Request.Context(), req.UserName, req.Password, c.ClientIP(), c.Request.UserAgent())
 	if err != nil {
 		respondError(c, err)
 		return
@@ -128,6 +141,12 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 func (h *Handler) Logout(c *gin.Context) {
+	if jti, ok := middleware.CurrentSessionJTI(c); ok {
+		if err := h.auth.Logout(c.Request.Context(), jti); err != nil {
+			respondError(c, err)
+			return
+		}
+	}
 	c.Status(http.StatusNoContent)
 }
 
@@ -296,6 +315,21 @@ func (h *Handler) HandleDeleteUser(c *gin.Context) {
 		return
 	}
 
+	req, ok := bindJSON[httpserver.UserDeleteRequest](c)
+	if !ok {
+		return
+	}
+
+	adminID, ok := middleware.CurrentUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
+		return
+	}
+	if !h.auth.VerifyUserPassword(c.Request.Context(), adminID, req.Password) {
+		c.JSON(http.StatusForbidden, errorResponse{Code: codeForbidden, Message: "admin password confirmation failed"})
+		return
+	}
+
 	if err := h.users.Delete(c.Request.Context(), id); err != nil {
 		respondError(c, err)
 		return
@@ -363,6 +397,11 @@ func userToHTTP(u usersvc.User) httpserver.User {
 		Role:        httpserver.UserRole(u.Role),
 		Rating:      u.Rating,
 		AvatarUrl:   u.AvatarUrl,
+		Bio:         u.Bio,
+		Telegram:    u.Telegram,
+		Github:      u.Github,
+		Email:       u.Email,
+		IsBlocked:   u.IsBlocked,
 		CreatedAt:   &u.CreatedAt,
 		UpdatedAt:   &u.UpdatedAt,
 	}

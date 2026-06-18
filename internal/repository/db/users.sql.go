@@ -9,6 +9,17 @@ import (
 	"context"
 )
 
+const clearUserTeamCaptaincy = `-- name: ClearUserTeamCaptaincy :exec
+UPDATE teams
+SET captain_id = NULL
+WHERE captain_id = $1
+`
+
+func (q *Queries) ClearUserTeamCaptaincy(ctx context.Context, captainID *int32) error {
+	_, err := q.db.Exec(ctx, clearUserTeamCaptaincy, captainID)
+	return err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT count(*) FROM users
 WHERE (
@@ -28,7 +39,7 @@ func (q *Queries) CountUsers(ctx context.Context, searchQuery *string) (int64, e
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (user_name, display_name, role, rating, avatar_url, password_digest)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
 `
 
 type CreateUserParams struct {
@@ -60,6 +71,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.PasswordDigest,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
 	)
 	return i, err
 }
@@ -75,7 +94,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at FROM users
+SELECT id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at FROM users
 WHERE id = $1
 `
 
@@ -92,12 +111,20 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 		&i.PasswordDigest,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
 	)
 	return i, err
 }
 
 const getUserByUserName = `-- name: GetUserByUserName :one
-SELECT id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at FROM users
+SELECT id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at FROM users
 WHERE user_name = $1
 `
 
@@ -114,12 +141,20 @@ func (q *Queries) GetUserByUserName(ctx context.Context, userName string) (User,
 		&i.PasswordDigest,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at FROM users
+SELECT id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at FROM users
 WHERE (
   user_name ILIKE '%' || $3 || '%'
   OR display_name ILIKE '%' || $3 || '%'
@@ -154,6 +189,14 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.PasswordDigest,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Bio,
+			&i.Telegram,
+			&i.Github,
+			&i.Email,
+			&i.IsBlocked,
+			&i.BlockedAt,
+			&i.LastLoginIp,
+			&i.LastLoginAt,
 		); err != nil {
 			return nil, err
 		}
@@ -165,6 +208,100 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 	return items, nil
 }
 
+const setUserAvatar = `-- name: SetUserAvatar :one
+UPDATE users
+SET avatar_url = $2,
+    updated_at = now()
+WHERE id = $1
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
+`
+
+type SetUserAvatarParams struct {
+	ID        int64   `json:"id"`
+	AvatarUrl *string `json:"avatar_url"`
+}
+
+func (q *Queries) SetUserAvatar(ctx context.Context, arg SetUserAvatarParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserAvatar, arg.ID, arg.AvatarUrl)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.UserName,
+		&i.DisplayName,
+		&i.Role,
+		&i.Rating,
+		&i.AvatarUrl,
+		&i.PasswordDigest,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
+	)
+	return i, err
+}
+
+const setUserBlocked = `-- name: SetUserBlocked :one
+UPDATE users
+SET is_blocked = $2,
+    blocked_at = CASE WHEN $2 THEN now() ELSE NULL END,
+    updated_at = now()
+WHERE id = $1
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
+`
+
+type SetUserBlockedParams struct {
+	ID        int64 `json:"id"`
+	IsBlocked bool  `json:"is_blocked"`
+}
+
+func (q *Queries) SetUserBlocked(ctx context.Context, arg SetUserBlockedParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserBlocked, arg.ID, arg.IsBlocked)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.UserName,
+		&i.DisplayName,
+		&i.Role,
+		&i.Rating,
+		&i.AvatarUrl,
+		&i.PasswordDigest,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
+	)
+	return i, err
+}
+
+const setUserLastLogin = `-- name: SetUserLastLogin :exec
+UPDATE users
+SET last_login_ip = $2,
+    last_login_at = now()
+WHERE id = $1
+`
+
+type SetUserLastLoginParams struct {
+	ID          int64   `json:"id"`
+	LastLoginIp *string `json:"last_login_ip"`
+}
+
+func (q *Queries) SetUserLastLogin(ctx context.Context, arg SetUserLastLoginParams) error {
+	_, err := q.db.Exec(ctx, setUserLastLogin, arg.ID, arg.LastLoginIp)
+	return err
+}
+
 const updateUserProfile = `-- name: UpdateUserProfile :one
 UPDATE users
 SET display_name = $2,
@@ -172,7 +309,7 @@ SET display_name = $2,
     password_digest = COALESCE($4, password_digest),
     updated_at = now()
 WHERE id = $1
-RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
 `
 
 type UpdateUserProfileParams struct {
@@ -200,6 +337,73 @@ func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfilePa
 		&i.PasswordDigest,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
+	)
+	return i, err
+}
+
+const updateUserProfileAdmin = `-- name: UpdateUserProfileAdmin :one
+UPDATE users
+SET display_name = $2,
+    avatar_url = COALESCE($3, avatar_url),
+    password_digest = COALESCE($4, password_digest),
+    bio = $5,
+    telegram = $6,
+    github = $7,
+    email = $8,
+    updated_at = now()
+WHERE id = $1
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
+`
+
+type UpdateUserProfileAdminParams struct {
+	ID             int64   `json:"id"`
+	DisplayName    string  `json:"display_name"`
+	AvatarUrl      *string `json:"avatar_url"`
+	PasswordDigest *string `json:"password_digest"`
+	Bio            *string `json:"bio"`
+	Telegram       *string `json:"telegram"`
+	Github         *string `json:"github"`
+	Email          *string `json:"email"`
+}
+
+func (q *Queries) UpdateUserProfileAdmin(ctx context.Context, arg UpdateUserProfileAdminParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserProfileAdmin,
+		arg.ID,
+		arg.DisplayName,
+		arg.AvatarUrl,
+		arg.PasswordDigest,
+		arg.Bio,
+		arg.Telegram,
+		arg.Github,
+		arg.Email,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.UserName,
+		&i.DisplayName,
+		&i.Role,
+		&i.Rating,
+		&i.AvatarUrl,
+		&i.PasswordDigest,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
 	)
 	return i, err
 }
@@ -209,7 +413,7 @@ UPDATE users
 SET rating = $2,
     updated_at = now()
 WHERE id = $1
-RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
 `
 
 type UpdateUserRatingParams struct {
@@ -230,6 +434,14 @@ func (q *Queries) UpdateUserRating(ctx context.Context, arg UpdateUserRatingPara
 		&i.PasswordDigest,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
 	)
 	return i, err
 }
@@ -239,7 +451,7 @@ UPDATE users
 SET role = $2,
     updated_at = now()
 WHERE id = $1
-RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
 `
 
 type UpdateUserRoleParams struct {
@@ -260,6 +472,14 @@ func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) 
 		&i.PasswordDigest,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
 	)
 	return i, err
 }

@@ -7,7 +7,7 @@ import (
 
 func TestJWT_RoundTrip(t *testing.T) {
 	m := NewManager("test-secret", 24)
-	token, err := m.Generate(42, "admin", "testuser")
+	token, err := m.Generate(42, "admin", "testuser", "jti1")
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
@@ -31,7 +31,7 @@ func TestJWT_ExpiredToken(t *testing.T) {
 	m := NewManager("test-secret", 24)
 	m.ttl = -1 * time.Hour
 
-	token, err := m.Generate(1, "guest", "expired")
+	token, err := m.Generate(1, "guest", "expired", "jti2")
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
@@ -55,7 +55,7 @@ func TestJWT_WrongSecret(t *testing.T) {
 	m1 := NewManager("secret1", 24)
 	m2 := NewManager("secret2", 24)
 
-	token, err := m1.Generate(1, "guest", "user")
+	token, err := m1.Generate(1, "guest", "user", "jti4")
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}

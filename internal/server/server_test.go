@@ -35,7 +35,7 @@ func newTestEngine(store Store) *gin.Engine {
 		nil, nil, jwtMgr,
 		nil, nil, nil, nil, nil, nil, nil, nil,
 		nil, nil, nil, nil, nil, nil,
-		209715200, "./storage",
+		209715200, "./storage", nil,
 	)
 	return New(cfg, log, store, h)
 }
