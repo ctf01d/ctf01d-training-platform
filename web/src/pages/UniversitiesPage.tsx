@@ -1,13 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import * as universitiesApi from "../api/universities";
-import type {
-  University,
-  UniversityCreate,
-  UniversityUpdate,
-} from "../api/universities";
+import type { University, UniversityCreate } from "../api/universities";
 import { CardGrid, Pagination } from "../components/Card";
-import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
+import { ErrorDisplay } from "../components/ErrorDisplay";
 
 export default function UniversitiesPage() {
   const [universities, setUniversities] = useState<University[]>([]);
@@ -21,10 +17,6 @@ export default function UniversitiesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<UniversityCreate>({});
   const [creating, setCreating] = useState(false);
-
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<UniversityUpdate>({});
-  const [saving, setSaving] = useState(false);
 
   const fetchUniversities = useCallback(async () => {
     setLoading(true);
@@ -58,40 +50,6 @@ export default function UniversitiesPage() {
     }
     setCreateForm({});
     setShowCreate(false);
-    await fetchUniversities();
-  };
-
-  const startEdit = (u: University) => {
-    setEditingId(u.id);
-    setEditForm({
-      name: u.name ?? undefined,
-      site_url: u.site_url ?? undefined,
-      avatar_url: u.avatar_url ?? undefined,
-    });
-  };
-
-  const handleSave = async () => {
-    if (editingId === null) return;
-    setSaving(true);
-    const { error: err } = await universitiesApi.updateUniversity(
-      editingId,
-      editForm,
-    );
-    setSaving(false);
-    if (err) {
-      setError(err);
-      return;
-    }
-    setEditingId(null);
-    await fetchUniversities();
-  };
-
-  const handleDelete = async (id: number) => {
-    const { error: err } = await universitiesApi.deleteUniversity(id);
-    if (err) {
-      setError(err);
-      return;
-    }
     await fetchUniversities();
   };
 
@@ -155,68 +113,13 @@ export default function UniversitiesPage() {
 
       <ErrorDisplay error={error} onRetry={fetchUniversities} />
 
-      {editingId !== null && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void handleSave();
-          }}
-          className="edit-form"
-        >
-          <div className="form-group">
-            <label>Name</label>
-            <input
-              value={editForm.name ?? ""}
-              onChange={(e) =>
-                setEditForm((f) => ({ ...f, name: e.target.value }))
-              }
-            />
-          </div>
-          <div className="form-group">
-            <label>Site URL</label>
-            <input
-              value={editForm.site_url ?? ""}
-              onChange={(e) =>
-                setEditForm((f) => ({ ...f, site_url: e.target.value }))
-              }
-            />
-          </div>
-          <div className="form-group">
-            <label>Avatar URL</label>
-            <input
-              value={editForm.avatar_url ?? ""}
-              onChange={(e) =>
-                setEditForm((f) => ({ ...f, avatar_url: e.target.value }))
-              }
-            />
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setEditingId(null)}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
       <CardGrid
         loading={loading}
         isEmpty={universities.length === 0}
         emptyMessage="No universities found"
       >
         {universities.map((u) => (
-          <UniversityCard
-            key={u.id}
-            university={u}
-            onEdit={() => startEdit(u)}
-            onDelete={() => handleDelete(u.id)}
-          />
+          <UniversityCard key={u.id} university={u} />
         ))}
       </CardGrid>
 
@@ -230,15 +133,7 @@ export default function UniversitiesPage() {
   );
 }
 
-function UniversityCard({
-  university,
-  onEdit,
-  onDelete,
-}: {
-  university: University;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
+function UniversityCard({ university }: { university: University }) {
   const [imageFailed, setImageFailed] = useState(false);
   const title = university.name ?? `University #${university.id}`;
   const href = safeUrl(university.site_url);
@@ -279,17 +174,6 @@ function UniversityCard({
             <dd>{formatDateTime(university.updated_at)}</dd>
           </div>
         </dl>
-
-        <div className="university-card-actions">
-          <ActionButton onClick={onEdit}>Edit</ActionButton>
-          <ActionButton
-            onClick={onDelete}
-            variant="danger"
-            confirm="Delete this university?"
-          >
-            Delete
-          </ActionButton>
-        </div>
       </div>
 
       <Link
