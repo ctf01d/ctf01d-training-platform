@@ -25,22 +25,20 @@ export default function Layout() {
             <span className="logo-mark">01</span>
             <span className="logo-text">CTF01D</span>
           </Link>
-          {user && (
-            <nav className="nav" aria-label="Primary navigation">
-              {primaryLinks.map((link) => (
-                <NavLink key={link.to} to={link.to}>
-                  {link.label}
-                </NavLink>
-              ))}
-              {isAdmin && (
-                <>
-                  <NavLink to="/universities">Universities</NavLink>
-                  <NavLink to="/users">Users</NavLink>
-                </>
-              )}
-              {isPlayer && <NavLink to="/results">Results</NavLink>}
-            </nav>
-          )}
+          <nav className="nav" aria-label="Primary navigation">
+            {primaryLinks.map((link) => (
+              <NavLink key={link.to} to={link.to}>
+                {link.label}
+              </NavLink>
+            ))}
+            {isAdmin && (
+              <>
+                <NavLink to="/universities">Universities</NavLink>
+                <NavLink to="/users">Users</NavLink>
+              </>
+            )}
+            {isPlayer && <NavLink to="/results">Results</NavLink>}
+          </nav>
           <div className="header-right">
             {user ? (
               <div className="user-menu">

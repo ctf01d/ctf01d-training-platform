@@ -31,7 +31,7 @@ export default function ServiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const serviceId = Number(id);
   const navigate = useNavigate();
-  const { isPlayer, isAdmin } = useAuth();
+  const { user, isPlayer, isAdmin } = useAuth();
 
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
@@ -483,11 +483,13 @@ export default function ServiceDetailPage() {
           <ArchiveCard
             title="Service archive"
             meta={service.service_archive}
+            canDownload={Boolean(user)}
             onDownload={() => void handleDownload("service")}
           />
           <ArchiveCard
             title="Checker archive"
             meta={service.checker_archive}
+            canDownload={Boolean(user)}
             onDownload={() => void handleDownload("checker")}
           />
         </div>
@@ -532,10 +534,12 @@ export default function ServiceDetailPage() {
 function ArchiveCard({
   title,
   meta,
+  canDownload,
   onDownload,
 }: {
   title: string;
   meta?: Service["service_archive"];
+  canDownload: boolean;
   onDownload: () => void;
 }) {
   const present = Boolean(meta);
@@ -565,9 +569,11 @@ function ArchiveCard({
       ) : (
         <p className="archive-card-empty">Not uploaded</p>
       )}
-      <button className="btn btn-sm" onClick={onDownload} disabled={!present}>
-        Download
-      </button>
+      {canDownload && (
+        <button className="btn btn-sm" onClick={onDownload} disabled={!present}>
+          Download
+        </button>
+      )}
     </div>
   );
 }

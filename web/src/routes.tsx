@@ -21,11 +21,7 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
-    ),
+    element: <Layout />,
     children: [
       { index: true, element: <GamesPage /> },
       { path: "games", element: <GamesPage /> },
@@ -35,8 +31,22 @@ export const router = createBrowserRouter([
       { path: "teams", element: <TeamsPage /> },
       { path: "teams/:id", element: <TeamDetailPage /> },
       { path: "scoreboard", element: <ScoreboardPage /> },
-      { path: "profile", element: <ProfilePage /> },
-      { path: "results", element: <ResultsPage /> },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "results",
+        element: (
+          <ProtectedRoute>
+            <ResultsPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "universities",
         element: (

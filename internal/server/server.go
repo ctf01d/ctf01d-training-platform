@@ -70,6 +70,7 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 
 	api := engine.Group("/api/v1")
 	requireAuth := middleware.RequireAuth(h.JWTMgr())
+	optionalAuth := middleware.OptionalAuth(h.JWTMgr())
 	requireAdmin := []gin.HandlerFunc{requireAuth, middleware.RequireRole("admin")}
 
 	api.POST("/session", h.Login)
@@ -90,15 +91,15 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.PATCH("/universities/:id", append(requireAdmin, h.HandleUpdateUniversity)...)
 	api.DELETE("/universities/:id", append(requireAdmin, h.HandleDeleteUniversity)...)
 
-	api.GET("/teams", requireAuth, h.HandleListTeams)
+	api.GET("/teams", optionalAuth, h.HandleListTeams)
 	api.POST("/teams", requireAuth, h.HandleCreateTeam)
-	api.GET("/teams/:id", requireAuth, h.HandleGetTeam)
+	api.GET("/teams/:id", optionalAuth, h.HandleGetTeam)
 	api.PATCH("/teams/:id", requireAuth, h.HandleUpdateTeam)
 	api.DELETE("/teams/:id", requireAuth, h.HandleDeleteTeam)
 	api.POST("/teams/:id/join-request", requireAuth, h.HandleRequestJoinTeam)
 	api.POST("/teams/:id/invite", requireAuth, h.HandleInviteToTeam)
-	api.GET("/teams/:id/members", requireAuth, h.HandleListTeamMembers)
-	api.GET("/teams/:id/events", requireAuth, h.HandleListTeamEvents)
+	api.GET("/teams/:id/members", optionalAuth, h.HandleListTeamMembers)
+	api.GET("/teams/:id/events", optionalAuth, h.HandleListTeamEvents)
 
 	api.GET("/team-memberships", requireAuth, h.HandleListTeamMemberships)
 	api.POST("/team-memberships", append(requireAdmin, h.HandleCreateTeamMembership)...)
@@ -113,19 +114,19 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 
 	requirePlayer := []gin.HandlerFunc{requireAuth, middleware.RequireRole("player")}
 
-	api.GET("/games", requireAuth, h.HandleListGames)
+	api.GET("/games", optionalAuth, h.HandleListGames)
 	api.POST("/games", append(requirePlayer, h.HandleCreateGame)...)
-	api.GET("/games/:id", requireAuth, h.HandleGetGame)
+	api.GET("/games/:id", optionalAuth, h.HandleGetGame)
 	api.PATCH("/games/:id", append(requirePlayer, h.HandleUpdateGame)...)
 	api.DELETE("/games/:id", append(requirePlayer, h.HandleDeleteGame)...)
 	api.POST("/games/:id/finalize", append(requirePlayer, h.HandleFinalizeGame)...)
 	api.POST("/games/:id/unfinalize", append(requirePlayer, h.HandleUnfinalizeGame)...)
-	api.GET("/games/:id/services", requireAuth, h.HandleListGameServices)
+	api.GET("/games/:id/services", optionalAuth, h.HandleListGameServices)
 	api.POST("/games/:id/services", append(requirePlayer, h.HandleAddGameService)...)
 	api.DELETE("/games/:id/services/:service_id", append(requirePlayer, h.HandleRemoveGameService)...)
-	api.GET("/games/:id/teams", requireAuth, h.HandleListGameTeams)
+	api.GET("/games/:id/teams", optionalAuth, h.HandleListGameTeams)
 	api.POST("/games/:id/teams/reorder", append(requirePlayer, h.HandleReorderGameTeams)...)
-	api.GET("/games/:id/scoreboard", middleware.OptionalAuth(h.JWTMgr()), h.HandleGetGameScoreboard)
+	api.GET("/games/:id/scoreboard", optionalAuth, h.HandleGetGameScoreboard)
 	api.GET("/games/:id/export/ctf01d/options", append(requirePlayer, h.HandleGetCtf01dExportOptions)...)
 	api.POST("/games/:id/export/ctf01d", append(requirePlayer, h.HandleExportCtf01d)...)
 
@@ -144,14 +145,14 @@ func New(cfg *config.Config, log *zap.Logger, store Store, h *handler.Handler) *
 	api.GET("/writeups/:id", requireAuth, h.HandleGetWriteup)
 	api.DELETE("/writeups/:id", requireAuth, h.HandleDeleteWriteup)
 
-	api.GET("/scoreboard", requireAuth, h.HandleGetGlobalScoreboard)
+	api.GET("/scoreboard", optionalAuth, h.HandleGetGlobalScoreboard)
 
-	api.GET("/services", middleware.OptionalAuth(h.JWTMgr()), h.HandleListServices)
+	api.GET("/services", optionalAuth, h.HandleListServices)
 	api.POST("/services", append(requirePlayer, h.HandleCreateService)...)
 	api.POST("/services/import/github", append(requirePlayer, h.HandleImportServiceFromGithub)...)
 	api.POST("/services/import/zip", append(requirePlayer, h.HandleImportServiceFromZip)...)
 	api.DELETE("/services/:id", append(requirePlayer, h.HandleDeleteService)...)
-	api.GET("/services/:id", middleware.OptionalAuth(h.JWTMgr()), h.HandleGetService)
+	api.GET("/services/:id", optionalAuth, h.HandleGetService)
 	api.PATCH("/services/:id", append(requirePlayer, h.HandleUpdateService)...)
 	api.POST("/services/:id/check-checker", append(requirePlayer, h.HandleCheckServiceChecker)...)
 	api.GET("/services/:id/download/:kind", requireAuth, h.HandleDownloadServiceArchive)

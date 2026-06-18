@@ -26,8 +26,12 @@ const authMiddleware: Middleware = {
 
 const unauthorizedMiddleware: Middleware = {
   async onResponse({ response }) {
+    // Only force a redirect when an existing session became invalid.
+    // Guests (no token) may freely browse public pages where some
+    // requests legitimately return 401, so they must not be bounced.
     if (
       response.status === 401 &&
+      getToken() &&
       !window.location.pathname.startsWith("/login")
     ) {
       clearToken();
