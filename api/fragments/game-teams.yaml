@@ -128,6 +128,7 @@ paths:
       tags:
         - game-teams
       summary: Add a team to a game
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -156,6 +157,7 @@ paths:
       tags:
         - game-teams
       summary: Update a game team entry
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -188,6 +190,7 @@ paths:
       tags:
         - game-teams
       summary: Remove a team from a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -211,6 +214,7 @@ paths:
       tags:
         - game-teams
       summary: Reorder teams in a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:

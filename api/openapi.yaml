@@ -145,6 +145,7 @@ paths:
       tags:
         - game-teams
       summary: Add a team to a game
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -173,6 +174,7 @@ paths:
       tags:
         - game-teams
       summary: Update a game team entry
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -205,6 +207,7 @@ paths:
       tags:
         - game-teams
       summary: Remove a team from a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -228,6 +231,7 @@ paths:
       tags:
         - game-teams
       summary: Reorder teams in a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -280,6 +284,7 @@ paths:
       tags:
         - games
       summary: Create a game
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -331,6 +336,7 @@ paths:
       tags:
         - games
       summary: Update a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -365,6 +371,7 @@ paths:
       tags:
         - games
       summary: Delete a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -416,6 +423,7 @@ paths:
       tags:
         - games
       summary: Link a service to a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -453,6 +461,7 @@ paths:
       tags:
         - games
       summary: Unlink a service from a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -482,6 +491,7 @@ paths:
       tags:
         - games
       summary: Finalize game results
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -511,6 +521,7 @@ paths:
       tags:
         - games
       summary: Unfinalize game results
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -538,6 +549,7 @@ paths:
       tags:
         - games
       summary: Get ctf01d export options and warnings for a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -565,6 +577,7 @@ paths:
       tags:
         - games
       summary: Export game as ctf01d zip archive
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -633,6 +646,7 @@ paths:
       tags:
         - results
       summary: Create a result
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -687,6 +701,7 @@ paths:
       tags:
         - results
       summary: Update a result
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -721,6 +736,7 @@ paths:
       tags:
         - results
       summary: Delete a result
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -814,6 +830,7 @@ paths:
       tags:
         - services
       summary: Create a service
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -867,6 +884,7 @@ paths:
       tags:
         - services
       summary: Update a service
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -903,6 +921,7 @@ paths:
       tags:
         - services
       summary: Delete a service
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -926,6 +945,7 @@ paths:
       tags:
         - services
       summary: Toggle service public flag
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -953,6 +973,7 @@ paths:
       tags:
         - services
       summary: Run checker inspection
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -982,6 +1003,7 @@ paths:
       tags:
         - services
       summary: Re-download service and checker archives from URLs
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -1011,6 +1033,7 @@ paths:
       tags:
         - services
       summary: Upload service and/or checker archives
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -1089,6 +1112,7 @@ paths:
       tags:
         - services
       summary: Import a service from GitHub
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -1115,6 +1139,7 @@ paths:
       tags:
         - services
       summary: Import a service from a ZIP file
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -1167,6 +1192,7 @@ paths:
       tags:
         - team-memberships
       summary: Create a team membership
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -1221,6 +1247,7 @@ paths:
       tags:
         - team-memberships
       summary: Update a team membership
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -1257,6 +1284,7 @@ paths:
       tags:
         - team-memberships
       summary: Delete a team membership
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -1711,6 +1739,7 @@ paths:
       tags:
         - universities
       summary: Create a university
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -1763,6 +1792,7 @@ paths:
       tags:
         - universities
       summary: Update a university
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -1797,6 +1827,7 @@ paths:
       tags:
         - universities
       summary: Delete a university
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -1844,6 +1875,7 @@ paths:
       tags:
         - users
       summary: Create a user
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -1934,6 +1966,7 @@ paths:
       tags:
         - users
       summary: Delete a user
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -1951,6 +1984,46 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Delete a user
+  /users/{id}/role:
+    patch:
+      operationId: updateUserRole
+      tags:
+        - users
+      summary: Update a user's role
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleUpdate'
+      responses:
+        '200':
+          description: User role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      description: Update a user's role
   /writeups:
     get:
       operationId: listWriteups
@@ -3118,6 +3191,17 @@ components:
         password:
           type: string
           minLength: 6
+    UserRoleUpdate:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum:
+            - guest
+            - player
+            - admin
     UserList:
       type: object
       required:

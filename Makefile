@@ -83,6 +83,7 @@ go-tidy:
 OPENAPI_FILE := api/openapi.yaml
 OPENAPI_FRAGMENTS_DIR := api/fragments
 OAPI_CODEGEN := go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+OPENAPI_ROLES := go run ./scripts/openapi-required-roles.go
 
 ## openapi-merge: Merge API fragments into a single OpenAPI file
 openapi-merge:
@@ -91,6 +92,11 @@ openapi-merge:
 ## openapi-codegen: Generate Go server code from OpenAPI spec
 openapi-codegen:
 	$(OAPI_CODEGEN) -config configs/oapi-codegen.yaml $(OPENAPI_FILE)
+	$(OPENAPI_ROLES) -input $(OPENAPI_FILE) -output gen/httpserver/roles.gen.go -package httpserver
+
+## openapi-roles: Generate Go role metadata from OpenAPI spec
+openapi-roles:
+	$(OPENAPI_ROLES) -input $(OPENAPI_FILE) -output gen/httpserver/roles.gen.go -package httpserver
 
 ## openapi-ts: Generate TypeScript types from OpenAPI spec
 openapi-ts:

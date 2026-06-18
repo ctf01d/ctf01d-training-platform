@@ -4,17 +4,10 @@
 package httpserver
 
 import (
-	"bytes"
-	"compress/flate"
-	"encoding/base64"
 	"fmt"
 	"net/http"
-	"net/url"
-	"path"
-	"strings"
 	"time"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -348,6 +341,27 @@ func (e UserCreateRole) Valid() bool {
 	case UserCreateRoleGuest:
 		return true
 	case UserCreateRolePlayer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserRoleUpdateRole.
+const (
+	Admin  UserRoleUpdateRole = "admin"
+	Guest  UserRoleUpdateRole = "guest"
+	Player UserRoleUpdateRole = "player"
+)
+
+// Valid indicates whether the value is a known member of the UserRoleUpdateRole enum.
+func (e UserRoleUpdateRole) Valid() bool {
+	switch e {
+	case Admin:
+		return true
+	case Guest:
+		return true
+	case Player:
 		return true
 	default:
 		return false
@@ -890,6 +904,14 @@ type UserList struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+// UserRoleUpdate defines model for UserRoleUpdate.
+type UserRoleUpdate struct {
+	Role UserRoleUpdateRole `json:"role"`
+}
+
+// UserRoleUpdateRole defines model for UserRoleUpdate.Role.
+type UserRoleUpdateRole string
+
 // UserUpdate defines model for UserUpdate.
 type UserUpdate struct {
 	AvatarUrl   *string `json:"avatar_url,omitempty"`
@@ -949,6 +971,7 @@ type bearerAuthContextKey string
 type ListGamesParams struct {
 	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
 	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+	Q       *string       `form:"q,omitempty" json:"q,omitempty"`
 }
 
 // AddGameServiceJSONBody defines parameters for AddGameService.
@@ -994,6 +1017,7 @@ type ListTeamMembershipsParams struct {
 type ListTeamsParams struct {
 	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
 	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+	Q       *string       `form:"q,omitempty" json:"q,omitempty"`
 }
 
 // ListTeamEventsParams defines parameters for ListTeamEvents.
@@ -1006,12 +1030,14 @@ type ListTeamEventsParams struct {
 type ListUniversitiesParams struct {
 	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
 	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+	Q       *string       `form:"q,omitempty" json:"q,omitempty"`
 }
 
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
 	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
 	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+	Q       *string       `form:"q,omitempty" json:"q,omitempty"`
 }
 
 // ListWriteupsParams defines parameters for ListWriteups.
@@ -1097,6 +1123,9 @@ type CreateUserJSONRequestBody = UserCreate
 
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
 type UpdateUserJSONRequestBody = UserUpdate
+
+// UpdateUserRoleJSONRequestBody defines body for UpdateUserRole for application/json ContentType.
+type UpdateUserRoleJSONRequestBody = UserRoleUpdate
 
 // CreateWriteupJSONRequestBody defines body for CreateWriteup for application/json ContentType.
 type CreateWriteupJSONRequestBody = WriteupCreate
@@ -1310,6 +1339,9 @@ type ServerInterface interface {
 	// Update a user
 	// (PATCH /users/{id})
 	UpdateUser(c *gin.Context, id int64)
+	// Update a user's role
+	// (PATCH /users/{id}/role)
+	UpdateUserRole(c *gin.Context, id int64)
 	// List writeups
 	// (GET /writeups)
 	ListWriteups(c *gin.Context, params ListWriteupsParams)
@@ -1408,8 +1440,6 @@ func (siw *ServerInterfaceWrapper) ListGames(c *gin.Context) {
 	var err error
 	_ = err
 
-	c.Set(string(BearerAuthScopes), []string{})
-
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListGamesParams
 
@@ -1426,6 +1456,14 @@ func (siw *ServerInterfaceWrapper) ListGames(c *gin.Context) {
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
 	if err != nil {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -1495,8 +1533,6 @@ func (siw *ServerInterfaceWrapper) GetGame(c *gin.Context) {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
 		return
 	}
-
-	c.Set(string(BearerAuthScopes), []string{})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1656,8 +1692,6 @@ func (siw *ServerInterfaceWrapper) ListGameServices(c *gin.Context) {
 		return
 	}
 
-	c.Set(string(BearerAuthScopes), []string{})
-
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -1745,8 +1779,6 @@ func (siw *ServerInterfaceWrapper) ListGameTeams(c *gin.Context) {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
 		return
 	}
-
-	c.Set(string(BearerAuthScopes), []string{})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1978,8 +2010,6 @@ func (siw *ServerInterfaceWrapper) UpdateResult(c *gin.Context) {
 // GetGlobalScoreboard operation middleware
 func (siw *ServerInterfaceWrapper) GetGlobalScoreboard(c *gin.Context) {
 
-	c.Set(string(BearerAuthScopes), []string{})
-
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -1995,8 +2025,6 @@ func (siw *ServerInterfaceWrapper) ListServices(c *gin.Context) {
 
 	var err error
 	_ = err
-
-	c.Set(string(BearerAuthScopes), []string{})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListServicesParams
@@ -2129,8 +2157,6 @@ func (siw *ServerInterfaceWrapper) GetService(c *gin.Context) {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
 		return
 	}
-
-	c.Set(string(BearerAuthScopes), []string{})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -2615,8 +2641,6 @@ func (siw *ServerInterfaceWrapper) ListTeams(c *gin.Context) {
 	var err error
 	_ = err
 
-	c.Set(string(BearerAuthScopes), []string{})
-
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListTeamsParams
 
@@ -2633,6 +2657,14 @@ func (siw *ServerInterfaceWrapper) ListTeams(c *gin.Context) {
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
 	if err != nil {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -2702,8 +2734,6 @@ func (siw *ServerInterfaceWrapper) GetTeam(c *gin.Context) {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
 		return
 	}
-
-	c.Set(string(BearerAuthScopes), []string{})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -2857,8 +2887,6 @@ func (siw *ServerInterfaceWrapper) ListTeamMembers(c *gin.Context) {
 		return
 	}
 
-	c.Set(string(BearerAuthScopes), []string{})
-
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -2893,6 +2921,14 @@ func (siw *ServerInterfaceWrapper) ListUniversities(c *gin.Context) {
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
 	if err != nil {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -3029,6 +3065,14 @@ func (siw *ServerInterfaceWrapper) ListUsers(c *gin.Context) {
 		return
 	}
 
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -3133,6 +3177,33 @@ func (siw *ServerInterfaceWrapper) UpdateUser(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateUser(c, id)
+}
+
+// UpdateUserRole operation middleware
+func (siw *ServerInterfaceWrapper) UpdateUserRole(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateUserRole(c, id)
 }
 
 // ListWriteups operation middleware
@@ -3337,197 +3408,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.DELETE(options.BaseURL+"/users/:id", wrapper.DeleteUser)
 	router.GET(options.BaseURL+"/users/:id", wrapper.GetUser)
 	router.PATCH(options.BaseURL+"/users/:id", wrapper.UpdateUser)
+	router.PATCH(options.BaseURL+"/users/:id/role", wrapper.UpdateUserRole)
 	router.GET(options.BaseURL+"/writeups", wrapper.ListWriteups)
 	router.POST(options.BaseURL+"/writeups", wrapper.CreateWriteup)
 	router.DELETE(options.BaseURL+"/writeups/:id", wrapper.DeleteWriteup)
 	router.GET(options.BaseURL+"/writeups/:id", wrapper.GetWriteup)
-}
-
-// Base64 encoded, compressed with deflate, json marshaled OpenAPI spec.
-// Stored as a slice of fixed-width chunks rather than one concatenated
-// const string: with thousands of chunks the chained `+` fold is several
-// times slower for the Go compiler than parsing a slice literal.
-var swaggerSpec = []string{
-	"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",
-	"o9gKTQhWhAaKdeXblX/38eH/AwAA//8=",
-}
-
-// decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
-// after base64-decoding and flate-decompressing the embedded blob.
-func decodeSpec() ([]byte, error) {
-	encoded := strings.Join(swaggerSpec, "")
-	compressed, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		return nil, fmt.Errorf("error base64 decoding spec: %w", err)
-	}
-	zr := flate.NewReader(bytes.NewReader(compressed))
-	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(zr); err != nil {
-		return nil, fmt.Errorf("read flate: %w", err)
-	}
-	if err := zr.Close(); err != nil {
-		return nil, fmt.Errorf("close flate reader: %w", err)
-	}
-
-	return buf.Bytes(), nil
-}
-
-var rawSpec = decodeSpecCached()
-
-// a naive cache of the decoded OpenAPI spec
-func decodeSpecCached() func() ([]byte, error) {
-	data, err := decodeSpec()
-	return func() ([]byte, error) {
-		return data, err
-	}
-}
-
-// Constructs a synthetic filesystem for resolving external references when loading openapi specifications.
-func PathToRawSpec(pathToFile string) map[string]func() ([]byte, error) {
-	res := make(map[string]func() ([]byte, error))
-	if len(pathToFile) > 0 {
-		res[pathToFile] = rawSpec
-	}
-
-	return res
-}
-
-// GetSpec returns the OpenAPI specification corresponding to the generated
-// code in this file. External references in the spec are resolved through
-// PathToRawSpec; externally-referenced files must be embedded in their
-// corresponding Go packages (via the import-mapping feature). URL-based
-// external refs are not supported.
-func GetSpec() (swagger *openapi3.T, err error) {
-	resolvePath := PathToRawSpec("")
-
-	loader := openapi3.NewLoader()
-	loader.IsExternalRefsAllowed = true
-	loader.ReadFromURIFunc = func(loader *openapi3.Loader, url *url.URL) ([]byte, error) {
-		pathToFile := url.String()
-		pathToFile = path.Clean(pathToFile)
-		getSpec, ok := resolvePath[pathToFile]
-		if !ok {
-			err1 := fmt.Errorf("path not found: %s", pathToFile)
-			return nil, err1
-		}
-		return getSpec()
-	}
-	var specData []byte
-	specData, err = rawSpec()
-	if err != nil {
-		return
-	}
-	swagger, err = loader.LoadFromData(specData)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// GetSpecJSON returns the raw JSON bytes of the embedded OpenAPI
-// specification: decompressed but not unmarshaled. External references
-// are not resolved here; the bytes are the spec exactly as embedded by
-// codegen. The result is cached at package init time, so repeated calls
-// are cheap.
-func GetSpecJSON() ([]byte, error) {
-	return rawSpec()
-}
-
-// GetSwagger returns the OpenAPI specification corresponding to the
-// generated code in this file.
-//
-// Deprecated: GetSwagger predates kin-openapi renaming openapi3.Swagger
-// to openapi3.T. Use [GetSpec] instead. This wrapper is retained for
-// backwards compatibility.
-func GetSwagger() (*openapi3.T, error) {
-	return GetSpec()
 }

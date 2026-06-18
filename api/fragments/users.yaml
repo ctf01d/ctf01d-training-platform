@@ -65,6 +65,17 @@ components:
         password:
           type: string
           minLength: 6
+    UserRoleUpdate:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum:
+            - guest
+            - player
+            - admin
     UserList:
       type: object
       required:
@@ -108,6 +119,7 @@ paths:
       tags:
         - users
       summary: Create a user
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -198,6 +210,7 @@ paths:
       tags:
         - users
       summary: Delete a user
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -215,3 +228,43 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Delete a user
+  /users/{id}/role:
+    patch:
+      operationId: updateUserRole
+      tags:
+        - users
+      summary: Update a user's role
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleUpdate'
+      responses:
+        '200':
+          description: User role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      description: Update a user's role

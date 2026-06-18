@@ -984,6 +984,26 @@ export interface paths {
         patch: operations["updateUser"];
         trace?: never;
     };
+    "/users/{id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a user's role
+         * @description Update a user's role
+         */
+        patch: operations["updateUserRole"];
+        trace?: never;
+    };
     "/writeups": {
         parameters: {
             query?: never;
@@ -1494,6 +1514,10 @@ export interface components {
             display_name?: string;
             avatar_url?: string | null;
             password?: string;
+        };
+        UserRoleUpdate: {
+            /** @enum {string} */
+            role: "guest" | "player" | "admin";
         };
         UserList: {
             items: components["schemas"]["User"][];
@@ -3338,6 +3362,37 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    updateUserRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserRoleUpdate"];
+            };
+        };
+        responses: {
+            /** @description User role updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationError"];

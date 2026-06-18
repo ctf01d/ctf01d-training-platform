@@ -84,6 +84,7 @@ paths:
       tags:
         - results
       summary: Create a result
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -138,6 +139,7 @@ paths:
       tags:
         - results
       summary: Update a result
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -172,6 +174,7 @@ paths:
       tags:
         - results
       summary: Delete a result
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:

@@ -306,6 +306,7 @@ paths:
       tags:
         - games
       summary: Create a game
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -357,6 +358,7 @@ paths:
       tags:
         - games
       summary: Update a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -391,6 +393,7 @@ paths:
       tags:
         - games
       summary: Delete a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -442,6 +445,7 @@ paths:
       tags:
         - games
       summary: Link a service to a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -479,6 +483,7 @@ paths:
       tags:
         - games
       summary: Unlink a service from a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -508,6 +513,7 @@ paths:
       tags:
         - games
       summary: Finalize game results
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -537,6 +543,7 @@ paths:
       tags:
         - games
       summary: Unfinalize game results
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -564,6 +571,7 @@ paths:
       tags:
         - games
       summary: Get ctf01d export options and warnings for a game
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -591,6 +599,7 @@ paths:
       tags:
         - games
       summary: Export game as ctf01d zip archive
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:

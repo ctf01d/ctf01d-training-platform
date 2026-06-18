@@ -201,6 +201,7 @@ paths:
       tags:
         - services
       summary: Create a service
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -254,6 +255,7 @@ paths:
       tags:
         - services
       summary: Update a service
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -290,6 +292,7 @@ paths:
       tags:
         - services
       summary: Delete a service
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -313,6 +316,7 @@ paths:
       tags:
         - services
       summary: Toggle service public flag
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -340,6 +344,7 @@ paths:
       tags:
         - services
       summary: Run checker inspection
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -369,6 +374,7 @@ paths:
       tags:
         - services
       summary: Re-download service and checker archives from URLs
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -398,6 +404,7 @@ paths:
       tags:
         - services
       summary: Upload service and/or checker archives
+      x-required-role: player
       security:
         - BearerAuth: []
       parameters:
@@ -476,6 +483,7 @@ paths:
       tags:
         - services
       summary: Import a service from GitHub
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:
@@ -502,6 +510,7 @@ paths:
       tags:
         - services
       summary: Import a service from a ZIP file
+      x-required-role: player
       security:
         - BearerAuth: []
       requestBody:

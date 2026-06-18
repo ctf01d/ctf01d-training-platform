@@ -80,6 +80,7 @@ paths:
       tags:
         - universities
       summary: Create a university
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -132,6 +133,7 @@ paths:
       tags:
         - universities
       summary: Update a university
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -166,6 +168,7 @@ paths:
       tags:
         - universities
       summary: Delete a university
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:

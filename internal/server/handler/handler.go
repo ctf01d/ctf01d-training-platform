@@ -309,14 +309,16 @@ func (h *Handler) HandleUpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	req, ok := bindJSON[struct {
-		Role string `json:"role" binding:"required,oneof=guest player admin"`
-	}](c)
+	req, ok := bindJSON[httpserver.UserRoleUpdate](c)
 	if !ok {
 		return
 	}
+	if !req.Role.Valid() {
+		respondError(c, errs.NewValidationError(map[string]string{"role": "must be one of guest, player, admin"}))
+		return
+	}
 
-	user, err := h.users.UpdateRole(c.Request.Context(), id, req.Role)
+	user, err := h.users.UpdateRole(c.Request.Context(), id, string(req.Role))
 	if err != nil {
 		respondError(c, err)
 		return
@@ -342,6 +344,11 @@ func (h *Handler) GetUser(c *gin.Context, id int64) {
 func (h *Handler) UpdateUser(c *gin.Context, id int64) {
 	c.Set("id", id)
 	h.HandleUpdateUser(c)
+}
+
+func (h *Handler) UpdateUserRole(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleUpdateUserRole(c)
 }
 
 func (h *Handler) DeleteUser(c *gin.Context, id int64) {

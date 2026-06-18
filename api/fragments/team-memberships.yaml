@@ -180,6 +180,7 @@ paths:
       tags:
         - team-memberships
       summary: Create a team membership
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -234,6 +235,7 @@ paths:
       tags:
         - team-memberships
       summary: Update a team membership
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
@@ -270,6 +272,7 @@ paths:
       tags:
         - team-memberships
       summary: Delete a team membership
+      x-required-role: admin
       security:
         - BearerAuth: []
       parameters:
