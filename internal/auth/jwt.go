@@ -51,9 +51,12 @@ func (m *Manager) Generate(userID int64, role, userName, jti string) (string, er
 	return token.SignedString(m.secret)
 }
 
+// sessionIDBytes is the number of random bytes in a session identifier (jti).
+const sessionIDBytes = 16
+
 // NewSessionID returns a random opaque identifier used as a JWT ID (jti).
 func NewSessionID() (string, error) {
-	b := make([]byte, 16)
+	b := make([]byte, sessionIDBytes)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}

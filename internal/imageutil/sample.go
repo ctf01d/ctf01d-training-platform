@@ -6,11 +6,20 @@ import (
 	"math"
 )
 
+const (
+	// colorShift converts 16-bit color channels (from RGBA()) down to 8-bit.
+	colorShift = 8
+	// maxChannel is the maximum value of an 8-bit color channel.
+	maxChannel = 255
+	// channelRoundBias rounds a float channel to the nearest integer.
+	channelRoundBias = 0.5
+)
+
 // bilinearSample returns the interpolated color at exact source coordinates
 // (sx, sy) within src, clamped to the source bounds. The caller is responsible
 // for the pixel-center (half-pixel) mapping. Channels are returned as 8-bit
 // values (0-255).
-func bilinearSample(src image.Image, b image.Rectangle, sx, sy float64) (r, g, bl, a uint32) {
+func bilinearSample(src image.Image, b image.Rectangle, sx, sy float64) (r, g, bl, a uint8) {
 	x0 := int(math.Floor(sx))
 	y0 := int(math.Floor(sy))
 	dx := sx - float64(x0)
@@ -43,22 +52,22 @@ func at(src image.Image, b image.Rectangle, x, y int) (r, g, bl, a float64) {
 		y = b.Max.Y - 1
 	}
 	cr, cg, cb, ca := src.At(x, y).RGBA()
-	return float64(cr >> 8), float64(cg >> 8), float64(cb >> 8), float64(ca >> 8)
+	return float64(cr >> colorShift), float64(cg >> colorShift), float64(cb >> colorShift), float64(ca >> colorShift)
 }
 
-func lerp2(c00, c10, c01, c11, dx, dy float64) uint32 {
+func lerp2(c00, c10, c01, c11, dx, dy float64) uint8 {
 	top := c00 + (c10-c00)*dx
 	bottom := c01 + (c11-c01)*dx
 	v := top + (bottom-top)*dy
 	if v < 0 {
 		v = 0
 	}
-	if v > 255 {
-		v = 255
+	if v > maxChannel {
+		v = maxChannel
 	}
-	return uint32(v + 0.5)
+	return uint8(v + channelRoundBias)
 }
 
-func rgba(r, g, b, a uint32) color.RGBA {
-	return color.RGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: uint8(a)}
+func rgba(r, g, b, a uint8) color.RGBA {
+	return color.RGBA{R: r, G: g, B: b, A: a}
 }

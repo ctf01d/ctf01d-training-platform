@@ -64,6 +64,9 @@ var userNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
 const defaultRole = "guest"
 
+// fieldPassword is the validation-error field key for the password input.
+const fieldPassword = "password"
+
 type Querier interface {
 	CreateUser(ctx context.Context, arg db.CreateUserParams) (db.User, error)
 	GetUserByID(ctx context.Context, id int64) (db.User, error)
@@ -103,7 +106,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error
 	}
 	if len(params.Password) < minPasswordLength {
 		return nil, errs.NewValidationError(map[string]string{
-			"password": "must be at least 6 characters",
+			fieldPassword: "must be at least 6 characters",
 		})
 	}
 
@@ -209,7 +212,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*U
 	var passwordDigest *string
 	if params.Password != nil {
 		if *params.Password == "" || len(*params.Password) < 6 {
-			return nil, errs.NewValidationError(map[string]string{"password": "password must be at least 6 characters"})
+			return nil, errs.NewValidationError(map[string]string{fieldPassword: "password must be at least 6 characters"})
 		}
 		hash, err := auth.HashPassword(*params.Password)
 		if err != nil {
@@ -251,7 +254,7 @@ func (s *Service) UpdateAdmin(ctx context.Context, id int64, params AdminUpdateP
 	var passwordDigest *string
 	if params.Password != nil {
 		if len(*params.Password) < minPasswordLength {
-			return nil, errs.NewValidationError(map[string]string{"password": "must be at least 6 characters"})
+			return nil, errs.NewValidationError(map[string]string{fieldPassword: "must be at least 6 characters"})
 		}
 		hash, err := auth.HashPassword(*params.Password)
 		if err != nil {

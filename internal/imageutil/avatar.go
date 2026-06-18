@@ -25,6 +25,9 @@ var ErrImageTooLarge = errors.New("image dimensions too large")
 // huge in-memory RGBA buffer (width*height*4 bytes). 8 MP ~= 32 MB decoded.
 const maxAvatarPixels = 8 << 20
 
+// pixelCenterOffset maps a destination pixel center to its source coordinate.
+const pixelCenterOffset = 0.5
+
 // ScaleAvatar decodes an arbitrary image and re-encodes it as a PNG that fits
 // within maxSize on its longest side, preserving aspect ratio. Images already
 // smaller than maxSize are re-encoded unchanged. The pixel dimensions are
@@ -89,9 +92,9 @@ func scaleToFit(src image.Image, maxSize int) image.Image {
 	// Map each destination pixel center to the exact source coordinate (single
 	// half-pixel correction; bilinearSample treats sx/sy as exact source coords).
 	for y := 0; y < dstH; y++ {
-		sy := float64(b.Min.Y) + (float64(y)+0.5)*yRatio - 0.5
+		sy := float64(b.Min.Y) + (float64(y)+pixelCenterOffset)*yRatio - pixelCenterOffset
 		for x := 0; x < dstW; x++ {
-			sx := float64(b.Min.X) + (float64(x)+0.5)*xRatio - 0.5
+			sx := float64(b.Min.X) + (float64(x)+pixelCenterOffset)*xRatio - pixelCenterOffset
 			r, g, bl, a := bilinearSample(src, b, sx, sy)
 			dst.Set(x, y, rgba(r, g, bl, a))
 		}
