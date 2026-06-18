@@ -12,3 +12,4 @@ __debug*
 web/node_modules/
 web/dist/
 /storage/
+seed
