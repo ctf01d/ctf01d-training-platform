@@ -336,7 +336,8 @@ a:focus-visible {
   margin-bottom: 2px;
 }
 
-.games-page .card-grid {
+.games-page .card-grid,
+.universities-page .card-grid {
   grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
   gap: 18px;
 }
@@ -448,6 +449,22 @@ a:focus-visible {
   font-size: 4rem;
   font-weight: 900;
 
+}
+
+.university-card .game-card-media {
+  background: #fff;
+}
+
+.university-card .game-card-media img {
+  object-fit: contain;
+  padding: 18px;
+}
+
+.university-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 .detail-hero {
@@ -1461,7 +1478,8 @@ a:focus-visible {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 
-  .games-page .card-grid {
+  .games-page .card-grid,
+  .universities-page .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
   }
 
@@ -1513,6 +1531,7 @@ a:focus-visible {
   }
 
   .games-page .card-grid,
+  .universities-page .card-grid,
   .game-card {
     grid-template-columns: 1fr;
   }

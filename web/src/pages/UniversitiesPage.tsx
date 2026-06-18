@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import * as universitiesApi from "../api/universities";
 import type {
   University,
   UniversityCreate,
   UniversityUpdate,
 } from "../api/universities";
-import { CardGrid, EntityCard, CardMeta, Pagination } from "../components/Card";
+import { CardGrid, Pagination } from "../components/Card";
 import { ErrorDisplay, ActionButton } from "../components/ErrorDisplay";
 
 export default function UniversitiesPage() {
@@ -94,20 +95,8 @@ export default function UniversitiesPage() {
     await fetchUniversities();
   };
 
-  const safeUrl = (u: string | undefined | null) => {
-    if (!u) return null;
-    try {
-      const parsed = new URL(u);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
-        return null;
-      return u;
-    } catch {
-      return null;
-    }
-  };
-
   return (
-    <div className="page">
+    <div className="page universities-page">
       <div className="page-header">
         <h1>Universities</h1>
         <button
@@ -222,35 +211,12 @@ export default function UniversitiesPage() {
         emptyMessage="No universities found"
       >
         {universities.map((u) => (
-          <EntityCard
+          <UniversityCard
             key={u.id}
-            to={`/universities/${u.id}`}
-            avatarUrl={u.avatar_url}
-            avatarText={u.name ?? "?"}
-            title={u.name ?? "—"}
-            footer={
-              <>
-                <ActionButton onClick={() => startEdit(u)}>Edit</ActionButton>
-                <ActionButton
-                  onClick={() => handleDelete(u.id)}
-                  variant="danger"
-                  confirm="Delete this university?"
-                >
-                  Delete
-                </ActionButton>
-              </>
-            }
-          >
-            <CardMeta label="Site">
-              {safeUrl(u.site_url) ? (
-                <a href={u.site_url!} target="_blank" rel="noreferrer">
-                  {u.site_url}
-                </a>
-              ) : (
-                (u.site_url ?? "—")
-              )}
-            </CardMeta>
-          </EntityCard>
+            university={u}
+            onEdit={() => startEdit(u)}
+            onDelete={() => handleDelete(u.id)}
+          />
         ))}
       </CardGrid>
 
@@ -262,4 +228,112 @@ export default function UniversitiesPage() {
       />
     </div>
   );
+}
+
+function UniversityCard({
+  university,
+  onEdit,
+  onDelete,
+}: {
+  university: University;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const title = university.name ?? `University #${university.id}`;
+  const href = safeUrl(university.site_url);
+  const hasImage = Boolean(university.avatar_url && !imageFailed);
+
+  return (
+    <article className="game-card university-card">
+      <div className="game-card-content">
+        <div className="game-card-heading">
+          <Link to={`/universities/${university.id}`} className="game-card-title">
+            {title}
+          </Link>
+        </div>
+
+        <dl className="game-card-meta">
+          <div>
+            <dt>Site</dt>
+            <dd>
+              {href ? (
+                <a href={href} target="_blank" rel="noreferrer">
+                  {formatHost(href)}
+                </a>
+              ) : (
+                (university.site_url ?? "—")
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>ID</dt>
+            <dd>{university.id}</dd>
+          </div>
+          <div>
+            <dt>Added</dt>
+            <dd>{formatDateTime(university.created_at)}</dd>
+          </div>
+          <div>
+            <dt>Updated</dt>
+            <dd>{formatDateTime(university.updated_at)}</dd>
+          </div>
+        </dl>
+
+        <div className="university-card-actions">
+          <ActionButton onClick={onEdit}>Edit</ActionButton>
+          <ActionButton
+            onClick={onDelete}
+            variant="danger"
+            confirm="Delete this university?"
+          >
+            Delete
+          </ActionButton>
+        </div>
+      </div>
+
+      <Link
+        to={`/universities/${university.id}`}
+        className="game-card-media"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
+        {hasImage ? (
+          <img
+            src={university.avatar_url ?? ""}
+            alt=""
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <span>{title.trim().charAt(0).toUpperCase() || "?"}</span>
+        )}
+      </Link>
+    </article>
+  );
+}
+
+function safeUrl(url: string | undefined | null) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function formatHost(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function formatDateTime(value?: string | null) {
+  return value ? new Date(value).toLocaleDateString() : "—";
 }

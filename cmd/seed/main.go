@@ -177,6 +177,7 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniCentral: "/img/university-logos/central-university.jpg",
 		uniMIREA:   "/img/university-logos/mirea.png",
 		uniOmSTU:   "/img/university-logos/omstu.png",
+		uniOmskAT:  "/img/university-logos/oak.jpg",
 		uniSibSU:   "/img/university-logos/sibsu.png",
 		uniSSUGT:   "/img/university-logos/ssugt.jpg",
 	}
