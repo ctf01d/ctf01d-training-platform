@@ -5,7 +5,7 @@ import type { Game, GameCreate } from "../api/games";
 import * as teamsApi from "../api/teams";
 import { CardGrid, CardBadge, Pagination } from "../components/Card";
 import { ErrorDisplay } from "../components/ErrorDisplay";
-import { RelativeTime, formatDuration } from "../components/DetailInfo";
+import { RelativeTime, Duration } from "../components/DetailInfo";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 
@@ -196,7 +196,6 @@ function GameCard({
   const organizerTeam = game.organizer
     ? organizerTeams[game.organizer.trim().toLowerCase()]
     : null;
-  const duration = formatDuration(game.starts_at, game.ends_at);
 
   return (
     <article className="game-card">
@@ -232,9 +231,12 @@ function GameCard({
             <dt>Date</dt>
             <dd>
               <RelativeTime value={game.starts_at} />
-              {duration && (
-                <span className="game-card-duration">{duration}</span>
-              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Duration</dt>
+            <dd>
+              <Duration start={game.starts_at} end={game.ends_at} />
             </dd>
           </div>
           <div>

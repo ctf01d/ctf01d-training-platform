@@ -426,14 +426,6 @@ a:focus-visible {
   word-break: break-word;
 }
 
-.game-card-duration {
-  display: block;
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: .8rem;
-  font-weight: 400;
-}
-
 .game-card-media {
   position: relative;
   display: block;

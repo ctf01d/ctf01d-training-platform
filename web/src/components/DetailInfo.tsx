@@ -164,6 +164,22 @@ export function formatDuration(
   return parts.join(" ") || "0m";
 }
 
+/**
+ * Renders the span between two timestamps as a human-readable duration,
+ * e.g. "1d 4h". Falls back to a muted dash when the range is unknown.
+ */
+export function Duration({
+  start,
+  end,
+}: {
+  start?: string | null;
+  end?: string | null;
+}) {
+  const text = formatDuration(start, end);
+  if (!text) return <span className="muted-dash">—</span>;
+  return <span>{text}</span>;
+}
+
 /** Full date/time including the timezone, e.g. for tooltips. */
 export function formatDateTimeWithZone(value: string): string {
   return new Date(value).toLocaleString(undefined, {

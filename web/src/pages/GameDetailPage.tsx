@@ -28,6 +28,7 @@ import {
   InfoRow,
   SectionCount,
   RelativeTime,
+  Duration,
   renderLink,
   renderLogo,
   formatDateTime as formatDate,
@@ -443,7 +444,10 @@ export default function GameDetailPage() {
                 label: "Starts",
                 value: <RelativeTime value={game.starts_at} />,
               },
-              { label: "Ends", value: <RelativeTime value={game.ends_at} /> },
+              {
+                label: "Duration",
+                value: <Duration start={game.starts_at} end={game.ends_at} />,
+              },
             ]}
             actions={
               <>
