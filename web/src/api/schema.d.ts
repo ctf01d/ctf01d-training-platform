@@ -1803,6 +1803,7 @@ export interface operations {
             query?: {
                 page?: components["parameters"]["PageParam"];
                 per_page?: components["parameters"]["PerPageParam"];
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -2861,6 +2862,7 @@ export interface operations {
             query?: {
                 page?: components["parameters"]["PageParam"];
                 per_page?: components["parameters"]["PerPageParam"];
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -3092,6 +3094,7 @@ export interface operations {
             query?: {
                 page?: components["parameters"]["PageParam"];
                 per_page?: components["parameters"]["PerPageParam"];
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -3217,6 +3220,7 @@ export interface operations {
             query?: {
                 page?: components["parameters"]["PageParam"];
                 per_page?: components["parameters"]["PerPageParam"];
+                q?: string;
             };
             header?: never;
             path?: never;

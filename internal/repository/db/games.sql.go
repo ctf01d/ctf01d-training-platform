@@ -13,10 +13,11 @@ import (
 
 const countGames = `-- name: CountGames :one
 SELECT count(*) FROM games
+WHERE (name ILIKE '%' || $1 || '%' OR $1 IS NULL)
 `
 
-func (q *Queries) CountGames(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countGames)
+func (q *Queries) CountGames(ctx context.Context, searchQuery *string) (int64, error) {
+	row := q.db.QueryRow(ctx, countGames, searchQuery)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -140,17 +141,19 @@ func (q *Queries) GetGameByID(ctx context.Context, id int64) (Game, error) {
 
 const listGames = `-- name: ListGames :many
 SELECT id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret FROM games
+WHERE (name ILIKE '%' || $3 || '%' OR $3 IS NULL)
 ORDER BY starts_at DESC NULLS LAST, created_at DESC, id DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListGamesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit       int32   `json:"limit"`
+	Offset      int32   `json:"offset"`
+	SearchQuery *string `json:"search_query"`
 }
 
 func (q *Queries) ListGames(ctx context.Context, arg ListGamesParams) ([]Game, error) {
-	rows, err := q.db.Query(ctx, listGames, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listGames, arg.Limit, arg.Offset, arg.SearchQuery)
 	if err != nil {
 		return nil, err
 	}

@@ -18,6 +18,7 @@ import {
   handleApiError,
 } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
+import { TeamLink } from "../components/TeamLink";
 import {
   DetailHero,
   InfoGroups,
@@ -725,7 +726,9 @@ export default function GameDetailPage() {
                 .map((gt) => (
                   <tr key={gt.id}>
                     <td className="rank-cell">{gt.order}</td>
-                    <td>{nameOf(gt.team_id)}</td>
+                    <td>
+                      <TeamLink id={gt.team_id} name={nameOf(gt.team_id)} />
+                    </td>
                     <td>
                       {gt.ip_address ? (
                         <code>{gt.ip_address}</code>
@@ -825,7 +828,9 @@ export default function GameDetailPage() {
                           i + 1
                         )}
                       </td>
-                      <td>{nameOf(r.team_id)}</td>
+                      <td>
+                        <TeamLink id={r.team_id} name={nameOf(r.team_id)} />
+                      </td>
                       <td className="numeric score-cell">
                         {r.score?.toLocaleString() ?? "—"}
                       </td>

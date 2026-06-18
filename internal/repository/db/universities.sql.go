@@ -11,10 +11,11 @@ import (
 
 const countUniversities = `-- name: CountUniversities :one
 SELECT count(*) FROM universities
+WHERE (name ILIKE '%' || $1 || '%' OR $1 IS NULL)
 `
 
-func (q *Queries) CountUniversities(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countUniversities)
+func (q *Queries) CountUniversities(ctx context.Context, searchQuery *string) (int64, error) {
+	row := q.db.QueryRow(ctx, countUniversities, searchQuery)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -74,16 +75,19 @@ func (q *Queries) GetUniversityByID(ctx context.Context, id int64) (University, 
 }
 
 const listUniversities = `-- name: ListUniversities :many
-SELECT id, name, site_url, avatar_url, created_at, updated_at FROM universities ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, name, site_url, avatar_url, created_at, updated_at FROM universities
+WHERE (name ILIKE '%' || $3 || '%' OR $3 IS NULL)
+ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListUniversitiesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit       int32   `json:"limit"`
+	Offset      int32   `json:"offset"`
+	SearchQuery *string `json:"search_query"`
 }
 
 func (q *Queries) ListUniversities(ctx context.Context, arg ListUniversitiesParams) ([]University, error) {
-	rows, err := q.db.Query(ctx, listUniversities, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listUniversities, arg.Limit, arg.Offset, arg.SearchQuery)
 	if err != nil {
 		return nil, err
 	}

@@ -28,7 +28,11 @@ export async function updateProfile(body: UserUpdate) {
   return client.PATCH("/profile", { body });
 }
 
-export async function listUsers(query?: { page?: number; per_page?: number }) {
+export async function listUsers(query?: {
+  page?: number;
+  per_page?: number;
+  q?: string;
+}) {
   return client.GET("/users", { params: { query } });
 }
 

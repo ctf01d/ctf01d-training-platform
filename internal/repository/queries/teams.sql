@@ -10,10 +10,13 @@ SELECT * FROM teams WHERE id = $1;
 SELECT * FROM teams WHERE captain_id = $1;
 
 -- name: ListTeams :many
-SELECT * FROM teams ORDER BY id LIMIT $1 OFFSET $2;
+SELECT * FROM teams
+WHERE (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL)
+ORDER BY id LIMIT $1 OFFSET $2;
 
 -- name: CountTeams :one
-SELECT count(*) FROM teams;
+SELECT count(*) FROM teams
+WHERE (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL);
 
 -- name: UpdateTeam :one
 UPDATE teams SET name = COALESCE($2, name),

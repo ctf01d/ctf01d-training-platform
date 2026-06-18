@@ -42,7 +42,7 @@ type Querier interface {
 	CreateUniversity(ctx context.Context, arg db.CreateUniversityParams) (db.University, error)
 	GetUniversityByID(ctx context.Context, id int64) (db.University, error)
 	ListUniversities(ctx context.Context, arg db.ListUniversitiesParams) ([]db.University, error)
-	CountUniversities(ctx context.Context) (int64, error)
+	CountUniversities(ctx context.Context, searchQuery *string) (int64, error)
 	UpdateUniversity(ctx context.Context, arg db.UpdateUniversityParams) (db.University, error)
 	DeleteUniversity(ctx context.Context, id int64) error
 }
@@ -80,7 +80,7 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*University, error) {
 	return &u, nil
 }
 
-func (s *Service) List(ctx context.Context, page, perPage int) (*UniversityListResult, error) {
+func (s *Service) List(ctx context.Context, page, perPage int, query *string) (*UniversityListResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -98,14 +98,15 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*UniversityListR
 	}
 
 	items, err := s.q.ListUniversities(ctx, db.ListUniversitiesParams{
-		Limit:  limit,
-		Offset: offset,
+		Limit:       limit,
+		Offset:      offset,
+		SearchQuery: query,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := s.q.CountUniversities(ctx)
+	total, err := s.q.CountUniversities(ctx, query)
 	if err != nil {
 		return nil, err
 	}

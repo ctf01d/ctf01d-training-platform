@@ -11,10 +11,15 @@ import (
 
 const countUsers = `-- name: CountUsers :one
 SELECT count(*) FROM users
+WHERE (
+  user_name ILIKE '%' || $1 || '%'
+  OR display_name ILIKE '%' || $1 || '%'
+  OR $1 IS NULL
+)
 `
 
-func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countUsers)
+func (q *Queries) CountUsers(ctx context.Context, searchQuery *string) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsers, searchQuery)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -115,17 +120,23 @@ func (q *Queries) GetUserByUserName(ctx context.Context, userName string) (User,
 
 const listUsers = `-- name: ListUsers :many
 SELECT id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at FROM users
+WHERE (
+  user_name ILIKE '%' || $3 || '%'
+  OR display_name ILIKE '%' || $3 || '%'
+  OR $3 IS NULL
+)
 ORDER BY id
 LIMIT $1 OFFSET $2
 `
 
 type ListUsersParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit       int32   `json:"limit"`
+	Offset      int32   `json:"offset"`
+	SearchQuery *string `json:"search_query"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
-	rows, err := q.db.Query(ctx, listUsers, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listUsers, arg.Limit, arg.Offset, arg.SearchQuery)
 	if err != nil {
 		return nil, err
 	}

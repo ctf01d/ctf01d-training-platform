@@ -5,7 +5,11 @@ export type Team = components["schemas"]["Team"];
 export type TeamCreate = components["schemas"]["TeamCreate"];
 export type TeamUpdate = components["schemas"]["TeamUpdate"];
 
-export async function listTeams(query?: { page?: number; per_page?: number }) {
+export async function listTeams(query?: {
+  page?: number;
+  per_page?: number;
+  q?: string;
+}) {
   return client.GET("/teams", { params: { query } });
 }
 

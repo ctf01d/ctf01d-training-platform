@@ -25,7 +25,12 @@ func (h *Handler) HandleListTeams(c *gin.Context) {
 		}
 	}
 
-	result, err := h.teams.List(c.Request.Context(), page, perPage)
+	var q *string
+	if v := c.Query("q"); v != "" {
+		q = &v
+	}
+
+	result, err := h.teams.List(c.Request.Context(), page, perPage, q)
 	if err != nil {
 		respondError(c, err)
 		return

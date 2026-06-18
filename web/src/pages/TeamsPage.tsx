@@ -15,6 +15,7 @@ export default function TeamsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const perPage = 20;
+  const [searchQuery, setSearchQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<TeamCreate>({ name: "" });
   const [creating, setCreating] = useState(false);
@@ -26,6 +27,7 @@ export default function TeamsPage() {
     const { data, error: err } = await teamsApi.listTeams({
       page,
       per_page: perPage,
+      q: searchQuery || undefined,
     });
     if (err) {
       setError(err);
@@ -34,7 +36,7 @@ export default function TeamsPage() {
       setTotal(data.pagination.total);
     }
     setLoading(false);
-  }, [page]);
+  }, [page, searchQuery]);
 
   useEffect(() => {
     void fetchTeams();
@@ -79,6 +81,17 @@ export default function TeamsPage() {
             {showCreate ? "Cancel" : "Create Team"}
           </button>
         )}
+      </div>
+
+      <div className="filters">
+        <input
+          placeholder="Search teams..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {showCreate && (

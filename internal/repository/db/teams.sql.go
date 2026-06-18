@@ -33,10 +33,11 @@ func (q *Queries) ClearCaptain(ctx context.Context, id int64) (Team, error) {
 
 const countTeams = `-- name: CountTeams :one
 SELECT count(*) FROM teams
+WHERE (name ILIKE '%' || $1 || '%' OR $1 IS NULL)
 `
 
-func (q *Queries) CountTeams(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countTeams)
+func (q *Queries) CountTeams(ctx context.Context, searchQuery *string) (int64, error) {
+	row := q.db.QueryRow(ctx, countTeams, searchQuery)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -131,16 +132,19 @@ func (q *Queries) GetTeamByID(ctx context.Context, id int64) (Team, error) {
 }
 
 const listTeams = `-- name: ListTeams :many
-SELECT id, name, description, website, avatar_url, captain_id, created_at, updated_at, university_id FROM teams ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, name, description, website, avatar_url, captain_id, created_at, updated_at, university_id FROM teams
+WHERE (name ILIKE '%' || $3 || '%' OR $3 IS NULL)
+ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListTeamsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit       int32   `json:"limit"`
+	Offset      int32   `json:"offset"`
+	SearchQuery *string `json:"search_query"`
 }
 
 func (q *Queries) ListTeams(ctx context.Context, arg ListTeamsParams) ([]Team, error) {
-	rows, err := q.db.Query(ctx, listTeams, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listTeams, arg.Limit, arg.Offset, arg.SearchQuery)
 	if err != nil {
 		return nil, err
 	}

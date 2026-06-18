@@ -5,6 +5,7 @@ import type { Game } from "../api/games";
 import type { components } from "../api/schema";
 import { ErrorDisplay } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
+import { TeamLink } from "../components/TeamLink";
 
 type ScoreboardEntry = components["schemas"]["ScoreboardEntry"];
 type GlobalScoreboard = components["schemas"]["GlobalScoreboard"];
@@ -115,7 +116,9 @@ export default function ScoreboardPage() {
                     .map((entry, idx) => (
                       <tr key={entry.team_id}>
                         <td className="rank-cell">{idx + 1}</td>
-                        <td>{entry.team_name}</td>
+                        <td>
+                          <TeamLink id={entry.team_id} name={entry.team_name} />
+                        </td>
                         <td className="numeric score-cell">
                           {fmtScore(entry.total_score)}
                         </td>
@@ -173,7 +176,12 @@ export default function ScoreboardPage() {
                         .map((entry: ScoreboardEntry) => (
                           <tr key={entry.team_id}>
                             <td className="rank-cell">{entry.position}</td>
-                            <td>{entry.team_name}</td>
+                            <td>
+                              <TeamLink
+                                id={entry.team_id}
+                                name={entry.team_name}
+                              />
+                            </td>
                             <td className="numeric score-cell">
                               {fmtScore(entry.score)}
                             </td>

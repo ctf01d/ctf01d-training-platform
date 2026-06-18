@@ -17,6 +17,7 @@ export default function GamesPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const perPage = 20;
+  const [searchQuery, setSearchQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<GameCreate>({});
   const [creating, setCreating] = useState(false);
@@ -27,6 +28,7 @@ export default function GamesPage() {
     const { data, error: err } = await gamesApi.listGames({
       page,
       per_page: perPage,
+      q: searchQuery || undefined,
     });
     if (err) {
       setError(err);
@@ -35,7 +37,7 @@ export default function GamesPage() {
       setTotal(data.pagination.total);
     }
     setLoading(false);
-  }, [page]);
+  }, [page, searchQuery]);
 
   useEffect(() => {
     void fetchGames();
@@ -67,6 +69,17 @@ export default function GamesPage() {
             {showCreate ? "Cancel" : "Create Game"}
           </button>
         )}
+      </div>
+
+      <div className="filters">
+        <input
+          placeholder="Search games..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {showCreate && (

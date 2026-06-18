@@ -17,6 +17,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const perPage = 20;
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<UserCreate>({
@@ -33,6 +34,7 @@ export default function UsersPage() {
     const { data, error: err } = await usersApi.listUsers({
       page,
       per_page: perPage,
+      q: searchQuery || undefined,
     });
     if (err) {
       setError(err);
@@ -41,7 +43,7 @@ export default function UsersPage() {
       setTotal(data.pagination.total);
     }
     setLoading(false);
-  }, [page]);
+  }, [page, searchQuery]);
 
   useEffect(() => {
     void fetchUsers();
@@ -85,6 +87,17 @@ export default function UsersPage() {
         >
           {showCreate ? "Cancel" : "Create User"}
         </button>
+      </div>
+
+      <div className="filters">
+        <input
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {showCreate && (

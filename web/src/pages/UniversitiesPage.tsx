@@ -15,6 +15,7 @@ export default function UniversitiesPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const perPage = 20;
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<UniversityCreate>({});
@@ -30,6 +31,7 @@ export default function UniversitiesPage() {
     const { data, error: err } = await universitiesApi.listUniversities({
       page,
       per_page: perPage,
+      q: searchQuery || undefined,
     });
     if (err) {
       setError(err);
@@ -38,7 +40,7 @@ export default function UniversitiesPage() {
       setTotal(data.pagination.total);
     }
     setLoading(false);
-  }, [page]);
+  }, [page, searchQuery]);
 
   useEffect(() => {
     void fetchUniversities();
@@ -114,6 +116,17 @@ export default function UniversitiesPage() {
         >
           {showCreate ? "Cancel" : "Create University"}
         </button>
+      </div>
+
+      <div className="filters">
+        <input
+          placeholder="Search universities..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {showCreate && (

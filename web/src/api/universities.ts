@@ -8,6 +8,7 @@ export type UniversityUpdate = components["schemas"]["UniversityUpdate"];
 export async function listUniversities(query?: {
   page?: number;
   per_page?: number;
+  q?: string;
 }) {
   return client.GET("/universities", { params: { query } });
 }

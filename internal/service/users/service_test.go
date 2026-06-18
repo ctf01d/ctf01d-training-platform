@@ -85,7 +85,7 @@ func (m *mockQuerier) ListUsers(_ context.Context, arg db.ListUsersParams) ([]db
 	return result, nil
 }
 
-func (m *mockQuerier) CountUsers(_ context.Context) (int64, error) {
+func (m *mockQuerier) CountUsers(_ context.Context, _ *string) (int64, error) {
 	return int64(len(m.users)), nil
 }
 
@@ -292,7 +292,7 @@ func TestList(t *testing.T) {
 		})
 	}
 
-	result, err := svc.List(context.Background(), 1, 3)
+	result, err := svc.List(context.Background(), 1, 3, nil)
 	if err != nil {
 		t.Fatalf("List: %v", err)
 	}

@@ -91,7 +91,7 @@ func (m *mockGameQuerier) ListGames(_ context.Context, arg db.ListGamesParams) (
 	return result, nil
 }
 
-func (m *mockGameQuerier) CountGames(_ context.Context) (int64, error) {
+func (m *mockGameQuerier) CountGames(_ context.Context, _ *string) (int64, error) {
 	return int64(len(m.games)), nil
 }
 
@@ -239,7 +239,7 @@ func TestList(t *testing.T) {
 		mustCreateGame(t, svc, CreateParams{Name: &n})
 	}
 
-	result, err := svc.List(context.Background(), 1, 3)
+	result, err := svc.List(context.Background(), 1, 3, nil)
 	if err != nil {
 		t.Fatalf("List: %v", err)
 	}

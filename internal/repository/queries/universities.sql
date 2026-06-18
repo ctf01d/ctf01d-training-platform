@@ -7,10 +7,13 @@ RETURNING *;
 SELECT * FROM universities WHERE id = $1;
 
 -- name: ListUniversities :many
-SELECT * FROM universities ORDER BY id LIMIT $1 OFFSET $2;
+SELECT * FROM universities
+WHERE (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL)
+ORDER BY id LIMIT $1 OFFSET $2;
 
 -- name: CountUniversities :one
-SELECT count(*) FROM universities;
+SELECT count(*) FROM universities
+WHERE (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL);
 
 -- name: UpdateUniversity :one
 UPDATE universities SET name = COALESCE($2, name),

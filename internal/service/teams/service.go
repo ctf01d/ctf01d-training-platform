@@ -69,7 +69,7 @@ type TeamQuerier interface {
 	GetTeamByID(ctx context.Context, id int64) (db.Team, error)
 	GetTeamByCaptain(ctx context.Context, captainID *int32) (db.Team, error)
 	ListTeams(ctx context.Context, arg db.ListTeamsParams) ([]db.Team, error)
-	CountTeams(ctx context.Context) (int64, error)
+	CountTeams(ctx context.Context, searchQuery *string) (int64, error)
 	UpdateTeam(ctx context.Context, arg db.UpdateTeamParams) (db.Team, error)
 	SetCaptain(ctx context.Context, arg db.SetCaptainParams) (db.Team, error)
 	ClearCaptain(ctx context.Context, id int64) (db.Team, error)
@@ -184,7 +184,7 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*Team, error) {
 	return &t, nil
 }
 
-func (s *Service) List(ctx context.Context, page, perPage int) (*TeamListResult, error) {
+func (s *Service) List(ctx context.Context, page, perPage int, query *string) (*TeamListResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -201,12 +201,12 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*TeamListResult,
 		return nil, err
 	}
 
-	items, err := s.teams.ListTeams(ctx, db.ListTeamsParams{Limit: limit, Offset: offset})
+	items, err := s.teams.ListTeams(ctx, db.ListTeamsParams{Limit: limit, Offset: offset, SearchQuery: query})
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := s.teams.CountTeams(ctx)
+	total, err := s.teams.CountTeams(ctx, query)
 	if err != nil {
 		return nil, err
 	}

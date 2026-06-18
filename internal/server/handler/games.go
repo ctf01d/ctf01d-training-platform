@@ -26,7 +26,12 @@ func (h *Handler) HandleListGames(c *gin.Context) {
 		}
 	}
 
-	result, err := h.games.List(c.Request.Context(), page, perPage)
+	var q *string
+	if v := c.Query("q"); v != "" {
+		q = &v
+	}
+
+	result, err := h.games.List(c.Request.Context(), page, perPage, q)
 	if err != nil {
 		respondError(c, err)
 		return

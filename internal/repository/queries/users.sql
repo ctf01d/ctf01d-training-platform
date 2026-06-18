@@ -13,11 +13,21 @@ WHERE user_name = $1;
 
 -- name: ListUsers :many
 SELECT * FROM users
+WHERE (
+  user_name ILIKE '%' || sqlc.narg('search_query') || '%'
+  OR display_name ILIKE '%' || sqlc.narg('search_query') || '%'
+  OR sqlc.narg('search_query') IS NULL
+)
 ORDER BY id
 LIMIT $1 OFFSET $2;
 
 -- name: CountUsers :one
-SELECT count(*) FROM users;
+SELECT count(*) FROM users
+WHERE (
+  user_name ILIKE '%' || sqlc.narg('search_query') || '%'
+  OR display_name ILIKE '%' || sqlc.narg('search_query') || '%'
+  OR sqlc.narg('search_query') IS NULL
+);
 
 -- name: UpdateUserProfile :one
 UPDATE users

@@ -614,6 +614,11 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 			return err
 		}
 	}
+	// UkVQ is imported from the SibirCTF 2019 scoreboard above, so its
+	// CTFtime academic binding has to run after scoreboard teams are ensured.
+	if err := bind("UkVQ", uniTUSUR, "CTFtime academic team TUSUR", "https://tusur.ru/"); err != nil {
+		return err
+	}
 
 	// --- GameTeams: game<->team links with rank order and ctf01d metadata ------
 	nameByTeamID := map[int64]string{}

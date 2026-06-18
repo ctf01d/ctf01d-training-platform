@@ -85,7 +85,7 @@ type GameQuerier interface {
 	CreateGame(ctx context.Context, arg db.CreateGameParams) (db.Game, error)
 	GetGameByID(ctx context.Context, id int64) (db.Game, error)
 	ListGames(ctx context.Context, arg db.ListGamesParams) ([]db.Game, error)
-	CountGames(ctx context.Context) (int64, error)
+	CountGames(ctx context.Context, searchQuery *string) (int64, error)
 	UpdateGame(ctx context.Context, arg db.UpdateGameParams) (db.Game, error)
 	DeleteGame(ctx context.Context, id int64) error
 	SetFinalized(ctx context.Context, arg db.SetFinalizedParams) (db.Game, error)
@@ -226,7 +226,7 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*Game, error) {
 	return &g, nil
 }
 
-func (s *Service) List(ctx context.Context, page, perPage int) (*GameListResult, error) {
+func (s *Service) List(ctx context.Context, page, perPage int, query *string) (*GameListResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -243,12 +243,12 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*GameListResult,
 		return nil, err
 	}
 
-	items, err := s.games.ListGames(ctx, db.ListGamesParams{Limit: limit, Offset: offset})
+	items, err := s.games.ListGames(ctx, db.ListGamesParams{Limit: limit, Offset: offset, SearchQuery: query})
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := s.games.CountGames(ctx)
+	total, err := s.games.CountGames(ctx, query)
 	if err != nil {
 		return nil, err
 	}

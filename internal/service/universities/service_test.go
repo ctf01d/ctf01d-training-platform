@@ -67,7 +67,7 @@ func (m *mockQuerier) ListUniversities(_ context.Context, arg db.ListUniversitie
 	return result, nil
 }
 
-func (m *mockQuerier) CountUniversities(_ context.Context) (int64, error) {
+func (m *mockQuerier) CountUniversities(_ context.Context, _ *string) (int64, error) {
 	return int64(len(m.universities)), nil
 }
 
@@ -151,7 +151,7 @@ func TestList(t *testing.T) {
 		mustCreateUniversity(t, svc, CreateParams{Name: &n})
 	}
 
-	result, err := svc.List(context.Background(), 1, 3)
+	result, err := svc.List(context.Background(), 1, 3, nil)
 	if err != nil {
 		t.Fatalf("List: %v", err)
 	}

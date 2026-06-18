@@ -61,6 +61,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PerPageParam'
+        - name: q
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: List of universities

@@ -5,7 +5,11 @@ export type Game = components["schemas"]["Game"];
 export type GameCreate = components["schemas"]["GameCreate"];
 export type GameUpdate = components["schemas"]["GameUpdate"];
 
-export async function listGames(query?: { page?: number; per_page?: number }) {
+export async function listGames(query?: {
+  page?: number;
+  per_page?: number;
+  q?: string;
+}) {
   return client.GET("/games", { params: { query } });
 }
 

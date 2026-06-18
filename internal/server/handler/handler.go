@@ -188,7 +188,12 @@ func (h *Handler) HandleListUsers(c *gin.Context) {
 		}
 	}
 
-	result, err := h.users.List(c.Request.Context(), page, perPage)
+	var q *string
+	if v := c.Query("q"); v != "" {
+		q = &v
+	}
+
+	result, err := h.users.List(c.Request.Context(), page, perPage, q)
 	if err != nil {
 		respondError(c, err)
 		return

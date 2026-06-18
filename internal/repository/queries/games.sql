@@ -11,11 +11,13 @@ SELECT * FROM games WHERE id = $1;
 
 -- name: ListGames :many
 SELECT * FROM games
+WHERE (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL)
 ORDER BY starts_at DESC NULLS LAST, created_at DESC, id DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountGames :one
-SELECT count(*) FROM games;
+SELECT count(*) FROM games
+WHERE (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL);
 
 -- name: UpdateGame :one
 UPDATE games SET

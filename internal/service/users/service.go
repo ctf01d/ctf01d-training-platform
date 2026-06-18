@@ -52,7 +52,7 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int64) (db.User, error)
 	GetUserByUserName(ctx context.Context, userName string) (db.User, error)
 	ListUsers(ctx context.Context, arg db.ListUsersParams) ([]db.User, error)
-	CountUsers(ctx context.Context) (int64, error)
+	CountUsers(ctx context.Context, searchQuery *string) (int64, error)
 	UpdateUserProfile(ctx context.Context, arg db.UpdateUserProfileParams) (db.User, error)
 	UpdateUserRole(ctx context.Context, arg db.UpdateUserRoleParams) (db.User, error)
 	UpdateUserRating(ctx context.Context, arg db.UpdateUserRatingParams) (db.User, error)
@@ -130,7 +130,7 @@ func (s *Service) GetByUserName(ctx context.Context, userName string) (*User, er
 	return &u, nil
 }
 
-func (s *Service) List(ctx context.Context, page, perPage int) (*UserListResult, error) {
+func (s *Service) List(ctx context.Context, page, perPage int, query *string) (*UserListResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -148,14 +148,15 @@ func (s *Service) List(ctx context.Context, page, perPage int) (*UserListResult,
 	}
 
 	items, err := s.q.ListUsers(ctx, db.ListUsersParams{
-		Limit:  limit,
-		Offset: offset,
+		Limit:       limit,
+		Offset:      offset,
+		SearchQuery: query,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := s.q.CountUsers(ctx)
+	total, err := s.q.CountUsers(ctx, query)
 	if err != nil {
 		return nil, err
 	}
