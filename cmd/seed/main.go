@@ -114,12 +114,20 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 
 	// --- Universities ---------------------------------------------------------
 	const (
+		uniMSU     = "Московский государственный университет имени М.В. Ломоносова"
+		uniSPbU    = "Санкт-Петербургский государственный университет"
 		uniNSU     = "Новосибирский государственный университет (НГУ, NSU)"
+		uniMIPT    = "Московский физико-технический институт"
+		uniMEPhI   = "Национальный исследовательский ядерный университет МИФИ"
 		uniAltSTU  = "Алтайский государственный технический университет (АлтГТУ, AltSTU)"
 		uniTUSUR   = "Томский государственный университет систем управления и радиоэлектроники (ТУСУР, TUSUR)"
 		uniTSU     = "Томский государственный университет (ТГУ, TSU)"
+		uniUrFU    = "Уральский федеральный университет"
+		uniKFU     = "Казанский федеральный университет"
+		uniFEFU    = "Дальневосточный федеральный университет"
 		uniSSUGT   = "Сибирский государственный университет геосистем и технологий (ССУГиТ, SSUGT)"
 		uniNSTU    = "Новосибирский государственный технический университет (НГТУ, NSTU)"
+		uniITMO    = "Университет ИТМО"
 		uniCentral = "Центральный университет"
 		uniFSO     = "Академия Федеральной службы охраны Российской Федерации"
 		uniMIREA   = "МИРЭА — Российский технологический университет (MIREA)"
@@ -128,16 +136,16 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniSibSU   = "Сибирский государственный университет науки и технологий имени академика М.Ф. Решетнева (СибГУ, SibSU)"
 	)
 	universityNames := []string{
-		"Московский государственный университет имени М.В. Ломоносова",
-		"Санкт-Петербургский государственный университет",
+		uniMSU,
+		uniSPbU,
 		uniNSU,
-		"Московский физико-технический институт",
-		"Национальный исследовательский ядерный университет МИФИ",
+		uniMIPT,
+		uniMEPhI,
 		"Бауманский МГТУ",
-		"Университет ИТМО",
-		"Уральский федеральный университет",
-		"Казанский федеральный университет",
-		"Дальневосточный федеральный университет",
+		uniITMO,
+		uniUrFU,
+		uniKFU,
+		uniFEFU,
 		"Высшая школа экономики",
 		uniAltSTU,
 		uniTUSUR,
@@ -153,10 +161,24 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 	// Real logos for select universities (served from web/public/img/...).
 	universityLogos := map[string]string{
-		uniAltSTU: "/img/university-logos/altstu.png",
-		uniTUSUR:  "/img/university-logos/tusur.jpg",
-		uniTSU:    "/img/university-logos/tsu.png",
-		uniNSTU:   "/img/university-logos/nstu.jpg",
+		uniMSU:     "/img/university-logos/msu.jpg",
+		uniSPbU:    "/img/university-logos/spbgu.png",
+		uniNSU:     "/img/university-logos/nsu.png",
+		uniMIPT:    "/img/university-logos/mipt.png",
+		uniMEPhI:   "/img/university-logos/mephi.png",
+		uniITMO:    "/img/university-logos/itmo.png",
+		uniUrFU:    "/img/university-logos/urfu.jpg",
+		uniKFU:     "/img/university-logos/kfu.jpg",
+		uniFEFU:    "/img/university-logos/fefu.png",
+		uniAltSTU:  "/img/university-logos/altstu.png",
+		uniTUSUR:   "/img/university-logos/tusur.jpg",
+		uniTSU:     "/img/university-logos/tsu.png",
+		uniNSTU:    "/img/university-logos/nstu.jpg",
+		uniCentral: "/img/university-logos/central-university.jpg",
+		uniMIREA:   "/img/university-logos/mirea.png",
+		uniOmSTU:   "/img/university-logos/omstu.png",
+		uniSibSU:   "/img/university-logos/sibsu.png",
+		uniSSUGT:   "/img/university-logos/ssugt.jpg",
 	}
 	universitySites := map[string]string{
 		uniAltSTU:  "http://www.altstu.ru/",
@@ -425,6 +447,9 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		return err
 	}
 	if err := bind("W@zz4bi", uniNSTU, "НГТУ · г. Новосибирск", ""); err != nil {
+		return err
+	}
+	if err := bind("Mustang", uniTUSUR, "Academic team TUSUR", "https://tusur.ru/"); err != nil {
 		return err
 	}
 	if err := bind("4Ray", uniMIREA, "CTFtime academic team MIREA", "https://www.mirea.ru/"); err != nil {
