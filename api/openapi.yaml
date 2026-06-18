@@ -113,148 +113,6 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
       description: Update current user profile
-  /games/{id}/teams:
-    get:
-      operationId: listGameTeams
-      tags:
-        - game-teams
-      summary: List teams in a game
-      security: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: List of game teams
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameTeamList'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      description: List teams in a game
-  /game-teams:
-    post:
-      operationId: createGameTeam
-      tags:
-        - game-teams
-      summary: Add a team to a game
-      x-required-role: player
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GameTeamCreate'
-      responses:
-        '201':
-          description: Game team created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameTeam'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      description: Add a team to a game
-  /game-teams/{id}:
-    patch:
-      operationId: updateGameTeam
-      tags:
-        - game-teams
-      summary: Update a game team entry
-      x-required-role: player
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GameTeamUpdate'
-      responses:
-        '200':
-          description: Game team updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameTeam'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      description: Update a game team entry
-    delete:
-      operationId: deleteGameTeam
-      tags:
-        - game-teams
-      summary: Remove a team from a game
-      x-required-role: player
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '204':
-          description: Game team deleted
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      description: Remove a team from a game
-  /games/{id}/teams/reorder:
-    post:
-      operationId: reorderGameTeams
-      tags:
-        - game-teams
-      summary: Reorder teams in a game
-      x-required-role: player
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReorderRequest'
-      responses:
-        '200':
-          description: Teams reordered
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-      description: Reorder teams in a game
   /games:
     get:
       operationId: listGames
@@ -612,6 +470,148 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Export game as ctf01d zip archive
+  /games/{id}/teams:
+    get:
+      operationId: listGameTeams
+      tags:
+        - game-teams
+      summary: List teams in a game
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of game teams
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameTeamList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: List teams in a game
+  /game-teams:
+    post:
+      operationId: createGameTeam
+      tags:
+        - game-teams
+      summary: Add a team to a game
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameTeamCreate'
+      responses:
+        '201':
+          description: Game team created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameTeam'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Add a team to a game
+  /game-teams/{id}:
+    patch:
+      operationId: updateGameTeam
+      tags:
+        - game-teams
+      summary: Update a game team entry
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameTeamUpdate'
+      responses:
+        '200':
+          description: Game team updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameTeam'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Update a game team entry
+    delete:
+      operationId: deleteGameTeam
+      tags:
+        - game-teams
+      summary: Remove a team from a game
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Game team deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Remove a team from a game
+  /games/{id}/teams/reorder:
+    post:
+      operationId: reorderGameTeams
+      tags:
+        - game-teams
+      summary: Reorder teams in a game
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+      responses:
+        '200':
+          description: Teams reordered
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Reorder teams in a game
   /results:
     get:
       operationId: listResults
@@ -2196,101 +2196,6 @@ components:
           type: string
         user:
           $ref: '#/components/schemas/User'
-    GameTeam:
-      allOf:
-        - $ref: '#/components/schemas/Timestamped'
-        - type: object
-          required:
-            - id
-            - game_id
-            - team_id
-            - order
-          properties:
-            id:
-              type: integer
-              format: int64
-            game_id:
-              type: integer
-              format: int64
-            team_id:
-              type: integer
-              format: int64
-            ip_address:
-              type: string
-              nullable: true
-            ctf01d_id:
-              type: string
-              nullable: true
-            ctf01d_overrides:
-              type: object
-              nullable: true
-            team_type:
-              type: string
-              nullable: true
-            order:
-              type: integer
-    GameTeamCreate:
-      type: object
-      required:
-        - game_id
-        - team_id
-      properties:
-        game_id:
-          type: integer
-          format: int64
-        team_id:
-          type: integer
-          format: int64
-        ip_address:
-          type: string
-        ctf01d_id:
-          type: string
-        ctf01d_overrides:
-          type: object
-        team_type:
-          type: string
-        order:
-          type: integer
-    GameTeamUpdate:
-      type: object
-      properties:
-        ip_address:
-          type: string
-        ctf01d_id:
-          type: string
-        ctf01d_overrides:
-          type: object
-        team_type:
-          type: string
-        order:
-          type: integer
-    GameTeamList:
-      type: object
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/GameTeam'
-    ReorderRequest:
-      type: object
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          items:
-            type: object
-            required:
-              - id
-              - order
-            properties:
-              id:
-                type: integer
-                format: int64
-              order:
-                type: integer
     Game:
       allOf:
         - $ref: '#/components/schemas/Timestamped'
@@ -2567,6 +2472,101 @@ components:
           type: array
           items:
             type: string
+    GameTeam:
+      allOf:
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          required:
+            - id
+            - game_id
+            - team_id
+            - order
+          properties:
+            id:
+              type: integer
+              format: int64
+            game_id:
+              type: integer
+              format: int64
+            team_id:
+              type: integer
+              format: int64
+            ip_address:
+              type: string
+              nullable: true
+            ctf01d_id:
+              type: string
+              nullable: true
+            ctf01d_overrides:
+              type: object
+              nullable: true
+            team_type:
+              type: string
+              nullable: true
+            order:
+              type: integer
+    GameTeamCreate:
+      type: object
+      required:
+        - game_id
+        - team_id
+      properties:
+        game_id:
+          type: integer
+          format: int64
+        team_id:
+          type: integer
+          format: int64
+        ip_address:
+          type: string
+        ctf01d_id:
+          type: string
+        ctf01d_overrides:
+          type: object
+        team_type:
+          type: string
+        order:
+          type: integer
+    GameTeamUpdate:
+      type: object
+      properties:
+        ip_address:
+          type: string
+        ctf01d_id:
+          type: string
+        ctf01d_overrides:
+          type: object
+        team_type:
+          type: string
+        order:
+          type: integer
+    GameTeamList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameTeam'
+    ReorderRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - order
+            properties:
+              id:
+                type: integer
+                format: int64
+              order:
+                type: integer
     Result:
       allOf:
         - $ref: '#/components/schemas/Timestamped'

@@ -1,6 +1,7 @@
 .PHONY: deploy \
 	go-build go-run go-test go-vet go-fmt go-tidy \
-	openapi-merge openapi-codegen openapi-ts openapi openapi-lint \
+	gen gen-all \
+	openapi-merge openapi-codegen openapi-roles openapi-ts openapi openapi-lint \
 	migrate-up migrate-down migrate-status migrate-new \
 	database-test-run database-test-stop go-test-e2e \
 	sqlc-gen sqlc-vet seed \
@@ -76,6 +77,15 @@ go-fmt:
 ## go-tidy: Run go mod tidy
 go-tidy:
 	go mod tidy
+
+# -----------------------------------------------------------------------------
+# Code generation
+
+## gen: Regenerate all generated code
+gen: gen-all
+
+## gen-all: Regenerate all generated code
+gen-all: openapi sqlc-gen
 
 # -----------------------------------------------------------------------------
 # OpenAPI code generation
