@@ -134,6 +134,9 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniOmSTU   = "Омский государственный технический университет (ОмГТУ, OmSTU)"
 		uniOmskAT  = "Омский авиационный колледж (Omsk Aviation College)"
 		uniSibSU   = "Сибирский государственный университет науки и технологий имени академика М.Ф. Решетнева (СибГУ, SibSU)"
+
+		uniKuzSTU = "Кузбасский государственный технический университет имени Т.Ф. Горбачёва (КузГТУ, KuzSTU)"
+		uniAltSU  = "Алтайский государственный университет (АлтГУ, AltSU)"
 	)
 	universityNames := []string{
 		uniMSU,
@@ -158,6 +161,8 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniOmSTU,
 		uniOmskAT,
 		uniSibSU,
+		uniKuzSTU,
+		uniAltSU,
 	}
 	// Real logos for select universities (served from web/public/img/...).
 	universityLogos := map[string]string{
@@ -192,6 +197,8 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniOmSTU:   "https://omgtu.ru/",
 		uniOmskAT:  "http://www.oatctf.ru/",
 		uniSibSU:   "http://sibsau.ru/",
+		uniKuzSTU:  "https://kuzstu.ru/",
+		uniAltSU:   "https://www.asu.ru/",
 	}
 	uniByName := map[string]db.University{}
 	for _, name := range universityNames {
@@ -251,7 +258,7 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		"Life":                       {ID: "8625"},
 		"Mu574n9":                    {ID: "45677"},
 		"N0N@me13":                   {ID: "209571", Country: "RU", AvatarURL: "https://ctftime.org/media/team/nn13_main.jpg"},
-		"Netoverkill":                {ID: "360551"},
+		"NetOverkill":                {ID: "360551"},
 		"NFB":                        {ID: "202829", Country: "RU", AvatarURL: "https://ctftime.org/media/team/duck_50.png", Academic: "OmSTU", AcademicURL: "https://omgtu.ru/"},
 		"o1d_bu7_go1d":               {ID: "213673", Country: "RU", AvatarURL: "https://ctftime.org/media/team/obg-logo.png"},
 		"Omaviat":                    {ID: "49106", Country: "RU", AvatarURL: "https://ctftime.org/media/team/logo_303.png", Academic: "Omsk Aviation College", AcademicURL: "http://www.oatctf.ru/"},
@@ -281,9 +288,24 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		"Циферки":               {ID: "380154", Country: "IT", AvatarURL: "https://ctftime.org/media/team/photo_2025-04-10_19.57.39.jpeg"},
 		"ыыыыЫЫЫЫЫ":             {ID: "275915"},
 	}
+	// Some teams appear under different names across editions (e.g. a Russian and
+	// an English spelling). canonTeam folds those aliases onto a single canonical
+	// name so they resolve to one team record.
+	teamAliases := map[string]string{
+		"КиберПатриоты": "CyberPatriots",
+		"Netoverkill":   "NetOverkill",
+	}
+	canonTeam := func(name string) string {
+		if c, ok := teamAliases[name]; ok {
+			return c
+		}
+		return name
+	}
+
 	// ctf01d metadata (config id / ip) per game, keyed by lower(team name).
 	rosterMeta := map[string]map[string]struct{ id, ip string }{}
 	addMeta := func(game, name, id, ip string) {
+		name = canonTeam(name)
 		m := rosterMeta[game]
 		if m == nil {
 			m = map[string]struct{ id, ip string }{}
@@ -293,6 +315,7 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	ensureTeam := func(name, descr string) (db.Team, error) {
+		name = canonTeam(name)
 		if t, ok := teamByName[name]; ok {
 			return t, nil
 		}
@@ -413,6 +436,9 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		teamByName["keva"] = updated
 	}
 
+	// Bundled team logos are applied after the scoreboards (see applyTeamLogos
+	// below) so teams that exist only in a scoreboard also get their logo.
+
 	// --- University bindings (manual corrections from the legacy seed) ---------
 	bind := func(teamName, uniName, tag, website string) error {
 		t, ok := teamByName[teamName]
@@ -466,6 +492,19 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 	if err := bind("W@zz4bi", uniNSTU, "НГТУ · г. Новосибирск", ""); err != nil {
 		return err
+	}
+	// University affiliations for teams that played our editions (from the
+	// AltayCTF participant list). Only teams already present in a roster or
+	// scoreboard are bound; non-participants are intentionally not seeded.
+	altayBindings := []struct{ team, uni, tag, site string }{
+		{"W@zz4b1", uniNSTU, "НГТУ · г. Новосибирск", ""},
+		{"NetOverkill", uniKuzSTU, "КузГТУ · г. Кемерово", "https://kuzstu.ru/"},
+		{"Error Yager", uniAltSU, "АлтГУ · г. Барнаул", "https://www.asu.ru/"},
+	}
+	for _, b := range altayBindings {
+		if err := bind(b.team, b.uni, b.tag, b.site); err != nil {
+			return err
+		}
 	}
 	if err := bind("Mustang", uniTUSUR, "Academic team TUSUR", "https://tusur.ru/"); err != nil {
 		return err
@@ -526,6 +565,7 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	// --- Real CTFtime scoreboards -> results ----------------------------------
 	addResult := func(gameName, teamName string, score int32) error {
 		g := gameByName[gameName]
+		teamName = canonTeam(teamName)
 		t, ok := teamByName[teamName]
 		if !ok {
 			nt, err := ensureTeam(teamName, "Импортировано из scoreboard "+gameName)
@@ -664,6 +704,53 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	// CTFtime academic binding has to run after scoreboard teams are ensured.
 	if err := bind("UkVQ", uniTUSUR, "CTFtime academic team TUSUR", "https://tusur.ru/"); err != nil {
 		return err
+	}
+
+	// Bundled team logos (served from web/public/img/team-logos) are the canonical
+	// source and take precedence over generated placeholders and external
+	// (CTFtime) avatars. Runs after the scoreboards so scoreboard-only teams are
+	// included too.
+	teamLogos := map[string]string{
+		"W@zz4bi":            "/img/team-logos/wazz4bi.jpg",
+		"W@zz4b1":            "/img/team-logos/wazz4b1.jpg",
+		"4Ray":               "/img/team-logos/4Ray.png",
+		"Циферки":            "/img/team-logos/ciferki.jpg",
+		"CUT":                "/img/team-logos/cut.jpg",
+		"CyberCringe":        "/img/team-logos/CyberCringe.jpg",
+		"CyberPatriots":      "/img/team-logos/CyberPatriots.jpg",
+		"d34dl1n3":           "/img/team-logos/d34dl1n3.png",
+		"datapoison":         "/img/team-logos/datapoison.png",
+		"химозный рулет":     "/img/team-logos/himozrulet.jpg",
+		"kekw":               "/img/team-logos/kekw.jpg",
+		"LCD":                "/img/team-logos/lcd.png",
+		"NetOverkill":        "/img/team-logos/NetOverkill.jpg",
+		"NFB":                "/img/team-logos/NFB.png",
+		"N0N@me13":           "/img/team-logos/noname13.jpg",
+		"o1d_bu7_go1d":       "/img/team-logos/o1d_bu7_go1d.jpg",
+		"QarabagTeam":        "/img/team-logos/QarabagTeam.png",
+		"R3T4RD0Z":           "/img/team-logos/R3T4RD0Z.png",
+		"ScareCrow":          "/img/team-logos/scarecrow.jpg",
+		"SharLike":           "/img/team-logos/SharLike.jpg",
+		"SiBears":            "/img/team-logos/SiBears.jpg",
+		"smiley-from-telega": "/img/team-logos/smiley-from-telega.jpg",
+		"TyumGUard":          "/img/team-logos/TyumGUard.png",
+		"vim>nano":           "/img/team-logos/vimnano.png",
+		"XAKCET":             "/img/team-logos/XAKCET.jpg",
+	}
+	for name, logo := range teamLogos {
+		t, ok := teamByName[name]
+		if !ok {
+			continue
+		}
+		if t.AvatarUrl != nil && *t.AvatarUrl == logo {
+			continue
+		}
+		logoURL := logo
+		updated, err := q.UpdateTeam(ctx, db.UpdateTeamParams{ID: t.ID, Name: t.Name, AvatarUrl: &logoURL})
+		if err != nil {
+			return fmt.Errorf("team %q logo: %w", name, err)
+		}
+		teamByName[name] = updated
 	}
 
 	// --- GameTeams: game<->team links with rank order and ctf01d metadata ------
