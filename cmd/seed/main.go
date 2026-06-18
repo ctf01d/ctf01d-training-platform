@@ -92,6 +92,21 @@ var palette = []string{
 	"#06B6D4", "#EC4899", "#84CC16", "#F97316", "#22C55E",
 }
 
+type ctftimeTeamInfo struct {
+	ID          string
+	Country     string
+	AvatarURL   string
+	Academic    string
+	AcademicURL string
+}
+
+func (i ctftimeTeamInfo) profileURL() string {
+	if i.ID == "" {
+		return ""
+	}
+	return "https://ctftime.org/team/" + i.ID + "/"
+}
+
 func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	rng := rand.New(rand.NewSource(42)) //nolint:gosec // deterministic seed data, not security-sensitive
 	now := time.Now()
@@ -107,6 +122,10 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniNSTU    = "Новосибирский государственный технический университет (НГТУ, NSTU)"
 		uniCentral = "Центральный университет"
 		uniFSO     = "Академия Федеральной службы охраны Российской Федерации"
+		uniMIREA   = "МИРЭА — Российский технологический университет (MIREA)"
+		uniOmSTU   = "Омский государственный технический университет (ОмГТУ, OmSTU)"
+		uniOmskAT  = "Омский авиационный колледж (Omsk Aviation College)"
+		uniSibSU   = "Сибирский государственный университет науки и технологий имени академика М.Ф. Решетнева (СибГУ, SibSU)"
 	)
 	universityNames := []string{
 		"Московский государственный университет имени М.В. Ломоносова",
@@ -127,6 +146,10 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniNSTU,
 		uniCentral,
 		uniFSO,
+		uniMIREA,
+		uniOmSTU,
+		uniOmskAT,
+		uniSibSU,
 	}
 	// Real logos for select universities (served from web/public/img/...).
 	universityLogos := map[string]string{
@@ -135,22 +158,44 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		uniTSU:    "/img/university-logos/tsu.png",
 		uniNSTU:   "/img/university-logos/nstu.jpg",
 	}
+	universitySites := map[string]string{
+		uniAltSTU:  "http://www.altstu.ru/",
+		uniTUSUR:   "https://tusur.ru/",
+		uniTSU:     "http://tsu.ru/",
+		uniSSUGT:   "https://sgugit.ru/en/",
+		uniNSTU:    "http://nstu.ru/",
+		uniCentral: "https://centraluniversity.ru/",
+		uniMIREA:   "https://www.mirea.ru/",
+		uniOmSTU:   "https://omgtu.ru/",
+		uniOmskAT:  "http://www.oatctf.ru/",
+		uniSibSU:   "http://sibsau.ru/",
+	}
 	uniByName := map[string]db.University{}
 	for _, name := range universityNames {
 		logo, hasLogo := universityLogos[name]
+		site := universitySites[name]
 		avatar := svgAvatar(name, color())
 		if hasLogo {
 			avatar = logo
 		}
-		uni, created, err := getOrCreateUniversity(ctx, q, name, avatar)
+		uni, created, err := getOrCreateUniversity(ctx, q, name, site, avatar)
 		if err != nil {
 			return fmt.Errorf("university %q: %w", name, err)
 		}
-		// Backfill the logo on universities seeded before logos existed.
-		if !created && hasLogo && (uni.AvatarUrl == nil || *uni.AvatarUrl != logo) {
-			uni, err = q.UpdateUniversity(ctx, db.UpdateUniversityParams{ID: uni.ID, AvatarUrl: &logo})
-			if err != nil {
-				return fmt.Errorf("university %q logo: %w", name, err)
+		if !created {
+			params := db.UpdateUniversityParams{ID: uni.ID}
+			if site != "" && (uni.SiteUrl == nil || *uni.SiteUrl == "") {
+				params.SiteUrl = &site
+			}
+			// Backfill the logo on universities seeded before logos existed.
+			if hasLogo && (uni.AvatarUrl == nil || *uni.AvatarUrl != logo) {
+				params.AvatarUrl = &logo
+			}
+			if params.SiteUrl != nil || params.AvatarUrl != nil {
+				uni, err = q.UpdateUniversity(ctx, params)
+				if err != nil {
+					return fmt.Errorf("university %q backfill: %w", name, err)
+				}
 			}
 		}
 		logSeed(log, "university", name, created)
@@ -159,6 +204,60 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 
 	// --- Teams ----------------------------------------------------------------
 	teamByName := map[string]db.Team{}
+	ctftimeTeams := map[string]ctftimeTeamInfo{
+		"!2day": {ID: "36203"},
+		"(_xXx_-=HOBOCu6uPCKuE_IICbl_1337=-_xXx_)": {ID: "21140"},
+		"4Ray":                       {ID: "281722", Country: "RU", AvatarURL: "https://ctftime.org/media/team/2._4ray_Logo_WHITE_1.jpg", Academic: "Russian Technological University MIREA", AcademicURL: "https://www.mirea.ru/"},
+		"4ерниkа":                    {ID: "275918"},
+		"a-cool-team":                {ID: "275919"},
+		"A4PT Reshetneva":            {ID: "273522"},
+		"BANOЧKA":                    {ID: "275920"},
+		"CatchFM":                    {ID: "32132", Country: "RU", AvatarURL: "https://ctftime.org/media/team/catchFM_logo.png"},
+		"CubaLibre":                  {ID: "275916"},
+		"CUT":                        {ID: "358931", Country: "RU", AvatarURL: "https://ctftime.org/media/team/scissors.png", Academic: "Central University", AcademicURL: "https://centraluniversity.ru/"},
+		"CyberCringe":                {ID: "277834"},
+		"CyberPatriots":              {ID: "8471"},
+		"d34dl1n3":                   {ID: "35562", Country: "RU", AvatarURL: "https://ctftime.org/media/team/128_1.png", Academic: "SSUGT", AcademicURL: "https://sgugit.ru/en/"},
+		"datapoison":                 {ID: "179977", Country: "RU", AvatarURL: "https://ctftime.org/media/team/IMG_20220723_201337_063.png"},
+		"Dragon Hat":                 {ID: "49385", Country: "RU", AvatarURL: "https://ctftime.org/media/team/dragon_hat_2.jpg"},
+		"FoXXXeS":                    {ID: "45678"},
+		"Ibeee":                      {ID: "186804", Country: "RU", AvatarURL: "https://ctftime.org/media/team/35168CC6-A92A-43AE-8E34-E42658E25B46.jpeg"},
+		"kekw":                       {ID: "118874"},
+		"Keva19":                     {ID: "105731", Country: "RU"},
+		"LCD":                        {ID: "270230", Country: "RU", AvatarURL: "https://ctftime.org/media/team/photo_2025-01-13_06-47-07.jpg"},
+		"Life":                       {ID: "8625"},
+		"Mu574n9":                    {ID: "45677"},
+		"N0N@me13":                   {ID: "209571", Country: "RU", AvatarURL: "https://ctftime.org/media/team/nn13_main.jpg"},
+		"Netoverkill":                {ID: "360551"},
+		"NFB":                        {ID: "202829", Country: "RU", AvatarURL: "https://ctftime.org/media/team/duck_50.png", Academic: "OmSTU", AcademicURL: "https://omgtu.ru/"},
+		"o1d_bu7_go1d":               {ID: "213673", Country: "RU", AvatarURL: "https://ctftime.org/media/team/obg-logo.png"},
+		"Omaviat":                    {ID: "49106", Country: "RU", AvatarURL: "https://ctftime.org/media/team/logo_303.png", Academic: "Omsk Aviation College", AcademicURL: "http://www.oatctf.ru/"},
+		"paperwhale":                 {ID: "27229", Country: "RU", AvatarURL: "https://ctftime.org/media/team/Dhq42M16goE.jpg", Academic: "SibSU", AcademicURL: "http://sibsau.ru/"},
+		"QarabagTeam":                {ID: "186802", Country: "RU", AvatarURL: "https://ctftime.org/media/team/%D0%9A%D0%BE%D0%BD%D1%8C.png", Academic: "NSTU", AcademicURL: "http://nstu.ru/"},
+		"R3T4RD0Z":                   {ID: "380155"},
+		"rwx":                        {ID: "4351", Country: "RU", AvatarURL: "https://ctftime.org/media/team/rwx.jpg"},
+		"ScareCrow":                  {ID: "12515"},
+		"SharLike":                   {ID: "16172", Country: "RU", AvatarURL: "https://ctftime.org/media/team/sharlike.jpg", Academic: "AltSTU", AcademicURL: "http://www.altstu.ru/"},
+		"SharNear":                   {ID: "105950"},
+		"SiBears":                    {ID: "557", Country: "RU", AvatarURL: "https://ctftime.org/media/team/sibears.jpg", Academic: "TSU", AcademicURL: "http://tsu.ru/"},
+		"smiley-from-telega":         {ID: "170324", Country: "RU", AvatarURL: "https://ctftime.org/media/team/2024-12-22_10.50.57.jpg"},
+		"Tanuki squad":               {ID: "76462", Country: "RU", AvatarURL: "https://ctftime.org/media/team/Bezymyanny.png"},
+		"Team 16":                    {ID: "151961"},
+		"Team Information Offensive": {ID: "27397"},
+		"TyumGUard":                  {ID: "380152"},
+		"UkVQ":                       {ID: "104638", Country: "RU", Academic: "Tomsk State University of Control Systems and Radioelectronics (TUSUR)", AcademicURL: "https://tusur.ru/"},
+		"vim>nano":                   {ID: "368995"},
+		"W@zz4b1":                    {ID: "358319"},
+		"XAKCET":                     {ID: "378647"},
+		"xXx_Я_не_ХЛЕБ_я_КОТ_хХх":    {ID: "39488"},
+		"Yozik":                      {ID: "1445", Country: "RU", AvatarURL: "https://ctftime.org/media/team/jo.jpg"},
+		"ИнфоБесы":                   {ID: "275008"},
+		"Продам гараж за флаги": {ID: "212793", Country: "RU", AvatarURL: "https://ctftime.org/media/team/logo_189.jpg"},
+		"Суслобатя":             {ID: "275917"},
+		"химозный рулет":        {ID: "380153"},
+		"Циферки":               {ID: "380154", Country: "IT", AvatarURL: "https://ctftime.org/media/team/photo_2025-04-10_19.57.39.jpeg"},
+		"ыыыыЫЫЫЫЫ":             {ID: "275915"},
+	}
 	// ctf01d metadata (config id / ip) per game, keyed by lower(team name).
 	rosterMeta := map[string]map[string]struct{ id, ip string }{}
 	addMeta := func(game, name, id, ip string) {
@@ -174,7 +273,17 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		if t, ok := teamByName[name]; ok {
 			return t, nil
 		}
-		t, created, err := getOrCreateTeam(ctx, q, name, descr, svgAvatar(name, color()))
+		info := ctftimeTeams[name]
+		descr = enrichTeamDescription(descr, info)
+		avatar := svgAvatar(name, color())
+		if info.AvatarURL != "" {
+			avatar = info.AvatarURL
+		}
+		t, created, err := getOrCreateTeam(ctx, q, name, descr, avatar)
+		if err != nil {
+			return db.Team{}, err
+		}
+		t, err = backfillCTFtimeTeamInfo(ctx, q, t, descr, info)
 		if err != nil {
 			return db.Team{}, err
 		}
@@ -316,6 +425,21 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 		return err
 	}
 	if err := bind("W@zz4bi", uniNSTU, "НГТУ · г. Новосибирск", ""); err != nil {
+		return err
+	}
+	if err := bind("4Ray", uniMIREA, "CTFtime academic team MIREA", "https://www.mirea.ru/"); err != nil {
+		return err
+	}
+	if err := bind("NFB", uniOmSTU, "CTFtime academic team OmSTU", "https://omgtu.ru/"); err != nil {
+		return err
+	}
+	if err := bind("Omaviat", uniOmskAT, "CTFtime academic team Omsk Aviation College", "http://www.oatctf.ru/"); err != nil {
+		return err
+	}
+	if err := bind("paperwhale", uniSibSU, "CTFtime academic team SibSU", "http://sibsau.ru/"); err != nil {
+		return err
+	}
+	if err := bind("UkVQ", uniTUSUR, "CTFtime academic team TUSUR", "https://tusur.ru/"); err != nil {
 		return err
 	}
 
@@ -502,6 +626,16 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 			return err
 		}
 		if len(existing) > 0 {
+			for _, gt := range existing {
+				info := ctftimeTeams[nameByTeamID[gt.TeamID]]
+				if info.Academic == "" || (gt.TeamType != nil && *gt.TeamType != "") {
+					continue
+				}
+				teamType := "academic"
+				if _, err := q.UpdateGameTeam(ctx, db.UpdateGameTeamParams{ID: gt.ID, TeamType: &teamType}); err != nil {
+					return fmt.Errorf("game_team %d CTFtime team_type: %w", gt.ID, err)
+				}
+			}
 			continue
 		}
 		results, err := q.ListResultsByGame(ctx, g.ID)
@@ -525,6 +659,10 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 					ip := meta.ip
 					gt.IpAddress = &ip
 				}
+			}
+			if info := ctftimeTeams[nameByTeamID[r.TeamID]]; info.Academic != "" {
+				teamType := "academic"
+				gt.TeamType = &teamType
 			}
 			if _, err := q.CreateGameTeam(ctx, gt); err != nil {
 				return fmt.Errorf("game_team game %d team %d: %w", g.ID, r.TeamID, err)
@@ -656,7 +794,7 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 // -----------------------------------------------------------------------------
 // SibirCTF helpers
 
-func getOrCreateUniversity(ctx context.Context, q *db.Queries, name, avatarURL string) (db.University, bool, error) {
+func getOrCreateUniversity(ctx context.Context, q *db.Queries, name, siteURL, avatarURL string) (db.University, bool, error) {
 	unis, err := q.ListUniversities(ctx, db.ListUniversitiesParams{Limit: 1000, Offset: 0})
 	if err != nil {
 		return db.University{}, false, err
@@ -666,7 +804,11 @@ func getOrCreateUniversity(ctx context.Context, q *db.Queries, name, avatarURL s
 			return u, false, nil
 		}
 	}
-	uni, err := q.CreateUniversity(ctx, db.CreateUniversityParams{Name: &name, AvatarUrl: &avatarURL})
+	var site *string
+	if siteURL != "" {
+		site = &siteURL
+	}
+	uni, err := q.CreateUniversity(ctx, db.CreateUniversityParams{Name: &name, SiteUrl: site, AvatarUrl: &avatarURL})
 	if err != nil {
 		return db.University{}, false, err
 	}
@@ -766,6 +908,62 @@ func sortResultsDesc(results []db.Result) {
 			results[j], results[j-1] = results[j-1], results[j]
 		}
 	}
+}
+
+func backfillCTFtimeTeamInfo(ctx context.Context, q *db.Queries, team db.Team, seedDescription string, info ctftimeTeamInfo) (db.Team, error) {
+	if info.ID == "" {
+		return team, nil
+	}
+
+	description := ptrStr(team.Description)
+	if description == "" {
+		description = seedDescription
+	}
+	description = enrichTeamDescription(description, info)
+
+	params := db.UpdateTeamParams{ID: team.ID, Name: team.Name}
+	if description != ptrStr(team.Description) {
+		params.Description = &description
+	}
+	if info.AvatarURL != "" && shouldBackfillAvatar(team.AvatarUrl) {
+		params.AvatarUrl = &info.AvatarURL
+	}
+	if params.Description == nil && params.AvatarUrl == nil {
+		return team, nil
+	}
+
+	updated, err := q.UpdateTeam(ctx, params)
+	if err != nil {
+		return db.Team{}, err
+	}
+	return updated, nil
+}
+
+func enrichTeamDescription(description string, info ctftimeTeamInfo) string {
+	if URL := info.profileURL(); URL != "" {
+		description = appendDescriptionPart(description, "CTFtime: "+URL)
+	}
+	if info.Country != "" {
+		description = appendDescriptionPart(description, "CTFtime country: "+info.Country)
+	}
+	return description
+}
+
+func appendDescriptionPart(description, part string) string {
+	if part == "" || strings.Contains(description, part) {
+		return description
+	}
+	if description == "" {
+		return part
+	}
+	return description + " · " + part
+}
+
+func shouldBackfillAvatar(avatarURL *string) bool {
+	if avatarURL == nil || *avatarURL == "" {
+		return true
+	}
+	return strings.HasPrefix(*avatarURL, "data:image/svg+xml")
 }
 
 func svgAvatar(text, bg string) string {
