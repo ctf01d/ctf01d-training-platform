@@ -17,7 +17,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/storage"
 )
 
-const avatarMaxDimension = 256
+const avatarMaxDimension = imageutil.AvatarMaxDimension
 
 func userAvatarKey(id int64) string {
 	return fmt.Sprintf("avatars/%d.png", id)

@@ -8,6 +8,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/ctf01d/ctf01d-training-platform/internal/service/avatarnorm"
 )
 
 type University struct {
@@ -56,13 +57,17 @@ func NewService(q Querier) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams) (*University, error) {
-	if err := validateURLs(params.SiteUrl, params.AvatarUrl); err != nil {
+	if err := validateURLs(params.SiteUrl); err != nil {
+		return nil, err
+	}
+	avatarURL, err := avatarnorm.Normalize(params.AvatarUrl, "avatar_url")
+	if err != nil {
 		return nil, err
 	}
 	dbUni, err := s.q.CreateUniversity(ctx, db.CreateUniversityParams{
 		Name:      params.Name,
 		SiteUrl:   params.SiteUrl,
-		AvatarUrl: params.AvatarUrl,
+		AvatarUrl: avatarURL,
 	})
 	if err != nil {
 		return nil, mapDBError(err)
@@ -125,14 +130,18 @@ func (s *Service) List(ctx context.Context, page, perPage int, query *string) (*
 }
 
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*University, error) {
-	if err := validateURLs(params.SiteUrl, params.AvatarUrl); err != nil {
+	if err := validateURLs(params.SiteUrl); err != nil {
+		return nil, err
+	}
+	avatarURL, err := avatarnorm.Normalize(params.AvatarUrl, "avatar_url")
+	if err != nil {
 		return nil, err
 	}
 	dbUni, err := s.q.UpdateUniversity(ctx, db.UpdateUniversityParams{
 		ID:        id,
 		Name:      params.Name,
 		SiteUrl:   params.SiteUrl,
-		AvatarUrl: params.AvatarUrl,
+		AvatarUrl: avatarURL,
 	})
 	if err != nil {
 		return nil, mapNotFound(err)

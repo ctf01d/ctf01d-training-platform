@@ -1,8 +1,13 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"image"
+	"image/color"
+	"image/png"
 	"strings"
 	"testing"
 	"time"
@@ -235,13 +240,42 @@ func TestCreate_AvatarDataImage(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)
 
-	_, err := svc.Create(context.Background(), CreateParams{
+	uri := tinyPNGDataURI(t)
+	model, err := svc.Create(context.Background(), CreateParams{
 		Name:      "test-service",
-		AvatarUrl: strPtr("data:image/png;base64,abc"),
+		AvatarUrl: &uri,
 	}, true)
 	if err != nil {
 		t.Fatalf("expected no error for data:image avatar, got %v", err)
 	}
+	if model.AvatarUrl == nil || !strings.HasPrefix(*model.AvatarUrl, "data:image/png;base64,") {
+		t.Fatalf("avatar should be normalized to a png data URI, got %v", model.AvatarUrl)
+	}
+}
+
+func TestCreate_AvatarInvalidDataImage(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	_, err := svc.Create(context.Background(), CreateParams{
+		Name:      "test-service",
+		AvatarUrl: strPtr("data:image/png;base64,abc"),
+	}, true)
+	if _, ok := err.(*errs.ValidationError); !ok {
+		t.Fatalf("expected ValidationError for undecodable data:image avatar, got %v", err)
+	}
+}
+
+// tinyPNGDataURI returns a data: URI for a minimal valid transparent PNG.
+func tinyPNGDataURI(t *testing.T) string {
+	t.Helper()
+	img := image.NewNRGBA(image.Rect(0, 0, 8, 8))
+	img.Set(0, 0, color.NRGBA{R: 1, G: 2, B: 3, A: 0})
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 }
 
 func TestCreate_InvalidArchiveURL(t *testing.T) {

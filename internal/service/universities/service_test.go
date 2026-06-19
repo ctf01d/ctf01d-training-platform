@@ -116,6 +116,21 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+func TestCreate_RejectsUnsafeAvatarScheme(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	name := "MIT"
+	avatar := "javascript:alert(1)"
+	_, err := svc.Create(context.Background(), CreateParams{
+		Name:      &name,
+		AvatarUrl: &avatar,
+	})
+	if _, ok := err.(*errs.ValidationError); !ok {
+		t.Fatalf("expected ValidationError for javascript: avatar, got %v", err)
+	}
+}
+
 func TestGetByID_Success(t *testing.T) {
 	q := newMockQuerier()
 	svc := NewService(q)

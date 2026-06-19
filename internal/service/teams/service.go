@@ -8,6 +8,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/ctf01d/ctf01d-training-platform/internal/service/avatarnorm"
 )
 
 type Team struct {
@@ -120,14 +121,19 @@ func (s *Service) Create(ctx context.Context, creatorID int64, params CreatePara
 		return nil, errs.NewValidationError(map[string]string{"name": "is required"})
 	}
 
+	avatarURL, err := avatarnorm.Normalize(params.AvatarUrl, "avatar_url")
+	if err != nil {
+		return nil, err
+	}
+
 	var result *Team
-	err := s.tx.RunInTx(ctx, func(q *db.Queries) error {
+	err = s.tx.RunInTx(ctx, func(q *db.Queries) error {
 		tq := s.txQ(q)
 		team, err := tq.teams.CreateTeam(ctx, db.CreateTeamParams{
 			Name:         params.Name,
 			Description:  params.Description,
 			Website:      params.Website,
-			AvatarUrl:    params.AvatarUrl,
+			AvatarUrl:    avatarURL,
 			UniversityID: params.UniversityID,
 		})
 		if err != nil {
@@ -261,12 +267,16 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*T
 		}
 		name = existing.Name
 	}
+	avatarURL, err := avatarnorm.Normalize(params.AvatarUrl, "avatar_url")
+	if err != nil {
+		return nil, err
+	}
 	team, err := s.teams.UpdateTeam(ctx, db.UpdateTeamParams{
 		ID:           id,
 		Name:         name,
 		Description:  params.Description,
 		Website:      params.Website,
-		AvatarUrl:    params.AvatarUrl,
+		AvatarUrl:    avatarURL,
 		UniversityID: params.UniversityID,
 	})
 	if err != nil {

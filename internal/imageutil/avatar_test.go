@@ -63,6 +63,41 @@ func TestScaleAvatar_ScalesDownPreservingAspect(t *testing.T) {
 	}
 }
 
+func TestScaleAvatar_PreservesAlpha(t *testing.T) {
+	// Transparent-left / opaque-right NRGBA image, large enough to be scaled.
+	w, h := 400, 400
+	img := image.NewNRGBA(image.Rect(0, 0, w, h))
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			a := uint8(0)
+			if x >= w/2 {
+				a = 255
+			}
+			img.Set(x, y, color.NRGBA{R: 180, G: 40, B: 40, A: a})
+		}
+	}
+	var in bytes.Buffer
+	if err := png.Encode(&in, img); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+
+	out, err := ScaleAvatar(bytes.NewReader(in.Bytes()), 256)
+	if err != nil {
+		t.Fatalf("ScaleAvatar: %v", err)
+	}
+	res, err := png.Decode(bytes.NewReader(out))
+	if err != nil {
+		t.Fatalf("decode result: %v", err)
+	}
+	b := res.Bounds()
+	if _, _, _, a := res.At(b.Min.X+2, b.Min.Y+2).RGBA(); a>>8 != 0 {
+		t.Errorf("transparent region lost alpha: got %d, want 0", a>>8)
+	}
+	if _, _, _, a := res.At(b.Max.X-3, b.Min.Y+2).RGBA(); a>>8 != 255 {
+		t.Errorf("opaque region alpha changed: got %d, want 255", a>>8)
+	}
+}
+
 func TestScaleAvatar_SmallImageUnchanged(t *testing.T) {
 	data := encodePNG(t, 100, 80)
 	out, err := ScaleAvatar(bytes.NewReader(data), 256)

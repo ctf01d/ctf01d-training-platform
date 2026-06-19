@@ -12,6 +12,7 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
+	"github.com/ctf01d/ctf01d-training-platform/internal/service/avatarnorm"
 )
 
 type ServiceModel struct {
@@ -102,6 +103,11 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 		return nil, err
 	}
 
+	avatarURL, err := avatarnorm.Normalize(params.AvatarUrl, "avatar_url")
+	if err != nil {
+		return nil, err
+	}
+
 	training := params.Ctf01dTraining
 	if training == nil {
 		training = json.RawMessage("{}")
@@ -113,7 +119,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 		PrivateDescription: params.PrivateDescription,
 		Author:             params.Author,
 		Copyright:          params.Copyright,
-		AvatarUrl:          params.AvatarUrl,
+		AvatarUrl:          avatarURL,
 		Public:             params.Public,
 		ServiceArchiveUrl:  params.ServiceArchiveUrl,
 		CheckerArchiveUrl:  params.CheckerArchiveUrl,
@@ -217,6 +223,16 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isA
 		return nil, err
 	}
 
+	// Only the explicitly-supplied avatar is normalized; a nil avatar leaves the
+	// stored value untouched (UpdateService COALESCEs nil onto the current row).
+	var normalizedAvatar *string
+	if params.AvatarUrl != nil {
+		normalizedAvatar, err = avatarnorm.Normalize(params.AvatarUrl, "avatar_url")
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	name := current.Name
 	if params.Name != nil {
 		if *params.Name == "" {
@@ -240,7 +256,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isA
 		PrivateDescription: params.PrivateDescription,
 		Author:             params.Author,
 		Copyright:          params.Copyright,
-		AvatarUrl:          params.AvatarUrl,
+		AvatarUrl:          normalizedAvatar,
 		Public:             public,
 		ServiceArchiveUrl:  params.ServiceArchiveUrl,
 		CheckerArchiveUrl:  params.CheckerArchiveUrl,
@@ -359,7 +375,10 @@ func validAvatarURL(s string) bool {
 			return false
 		}
 		mime := rest[:i]
-		for _, allowed := range []string{"png", "jpeg", "gif", "webp"} {
+		// Only formats imageutil can decode (see imageutil/avatar.go); webp has
+		// no registered decoder, so accepting it here would defer a confusing
+		// failure to normalization.
+		for _, allowed := range []string{"png", "jpeg", "gif"} {
 			if mime == allowed {
 				return strings.HasPrefix(rest[i+1:], "base64,")
 			}

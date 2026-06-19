@@ -556,16 +556,20 @@ a:focus-visible {
   min-height: 320px;
   display: grid;
   place-items: center;
-  background: #0f172a;
+  padding: 28px;
+  /* Light surface so transparent PNG icons (services/teams) read correctly;
+     a dark fill would swallow their outlines. */
+  background: var(--surface-strong);
   border-left: 1px solid var(--line-soft);
   overflow: hidden;
 }
 
 .detail-hero-logo img {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   display: block;
-  object-fit: cover;
+  /* contain (not cover) keeps the whole icon visible instead of cropping it. */
+  object-fit: contain;
 }
 
 .detail-hero-logo span {
