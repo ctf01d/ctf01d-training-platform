@@ -1354,11 +1354,100 @@ a:focus-visible {
 
 .game-info-access {
   grid-column: 1 / -1;
+}
+
+.game-info-groups .game-info-access {
   min-height: 0;
 }
 
 .game-info-access .info-row {
   grid-template-columns: 116px minmax(0, 1fr);
+}
+
+.team-info-groups {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  align-items: stretch;
+}
+
+.team-info-groups .info-group {
+  min-width: 0;
+}
+
+.team-info-about .info-row {
+  grid-template-columns: 112px minmax(0, 1fr);
+}
+
+.team-games-list {
+  display: grid;
+  gap: 0;
+}
+
+.team-game-row {
+  --team-game-meter: linear-gradient(90deg, var(--teal), var(--success));
+  --team-game-score: #0f766e;
+  display: grid;
+  gap: 9px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.team-game-row.podium-1 {
+  --team-game-meter: linear-gradient(135deg, #fde047, #f59e0b);
+  --team-game-score: #b45309;
+}
+
+.team-game-row.podium-2 {
+  --team-game-meter: linear-gradient(135deg, #e5e7eb, #9ca3af);
+  --team-game-score: #475569;
+}
+
+.team-game-row.podium-3 {
+  --team-game-meter: linear-gradient(135deg, #fcd9a8, #d97706);
+  --team-game-score: #92400e;
+}
+
+.team-game-row:first-child {
+  padding-top: 0;
+}
+
+.team-game-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.team-game-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.team-game-main a {
+  min-width: 0;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.team-game-main .score-cell {
+  color: var(--team-game-score);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.team-game-meter {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-strong);
+}
+
+.team-game-meter::before {
+  content: "";
+  display: block;
+  width: var(--value);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--team-game-meter);
 }
 
 /* Service chips */

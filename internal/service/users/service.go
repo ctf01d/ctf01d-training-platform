@@ -297,14 +297,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 
 // UpdateAdmin applies the same profile edits from the admin user-management page.
 func (s *Service) UpdateAdmin(ctx context.Context, id int64, params AdminUpdateParams) (*User, error) {
-	return s.UpdateProfile(ctx, id, ProfileUpdateParams{
-		DisplayName: params.DisplayName,
-		Password:    params.Password,
-		Bio:         params.Bio,
-		Telegram:    params.Telegram,
-		Github:      params.Github,
-		Email:       params.Email,
-	})
+	return s.UpdateProfile(ctx, id, ProfileUpdateParams(params))
 }
 
 // SetAvatar updates the stored avatar URL for a user.

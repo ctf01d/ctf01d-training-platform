@@ -465,6 +465,16 @@ export default function GameDetailPage() {
                 label: "Duration",
                 value: <Duration start={game.starts_at} end={game.ends_at} />,
               },
+              ...(game.finalized
+                ? [
+                    {
+                      label: "Finalized",
+                      value: game.finalized_at
+                        ? formatDate(game.finalized_at)
+                        : "yes",
+                    },
+                  ]
+                : []),
             ]}
             actions={
               <>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import * as teamsApi from "../api/teams";
 import type { Team, TeamUpdate } from "../api/teams";
@@ -23,8 +23,6 @@ import {
   InfoGroup,
   InfoRow,
   SectionCount,
-  renderLink,
-  renderLogo,
   formatDateTime,
   safeHref,
 } from "../components/DetailInfo";
@@ -303,6 +301,7 @@ export default function TeamDetailPage() {
   const approvedCount = members.filter((m) => m.status === "approved").length;
   const memberUserIds = new Set(members.map((m) => m.user_id));
   const invitableUsers = allUsers.filter((u) => !memberUserIds.has(u.id));
+  const hasTeamInfo = Boolean(team.description);
 
   const universityNode =
     team.university_id != null ? (
@@ -395,25 +394,18 @@ export default function TeamDetailPage() {
             }
           />
 
-          <div className="detail-section">
-            <div className="section-head">
-              <h3>Team Info</h3>
+          {hasTeamInfo && (
+            <div className="detail-section">
+              <div className="section-head">
+                <h3>Team Info</h3>
+              </div>
+              <InfoGroups className="team-info-groups">
+                <InfoGroup title="About" className="team-info-about">
+                  <InfoRow label="Description">{team.description}</InfoRow>
+                </InfoGroup>
+              </InfoGroups>
             </div>
-            <InfoGroups>
-              <InfoGroup title="About">
-                <InfoRow label="Description">{team.description ?? "—"}</InfoRow>
-                <InfoRow label="Website">{renderLink(team.website)}</InfoRow>
-                <InfoRow label="Avatar">{renderLogo(team.avatar_url)}</InfoRow>
-              </InfoGroup>
-
-              <InfoGroup title="Details">
-                <InfoRow label="Captain">
-                  {team.captain_id ? userLabel(team.captain_id) : "—"}
-                </InfoRow>
-                <InfoRow label="University">{universityNode}</InfoRow>
-              </InfoGroup>
-            </InfoGroups>
-          </div>
+          )}
         </>
       ) : (
         <form
@@ -655,29 +647,56 @@ export default function TeamDetailPage() {
               </h3>
             </div>
             {playedGames.length > 0 ? (
-              <InfoGroups>
-                <InfoGroup title="Played">
-                  {playedGames.map((g) => (
-                    <InfoRow
+              <div className="team-games-list">
+                {playedGames.map((g) => {
+                  const rank = g.rank;
+                  const total = g.total;
+                  const hasPlacement = rank != null && total != null;
+                  const performance = hasPlacement
+                    ? Math.max(
+                        0,
+                        Math.min(100, ((total - rank + 1) / total) * 100),
+                      )
+                    : 0;
+                  const meterStyle = {
+                    "--value": `${performance}%`,
+                  } as CSSProperties;
+                  const podiumClass =
+                    hasPlacement && rank >= 1 && rank <= 3
+                      ? ` podium-${rank}`
+                      : "";
+
+                  return (
+                    <div
+                      className={`team-game-row${podiumClass}`}
                       key={g.gameId}
-                      label={
-                        <Link to={`/games/${g.gameId}`}>{g.name}</Link>
-                      }
                     >
-                      {g.rank != null && g.total != null ? (
+                      <div className="team-game-main">
+                        <Link to={`/games/${g.gameId}`}>{g.name}</Link>
                         <span
                           className="score-cell"
-                          title={`Placed ${g.rank} of ${g.total} teams`}
+                          title={
+                            hasPlacement
+                              ? `Placed ${rank} of ${total} teams`
+                              : undefined
+                          }
                         >
-                          {g.rank} / {g.total}
+                          {hasPlacement ? (
+                            `${rank} / ${total}`
+                          ) : (
+                            <span className="muted-dash">—</span>
+                          )}
                         </span>
-                      ) : (
-                        <span className="muted-dash">—</span>
-                      )}
-                    </InfoRow>
-                  ))}
-                </InfoGroup>
-              </InfoGroups>
+                      </div>
+                      <div
+                        className="team-game-meter"
+                        style={meterStyle}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <p className="section-empty">No games played yet.</p>
             )}
