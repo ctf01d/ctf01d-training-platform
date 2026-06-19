@@ -15,6 +15,8 @@ func TestHTTPRouteCatalogIsCoveredByIntegrationSuite(t *testing.T) {
 		"DELETE /api/v1/session":                        true,
 		"GET /api/v1/profile":                           true,
 		"PATCH /api/v1/profile":                         true,
+		"POST /api/v1/profile/avatar":                   true,
+		"GET /api/v1/profile/sessions":                  true,
 		"GET /api/v1/users":                             true,
 		"POST /api/v1/users":                            true,
 		"GET /api/v1/users/:id":                         true,

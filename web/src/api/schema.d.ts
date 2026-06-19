@@ -52,6 +52,46 @@ export interface paths {
         patch: operations["updateProfile"];
         trace?: never;
     };
+    "/profile/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload current user's avatar
+         * @description Upload an avatar image for the current user
+         */
+        post: operations["uploadProfileAvatar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/profile/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List current user's active sessions
+         * @description List active sessions for the current user
+         */
+        get: operations["listProfileSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games": {
         parameters: {
             query?: never;
@@ -1606,6 +1646,9 @@ export interface components {
             telegram?: string | null;
             github?: string | null;
             email?: string | null;
+            last_login_ip?: string | null;
+            /** Format: date-time */
+            last_login_at?: string | null;
             is_blocked: boolean;
         };
         UserCreate: {
@@ -1818,7 +1861,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UserUpdate"];
+                "application/json": components["schemas"]["UserProfileUpdate"];
             };
         };
         responses: {
@@ -1833,6 +1876,56 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    uploadProfileAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    avatar: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Avatar uploaded; the image is scaled and stored server-side */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    listProfileSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSessionList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listGames: {

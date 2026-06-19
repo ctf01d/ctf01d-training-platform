@@ -14,7 +14,7 @@ import (
 type UserStore interface {
 	GetUserByUserName(ctx context.Context, userName string) (db.User, error)
 	GetUserByID(ctx context.Context, id int64) (db.User, error)
-	SetUserLastLogin(ctx context.Context, arg db.SetUserLastLoginParams) error
+	SetUserLastLogin(ctx context.Context, arg db.SetUserLastLoginParams) (db.User, error)
 }
 
 type SessionStore interface {
@@ -85,7 +85,8 @@ func (s *Service) Login(ctx context.Context, userName, password, ipAddress, user
 	// Order matters: record login and sign the token before the session row.
 	// CreateSession runs last so a failure leaves no orphan session, and a
 	// returned token always has a backing session.
-	if err := s.store.SetUserLastLogin(ctx, db.SetUserLastLoginParams{ID: dbUser.ID, LastLoginIp: ip}); err != nil {
+	dbUser, err = s.store.SetUserLastLogin(ctx, db.SetUserLastLoginParams{ID: dbUser.ID, LastLoginIp: ip})
+	if err != nil {
 		return "", nil, fmt.Errorf("recording login: %w", err)
 	}
 
@@ -193,6 +194,10 @@ func (s *Service) RevokeAllSessions(ctx context.Context, userID int64) error {
 }
 
 func userFromDB(u db.User) usersvc.User {
+	var lastLoginAt *time.Time
+	if u.LastLoginAt.Valid {
+		lastLoginAt = &u.LastLoginAt.Time
+	}
 	return usersvc.User{
 		ID:          u.ID,
 		UserName:    u.UserName,
@@ -204,6 +209,8 @@ func userFromDB(u db.User) usersvc.User {
 		Telegram:    u.Telegram,
 		Github:      u.Github,
 		Email:       u.Email,
+		LastLoginIp: u.LastLoginIp,
+		LastLoginAt: lastLoginAt,
 		IsBlocked:   u.IsBlocked,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,

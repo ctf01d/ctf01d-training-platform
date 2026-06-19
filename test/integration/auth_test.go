@@ -234,6 +234,59 @@ func TestAuthFlow(t *testing.T) {
 	if profile["user_name"] != "player1" {
 		t.Errorf("expected player1, got %v", profile["user_name"])
 	}
+	if _, ok := profile["last_login_ip"]; !ok {
+		t.Error("expected own profile to include last_login_ip")
+	}
+	if _, ok := profile["last_login_at"]; !ok {
+		t.Error("expected own profile to include last_login_at")
+	}
+
+	w = makeReq(t, engine, http.MethodGet, "/api/v1/profile/sessions", nil, playerToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("list own sessions: %d %s", w.Code, w.Body.String())
+	}
+	profileSessions := parseItems(t, w)
+	if len(profileSessions) == 0 {
+		t.Fatal("expected at least one active session")
+	}
+	foundCurrentSession := false
+	for _, session := range profileSessions {
+		if current, ok := session["current"].(bool); ok && current {
+			foundCurrentSession = true
+			break
+		}
+	}
+	if !foundCurrentSession {
+		t.Error("expected current session in profile sessions")
+	}
+
+	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/users/%d", playerID), nil, playerToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get user as player: %d %s", w.Code, w.Body.String())
+	}
+	publicUser := parseJSON(t, w)
+	if _, ok := publicUser["last_login_ip"]; ok {
+		t.Error("public user detail must not include last_login_ip")
+	}
+	if _, ok := publicUser["last_login_at"]; ok {
+		t.Error("public user detail must not include last_login_at")
+	}
+
+	w = makeReq(t, engine, http.MethodGet, "/api/v1/users", nil, playerToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("list users as player: %d %s", w.Code, w.Body.String())
+	}
+	for _, item := range parseItems(t, w) {
+		if item["user_name"] != "player1" {
+			continue
+		}
+		if _, ok := item["last_login_ip"]; ok {
+			t.Error("public user list must not include last_login_ip")
+		}
+		if _, ok := item["last_login_at"]; ok {
+			t.Error("public user list must not include last_login_at")
+		}
+	}
 
 	w = makeReq(t, engine, http.MethodPost, "/api/v1/session", map[string]interface{}{
 		"user_name": "player1", "password": "wrongpassword",

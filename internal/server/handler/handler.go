@@ -136,7 +136,7 @@ func (h *Handler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, httpserver.LoginResponse{
 		Token: token,
-		User:  userToHTTP(*user),
+		User:  userToHTTPPrivate(*user),
 	})
 }
 
@@ -163,7 +163,7 @@ func (h *Handler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, userToHTTP(*user))
+	c.JSON(http.StatusOK, userToHTTPPrivate(*user))
 }
 
 func (h *Handler) UpdateProfile(c *gin.Context) {
@@ -173,24 +173,27 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	req, ok := bindJSON[httpserver.UserUpdate](c)
+	req, ok := bindJSON[httpserver.UserProfileUpdate](c)
 	if !ok {
 		return
 	}
 
-	params := usersvc.UpdateParams{
+	params := usersvc.ProfileUpdateParams{
 		DisplayName: req.DisplayName,
-		AvatarUrl:   req.AvatarUrl,
 		Password:    req.Password,
+		Bio:         req.Bio,
+		Telegram:    req.Telegram,
+		Github:      req.Github,
+		Email:       req.Email,
 	}
 
-	user, err := h.users.Update(c.Request.Context(), userID, params)
+	user, err := h.users.UpdateProfile(c.Request.Context(), userID, params)
 	if err != nil {
 		respondError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, userToHTTP(*user))
+	c.JSON(http.StatusOK, userToHTTPPrivate(*user))
 }
 
 func (h *Handler) HandleListUsers(c *gin.Context) {
@@ -390,7 +393,15 @@ func (h *Handler) DeleteUser(c *gin.Context, id int64) {
 }
 
 func userToHTTP(u usersvc.User) httpserver.User {
-	return httpserver.User{
+	return userToHTTPWithPrivate(u, false)
+}
+
+func userToHTTPPrivate(u usersvc.User) httpserver.User {
+	return userToHTTPWithPrivate(u, true)
+}
+
+func userToHTTPWithPrivate(u usersvc.User, includePrivate bool) httpserver.User {
+	result := httpserver.User{
 		Id:          u.ID,
 		UserName:    u.UserName,
 		DisplayName: u.DisplayName,
@@ -405,6 +416,11 @@ func userToHTTP(u usersvc.User) httpserver.User {
 		CreatedAt:   &u.CreatedAt,
 		UpdatedAt:   &u.UpdatedAt,
 	}
+	if includePrivate {
+		result.LastLoginIp = u.LastLoginIp
+		result.LastLoginAt = u.LastLoginAt
+	}
+	return result
 }
 
 func parseIDParam(c *gin.Context, param string) (int64, bool) {

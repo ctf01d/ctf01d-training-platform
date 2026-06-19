@@ -66,11 +66,12 @@ SET is_blocked = $2,
 WHERE id = $1
 RETURNING *;
 
--- name: SetUserLastLogin :exec
+-- name: SetUserLastLogin :one
 UPDATE users
 SET last_login_ip = $2,
     last_login_at = now()
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;
 
 -- name: ClearUserTeamCaptaincy :exec
 UPDATE teams

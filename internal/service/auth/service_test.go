@@ -37,8 +37,16 @@ func (m *mockUserStore) GetUserByID(_ context.Context, id int64) (db.User, error
 	return u, nil
 }
 
-func (m *mockUserStore) SetUserLastLogin(_ context.Context, _ db.SetUserLastLoginParams) error {
-	return nil
+func (m *mockUserStore) SetUserLastLogin(_ context.Context, arg db.SetUserLastLoginParams) (db.User, error) {
+	u, ok := m.byID[arg.ID]
+	if !ok {
+		return db.User{}, errors.New("no rows in result set")
+	}
+	u.LastLoginIp = arg.LastLoginIp
+	u.LastLoginAt = pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	m.byID[arg.ID] = u
+	m.users[u.UserName] = u
+	return u, nil
 }
 
 type mockSessionStore struct {
@@ -118,6 +126,12 @@ func TestLogin_Success(t *testing.T) {
 	}
 	if user.UserName != "alice" {
 		t.Errorf("expected alice, got %s", user.UserName)
+	}
+	if user.LastLoginIp == nil || *user.LastLoginIp != "1.2.3.4" {
+		t.Errorf("expected last login IP 1.2.3.4, got %v", user.LastLoginIp)
+	}
+	if user.LastLoginAt == nil {
+		t.Error("expected last login time")
 	}
 }
 

@@ -285,11 +285,12 @@ func (q *Queries) SetUserBlocked(ctx context.Context, arg SetUserBlockedParams) 
 	return i, err
 }
 
-const setUserLastLogin = `-- name: SetUserLastLogin :exec
+const setUserLastLogin = `-- name: SetUserLastLogin :one
 UPDATE users
 SET last_login_ip = $2,
     last_login_at = now()
 WHERE id = $1
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
 `
 
 type SetUserLastLoginParams struct {
@@ -297,9 +298,29 @@ type SetUserLastLoginParams struct {
 	LastLoginIp *string `json:"last_login_ip"`
 }
 
-func (q *Queries) SetUserLastLogin(ctx context.Context, arg SetUserLastLoginParams) error {
-	_, err := q.db.Exec(ctx, setUserLastLogin, arg.ID, arg.LastLoginIp)
-	return err
+func (q *Queries) SetUserLastLogin(ctx context.Context, arg SetUserLastLoginParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserLastLogin, arg.ID, arg.LastLoginIp)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.UserName,
+		&i.DisplayName,
+		&i.Role,
+		&i.Rating,
+		&i.AvatarUrl,
+		&i.PasswordDigest,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
+	)
+	return i, err
 }
 
 const updateUserProfile = `-- name: UpdateUserProfile :one

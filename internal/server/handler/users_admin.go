@@ -46,7 +46,7 @@ func (h *Handler) HandleUpdateUserProfileAdmin(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, userToHTTP(*user))
+	c.JSON(http.StatusOK, userToHTTPPrivate(*user))
 }
 
 func (h *Handler) HandleSetUserBlocked(c *gin.Context) {
@@ -83,7 +83,7 @@ func (h *Handler) HandleSetUserBlocked(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, userToHTTP(*user))
+	c.JSON(http.StatusOK, userToHTTPPrivate(*user))
 }
 
 func (h *Handler) HandleUploadUserAvatar(c *gin.Context) {
@@ -92,6 +92,20 @@ func (h *Handler) HandleUploadUserAvatar(c *gin.Context) {
 		return
 	}
 
+	h.handleUploadUserAvatar(c, id)
+}
+
+func (h *Handler) HandleUploadProfileAvatar(c *gin.Context) {
+	userID, ok := middleware.CurrentUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
+		return
+	}
+
+	h.handleUploadUserAvatar(c, userID)
+}
+
+func (h *Handler) handleUploadUserAvatar(c *gin.Context, id int64) {
 	if _, err := h.users.GetByID(c.Request.Context(), id); err != nil {
 		respondError(c, err)
 		return
@@ -137,7 +151,7 @@ func (h *Handler) HandleUploadUserAvatar(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, userToHTTP(*user))
+	c.JSON(http.StatusOK, userToHTTPPrivate(*user))
 }
 
 func (h *Handler) HandleGetUserAvatar(c *gin.Context) {
@@ -171,6 +185,20 @@ func (h *Handler) HandleListUserSessions(c *gin.Context) {
 		return
 	}
 
+	h.listUserSessions(c, id)
+}
+
+func (h *Handler) HandleListProfileSessions(c *gin.Context) {
+	userID, ok := middleware.CurrentUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
+		return
+	}
+
+	h.listUserSessions(c, userID)
+}
+
+func (h *Handler) listUserSessions(c *gin.Context, id int64) {
 	if _, err := h.users.GetByID(c.Request.Context(), id); err != nil {
 		respondError(c, err)
 		return
@@ -215,6 +243,10 @@ func (h *Handler) UploadUserAvatar(c *gin.Context, id int64) {
 	h.HandleUploadUserAvatar(c)
 }
 
+func (h *Handler) UploadProfileAvatar(c *gin.Context) {
+	h.HandleUploadProfileAvatar(c)
+}
+
 func (h *Handler) GetUserAvatar(c *gin.Context, id int64) {
 	c.Set("id", id)
 	h.HandleGetUserAvatar(c)
@@ -223,6 +255,10 @@ func (h *Handler) GetUserAvatar(c *gin.Context, id int64) {
 func (h *Handler) ListUserSessions(c *gin.Context, id int64) {
 	c.Set("id", id)
 	h.HandleListUserSessions(c)
+}
+
+func (h *Handler) ListProfileSessions(c *gin.Context) {
+	h.HandleListProfileSessions(c)
 }
 
 func (h *Handler) RevokeUserSession(c *gin.Context, id int64, sessionId int64) {

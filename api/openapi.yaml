@@ -103,7 +103,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserUpdate'
+              $ref: '#/components/schemas/UserProfileUpdate'
       responses:
         '200':
           description: Profile updated
@@ -116,6 +116,58 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
       description: Update current user profile
+  /profile/avatar:
+    post:
+      operationId: uploadProfileAvatar
+      tags:
+        - auth
+      summary: Upload current user's avatar
+      x-required-role: authenticated
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded; the image is scaled and stored server-side
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Upload an avatar image for the current user
+  /profile/sessions:
+    get:
+      operationId: listProfileSessions
+      tags:
+        - auth
+      summary: List current user's active sessions
+      x-required-role: authenticated
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Active sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSessionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: List active sessions for the current user
   /games:
     get:
       operationId: listGames
@@ -3388,6 +3440,13 @@ components:
               nullable: true
             email:
               type: string
+              nullable: true
+            last_login_ip:
+              type: string
+              nullable: true
+            last_login_at:
+              type: string
+              format: date-time
               nullable: true
             is_blocked:
               type: boolean

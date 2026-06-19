@@ -12,19 +12,21 @@ import (
 )
 
 type User struct {
-	ID          int64     `json:"id"`
-	UserName    string    `json:"user_name"`
-	DisplayName string    `json:"display_name"`
-	Role        string    `json:"role"`
-	Rating      int       `json:"rating"`
-	AvatarUrl   *string   `json:"avatar_url,omitempty"`
-	Bio         *string   `json:"bio,omitempty"`
-	Telegram    *string   `json:"telegram,omitempty"`
-	Github      *string   `json:"github,omitempty"`
-	Email       *string   `json:"email,omitempty"`
-	IsBlocked   bool      `json:"is_blocked"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          int64      `json:"id"`
+	UserName    string     `json:"user_name"`
+	DisplayName string     `json:"display_name"`
+	Role        string     `json:"role"`
+	Rating      int        `json:"rating"`
+	AvatarUrl   *string    `json:"avatar_url,omitempty"`
+	Bio         *string    `json:"bio,omitempty"`
+	Telegram    *string    `json:"telegram,omitempty"`
+	Github      *string    `json:"github,omitempty"`
+	Email       *string    `json:"email,omitempty"`
+	LastLoginIp *string    `json:"last_login_ip,omitempty"`
+	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
+	IsBlocked   bool       `json:"is_blocked"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 type UserListResult struct {
@@ -48,9 +50,21 @@ type UpdateParams struct {
 	Password    *string `json:"password,omitempty"`
 }
 
-// AdminUpdateParams carries the full set of fields an admin may edit on the
-// user management page. Optional profile fields are set verbatim (a nil pointer
-// clears the column).
+// ProfileUpdateParams carries the full set of fields editable on profile
+// screens. Optional profile fields are set verbatim (a nil pointer clears the
+// column).
+type ProfileUpdateParams struct {
+	DisplayName *string `json:"display_name,omitempty"`
+	Password    *string `json:"password,omitempty"`
+	Bio         *string `json:"bio,omitempty"`
+	Telegram    *string `json:"telegram,omitempty"`
+	Github      *string `json:"github,omitempty"`
+	Email       *string `json:"email,omitempty"`
+}
+
+// AdminUpdateParams carries the profile fields an admin may edit from the user
+// management page. Keep it separate from ProfileUpdateParams so future admin-only
+// fields or validation do not silently become self-service.
 type AdminUpdateParams struct {
 	DisplayName *string `json:"display_name,omitempty"`
 	Password    *string `json:"password,omitempty"`
@@ -235,9 +249,9 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*U
 	return &u, nil
 }
 
-// UpdateAdmin applies an admin's edits, setting optional profile fields
-// verbatim. display_name falls back to the existing value when omitted.
-func (s *Service) UpdateAdmin(ctx context.Context, id int64, params AdminUpdateParams) (*User, error) {
+// UpdateProfile applies profile edits, setting optional profile fields verbatim.
+// display_name falls back to the existing value when omitted.
+func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpdateParams) (*User, error) {
 	existing, err := s.q.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, mapNotFound(err)
@@ -279,6 +293,18 @@ func (s *Service) UpdateAdmin(ctx context.Context, id int64, params AdminUpdateP
 
 	u := fromDB(dbUser)
 	return &u, nil
+}
+
+// UpdateAdmin applies the same profile edits from the admin user-management page.
+func (s *Service) UpdateAdmin(ctx context.Context, id int64, params AdminUpdateParams) (*User, error) {
+	return s.UpdateProfile(ctx, id, ProfileUpdateParams{
+		DisplayName: params.DisplayName,
+		Password:    params.Password,
+		Bio:         params.Bio,
+		Telegram:    params.Telegram,
+		Github:      params.Github,
+		Email:       params.Email,
+	})
 }
 
 // SetAvatar updates the stored avatar URL for a user.
@@ -347,6 +373,10 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 }
 
 func fromDB(u db.User) User {
+	var lastLoginAt *time.Time
+	if u.LastLoginAt.Valid {
+		lastLoginAt = &u.LastLoginAt.Time
+	}
 	return User{
 		ID:          u.ID,
 		UserName:    u.UserName,
@@ -358,6 +388,8 @@ func fromDB(u db.User) User {
 		Telegram:    u.Telegram,
 		Github:      u.Github,
 		Email:       u.Email,
+		LastLoginIp: u.LastLoginIp,
+		LastLoginAt: lastLoginAt,
 		IsBlocked:   u.IsBlocked,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,

@@ -42,6 +42,13 @@ components:
             email:
               type: string
               nullable: true
+            last_login_ip:
+              type: string
+              nullable: true
+            last_login_at:
+              type: string
+              format: date-time
+              nullable: true
             is_blocked:
               type: boolean
     UserCreate:

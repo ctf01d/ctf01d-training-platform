@@ -1,5 +1,5 @@
 import client from "./client";
-import { clearToken } from "./auth";
+import { clearToken, getToken } from "./auth";
 import type { components } from "./schema";
 
 export type User = components["schemas"]["User"];
@@ -27,8 +27,12 @@ export async function getProfile() {
   return client.GET("/profile");
 }
 
-export async function updateProfile(body: UserUpdate) {
+export async function updateProfile(body: UserProfileUpdate) {
   return client.PATCH("/profile", { body });
+}
+
+export async function listProfileSessions() {
+  return client.GET("/profile/sessions");
 }
 
 export async function listUsers(query?: {
@@ -97,8 +101,20 @@ export async function revokeUserSession(id: number, sessionId: number) {
 export async function uploadUserAvatar(id: number, file: File) {
   const formData = new FormData();
   formData.append("avatar", file);
-  const token = localStorage.getItem("auth_token");
+  const token = getToken();
   const response = await fetch(`/api/v1/users/${id}/avatar`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  return response;
+}
+
+export async function uploadProfileAvatar(file: File) {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  const token = getToken();
+  const response = await fetch("/api/v1/profile/avatar", {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,

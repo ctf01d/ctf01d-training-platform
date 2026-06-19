@@ -881,6 +881,8 @@ type User struct {
 	Github      *string    `json:"github,omitempty"`
 	Id          int64      `json:"id"`
 	IsBlocked   bool       `json:"is_blocked"`
+	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
+	LastLoginIp *string    `json:"last_login_ip,omitempty"`
 	Rating      int        `json:"rating"`
 	Role        UserRole   `json:"role"`
 	Telegram    *string    `json:"telegram,omitempty"`
@@ -1021,6 +1023,11 @@ type AddGameServiceJSONBody struct {
 	ServiceId int64 `json:"service_id"`
 }
 
+// UploadProfileAvatarMultipartBody defines parameters for UploadProfileAvatar.
+type UploadProfileAvatarMultipartBody struct {
+	Avatar openapi_types.File `json:"avatar"`
+}
+
 // ListResultsParams defines parameters for ListResults.
 type ListResultsParams struct {
 	GameId *int64 `form:"game_id,omitempty" json:"game_id,omitempty"`
@@ -1115,7 +1122,10 @@ type AddGameServiceJSONRequestBody AddGameServiceJSONBody
 type ReorderGameTeamsJSONRequestBody = ReorderRequest
 
 // UpdateProfileJSONRequestBody defines body for UpdateProfile for application/json ContentType.
-type UpdateProfileJSONRequestBody = UserUpdate
+type UpdateProfileJSONRequestBody = UserProfileUpdate
+
+// UploadProfileAvatarMultipartRequestBody defines body for UploadProfileAvatar for multipart/form-data ContentType.
+type UploadProfileAvatarMultipartRequestBody UploadProfileAvatarMultipartBody
 
 // CreateResultJSONRequestBody defines body for CreateResult for application/json ContentType.
 type CreateResultJSONRequestBody = ResultCreate
@@ -1251,6 +1261,12 @@ type ServerInterface interface {
 	// Update current user profile
 	// (PATCH /profile)
 	UpdateProfile(c *gin.Context)
+	// Upload current user's avatar
+	// (POST /profile/avatar)
+	UploadProfileAvatar(c *gin.Context)
+	// List current user's active sessions
+	// (GET /profile/sessions)
+	ListProfileSessions(c *gin.Context)
 	// List results
 	// (GET /results)
 	ListResults(c *gin.Context, params ListResultsParams)
@@ -1949,6 +1965,36 @@ func (siw *ServerInterfaceWrapper) UpdateProfile(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateProfile(c)
+}
+
+// UploadProfileAvatar operation middleware
+func (siw *ServerInterfaceWrapper) UploadProfileAvatar(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UploadProfileAvatar(c)
+}
+
+// ListProfileSessions operation middleware
+func (siw *ServerInterfaceWrapper) ListProfileSessions(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListProfileSessions(c)
 }
 
 // ListResults operation middleware
@@ -3605,6 +3651,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/games/:id/unfinalize", wrapper.UnfinalizeGame)
 	router.GET(options.BaseURL+"/profile", wrapper.GetProfile)
 	router.PATCH(options.BaseURL+"/profile", wrapper.UpdateProfile)
+	router.POST(options.BaseURL+"/profile/avatar", wrapper.UploadProfileAvatar)
+	router.GET(options.BaseURL+"/profile/sessions", wrapper.ListProfileSessions)
 	router.GET(options.BaseURL+"/results", wrapper.ListResults)
 	router.POST(options.BaseURL+"/results", wrapper.CreateResult)
 	router.DELETE(options.BaseURL+"/results/:id", wrapper.DeleteResult)
