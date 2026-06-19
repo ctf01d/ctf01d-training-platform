@@ -1,10 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import * as usersApi from "../api/users";
 import type { User, UserProfileUpdate, UserSession } from "../api/users";
-import {
-  ErrorDisplay,
-  handleApiError,
-} from "../components/ErrorDisplay";
+import { ErrorDisplay, handleApiError } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 import {

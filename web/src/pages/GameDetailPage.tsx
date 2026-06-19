@@ -30,7 +30,6 @@ import {
   RelativeTime,
   Duration,
   renderLink,
-  renderLogo,
   formatDateTime as formatDate,
   safeHref,
 } from "../components/DetailInfo";
@@ -410,6 +409,12 @@ export default function GameDetailPage() {
   const writeupTeamOptions = isAdmin
     ? gameTeams.map((gt) => ({ id: gt.team_id, name: nameOf(gt.team_id) }))
     : manageableTeamIds.map((tid) => ({ id: tid, name: nameOf(tid) }));
+  const hasGameLinks = Boolean(
+    game.site_url || game.ctftime_url || game.vpn_url || game.vpn_config_url,
+  );
+  const hasAdminAccess = Boolean(
+    isAdmin && (game.access_secret || game.access_instructions),
+  );
   const gameTabs: Array<{ href: string; label: string; count?: number }> = [
     { href: "#overview", label: "Overview" },
     { href: "#services", label: "Services", count: serviceIds.length },
@@ -529,13 +534,12 @@ export default function GameDetailPage() {
             <div className="section-head">
               <h3>Game Info</h3>
             </div>
-            <InfoGroups>
+            <InfoGroups className="game-info-groups">
               <InfoGroup title="Schedule">
-                <InfoRow label="Starts at">
-                  <RelativeTime value={game.starts_at} />
-                </InfoRow>
-                <InfoRow label="Ends at">
-                  <RelativeTime value={game.ends_at} />
+                <InfoRow label="Starts">{formatDate(game.starts_at)}</InfoRow>
+                <InfoRow label="Ends">{formatDate(game.ends_at)}</InfoRow>
+                <InfoRow label="Duration">
+                  <Duration start={game.starts_at} end={game.ends_at} />
                 </InfoRow>
               </InfoGroup>
 
@@ -569,31 +573,29 @@ export default function GameDetailPage() {
                 </InfoRow>
               </InfoGroup>
 
-              <InfoGroup title="Links">
-                <InfoRow label="Site">{renderLink(game.site_url)}</InfoRow>
-                <InfoRow label="CTFtime">
-                  {renderLink(game.ctftime_url)}
-                </InfoRow>
-                <InfoRow label="VPN">{renderLink(game.vpn_url)}</InfoRow>
-                <InfoRow label="Logo">{renderLogo(game.avatar_url)}</InfoRow>
-              </InfoGroup>
-
-              <InfoGroup title="Status">
-                <InfoRow label="Finalized">
-                  {game.finalized ? (
-                    <CardBadge variant="approved">
-                      {game.finalized_at
-                        ? formatDate(game.finalized_at)
-                        : "yes"}
-                    </CardBadge>
-                  ) : (
-                    "No"
+              {hasGameLinks && (
+                <InfoGroup title="Links">
+                  {game.site_url && (
+                    <InfoRow label="Site">{renderLink(game.site_url)}</InfoRow>
                   )}
-                </InfoRow>
-              </InfoGroup>
+                  {game.ctftime_url && (
+                    <InfoRow label="CTFtime">
+                      {renderLink(game.ctftime_url)}
+                    </InfoRow>
+                  )}
+                  {game.vpn_url && (
+                    <InfoRow label="VPN">{renderLink(game.vpn_url)}</InfoRow>
+                  )}
+                  {game.vpn_config_url && (
+                    <InfoRow label="VPN config">
+                      {renderLink(game.vpn_config_url)}
+                    </InfoRow>
+                  )}
+                </InfoGroup>
+              )}
 
-              {isAdmin && (game.access_secret || game.access_instructions) && (
-                <InfoGroup title="Access (admin)">
+              {hasAdminAccess && (
+                <InfoGroup title="Access (admin)" className="game-info-access">
                   {game.access_secret && (
                     <InfoRow label="Secret">
                       <code>{game.access_secret}</code>

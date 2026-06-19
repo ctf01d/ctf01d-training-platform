@@ -1338,6 +1338,29 @@ a:focus-visible {
   font-size: .82rem;
 }
 
+.game-info-groups {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  align-items: stretch;
+}
+
+.game-info-groups .info-group {
+  min-width: 0;
+  min-height: 164px;
+}
+
+.game-info-groups .info-row {
+  grid-template-columns: minmax(96px, max-content) minmax(0, 1fr);
+}
+
+.game-info-access {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.game-info-access .info-row {
+  grid-template-columns: 116px minmax(0, 1fr);
+}
+
 /* Service chips */
 .chip-list {
   display: flex;

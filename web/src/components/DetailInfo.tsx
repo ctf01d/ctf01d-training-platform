@@ -57,19 +57,31 @@ export function DetailHero({
   );
 }
 
-export function InfoGroups({ children }: { children: ReactNode }) {
-  return <div className="info-groups">{children}</div>;
+export function InfoGroups({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className ? `info-groups ${className}` : "info-groups"}>
+      {children}
+    </div>
+  );
 }
 
 export function InfoGroup({
   title,
   children,
+  className,
 }: {
   title: string;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="info-group">
+    <div className={className ? `info-group ${className}` : "info-group"}>
       <h4>{title}</h4>
       <dl className="info-dl">{children}</dl>
     </div>
