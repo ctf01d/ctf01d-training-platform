@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import * as gamesApi from "../api/games";
 import type { Game, GameUpdate } from "../api/games";
 import * as gameTeamsApi from "../api/game-teams";
@@ -410,6 +410,18 @@ export default function GameDetailPage() {
   const writeupTeamOptions = isAdmin
     ? gameTeams.map((gt) => ({ id: gt.team_id, name: nameOf(gt.team_id) }))
     : manageableTeamIds.map((tid) => ({ id: tid, name: nameOf(tid) }));
+  const gameTabs: Array<{ href: string; label: string; count?: number }> = [
+    { href: "#overview", label: "Overview" },
+    { href: "#services", label: "Services", count: serviceIds.length },
+    { href: "#teams", label: "Teams", count: gameTeams.length },
+    ...(user
+      ? [{ href: "#results", label: "Results", count: results.length }]
+      : []),
+    ...(user
+      ? [{ href: "#writeups", label: "Writeups", count: writeups.length }]
+      : []),
+    ...(canEdit ? [{ href: "#actions", label: "Actions" }] : []),
+  ];
 
   return (
     <div className="page detail-page">
@@ -499,7 +511,21 @@ export default function GameDetailPage() {
             }
           />
 
-          <div className="detail-section">
+          <nav className="tabs game-context-tabs" aria-label="Game navigation">
+            {gameTabs.map((item) => (
+              <a className="tab" href={item.href} key={item.href}>
+                <span>{item.label}</span>
+                {typeof item.count === "number" && (
+                  <span className="section-count">{item.count}</span>
+                )}
+              </a>
+            ))}
+            <Link className="tab" to={`/scoreboard?game=${game.id}`}>
+              Scoreboard
+            </Link>
+          </nav>
+
+          <div className="detail-section" id="overview">
             <div className="section-head">
               <h3>Game Info</h3>
             </div>
@@ -659,7 +685,7 @@ export default function GameDetailPage() {
       )}
 
       {canEdit && (
-        <div className="detail-section">
+        <div className="detail-section" id="actions">
           <div className="section-head">
             <h3>Actions</h3>
           </div>
@@ -690,7 +716,7 @@ export default function GameDetailPage() {
         </div>
       )}
 
-      <div className="detail-section">
+      <div className="detail-section" id="services">
         <div className="section-head">
           <h3>
             Services <SectionCount n={serviceIds.length} />
@@ -744,7 +770,7 @@ export default function GameDetailPage() {
         )}
       </div>
 
-      <div className="detail-section">
+      <div className="detail-section" id="teams">
         <div className="section-head">
           <h3>
             Roster <SectionCount n={gameTeams.length} />
@@ -835,7 +861,7 @@ export default function GameDetailPage() {
 
       {user && (
         <>
-          <div className="detail-section">
+          <div className="detail-section" id="results">
             <div className="section-head">
               <h3>
                 Results <SectionCount n={results.length} />
@@ -933,7 +959,7 @@ export default function GameDetailPage() {
             )}
           </div>
 
-          <div className="detail-section">
+          <div className="detail-section" id="writeups">
             <div className="section-head">
               <h3>
                 Writeups <SectionCount n={writeups.length} />

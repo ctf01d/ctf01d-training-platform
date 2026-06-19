@@ -127,11 +127,8 @@ textarea {
   gap: 4px;
   flex: 1;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow: visible;
 }
-
-.nav::-webkit-scrollbar { display: none; }
 
 .nav a {
   color: #cbd5e1;
@@ -154,6 +151,81 @@ textarea {
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
 }
 
+.nav-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-menu-trigger {
+  color: #cbd5e1;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+
+.nav-menu-trigger:hover,
+.nav-menu.is-open .nav-menu-trigger {
+  color: #fff;
+  background: rgba(255,255,255,.08);
+}
+
+.nav-menu.is-active .nav-menu-trigger,
+.nav-menu.is-open .nav-menu-trigger {
+  color: #fff;
+  background: var(--nav-soft);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+.nav-menu-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 130;
+  display: grid;
+  min-width: 180px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+
+.nav-menu.is-open .nav-menu-content {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.nav-menu-content a {
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  font-size: .88rem;
+}
+
+.nav-menu-content a:hover {
+  color: var(--primary);
+  background: var(--surface-muted);
+  text-decoration: none;
+}
+
+.nav-menu-content a.active {
+  color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: none;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -161,27 +233,154 @@ textarea {
   flex: 0 0 auto;
 }
 
-.user-menu {
-  display: flex;
+.account-menu {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
 }
 
-.user-link {
+.account-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 3px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
   color: #fff;
-  font-weight: 700;
+  font: inherit;
+  cursor: pointer;
+}
+
+.account-menu-trigger:hover,
+.account-menu.is-open .account-menu-trigger,
+.account-menu.is-active .account-menu-trigger {
+  background: var(--nav-soft);
+  border-color: rgba(255,255,255,.16);
+}
+
+.account-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #14b8a6);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.account-avatar-lg {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
 }
 
 .user-role {
   font-size: .72rem;
   line-height: 1;
-  color: #bae6fd;
-  background: rgba(8,145,178,.18);
-  border: 1px solid rgba(125,211,252,.24);
+  color: #075985;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
   padding: 5px 7px;
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   font-weight: 800;
+}
+
+.account-menu-content {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 130;
+  display: grid;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+
+.account-menu.is-open .account-menu-content {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.account-menu-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 6px;
+}
+
+.account-menu-identity {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.account-menu-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: .9rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-menu-content a,
+.account-menu-action {
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.account-menu-content a:hover,
+.account-menu-action:hover {
+  color: var(--primary);
+  background: var(--surface-muted);
+  text-decoration: none;
+}
+
+.account-menu-content a.active {
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+}
+
+.account-menu-action {
+  margin-top: 6px;
+  border-top: 1px solid var(--line-soft);
+  color: #991b1b;
+  cursor: pointer;
 }
 
 .main {
@@ -1479,6 +1678,51 @@ a:focus-visible {
   font-weight: 800;
 }
 
+.game-context-tabs {
+  position: sticky;
+  top: 72px;
+  z-index: 80;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(247, 249, 252, .94);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+}
+
+.game-context-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.game-context-tabs .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  text-decoration: none;
+}
+
+.game-context-tabs .tab:hover {
+  color: var(--primary);
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.game-context-tabs .section-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: .68rem;
+}
+
+.detail-section {
+  scroll-margin-top: 140px;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -1623,11 +1867,6 @@ a:focus-visible {
     gap: 6px;
   }
 
-  .user-link,
-  .user-role {
-    display: none;
-  }
-
   .page-header {
     flex-direction: column;
     align-items: stretch;
@@ -1715,6 +1954,20 @@ a:focus-visible {
   .nav a {
     padding: 7px 8px;
     font-size: .84rem;
+  }
+
+  .nav-menu-trigger {
+    padding: 7px 8px;
+    font-size: .84rem;
+  }
+
+  .account-menu-trigger {
+    width: 38px;
+    height: 38px;
+  }
+
+  .game-context-tabs {
+    top: 64px;
   }
 
   .page-header h1 {

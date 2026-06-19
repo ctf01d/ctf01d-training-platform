@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import * as scoreboardApi from "../api/scoreboard";
 import * as gamesApi from "../api/games";
 import type { Game } from "../api/games";
@@ -20,7 +21,12 @@ const fmtScore = (score: number) => score.toLocaleString();
 
 export default function ScoreboardPage() {
   usePageTitle("Scoreboard");
-  const [tab, setTab] = useState<"global" | "game">("global");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryGameId =
+    searchParams.get("game") ?? searchParams.get("game_id") ?? "";
+  const [tab, setTab] = useState<"global" | "game">(
+    queryGameId ? "game" : "global",
+  );
 
   const [globalEntries, setGlobalEntries] = useState<
     GlobalScoreboard["entries"]
@@ -31,7 +37,7 @@ export default function ScoreboardPage() {
   );
 
   const [games, setGames] = useState<Game[]>([]);
-  const [selectedGameId, setSelectedGameId] = useState("");
+  const [selectedGameId, setSelectedGameId] = useState(queryGameId);
   const [gameScoreboard, setGameScoreboard] = useState<Scoreboard | null>(null);
   const [gameLoading, setGameLoading] = useState(false);
   const [gameError, setGameError] = useState<{ message?: string } | null>(null);
@@ -54,6 +60,12 @@ export default function ScoreboardPage() {
     void fetchGames();
   }, [fetchGlobal, fetchGames]);
 
+  useEffect(() => {
+    if (!queryGameId || queryGameId === selectedGameId) return;
+    setSelectedGameId(queryGameId);
+    setTab("game");
+  }, [queryGameId, selectedGameId]);
+
   const fetchGameScoreboard = useCallback(async () => {
     const gid = Number(selectedGameId);
     if (!gid) {
@@ -73,18 +85,34 @@ export default function ScoreboardPage() {
     else setGameScoreboard(null);
   }, [selectedGameId, fetchGameScoreboard]);
 
+  const selectGlobalTab = () => {
+    setTab("global");
+    setSearchParams({});
+  };
+
+  const selectGameTab = () => {
+    setTab("game");
+    if (selectedGameId) setSearchParams({ game: selectedGameId });
+  };
+
+  const selectGame = (gameId: string) => {
+    setSelectedGameId(gameId);
+    if (gameId) setSearchParams({ game: gameId });
+    else setSearchParams({});
+  };
+
   return (
     <div className="page">
       <div className="tabs" role="tablist" aria-label="Scoreboard scope">
         <button
           className={`btn btn-sm ${tab === "global" ? "btn-primary" : ""}`}
-          onClick={() => setTab("global")}
+          onClick={selectGlobalTab}
         >
           Global
         </button>
         <button
           className={`btn btn-sm ${tab === "game" ? "btn-primary" : ""}`}
-          onClick={() => setTab("game")}
+          onClick={selectGameTab}
         >
           By Game
         </button>
@@ -135,7 +163,7 @@ export default function ScoreboardPage() {
           <div className="form-group">
             <select
               value={selectedGameId}
-              onChange={(e) => setSelectedGameId(e.target.value)}
+              onChange={(e) => selectGame(e.target.value)}
             >
               <option value="">Select a game...</option>
               {games.map((g) => (

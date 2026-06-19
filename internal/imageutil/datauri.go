@@ -24,9 +24,10 @@ const maxAvatarDataURIBytes = 12 << 20
 var ErrUnsupportedAvatar = errors.New("unsupported avatar reference")
 
 const (
-	dataURIScheme    = "data:"
-	base64Marker     = ";base64,"
-	pngDataURIPrefix = "data:image/png;base64,"
+	dataURIScheme               = "data:"
+	base64Marker                = ";base64,"
+	pngDataURIPrefix            = "data:image/png;base64,"
+	unsupportedAvatarPreviewLen = 16
 )
 
 // NormalizeAvatarURL canonicalises an avatar reference. Inline data: images are
@@ -87,8 +88,8 @@ func schemeOf(s string) string {
 	if u, err := url.Parse(s); err == nil && u.Scheme != "" {
 		return u.Scheme
 	}
-	if len(s) > 16 {
-		return s[:16]
+	if len(s) > unsupportedAvatarPreviewLen {
+		return s[:unsupportedAvatarPreviewLen]
 	}
 	return s
 }

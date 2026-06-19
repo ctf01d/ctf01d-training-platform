@@ -64,7 +64,7 @@ func TestNormalizeAvatarURL_PreservesAlphaAndReencodesPNG(t *testing.T) {
 }
 
 func TestNormalizeAvatarURL_ConvertsNonPNGToPNG(t *testing.T) {
-	// A data URI labelled image/jpeg but carrying PNG bytes must still come out
+	// A data URI labeled image/jpeg but carrying PNG bytes must still come out
 	// as a PNG data URI (we re-encode by decoded content, not the label).
 	in := transparentPNGDataURI(t, 64, 64, "image/jpeg")
 	out, err := NormalizeAvatarURL(&in, AvatarMaxDimension)
