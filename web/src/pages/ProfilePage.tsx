@@ -285,7 +285,7 @@ export default function ProfilePage() {
         <div className="section-head">
           <h3>Password</h3>
         </div>
-        <form onSubmit={handleChangePassword} className="edit-form">
+        <form onSubmit={handleChangePassword} className="edit-form password-form">
           <p className="section-hint">
             Setting a new password takes effect immediately. It does not affect
             the rest of your profile.
