@@ -596,6 +596,11 @@ type Pagination struct {
 	Total   int `json:"total"`
 }
 
+// PasswordUpdate defines model for PasswordUpdate.
+type PasswordUpdate struct {
+	Password string `json:"password"`
+}
+
 // ReorderRequest defines model for ReorderRequest.
 type ReorderRequest struct {
 	Items []struct {
@@ -1127,6 +1132,9 @@ type UpdateProfileJSONRequestBody = UserProfileUpdate
 // UploadProfileAvatarMultipartRequestBody defines body for UploadProfileAvatar for multipart/form-data ContentType.
 type UploadProfileAvatarMultipartRequestBody UploadProfileAvatarMultipartBody
 
+// ChangeProfilePasswordJSONRequestBody defines body for ChangeProfilePassword for application/json ContentType.
+type ChangeProfilePasswordJSONRequestBody = PasswordUpdate
+
 // CreateResultJSONRequestBody defines body for CreateResult for application/json ContentType.
 type CreateResultJSONRequestBody = ResultCreate
 
@@ -1189,6 +1197,9 @@ type UploadUserAvatarMultipartRequestBody UploadUserAvatarMultipartBody
 
 // SetUserBlockedJSONRequestBody defines body for SetUserBlocked for application/json ContentType.
 type SetUserBlockedJSONRequestBody = UserBlockUpdate
+
+// ChangeUserPasswordJSONRequestBody defines body for ChangeUserPassword for application/json ContentType.
+type ChangeUserPasswordJSONRequestBody = PasswordUpdate
 
 // UpdateUserProfileAdminJSONRequestBody defines body for UpdateUserProfileAdmin for application/json ContentType.
 type UpdateUserProfileAdminJSONRequestBody = UserProfileUpdate
@@ -1264,6 +1275,9 @@ type ServerInterface interface {
 	// Upload current user's avatar
 	// (POST /profile/avatar)
 	UploadProfileAvatar(c *gin.Context)
+	// Change current user's password
+	// (PUT /profile/password)
+	ChangeProfilePassword(c *gin.Context)
 	// List current user's active sessions
 	// (GET /profile/sessions)
 	ListProfileSessions(c *gin.Context)
@@ -1423,6 +1437,9 @@ type ServerInterface interface {
 	// Block or unblock a user
 	// (POST /users/{id}/block)
 	SetUserBlocked(c *gin.Context, id int64)
+	// Change a user's password (admin)
+	// (PUT /users/{id}/password)
+	ChangeUserPassword(c *gin.Context, id int64)
 	// Update a user's profile (admin)
 	// (PATCH /users/{id}/profile)
 	UpdateUserProfileAdmin(c *gin.Context, id int64)
@@ -1980,6 +1997,21 @@ func (siw *ServerInterfaceWrapper) UploadProfileAvatar(c *gin.Context) {
 	}
 
 	siw.Handler.UploadProfileAvatar(c)
+}
+
+// ChangeProfilePassword operation middleware
+func (siw *ServerInterfaceWrapper) ChangeProfilePassword(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ChangeProfilePassword(c)
 }
 
 // ListProfileSessions operation middleware
@@ -3381,6 +3413,33 @@ func (siw *ServerInterfaceWrapper) SetUserBlocked(c *gin.Context) {
 	siw.Handler.SetUserBlocked(c, id)
 }
 
+// ChangeUserPassword operation middleware
+func (siw *ServerInterfaceWrapper) ChangeUserPassword(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ChangeUserPassword(c, id)
+}
+
 // UpdateUserProfileAdmin operation middleware
 func (siw *ServerInterfaceWrapper) UpdateUserProfileAdmin(c *gin.Context) {
 
@@ -3652,6 +3711,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/profile", wrapper.GetProfile)
 	router.PATCH(options.BaseURL+"/profile", wrapper.UpdateProfile)
 	router.POST(options.BaseURL+"/profile/avatar", wrapper.UploadProfileAvatar)
+	router.PUT(options.BaseURL+"/profile/password", wrapper.ChangeProfilePassword)
 	router.GET(options.BaseURL+"/profile/sessions", wrapper.ListProfileSessions)
 	router.GET(options.BaseURL+"/results", wrapper.ListResults)
 	router.POST(options.BaseURL+"/results", wrapper.CreateResult)
@@ -3705,6 +3765,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/users/:id/avatar", wrapper.GetUserAvatar)
 	router.POST(options.BaseURL+"/users/:id/avatar", wrapper.UploadUserAvatar)
 	router.POST(options.BaseURL+"/users/:id/block", wrapper.SetUserBlocked)
+	router.PUT(options.BaseURL+"/users/:id/password", wrapper.ChangeUserPassword)
 	router.PATCH(options.BaseURL+"/users/:id/profile", wrapper.UpdateUserProfileAdmin)
 	router.PATCH(options.BaseURL+"/users/:id/role", wrapper.UpdateUserRole)
 	router.GET(options.BaseURL+"/users/:id/sessions", wrapper.ListUserSessions)

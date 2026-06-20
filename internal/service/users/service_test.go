@@ -127,6 +127,17 @@ func (m *mockQuerier) UpdateUserProfileAdmin(_ context.Context, arg db.UpdateUse
 	return u, nil
 }
 
+func (m *mockQuerier) UpdateUserPassword(_ context.Context, arg db.UpdateUserPasswordParams) (db.User, error) {
+	u, ok := m.users[arg.ID]
+	if !ok {
+		return db.User{}, pgx.ErrNoRows
+	}
+	u.PasswordDigest = arg.PasswordDigest
+	u.UpdatedAt = time.Now()
+	m.users[arg.ID] = u
+	return u, nil
+}
+
 func (m *mockQuerier) SetUserAvatar(_ context.Context, arg db.SetUserAvatarParams) (db.User, error) {
 	u, ok := m.users[arg.ID]
 	if !ok {
@@ -445,6 +456,64 @@ func TestUpdate_PasswordChange(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("Update password: %v", err)
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created, _ := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+	// Seed an existing profile field to prove the password change leaves it alone.
+	bio := "hello"
+	stored := q.users[created.ID]
+	stored.Bio = &bio
+	q.users[created.ID] = stored
+	oldDigest := stored.PasswordDigest
+
+	updated, err := svc.ChangePassword(context.Background(), created.ID, "newpassword")
+	if err != nil {
+		t.Fatalf("ChangePassword: %v", err)
+	}
+	if got := q.users[created.ID].PasswordDigest; got == oldDigest || got == nil {
+		t.Fatalf("password digest was not updated")
+	}
+	// Other profile fields must be left untouched.
+	if updated.Bio == nil || *updated.Bio != "hello" {
+		t.Fatalf("bio changed unexpectedly: %v", updated.Bio)
+	}
+	if updated.DisplayName != "Test" {
+		t.Fatalf("display_name changed unexpectedly: %q", updated.DisplayName)
+	}
+}
+
+func TestChangePassword_ShortPassword(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created, _ := svc.Create(context.Background(), CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	_, err := svc.ChangePassword(context.Background(), created.ID, "short")
+	if !isValidation(err) {
+		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+func TestChangePassword_NotFound(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	_, err := svc.ChangePassword(context.Background(), 999, "newpassword")
+	if !isErr(err, errs.ErrNotFound) {
+		t.Fatalf("expected not found, got %v", err)
 	}
 }
 

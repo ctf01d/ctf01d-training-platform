@@ -52,6 +52,26 @@ export interface paths {
         patch: operations["updateProfile"];
         trace?: never;
     };
+    "/profile/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change current user's password
+         * @description Change the current user's password without affecting other profile fields
+         */
+        put: operations["changeProfilePassword"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/profile/avatar": {
         parameters: {
             query?: never;
@@ -1044,6 +1064,26 @@ export interface paths {
         patch: operations["updateUserProfileAdmin"];
         trace?: never;
     };
+    "/users/{id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change a user's password (admin)
+         * @description Change a user's password without affecting other profile fields
+         */
+        put: operations["changeUserPassword"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{id}/block": {
         parameters: {
             query?: never;
@@ -1679,6 +1719,9 @@ export interface components {
             github?: string | null;
             email?: string | null;
         };
+        PasswordUpdate: {
+            password: string;
+        };
         UserBlockUpdate: {
             blocked: boolean;
         };
@@ -1873,6 +1916,30 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["User"];
                 };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    changeProfilePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordUpdate"];
+            };
+        };
+        responses: {
+            /** @description Password changed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["ValidationError"];
@@ -3629,6 +3696,33 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["User"];
                 };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    changeUserPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordUpdate"];
+            };
+        };
+        responses: {
+            /** @description Password changed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];

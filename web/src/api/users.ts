@@ -31,6 +31,10 @@ export async function updateProfile(body: UserProfileUpdate) {
   return client.PATCH("/profile", { body });
 }
 
+export async function changeProfilePassword(password: string) {
+  return client.PUT("/profile/password", { body: { password } });
+}
+
 export async function listProfileSessions() {
   return client.GET("/profile/sessions");
 }
@@ -69,6 +73,13 @@ export async function updateUserProfileAdmin(
   return client.PATCH("/users/{id}/profile", {
     params: { path: { id } },
     body,
+  });
+}
+
+export async function changeUserPassword(id: number, password: string) {
+  return client.PUT("/users/{id}/password", {
+    params: { path: { id } },
+    body: { password },
   });
 }
 

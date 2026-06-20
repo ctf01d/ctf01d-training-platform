@@ -51,6 +51,13 @@ SET display_name = $2,
 WHERE id = $1
 RETURNING *;
 
+-- name: UpdateUserPassword :one
+UPDATE users
+SET password_digest = $2,
+    updated_at = now()
+WHERE id = $1
+RETURNING *;
+
 -- name: SetUserAvatar :one
 UPDATE users
 SET avatar_url = $2,

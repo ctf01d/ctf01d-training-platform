@@ -1041,6 +1041,12 @@ a:focus-visible {
   color: #166534;
 }
 
+.section-hint {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
 .card,
 .detail-card,
 .detail-section,

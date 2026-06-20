@@ -323,6 +323,44 @@ func (q *Queries) SetUserLastLogin(ctx context.Context, arg SetUserLastLoginPara
 	return i, err
 }
 
+const updateUserPassword = `-- name: UpdateUserPassword :one
+UPDATE users
+SET password_digest = $2,
+    updated_at = now()
+WHERE id = $1
+RETURNING id, user_name, display_name, role, rating, avatar_url, password_digest, created_at, updated_at, bio, telegram, github, email, is_blocked, blocked_at, last_login_ip, last_login_at
+`
+
+type UpdateUserPasswordParams struct {
+	ID             int64   `json:"id"`
+	PasswordDigest *string `json:"password_digest"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserPassword, arg.ID, arg.PasswordDigest)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.UserName,
+		&i.DisplayName,
+		&i.Role,
+		&i.Rating,
+		&i.AvatarUrl,
+		&i.PasswordDigest,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Bio,
+		&i.Telegram,
+		&i.Github,
+		&i.Email,
+		&i.IsBlocked,
+		&i.BlockedAt,
+		&i.LastLoginIp,
+		&i.LastLoginAt,
+	)
+	return i, err
+}
+
 const updateUserProfile = `-- name: UpdateUserProfile :one
 UPDATE users
 SET display_name = $2,

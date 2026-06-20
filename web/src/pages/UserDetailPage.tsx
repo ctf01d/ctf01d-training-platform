@@ -21,7 +21,6 @@ import { useAuth } from "../auth/AuthContext";
 
 type ProfileForm = {
   display_name: string;
-  password: string;
   bio: string;
   telegram: string;
   github: string;
@@ -31,7 +30,6 @@ type ProfileForm = {
 function emptyProfileForm(): ProfileForm {
   return {
     display_name: "",
-    password: "",
     bio: "",
     telegram: "",
     github: "",
@@ -53,6 +51,10 @@ export default function UserDetailPage() {
   const [form, setForm] = useState<ProfileForm>(emptyProfileForm());
   const [saving, setSaving] = useState(false);
 
+  const [passwordForm, setPasswordForm] = useState({ password: "", confirm: "" });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+
   const [sessions, setSessions] = useState<UserSession[]>([]);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -66,7 +68,6 @@ export default function UserDetailPage() {
     setUser(u);
     setForm({
       display_name: u.display_name ?? "",
-      password: "",
       bio: u.bio ?? "",
       telegram: u.telegram ?? "",
       github: u.github ?? "",
@@ -96,6 +97,7 @@ export default function UserDetailPage() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setSuccess(null);
     const body: usersApi.UserProfileUpdate = {
       display_name: form.display_name,
       bio: form.bio || null,
@@ -103,7 +105,6 @@ export default function UserDetailPage() {
       github: form.github || null,
       email: form.email || null,
     };
-    if (form.password) body.password = form.password;
     const { data, error: err } = await usersApi.updateUserProfileAdmin(
       userId,
       body,
@@ -116,6 +117,30 @@ export default function UserDetailPage() {
     if (data) {
       applyUser(data);
     }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccess(null);
+    if (passwordForm.password !== passwordForm.confirm) {
+      setError({ message: "Passwords do not match." });
+      return;
+    }
+    setChangingPassword(true);
+    setError(null);
+    // Dedicated endpoint: only the password changes, no other profile fields are
+    // touched, so the open profile form is left untouched.
+    const { error: err } = await usersApi.changeUserPassword(
+      userId,
+      passwordForm.password,
+    );
+    setChangingPassword(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setPasswordForm({ password: "", confirm: "" });
+    setSuccess("Password updated successfully.");
   };
 
   const handleRoleChange = async (role: UserRole) => {
@@ -195,6 +220,7 @@ export default function UserDetailPage() {
   return (
     <div className="page detail-page">
       <ErrorDisplay error={error} onRetry={fetchUser} />
+      {success && <div className="success-message">{success}</div>}
 
       <DetailHero
         kicker={`User #${user.id}`}
@@ -282,17 +308,6 @@ export default function UserDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>New Password</label>
-            <input
-              type="password"
-              placeholder="Leave blank to keep current"
-              value={form.password}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, password: e.target.value }))
-              }
-            />
-          </div>
-          <div className="form-group">
             <label>About</label>
             <textarea
               value={form.bio}
@@ -330,6 +345,57 @@ export default function UserDetailPage() {
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? "Saving..." : "Save profile"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="detail-section">
+        <div className="section-head">
+          <h3>Password</h3>
+        </div>
+        <form onSubmit={handleChangePassword} className="edit-form">
+          <p className="section-hint">
+            Setting a new password takes effect immediately. It does not affect
+            the rest of the profile.
+          </p>
+          <div className="form-group">
+            <label>New Password</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              minLength={6}
+              value={passwordForm.password}
+              onChange={(e) =>
+                setPasswordForm((f) => ({ ...f, password: e.target.value }))
+              }
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              minLength={6}
+              value={passwordForm.confirm}
+              onChange={(e) =>
+                setPasswordForm((f) => ({ ...f, confirm: e.target.value }))
+              }
+              required
+            />
+          </div>
+          <div className="form-actions">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={
+                changingPassword ||
+                !passwordForm.password ||
+                !passwordForm.confirm
+              }
+            >
+              {changingPassword ? "Updating..." : "Change password"}
             </button>
           </div>
         </form>

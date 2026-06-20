@@ -89,6 +89,7 @@ type Querier interface {
 	CountUsers(ctx context.Context, searchQuery *string) (int64, error)
 	UpdateUserProfile(ctx context.Context, arg db.UpdateUserProfileParams) (db.User, error)
 	UpdateUserProfileAdmin(ctx context.Context, arg db.UpdateUserProfileAdminParams) (db.User, error)
+	UpdateUserPassword(ctx context.Context, arg db.UpdateUserPasswordParams) (db.User, error)
 	UpdateUserRole(ctx context.Context, arg db.UpdateUserRoleParams) (db.User, error)
 	UpdateUserRating(ctx context.Context, arg db.UpdateUserRatingParams) (db.User, error)
 	SetUserAvatar(ctx context.Context, arg db.SetUserAvatarParams) (db.User, error)
@@ -291,6 +292,28 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 		return nil, err
 	}
 
+	u := fromDB(dbUser)
+	return &u, nil
+}
+
+// ChangePassword sets a new password for a user, leaving every other field
+// untouched. It is intentionally separate from the profile update so changing a
+// password — a critical action — can never clobber other profile data.
+func (s *Service) ChangePassword(ctx context.Context, id int64, password string) (*User, error) {
+	if len(password) < minPasswordLength {
+		return nil, errs.NewValidationError(map[string]string{fieldPassword: "must be at least 6 characters"})
+	}
+	hash, err := auth.HashPassword(password)
+	if err != nil {
+		return nil, err
+	}
+	dbUser, err := s.q.UpdateUserPassword(ctx, db.UpdateUserPasswordParams{
+		ID:             id,
+		PasswordDigest: &hash,
+	})
+	if err != nil {
+		return nil, mapNotFound(err)
+	}
 	u := fromDB(dbUser)
 	return &u, nil
 }

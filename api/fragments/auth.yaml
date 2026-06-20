@@ -103,6 +103,29 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
       description: Update current user profile
+  /profile/password:
+    put:
+      operationId: changeProfilePassword
+      tags:
+        - auth
+      summary: Change current user's password
+      x-required-role: authenticated
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdate'
+      responses:
+        '204':
+          description: Password changed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      description: Change the current user's password without affecting other profile fields
   /profile/avatar:
     post:
       operationId: uploadProfileAvatar

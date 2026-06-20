@@ -116,6 +116,29 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
       description: Update current user profile
+  /profile/password:
+    put:
+      operationId: changeProfilePassword
+      tags:
+        - auth
+      summary: Change current user's password
+      x-required-role: authenticated
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdate'
+      responses:
+        '204':
+          description: Password changed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      description: Change the current user's password without affecting other profile fields
   /profile/avatar:
     post:
       operationId: uploadProfileAvatar
@@ -2096,6 +2119,38 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Update a user's profile fields and password
+  /users/{id}/password:
+    put:
+      operationId: changeUserPassword
+      tags:
+        - users
+      summary: Change a user's password (admin)
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdate'
+      responses:
+        '204':
+          description: Password changed
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Change a user's password without affecting other profile fields
   /users/{id}/block:
     post:
       operationId: setUserBlocked
@@ -3517,6 +3572,14 @@ components:
         email:
           type: string
           nullable: true
+    PasswordUpdate:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          minLength: 6
     UserBlockUpdate:
       type: object
       required:

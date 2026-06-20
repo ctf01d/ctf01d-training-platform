@@ -49,6 +49,25 @@ func (h *Handler) HandleUpdateUserProfileAdmin(c *gin.Context) {
 	c.JSON(http.StatusOK, userToHTTPPrivate(*user))
 }
 
+func (h *Handler) HandleChangeUserPassword(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+
+	req, ok := bindJSON[httpserver.PasswordUpdate](c)
+	if !ok {
+		return
+	}
+
+	if _, err := h.users.ChangePassword(c.Request.Context(), id, req.Password); err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func (h *Handler) HandleSetUserBlocked(c *gin.Context) {
 	id, ok := parseIDParam(c, "id")
 	if !ok {
@@ -231,6 +250,11 @@ func (h *Handler) listUserSessions(c *gin.Context, id int64) {
 func (h *Handler) UpdateUserProfileAdmin(c *gin.Context, id int64) {
 	c.Set("id", id)
 	h.HandleUpdateUserProfileAdmin(c)
+}
+
+func (h *Handler) ChangeUserPassword(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleChangeUserPassword(c)
 }
 
 func (h *Handler) SetUserBlocked(c *gin.Context, id int64) {

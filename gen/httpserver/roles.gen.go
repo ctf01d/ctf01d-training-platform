@@ -43,4 +43,5 @@ var OperationRequiredRoles = map[string]string{
 	"POST /users":                              "admin",
 	"POST /users/{id}/avatar":                  "admin",
 	"POST /users/{id}/block":                   "admin",
+	"PUT /users/{id}/password":                 "admin",
 }

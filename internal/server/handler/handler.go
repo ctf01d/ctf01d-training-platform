@@ -196,6 +196,26 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, userToHTTPPrivate(*user))
 }
 
+func (h *Handler) ChangeProfilePassword(c *gin.Context) {
+	userID, ok := middleware.CurrentUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
+		return
+	}
+
+	req, ok := bindJSON[httpserver.PasswordUpdate](c)
+	if !ok {
+		return
+	}
+
+	if _, err := h.users.ChangePassword(c.Request.Context(), userID, req.Password); err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func (h *Handler) HandleListUsers(c *gin.Context) {
 	page := 1
 	perPage := 20
