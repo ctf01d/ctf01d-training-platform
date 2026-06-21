@@ -10,6 +10,7 @@ export function DetailHero({
   actions,
   avatarUrl,
   avatarText,
+  avatarMode = "logo",
 }: {
   kicker: ReactNode;
   title: string;
@@ -18,6 +19,7 @@ export function DetailHero({
   actions?: ReactNode;
   avatarUrl?: string | null;
   avatarText?: string;
+  avatarMode?: "logo" | "photo";
 }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -28,7 +30,13 @@ export function DetailHero({
   const initial = (avatarText ?? title).trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <section className="detail-hero">
+    <section
+      className={
+        avatarMode === "photo"
+          ? "detail-hero detail-hero--photo"
+          : "detail-hero"
+      }
+    >
       <div className="detail-hero-content">
         <div className="detail-hero-kicker">{kicker}</div>
         <h1>{title}</h1>

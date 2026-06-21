@@ -167,6 +167,7 @@ export default function ProfilePage() {
         title={title}
         avatarUrl={user.avatar_url}
         avatarText={title}
+        avatarMode="photo"
         badges={<span className={`badge badge-${user.role}`}>{user.role}</span>}
         summary={[
           { label: "Username", value: `@${user.user_name}` },

@@ -771,6 +771,12 @@ a:focus-visible {
   object-fit: contain;
 }
 
+.detail-hero--photo .detail-hero-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .detail-hero-logo span {
   width: 100%;
   height: 100%;

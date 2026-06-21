@@ -227,6 +227,7 @@ export default function UserDetailPage() {
         title={title}
         avatarUrl={user.avatar_url}
         avatarText={title}
+        avatarMode="photo"
         summary={[
           { label: "Username", value: `@${user.user_name}` },
           { label: "Role", value: user.role },
