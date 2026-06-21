@@ -106,7 +106,10 @@ func NewService(q Querier) *Service {
 	return &Service{q: q}
 }
 
-const minPasswordLength = 6
+const (
+	minPasswordLength       = 6
+	passwordTooShortMessage = "must be at least 6 characters"
+)
 
 func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error) {
 	if params.UserName == "" || !userNameRegex.MatchString(params.UserName) {
@@ -121,7 +124,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*User, error
 	}
 	if len(params.Password) < minPasswordLength {
 		return nil, errs.NewValidationError(map[string]string{
-			fieldPassword: "must be at least 6 characters",
+			fieldPassword: passwordTooShortMessage,
 		})
 	}
 
@@ -226,8 +229,8 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*U
 
 	var passwordDigest *string
 	if params.Password != nil {
-		if *params.Password == "" || len(*params.Password) < 6 {
-			return nil, errs.NewValidationError(map[string]string{fieldPassword: "password must be at least 6 characters"})
+		if len(*params.Password) < minPasswordLength {
+			return nil, errs.NewValidationError(map[string]string{fieldPassword: passwordTooShortMessage})
 		}
 		hash, err := auth.HashPassword(*params.Password)
 		if err != nil {
@@ -269,7 +272,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 	var passwordDigest *string
 	if params.Password != nil {
 		if len(*params.Password) < minPasswordLength {
-			return nil, errs.NewValidationError(map[string]string{fieldPassword: "must be at least 6 characters"})
+			return nil, errs.NewValidationError(map[string]string{fieldPassword: passwordTooShortMessage})
 		}
 		hash, err := auth.HashPassword(*params.Password)
 		if err != nil {
@@ -301,7 +304,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 // password — a critical action — can never clobber other profile data.
 func (s *Service) ChangePassword(ctx context.Context, id int64, password string) (*User, error) {
 	if len(password) < minPasswordLength {
-		return nil, errs.NewValidationError(map[string]string{fieldPassword: "must be at least 6 characters"})
+		return nil, errs.NewValidationError(map[string]string{fieldPassword: passwordTooShortMessage})
 	}
 	hash, err := auth.HashPassword(password)
 	if err != nil {

@@ -218,8 +218,15 @@ func TestAuthFlow(t *testing.T) {
 		t.Fatalf("update user: %d %s", w.Code, w.Body.String())
 	}
 
+	w = makeReq(t, engine, http.MethodPut, fmt.Sprintf("/api/v1/users/%d/password", playerID), map[string]interface{}{
+		"password": "adminset123",
+	}, loginToken)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("admin change user password: %d %s", w.Code, w.Body.String())
+	}
+
 	w = makeReq(t, engine, http.MethodPost, "/api/v1/session", map[string]interface{}{
-		"user_name": "player1", "password": "password123",
+		"user_name": "player1", "password": "adminset123",
 	}, "")
 	if w.Code != http.StatusOK {
 		t.Fatalf("login player: %d %s", w.Code, w.Body.String())
@@ -258,6 +265,20 @@ func TestAuthFlow(t *testing.T) {
 	}
 	if !foundCurrentSession {
 		t.Error("expected current session in profile sessions")
+	}
+
+	w = makeReq(t, engine, http.MethodPut, "/api/v1/profile/password", map[string]interface{}{
+		"password": "profile123",
+	}, playerToken)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("change own password: %d %s", w.Code, w.Body.String())
+	}
+
+	w = makeReq(t, engine, http.MethodPost, "/api/v1/session", map[string]interface{}{
+		"user_name": "player1", "password": "profile123",
+	}, "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("login player with changed password: %d %s", w.Code, w.Body.String())
 	}
 
 	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/users/%d", playerID), nil, playerToken)
