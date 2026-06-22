@@ -2,40 +2,29 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as usersApi from "../api/users";
 import type { User, UserSession, UserRole } from "../api/users";
-import {
-  ErrorDisplay,
-  ActionButton,
-  handleApiError,
-} from "../components/ErrorDisplay";
+import { ErrorDisplay, handleApiError } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
 import {
-  DetailHero,
   InfoGroups,
   InfoGroup,
   InfoRow,
   SectionCount,
   formatDateTime,
-  formatRelativeTime,
 } from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
-
-type ProfileForm = {
-  display_name: string;
-  bio: string;
-  telegram: string;
-  github: string;
-  email: string;
-};
-
-function emptyProfileForm(): ProfileForm {
-  return {
-    display_name: "",
-    bio: "",
-    telegram: "",
-    github: "",
-    email: "",
-  };
-}
+import {
+  UserDetailHero,
+  UserPasswordForm,
+  UserProfileEditForm,
+  UserSessionsTable,
+} from "../components/UserProfileBlocks";
+import {
+  emptyUserProfileForm,
+  profileUpdateFromForm,
+  userProfileFormFromUser,
+  type UserPasswordFormState,
+  type UserProfileFormState,
+} from "../components/UserProfileModel";
 
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,10 +37,15 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
 
-  const [form, setForm] = useState<ProfileForm>(emptyProfileForm());
+  const [form, setForm] = useState<UserProfileFormState>(
+    emptyUserProfileForm(),
+  );
   const [saving, setSaving] = useState(false);
 
-  const [passwordForm, setPasswordForm] = useState({ password: "", confirm: "" });
+  const [passwordForm, setPasswordForm] = useState<UserPasswordFormState>({
+    password: "",
+    confirm: "",
+  });
   const [changingPassword, setChangingPassword] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -66,13 +60,7 @@ export default function UserDetailPage() {
 
   const applyUser = useCallback((u: User) => {
     setUser(u);
-    setForm({
-      display_name: u.display_name ?? "",
-      bio: u.bio ?? "",
-      telegram: u.telegram ?? "",
-      github: u.github ?? "",
-      email: u.email ?? "",
-    });
+    setForm(userProfileFormFromUser(u));
   }, []);
 
   const fetchUser = useCallback(async () => {
@@ -98,13 +86,7 @@ export default function UserDetailPage() {
     setSaving(true);
     setError(null);
     setSuccess(null);
-    const body: usersApi.UserProfileUpdate = {
-      display_name: form.display_name,
-      bio: form.bio || null,
-      telegram: form.telegram || null,
-      github: form.github || null,
-      email: form.email || null,
-    };
+    const body = profileUpdateFromForm(form);
     const { data, error: err } = await usersApi.updateUserProfileAdmin(
       userId,
       body,
@@ -215,25 +197,13 @@ export default function UserDetailPage() {
   if (loading) return <div className="loading">Loading...</div>;
   if (!user) return <ErrorDisplay error={error} onRetry={fetchUser} />;
 
-  const title = user.display_name || user.user_name;
-
   return (
     <div className="page detail-page">
       <ErrorDisplay error={error} onRetry={fetchUser} />
       {success && <div className="success-message">{success}</div>}
 
-      <DetailHero
-        kicker={`User #${user.id}`}
-        title={title}
-        avatarUrl={user.avatar_url}
-        avatarText={title}
-        avatarMode="photo"
-        summary={[
-          { label: "Username", value: `@${user.user_name}` },
-          { label: "Role", value: user.role },
-          { label: "Rating", value: `${user.rating}` },
-          { label: "Status", value: user.is_blocked ? "Blocked" : "Active" },
-        ]}
+      <UserDetailHero
+        user={user}
         actions={
           <>
             <button className="btn btn-sm" onClick={() => navigate("/users")}>
@@ -297,109 +267,24 @@ export default function UserDetailPage() {
         <div className="section-head">
           <h3>Profile</h3>
         </div>
-        <form onSubmit={handleSaveProfile} className="edit-form">
-          <div className="form-group">
-            <label>Display Name</label>
-            <input
-              value={form.display_name}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, display_name: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>About</label>
-            <textarea
-              value={form.bio}
-              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-            />
-          </div>
-          <div className="form-group">
-            <label>Telegram</label>
-            <input
-              value={form.telegram}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, telegram: e.target.value }))
-              }
-            />
-          </div>
-          <div className="form-group">
-            <label>GitHub</label>
-            <input
-              value={form.github}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, github: e.target.value }))
-              }
-            />
-          </div>
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, email: e.target.value }))
-              }
-            />
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save profile"}
-            </button>
-          </div>
-        </form>
+        <UserProfileEditForm
+          form={form}
+          setForm={setForm}
+          onSubmit={handleSaveProfile}
+          saving={saving}
+        />
       </div>
 
       <div className="detail-section">
         <div className="section-head">
           <h3>Password</h3>
         </div>
-        <form onSubmit={handleChangePassword} className="edit-form password-form">
-          <p className="section-hint">
-            Setting a new password takes effect immediately. It does not affect
-            the rest of the profile.
-          </p>
-          <div className="form-group">
-            <label>New Password</label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              minLength={6}
-              value={passwordForm.password}
-              onChange={(e) =>
-                setPasswordForm((f) => ({ ...f, password: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Confirm Password</label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              minLength={6}
-              value={passwordForm.confirm}
-              onChange={(e) =>
-                setPasswordForm((f) => ({ ...f, confirm: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={
-                changingPassword ||
-                !passwordForm.password ||
-                !passwordForm.confirm
-              }
-            >
-              {changingPassword ? "Updating..." : "Change password"}
-            </button>
-          </div>
-        </form>
+        <UserPasswordForm
+          form={passwordForm}
+          setForm={setPasswordForm}
+          onSubmit={handleChangePassword}
+          changing={changingPassword}
+        />
       </div>
 
       <div className="detail-section">
@@ -408,49 +293,7 @@ export default function UserDetailPage() {
             Active Sessions <SectionCount n={sessions.length} />
           </h3>
         </div>
-        {sessions.length > 0 ? (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>IP address</th>
-                <th>Client</th>
-                <th>Last seen</th>
-                <th>Started</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((s) => (
-                <tr key={s.id}>
-                  <td>
-                    {s.ip_address ?? "—"}
-                    {s.current && (
-                      <span className="badge" style={{ marginLeft: "0.5rem" }}>
-                        current
-                      </span>
-                    )}
-                  </td>
-                  <td title={s.user_agent ?? ""}>
-                    {shortUserAgent(s.user_agent)}
-                  </td>
-                  <td>{formatRelativeTime(s.last_seen_at)}</td>
-                  <td>{formatDateTime(s.created_at)}</td>
-                  <td>
-                    <ActionButton
-                      onClick={() => handleRevokeSession(s.id)}
-                      variant="danger"
-                      confirm="Revoke this session?"
-                    >
-                      Revoke
-                    </ActionButton>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="section-empty">No active sessions.</p>
-        )}
+        <UserSessionsTable sessions={sessions} onRevoke={handleRevokeSession} />
       </div>
 
       <div className="detail-section">
@@ -505,9 +348,4 @@ export default function UserDetailPage() {
       </div>
     </div>
   );
-}
-
-function shortUserAgent(ua?: string | null): string {
-  if (!ua) return "—";
-  return ua.length > 40 ? `${ua.slice(0, 40)}…` : ua;
 }
