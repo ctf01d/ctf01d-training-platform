@@ -366,15 +366,6 @@ func (h *Handler) HandleUpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	req, ok := bindJSON[httpserver.UserRoleUpdate](c)
-	if !ok {
-		return
-	}
-	if !req.Role.Valid() {
-		respondError(c, errs.NewValidationError(map[string]string{"role": "must be one of guest, player, admin"}))
-		return
-	}
-
 	adminID, ok := middleware.CurrentUserID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
@@ -382,6 +373,15 @@ func (h *Handler) HandleUpdateUserRole(c *gin.Context) {
 	}
 	if adminID == id {
 		c.JSON(http.StatusForbidden, errorResponse{Code: codeForbidden, Message: "you cannot change your own role"})
+		return
+	}
+
+	req, ok := bindJSON[httpserver.UserRoleUpdate](c)
+	if !ok {
+		return
+	}
+	if !req.Role.Valid() {
+		respondError(c, errs.NewValidationError(map[string]string{"role": "must be one of guest, player, admin"}))
 		return
 	}
 

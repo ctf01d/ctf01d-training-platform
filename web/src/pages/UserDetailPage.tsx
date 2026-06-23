@@ -98,8 +98,8 @@ export default function UserDetailPage() {
     }
     if (data) {
       applyUser(data);
+      setSuccess("Profile updated successfully.");
     }
-    setSuccess("Profile updated successfully.");
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -129,6 +129,7 @@ export default function UserDetailPage() {
   const handleRoleChange = async (role: UserRole) => {
     if (userId === currentUser?.id) return;
     setError(null);
+    setSuccess(null);
     const { data, error: err } = await usersApi.updateUserRole(userId, role);
     if (err) {
       setError(err);
@@ -140,6 +141,7 @@ export default function UserDetailPage() {
   const handleToggleBlock = async () => {
     if (!user) return;
     setError(null);
+    setSuccess(null);
     const { data, error: err } = await usersApi.setUserBlocked(
       userId,
       !user.is_blocked,
