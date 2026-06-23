@@ -2,7 +2,7 @@
   email {$ACME_EMAIL}
 }
 
-ctf01d-training-platform.ru, www.ctf01d-training-platform.ru {
+ctf01d-keva.ru, www.ctf01d-keva.ru {
   encode gzip zstd
 
   @health path /healthz

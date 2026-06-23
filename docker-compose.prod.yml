@@ -28,7 +28,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_TTL_HOURS: "${JWT_TTL_HOURS:-24}"
       LOG_LEVEL: "${LOG_LEVEL:-info}"
-      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-https://ctf01d-training-platform.ru}"
+      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-https://ctf01d-keva.ru}"
       STORAGE_DIR: /data/storage
       STORAGE_MAX_UPLOAD_BYTES: "${STORAGE_MAX_UPLOAD_BYTES:-209715200}"
       RUN_MIGRATIONS: "${RUN_MIGRATIONS:-true}"
