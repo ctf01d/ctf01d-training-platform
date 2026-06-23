@@ -1639,28 +1639,69 @@ a:focus-visible {
   padding: 18px;
 }
 
+.import-wizard-top {
+  display: grid;
+  grid-template-columns: minmax(128px, max-content) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
 .import-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(112px, 1fr));
+  align-items: stretch;
+  min-width: 0;
+  isolation: isolate;
 }
 
 .import-step {
-  min-width: 92px;
-  padding: 7px 10px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 28px 8px 20px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
   background: var(--surface-muted);
   color: var(--muted);
   font-size: .82rem;
   font-weight: 800;
+  line-height: 1;
   text-align: center;
+  white-space: nowrap;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%);
+  z-index: 1;
+}
+
+.import-step + .import-step {
+  margin-left: -17px;
+  padding-left: 32px;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%, 18px 50%);
+}
+
+.import-step:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.import-step:last-child {
+  padding-right: 20px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 18px 50%);
 }
 
 .import-step.is-active {
   border-color: #bfdbfe;
   background: var(--primary-soft);
   color: var(--primary-strong);
+  z-index: 3;
+}
+
+.import-step.is-complete {
+  border-color: #bbf7d0;
+  background: #dcfce7;
+  color: #166534;
+  z-index: 2;
 }
 
 .import-source-tabs {
@@ -2157,6 +2198,16 @@ a:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .import-wizard-top {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .import-source-tabs {
+    justify-content: flex-start;
+  }
+
   .games-page .card-grid,
   .universities-page .card-grid,
   .game-card {
@@ -2251,6 +2302,24 @@ a:focus-visible {
   .import-preview-meta,
   .import-check {
     grid-template-columns: 1fr;
+  }
+
+  .import-steps {
+    grid-template-columns: repeat(3, minmax(82px, 1fr));
+  }
+
+  .import-step {
+    min-height: 38px;
+    padding: 8px 22px 8px 12px;
+    font-size: .72rem;
+  }
+
+  .import-step + .import-step {
+    padding-left: 26px;
+  }
+
+  .import-step:last-child {
+    padding-right: 12px;
   }
 
   .detail-card,

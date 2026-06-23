@@ -284,39 +284,51 @@ export default function ServicesPage() {
           onSubmit={(e) => void handlePreviewImport(e)}
           className="import-wizard"
         >
-          <div className="import-steps" aria-label="Import steps">
-            <span className="import-step is-active">Source</span>
-            <span className={`import-step ${preview ? "is-active" : ""}`}>
-              Validate
-            </span>
-            <span
-              className={`import-step ${preview?.valid ? "is-active" : ""}`}
-            >
-              Import
-            </span>
-          </div>
+          <div className="import-wizard-top">
+            <div className="import-source-tabs">
+              <button
+                type="button"
+                className={`tab ${importSource === "github" ? "active" : ""}`}
+                onClick={() => {
+                  setImportSource("github");
+                  resetImportPreview();
+                }}
+              >
+                GitHub
+              </button>
+              <button
+                type="button"
+                className={`tab ${importSource === "zip" ? "active" : ""}`}
+                onClick={() => {
+                  setImportSource("zip");
+                  resetImportPreview();
+                }}
+              >
+                ZIP
+              </button>
+            </div>
 
-          <div className="import-source-tabs">
-            <button
-              type="button"
-              className={`tab ${importSource === "github" ? "active" : ""}`}
-              onClick={() => {
-                setImportSource("github");
-                resetImportPreview();
-              }}
-            >
-              GitHub
-            </button>
-            <button
-              type="button"
-              className={`tab ${importSource === "zip" ? "active" : ""}`}
-              onClick={() => {
-                setImportSource("zip");
-                resetImportPreview();
-              }}
-            >
-              ZIP
-            </button>
+            <div className="import-steps" aria-label="Import steps">
+              <span
+                className={`import-step ${
+                  preview ? "is-complete" : "is-active"
+                }`}
+              >
+                Source
+              </span>
+              <span
+                className={`import-step ${
+                  preview?.valid ? "is-complete" : preview ? "is-active" : ""
+                }`}
+              >
+                Validate
+              </span>
+              <span
+                className={`import-step ${preview?.valid ? "is-active" : ""}`}
+              >
+                Import
+              </span>
+            </div>
           </div>
 
           {importSource === "github" ? (
