@@ -25,6 +25,15 @@ const (
 	entryReadOverhead  = 1
 	summaryMaxLength   = 400
 	fieldValueMaxChars = 200
+
+	previewRequirementsCapacity = 10
+
+	sourceGithub = "github"
+	sourceZip    = "zip"
+
+	fieldArchive = "archive"
+	fieldRepoURL = "repo_url"
+	fieldName    = "name"
 )
 
 type BundleMetadata struct {
@@ -132,50 +141,7 @@ func inspectSourceLayout(zr *zip.Reader, source importSourceInfo) sourceLayout {
 
 	checkerSeen := make(map[string]bool)
 	for _, f := range zr.File {
-		name := strings.TrimPrefix(f.Name, "/")
-		if layout.RootPrefix != "" {
-			if !strings.HasPrefix(name, layout.RootPrefix) {
-				continue
-			}
-			name = strings.TrimPrefix(name, layout.RootPrefix)
-		}
-
-		rel := safeRelPath(name)
-		if rel == "" {
-			continue
-		}
-		parts := strings.Split(rel, "/")
-		top := parts[0]
-		if top == "" {
-			continue
-		}
-
-		if len(parts) == 1 && !f.FileInfo().IsDir() && isReadmeName(top) {
-			layout.HasRootReadme = true
-		}
-
-		switch {
-		case top == kindVulnService:
-			layout.HasNewService = true
-			if len(parts) == 2 && !f.FileInfo().IsDir() && isComposeName(parts[1]) {
-				layout.ComposeFile = strings.Join(parts, "/")
-			}
-		case top == kindService:
-			layout.HasOldService = true
-		case top == kindChecker:
-			layout.HasOldChecker = true
-		case top == kindWriteups:
-			layout.HasWriteups = true
-		case top == kindExploits:
-			layout.HasExploits = true
-		case top == kindVulnServiceDev:
-			layout.HasDevDir = true
-		case strings.HasPrefix(top, checkerDirPrefix):
-			if !checkerSeen[top] {
-				checkerSeen[top] = true
-				layout.CheckerDirs = append(layout.CheckerDirs, top)
-			}
-		}
+		layout.applyEntry(f, checkerSeen)
 	}
 
 	sort.Strings(layout.CheckerDirs)
@@ -213,6 +179,53 @@ func inspectSourceLayout(zr *zip.Reader, source importSourceInfo) sourceLayout {
 	}
 
 	return layout
+}
+
+func (layout *sourceLayout) applyEntry(f *zip.File, checkerSeen map[string]bool) {
+	name := strings.TrimPrefix(f.Name, "/")
+	if layout.RootPrefix != "" {
+		if !strings.HasPrefix(name, layout.RootPrefix) {
+			return
+		}
+		name = strings.TrimPrefix(name, layout.RootPrefix)
+	}
+
+	rel := safeRelPath(name)
+	if rel == "" {
+		return
+	}
+	parts := strings.Split(rel, "/")
+	top := parts[0]
+	if top == "" {
+		return
+	}
+
+	if len(parts) == 1 && !f.FileInfo().IsDir() && isReadmeName(top) {
+		layout.HasRootReadme = true
+	}
+
+	switch {
+	case top == kindVulnService:
+		layout.HasNewService = true
+		if len(parts) == 2 && !f.FileInfo().IsDir() && isComposeName(parts[1]) {
+			layout.ComposeFile = strings.Join(parts, "/")
+		}
+	case top == kindService:
+		layout.HasOldService = true
+	case top == kindChecker:
+		layout.HasOldChecker = true
+	case top == kindWriteups:
+		layout.HasWriteups = true
+	case top == kindExploits:
+		layout.HasExploits = true
+	case top == kindVulnServiceDev:
+		layout.HasDevDir = true
+	case strings.HasPrefix(top, checkerDirPrefix):
+		if !checkerSeen[top] {
+			checkerSeen[top] = true
+			layout.CheckerDirs = append(layout.CheckerDirs, top)
+		}
+	}
 }
 
 func inspectSourceLayoutFromBytes(zipBytes []byte, source importSourceInfo) (sourceLayout, error) {

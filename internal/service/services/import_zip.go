@@ -9,10 +9,10 @@ import (
 
 func (s *ImportService) ImportFromZipUpload(ctx context.Context, zipBytes []byte, isAdmin bool) (*ImportResult, error) {
 	if len(zipBytes) == 0 {
-		return nil, errs.NewValidationError(map[string]string{"archive": "file is required"})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: "file is required"})
 	}
 	if err := validateZipBytes(zipBytes); err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("invalid zip: %v", err)})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: fmt.Sprintf("invalid zip: %v", err)})
 	}
 	return s.ImportFromZip(ctx, zipBytes, isAdmin)
 }

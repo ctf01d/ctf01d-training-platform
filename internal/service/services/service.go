@@ -236,7 +236,7 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isA
 	name := current.Name
 	if params.Name != nil {
 		if *params.Name == "" {
-			return nil, errs.NewValidationError(map[string]string{"name": "must be non-empty"})
+			return nil, errs.NewValidationError(map[string]string{fieldName: "must be non-empty"})
 		}
 		name = *params.Name
 	}

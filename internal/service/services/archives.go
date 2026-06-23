@@ -342,7 +342,7 @@ func (s *ArchiveService) saveUploaded(ctx context.Context, r io.Reader, key stri
 	}
 	if !bytes.Equal(header[:n], zipMagic) {
 		return storage.FileInfo{}, errs.NewValidationError(map[string]string{
-			"archive": "file is not a valid ZIP archive",
+			fieldArchive: "file is not a valid ZIP archive",
 		})
 	}
 

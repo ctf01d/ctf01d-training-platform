@@ -87,6 +87,8 @@ func TestHTTPRouteCatalogIsCoveredByIntegrationSuite(t *testing.T) {
 		"POST /api/v1/services":                         true,
 		"POST /api/v1/services/import/github":           true,
 		"POST /api/v1/services/import/zip":              true,
+		"POST /api/v1/services/import/github/preview":   true,
+		"POST /api/v1/services/import/zip/preview":      true,
 		"DELETE /api/v1/services/:id":                   true,
 		"GET /api/v1/services/:id":                      true,
 		"PATCH /api/v1/services/:id":                    true,

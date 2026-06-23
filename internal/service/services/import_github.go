@@ -98,7 +98,7 @@ func (s *ImportService) PreviewFromGithub(ctx context.Context, req GithubImportR
 
 	owner, repo, parsedRef, err := parseGitHubURL(req.RepoURL)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"repo_url": "must be a valid GitHub repository URL"})
+		return nil, errs.NewValidationError(map[string]string{fieldRepoURL: "must be a valid GitHub repository URL"})
 	}
 
 	ref := req.Ref
@@ -111,21 +111,21 @@ func (s *ImportService) PreviewFromGithub(ctx context.Context, req GithubImportR
 
 	zipBytes, err := s.fetchRepoZip(ctx, owner, repo, ref)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"repo_url": fmt.Sprintf("downloading repository: %v", err)})
+		return nil, errs.NewValidationError(map[string]string{fieldRepoURL: fmt.Sprintf("downloading repository: %v", err)})
 	}
 
-	source := importSourceInfo{Source: "github", Owner: owner, Repo: repo}
+	source := importSourceInfo{Source: sourceGithub, Owner: owner, Repo: repo}
 	return s.previewArchive(ctx, zipBytes, source, isAdmin)
 }
 
 func (s *ImportService) PreviewFromZipUpload(ctx context.Context, zipBytes []byte, isAdmin bool) (*ImportPreview, error) {
 	if len(zipBytes) == 0 {
-		return nil, errs.NewValidationError(map[string]string{"archive": "file is required"})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: "file is required"})
 	}
 	if err := validateZipBytes(zipBytes); err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: err.Error()})
 	}
-	return s.previewArchive(ctx, zipBytes, importSourceInfo{Source: "zip"}, isAdmin)
+	return s.previewArchive(ctx, zipBytes, importSourceInfo{Source: sourceZip}, isAdmin)
 }
 
 var serviceNameRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
@@ -133,7 +133,7 @@ var serviceNameRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 func (s *ImportService) previewArchive(ctx context.Context, zipBytes []byte, source importSourceInfo, isAdmin bool) (*ImportPreview, error) {
 	layout, err := inspectSourceLayoutFromBytes(zipBytes, source)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: err.Error()})
 	}
 
 	var meta *BundleMetadata
@@ -175,11 +175,12 @@ func buildImportPreview(layout sourceLayout, source importSourceInfo, serviceNam
 		ServiceDirectory:       layout.ServiceDir,
 		CheckerDirectory:       layout.CheckerDir,
 		HasDevDirectory:        layout.HasDevDir,
-		Requirements:           make([]ImportValidationItem, 0, 10),
+		Requirements:           make([]ImportValidationItem, 0, previewRequirementsCapacity),
 		Warnings:               []string{},
 	}
 
-	if source.Source == "github" {
+	switch {
+	case source.Source == sourceGithub:
 		if strings.EqualFold(source.Owner, expectedGithubOwner) {
 			preview.addRequirement("github_owner", "GitHub organization", "ok", "repository is in github.com/"+expectedGithubOwner)
 		} else {
@@ -190,17 +191,18 @@ func buildImportPreview(layout sourceLayout, source importSourceInfo, serviceNam
 		} else {
 			preview.addRequirement("repository_name", "Repository name", "error", "must match "+serviceRepoPattern)
 		}
-	} else if layout.RootName != "" && serviceIDFromRepo(layout.RootName) != "" {
+	case layout.RootName != "" && serviceIDFromRepo(layout.RootName) != "":
 		preview.addRequirement("repository_name", "Repository name", "ok", "archive root looks like "+serviceRepoPattern)
-	} else {
+	default:
 		preview.addRequirement("repository_name", "Repository name", "warning", "ZIP upload cannot prove the final GitHub repository name")
 	}
 
-	if serviceName != "" && serviceNameRe.MatchString(serviceName) {
+	switch {
+	case serviceName != "" && serviceNameRe.MatchString(serviceName):
 		preview.addRequirement("service_id", "Service ID", "ok", "will be imported as "+serviceName)
-	} else if serviceName != "" {
+	case serviceName != "":
 		preview.addRequirement("service_id", "Service ID", "error", "derived service name must match [a-zA-Z0-9_-]+")
-	} else {
+	default:
 		preview.addRequirement("service_id", "Service ID", "error", "service ID was not found in repository name, checker directory, or metadata")
 	}
 
@@ -210,11 +212,12 @@ func buildImportPreview(layout sourceLayout, source importSourceInfo, serviceNam
 		preview.addRequirement("root_readme", "README.md", "error", "root README.md is required")
 	}
 
-	if layout.HasNewService {
+	switch {
+	case layout.HasNewService:
 		preview.addRequirement("vuln_service", "vuln-service", "ok", "service directory is present")
-	} else if layout.HasOldService {
+	case layout.HasOldService:
 		preview.addRequirement("vuln_service", "vuln-service", "error", "legacy service/ was found, but vuln-service/ is required")
-	} else {
+	default:
 		preview.addRequirement("vuln_service", "vuln-service", "error", "vuln-service/ directory is required")
 	}
 
@@ -228,19 +231,20 @@ func buildImportPreview(layout sourceLayout, source importSourceInfo, serviceNam
 	if serviceName != "" && serviceNameRe.MatchString(serviceName) {
 		expectedCheckerDir = checkerDirPrefix + serviceName
 	}
-	if expectedCheckerDir != "" && layout.CheckerDir == expectedCheckerDir {
+	switch {
+	case expectedCheckerDir != "" && layout.CheckerDir == expectedCheckerDir:
 		preview.addRequirement("checker", "checker_<idservice>", "ok", layout.CheckerDir+" is present")
-	} else if len(layout.CheckerDirs) > 0 && expectedCheckerDir != "" {
+	case len(layout.CheckerDirs) > 0 && expectedCheckerDir != "":
 		preview.addRequirement("checker", "checker_<idservice>", "error", "checker directory must be named "+expectedCheckerDir)
-	} else if len(layout.CheckerDirs) > 0 {
+	case len(layout.CheckerDirs) > 0:
 		preview.addRequirement("checker", "checker_<idservice>", "ok", layout.CheckerDir+" is present")
-	} else if layout.HasOldChecker && expectedCheckerDir != "" {
+	case layout.HasOldChecker && expectedCheckerDir != "":
 		preview.addRequirement("checker", "checker_<idservice>", "error", "legacy checker/ was found, but "+expectedCheckerDir+" is required")
-	} else if layout.HasOldChecker {
+	case layout.HasOldChecker:
 		preview.addRequirement("checker", "checker_<idservice>", "error", "legacy checker/ was found, but checker_<idservice>/ is required")
-	} else if expectedCheckerDir != "" {
+	case expectedCheckerDir != "":
 		preview.addRequirement("checker", "checker_<idservice>", "error", expectedCheckerDir+" directory is required")
-	} else {
+	default:
 		preview.addRequirement("checker", "checker_<idservice>", "error", "checker_<idservice> directory is required")
 	}
 
@@ -284,7 +288,7 @@ func (s *ImportService) addDuplicatePreviewStatus(ctx context.Context, preview *
 		return
 	}
 	preview.ExistingServiceID = &existing.ID
-	if source.Source == "github" && isAdmin {
+	if source.Source == sourceGithub && isAdmin {
 		preview.addRequirement("duplicate", "Existing service", "warning", "existing service will be updated by GitHub import")
 		return
 	}
@@ -311,7 +315,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 
 	owner, repo, parsedRef, err := parseGitHubURL(req.RepoURL)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"repo_url": "must be a valid GitHub repository URL"})
+		return nil, errs.NewValidationError(map[string]string{fieldRepoURL: "must be a valid GitHub repository URL"})
 	}
 
 	ref := req.Ref
@@ -324,17 +328,17 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 
 	zipBytes, err := s.fetchRepoZip(ctx, owner, repo, ref)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"repo_url": fmt.Sprintf("downloading repository: %v", err)})
+		return nil, errs.NewValidationError(map[string]string{fieldRepoURL: fmt.Sprintf("downloading repository: %v", err)})
 	}
-	source := importSourceInfo{Source: "github", Owner: owner, Repo: repo}
+	source := importSourceInfo{Source: sourceGithub, Owner: owner, Repo: repo}
 	layout, err := inspectSourceLayoutFromBytes(zipBytes, source)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: err.Error()})
 	}
 
 	bundleBytes, err := BuildBundle(zipBytes)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("building bundle: %v", err)})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: fmt.Sprintf("building bundle: %v", err)})
 	}
 
 	meta, err := ExtractMetadata(bundleBytes)
@@ -356,7 +360,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 		warnings = append(warnings, "no name found in metadata, using repository name")
 	}
 	if !serviceNameRe.MatchString(name) {
-		return nil, errs.NewValidationError(map[string]string{"name": fmt.Sprintf("invalid service name derived from import: %q", name)})
+		return nil, errs.NewValidationError(map[string]string{fieldName: fmt.Sprintf("invalid service name derived from import: %q", name)})
 	}
 
 	archiveURL := githubArchiveURL(owner, repo, ref)
@@ -480,18 +484,18 @@ func (s *ImportService) saveBundleArchivesForSvc(ctx context.Context, svc db.Ser
 
 func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAdmin bool) (*ImportResult, error) {
 	if err := validateZipBytes(zipBytes); err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("invalid zip: %v", err)})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: fmt.Sprintf("invalid zip: %v", err)})
 	}
 
-	source := importSourceInfo{Source: "zip"}
+	source := importSourceInfo{Source: sourceZip}
 	layout, err := inspectSourceLayoutFromBytes(zipBytes, source)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: err.Error()})
 	}
 
 	bundleBytes, err := BuildBundle(zipBytes)
 	if err != nil {
-		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("building bundle: %v", err)})
+		return nil, errs.NewValidationError(map[string]string{fieldArchive: fmt.Sprintf("building bundle: %v", err)})
 	}
 
 	meta, err := ExtractMetadata(bundleBytes)
@@ -509,10 +513,10 @@ func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAd
 
 	name := resolveImportServiceName(meta, layout, source)
 	if name == "" {
-		return nil, errs.NewValidationError(map[string]string{"name": "could not determine service name from zip"})
+		return nil, errs.NewValidationError(map[string]string{fieldName: "could not determine service name from zip"})
 	}
 	if !serviceNameRe.MatchString(name) {
-		return nil, errs.NewValidationError(map[string]string{"name": fmt.Sprintf("invalid service name derived from import: %q", name)})
+		return nil, errs.NewValidationError(map[string]string{fieldName: fmt.Sprintf("invalid service name derived from import: %q", name)})
 	}
 
 	var training json.RawMessage
