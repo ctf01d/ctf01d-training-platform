@@ -375,6 +375,16 @@ func (h *Handler) HandleUpdateUserRole(c *gin.Context) {
 		return
 	}
 
+	adminID, ok := middleware.CurrentUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
+		return
+	}
+	if adminID == id {
+		c.JSON(http.StatusForbidden, errorResponse{Code: codeForbidden, Message: "you cannot change your own role"})
+		return
+	}
+
 	user, err := h.users.UpdateRole(c.Request.Context(), id, string(req.Role))
 	if err != nil {
 		respondError(c, err)

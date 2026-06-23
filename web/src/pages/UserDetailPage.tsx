@@ -99,6 +99,7 @@ export default function UserDetailPage() {
     if (data) {
       applyUser(data);
     }
+    setSuccess("Profile updated successfully.");
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -126,6 +127,7 @@ export default function UserDetailPage() {
   };
 
   const handleRoleChange = async (role: UserRole) => {
+    if (userId === currentUser?.id) return;
     setError(null);
     const { data, error: err } = await usersApi.updateUserRole(userId, role);
     if (err) {
@@ -237,11 +239,17 @@ export default function UserDetailPage() {
               <select
                 value={user.role}
                 onChange={(e) => handleRoleChange(e.target.value as UserRole)}
+                disabled={user.id === currentUser?.id}
               >
                 <option value="guest">Guest</option>
                 <option value="player">Player</option>
                 <option value="admin">Admin</option>
               </select>
+              {user.id === currentUser?.id && (
+                <span className="section-hint" style={{ marginLeft: "0.5rem" }}>
+                  You cannot change your own role.
+                </span>
+              )}
             </InfoRow>
             <InfoRow label="Blocked">
               {user.is_blocked ? "Yes" : "No"}

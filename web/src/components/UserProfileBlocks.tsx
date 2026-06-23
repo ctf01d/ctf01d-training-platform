@@ -57,7 +57,7 @@ export function UserProfileEditForm({
   saving: boolean;
 }) {
   return (
-    <form onSubmit={onSubmit} className="edit-form">
+    <form onSubmit={onSubmit} className="edit-form" autoComplete="off">
       <div className="form-group">
         <label>Display Name</label>
         <input
@@ -65,6 +65,7 @@ export function UserProfileEditForm({
           onChange={(e) =>
             setForm((f) => ({ ...f, display_name: e.target.value }))
           }
+          autoComplete="off"
           required
         />
       </div>
@@ -97,6 +98,7 @@ export function UserProfileEditForm({
           type="email"
           value={form.email}
           onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+          autoComplete="off"
         />
       </div>
       <div className="form-actions">

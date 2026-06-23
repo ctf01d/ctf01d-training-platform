@@ -92,7 +92,7 @@ export default function UsersPage() {
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="create-form">
+        <form onSubmit={handleCreate} className="create-form" autoComplete="off">
           <div className="form-group">
             <label>Username</label>
             <input
@@ -100,6 +100,7 @@ export default function UsersPage() {
               onChange={(e) =>
                 setCreateForm((f) => ({ ...f, user_name: e.target.value }))
               }
+              autoComplete="off"
               required
             />
           </div>
@@ -121,6 +122,7 @@ export default function UsersPage() {
               onChange={(e) =>
                 setCreateForm((f) => ({ ...f, password: e.target.value }))
               }
+              autoComplete="new-password"
               required
             />
           </div>
