@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import * as servicesApi from "../api/services";
-import type { Service, ServiceCreate } from "../api/services";
+import type {
+  Service,
+  ServiceCreate,
+  ServiceImportPreview,
+} from "../api/services";
 import {
   CardGrid,
   EntityCard,
@@ -19,6 +23,19 @@ const checkBadgeVariant: Record<string, string> = {
   fail: "failed",
   unknown: "unknown",
   queued: "upcoming",
+};
+
+type ImportSource = "github" | "zip";
+
+type ImportResultResponse = {
+  service?: Service;
+  warnings?: string[];
+};
+
+const importStatusLabel: Record<string, string> = {
+  ok: "OK",
+  warning: "Warning",
+  error: "Error",
 };
 
 export default function ServicesPage() {
@@ -40,15 +57,15 @@ export default function ServicesPage() {
   const [createForm, setCreateForm] = useState<ServiceCreate>({ name: "" });
   const [creating, setCreating] = useState(false);
 
-  const [showGithubImport, setShowGithubImport] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
+  const [importSource, setImportSource] = useState<ImportSource>("github");
   const [githubUrl, setGithubUrl] = useState("");
   const [githubRef, setGithubRef] = useState("");
   const [githubSubdir, setGithubSubdir] = useState("");
+  const [preview, setPreview] = useState<ServiceImportPreview | null>(null);
+  const [previewing, setPreviewing] = useState(false);
   const [importing, setImporting] = useState(false);
-
-  const [showZipImport, setShowZipImport] = useState(false);
   const [zipFile, setZipFile] = useState<File | null>(null);
-  const [importingZip, setImportingZip] = useState(false);
 
   const fetchServices = useCallback(async () => {
     setLoading(true);
@@ -83,41 +100,81 @@ export default function ServicesPage() {
     if (data) navigate(`/services/${data.id}`);
   };
 
-  const handleGithubImport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setImporting(true);
-    const { data, error: err } = await servicesApi.importServiceFromGithub({
-      repo_url: githubUrl,
-      ref: githubRef || undefined,
-      subdir: githubSubdir || undefined,
-    });
-    setImporting(false);
-    if (err) {
-      setError(handleApiError(err));
-      return;
-    }
-    if (data) navigate(`/services/${data.service.id}`);
+  const resetImportPreview = () => {
+    setPreview(null);
   };
 
-  const handleZipImport = async (e: React.FormEvent) => {
+  const handlePreviewImport = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!zipFile) return;
-    setImportingZip(true);
+    setPreviewing(true);
+    setError(null);
+    setPreview(null);
     try {
+      if (importSource === "github") {
+        const { data, error: err } =
+          await servicesApi.previewServiceGithubImport({
+            repo_url: githubUrl,
+            ref: githubRef || undefined,
+            subdir: githubSubdir || undefined,
+          });
+        if (err) {
+          setError(handleApiError(err));
+          return;
+        }
+        if (data) setPreview(data);
+        return;
+      }
+
+      if (!zipFile) return;
       const formData = new FormData();
       formData.append("archive", zipFile);
-      const response = await servicesApi.importServiceFromZip(formData);
+      const response = await servicesApi.previewServiceZipImport(formData);
+      const body = await response.json();
       if (!response.ok) {
-        const body = await response.json();
         setError(handleApiError(body));
         return;
       }
-      const result = await response.json();
-      if (result.service) navigate(`/services/${result.service.id}`);
-    } catch (e) {
-      setError(handleApiError(e));
+      setPreview(body as ServiceImportPreview);
+    } catch (err) {
+      setError(handleApiError(err));
     } finally {
-      setImportingZip(false);
+      setPreviewing(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!preview?.valid) return;
+    setImporting(true);
+    setError(null);
+    try {
+      if (importSource === "github") {
+        const { data, error: err } = await servicesApi.importServiceFromGithub({
+          repo_url: githubUrl,
+          ref: githubRef || undefined,
+          subdir: githubSubdir || undefined,
+        });
+        if (err) {
+          setError(handleApiError(err));
+          return;
+        }
+        if (data) navigate(`/services/${data.service.id}`);
+        return;
+      }
+
+      if (!zipFile) return;
+      const formData = new FormData();
+      formData.append("archive", zipFile);
+      const response = await servicesApi.importServiceFromZip(formData);
+      const result = (await response.json()) as ImportResultResponse;
+      if (!response.ok) {
+        setError(handleApiError(result));
+        return;
+      }
+      if (result.service) navigate(`/services/${result.service.id}`);
+    } catch (err) {
+      setError(handleApiError(err));
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -153,21 +210,21 @@ export default function ServicesPage() {
           <div className="action-buttons">
             <button
               className="btn btn-primary"
-              onClick={() => setShowCreate(!showCreate)}
+              onClick={() => {
+                setShowCreate(!showCreate);
+                setShowImportWizard(false);
+              }}
             >
               {showCreate ? "Cancel" : "Create Service"}
             </button>
             <button
               className="btn"
-              onClick={() => setShowGithubImport(!showGithubImport)}
+              onClick={() => {
+                setShowImportWizard(!showImportWizard);
+                setShowCreate(false);
+              }}
             >
-              {showGithubImport ? "Cancel" : "Import from GitHub"}
-            </button>
-            <button
-              className="btn"
-              onClick={() => setShowZipImport(!showZipImport)}
-            >
-              {showZipImport ? "Cancel" : "Import ZIP"}
+              {showImportWizard ? "Close Import" : "Import Service"}
             </button>
           </div>
         )}
@@ -222,63 +279,158 @@ export default function ServicesPage() {
         </form>
       )}
 
-      {showGithubImport && (
+      {showImportWizard && (
         <form
-          onSubmit={(e) => void handleGithubImport(e)}
-          className="create-form"
+          onSubmit={(e) => void handlePreviewImport(e)}
+          className="import-wizard"
         >
-          <div className="form-group">
-            <label>Repo URL *</label>
-            <input
-              value={githubUrl}
-              onChange={(e) => setGithubUrl(e.target.value)}
-              required
-              placeholder="https://github.com/org/repo"
-            />
+          <div className="import-steps" aria-label="Import steps">
+            <span className="import-step is-active">Source</span>
+            <span className={`import-step ${preview ? "is-active" : ""}`}>
+              Validate
+            </span>
+            <span
+              className={`import-step ${preview?.valid ? "is-active" : ""}`}
+            >
+              Import
+            </span>
           </div>
-          <div className="form-group">
-            <label>Ref (branch/tag)</label>
-            <input
-              value={githubRef}
-              onChange={(e) => setGithubRef(e.target.value)}
-              placeholder="main"
-            />
-          </div>
-          <div className="form-group">
-            <label>Subdirectory</label>
-            <input
-              value={githubSubdir}
-              onChange={(e) => setGithubSubdir(e.target.value)}
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={importing}
-          >
-            {importing ? "Importing..." : "Import"}
-          </button>
-        </form>
-      )}
 
-      {showZipImport && (
-        <form onSubmit={(e) => void handleZipImport(e)} className="create-form">
-          <div className="form-group">
-            <label>ZIP Archive *</label>
-            <input
-              type="file"
-              accept=".zip"
-              onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
-              required
-            />
+          <div className="import-source-tabs">
+            <button
+              type="button"
+              className={`tab ${importSource === "github" ? "active" : ""}`}
+              onClick={() => {
+                setImportSource("github");
+                resetImportPreview();
+              }}
+            >
+              GitHub
+            </button>
+            <button
+              type="button"
+              className={`tab ${importSource === "zip" ? "active" : ""}`}
+              onClick={() => {
+                setImportSource("zip");
+                resetImportPreview();
+              }}
+            >
+              ZIP
+            </button>
           </div>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={importingZip}
-          >
-            {importingZip ? "Importing..." : "Import"}
-          </button>
+
+          {importSource === "github" ? (
+            <div className="import-fields">
+              <div className="form-group">
+                <label>Repo URL *</label>
+                <input
+                  value={githubUrl}
+                  onChange={(e) => {
+                    setGithubUrl(e.target.value);
+                    resetImportPreview();
+                  }}
+                  required
+                  placeholder="https://github.com/SibirCTF/2026-cybersibir-service-name"
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Ref</label>
+                  <input
+                    value={githubRef}
+                    onChange={(e) => {
+                      setGithubRef(e.target.value);
+                      resetImportPreview();
+                    }}
+                    placeholder="main"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Subdirectory</label>
+                  <input
+                    value={githubSubdir}
+                    onChange={(e) => {
+                      setGithubSubdir(e.target.value);
+                      resetImportPreview();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="form-group">
+              <label>ZIP Archive *</label>
+              <input
+                type="file"
+                accept=".zip"
+                onChange={(e) => {
+                  setZipFile(e.target.files?.[0] ?? null);
+                  resetImportPreview();
+                }}
+                required
+              />
+            </div>
+          )}
+
+          <div className="form-actions">
+            <button
+              type="submit"
+              className="btn"
+              disabled={
+                previewing || (importSource === "zip" ? !zipFile : !githubUrl)
+              }
+            >
+              {previewing ? "Validating..." : "Validate"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!preview?.valid || importing || previewing}
+              onClick={() => void handleImport()}
+            >
+              {importing ? "Importing..." : "Import"}
+            </button>
+          </div>
+
+          {preview && (
+            <div className="import-preview">
+              <div className="import-preview-meta">
+                <div>
+                  <span>Service ID</span>
+                  <strong>{preview.service_name || "—"}</strong>
+                </div>
+                <div>
+                  <span>Expected repo</span>
+                  <strong>{preview.expected_repository_name}</strong>
+                </div>
+                <div>
+                  <span>Service dir</span>
+                  <strong>{preview.service_directory ?? "—"}</strong>
+                </div>
+                <div>
+                  <span>Checker dir</span>
+                  <strong>{preview.checker_directory ?? "—"}</strong>
+                </div>
+              </div>
+
+              <div className="import-check-list">
+                {preview.requirements.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`import-check import-check-${item.status}`}
+                  >
+                    <span className="import-check-status">
+                      {importStatusLabel[item.status] ?? item.status}
+                    </span>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <p>{item.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
       )}
 

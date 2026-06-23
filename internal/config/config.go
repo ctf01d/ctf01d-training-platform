@@ -35,7 +35,7 @@ type LogConfig struct {
 }
 
 type CORSConfig struct {
-	AllowedOrigins string `env:"CORS_ALLOWED_ORIGINS" env-default:"http://localhost:5173"`
+	AllowedOrigins string `env:"CORS_ALLOWED_ORIGINS" env-default:"http://localhost:5173,http://127.0.0.1:5173"`
 }
 
 type StorageConfig struct {

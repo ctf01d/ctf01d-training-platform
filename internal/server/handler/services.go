@@ -81,3 +81,43 @@ func importResultToHTTP(r *svcsvc.ImportResult) httpserver.ImportResult {
 		Warnings: warnings,
 	}
 }
+
+func importPreviewToHTTP(p *svcsvc.ImportPreview) httpserver.ServiceImportPreview {
+	requirements := make([]httpserver.ServiceImportValidationItem, len(p.Requirements))
+	for i, item := range p.Requirements {
+		requirements[i] = httpserver.ServiceImportValidationItem{
+			Id:      item.ID,
+			Title:   item.Title,
+			Status:  httpserver.ServiceImportValidationItemStatus(item.Status),
+			Message: item.Message,
+		}
+	}
+
+	warnings := p.Warnings
+	if warnings == nil {
+		warnings = []string{}
+	}
+
+	return httpserver.ServiceImportPreview{
+		Source:                 httpserver.ServiceImportPreviewSource(p.Source),
+		Valid:                  p.Valid,
+		ServiceName:            p.ServiceName,
+		RepositoryOwner:        optionalString(p.RepositoryOwner),
+		RepositoryName:         optionalString(p.RepositoryName),
+		ExpectedRepositoryName: p.ExpectedRepositoryName,
+		RootDirectory:          optionalString(p.RootDirectory),
+		ServiceDirectory:       optionalString(p.ServiceDirectory),
+		CheckerDirectory:       optionalString(p.CheckerDirectory),
+		HasDevDirectory:        p.HasDevDirectory,
+		ExistingServiceId:      p.ExistingServiceID,
+		Requirements:           requirements,
+		Warnings:               warnings,
+	}
+}
+
+func optionalString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}

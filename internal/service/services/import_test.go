@@ -364,6 +364,48 @@ func TestBuildBundle_ServiceAndChecker(t *testing.T) {
 	}
 }
 
+func TestBuildBundle_CybersibirLayout(t *testing.T) {
+	input := createZip(map[string]string{
+		"2027-cybersibir-service-bank/README.md":                       "# Bank\nDesc",
+		"2027-cybersibir-service-bank/vuln-service/docker-compose.yml": "services: {}",
+		"2027-cybersibir-service-bank/vuln-service/app.py":             "print('service')",
+		"2027-cybersibir-service-bank/checker_bank/checker.py":         "exit(101)",
+		"2027-cybersibir-service-bank/writeups/README.md":              "writeup",
+		"2027-cybersibir-service-bank/exploits/poc.py":                 "exploit",
+		"2027-cybersibir-service-bank/vuln-service_dev/build.sh":       "build",
+	})
+
+	result, err := BuildBundle(input)
+	if err != nil {
+		t.Fatalf("BuildBundle: %v", err)
+	}
+
+	r, err := zip.NewReader(bytes.NewReader(result), int64(len(result)))
+	if err != nil {
+		t.Fatalf("reading result: %v", err)
+	}
+
+	found := make(map[string]bool)
+	for _, f := range r.File {
+		found[f.Name] = true
+	}
+	if !found["service/app.py"] {
+		t.Error("missing service/app.py")
+	}
+	if !found["checker/checker.py"] {
+		t.Error("missing checker/checker.py")
+	}
+	if !found["writeups/README.md"] {
+		t.Error("missing writeups/README.md")
+	}
+	if !found["exploits/poc.py"] {
+		t.Error("missing exploits/poc.py")
+	}
+	if found["service/vuln-service_dev/build.sh"] {
+		t.Error("vuln-service_dev should not be copied into service/")
+	}
+}
+
 func TestExtractMetadata_FromReadme(t *testing.T) {
 	bundle := createBundleZip(map[string]string{
 		"README.md": "# Awesome Service\n\nThis is a great service for CTF",
@@ -783,6 +825,85 @@ func TestImportFromZipUpload_BasicFlow(t *testing.T) {
 	}
 	if result.Service.Name != "UploadService" {
 		t.Errorf("Name = %q, want %q", result.Service.Name, "UploadService")
+	}
+}
+
+func TestPreviewFromZipUpload_CybersibirLayout(t *testing.T) {
+	zipData := createZip(map[string]string{
+		"2027-cybersibir-service-bank/README.md":                       "# Bank\nDesc",
+		"2027-cybersibir-service-bank/vuln-service/docker-compose.yml": "services: {}",
+		"2027-cybersibir-service-bank/vuln-service/app.py":             "print('service')",
+		"2027-cybersibir-service-bank/checker_bank/checker.py":         "exit(101)",
+		"2027-cybersibir-service-bank/writeups/README.md":              "writeup",
+		"2027-cybersibir-service-bank/exploits/poc.py":                 "exploit",
+		"2027-cybersibir-service-bank/vuln-service_dev/build.sh":       "build",
+	})
+
+	q := newMockImportQuerier()
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+
+	preview, err := svc.PreviewFromZipUpload(context.Background(), zipData, true)
+	if err != nil {
+		t.Fatalf("PreviewFromZipUpload: %v", err)
+	}
+	if !preview.Valid {
+		t.Fatalf("preview should be valid, got requirements: %#v", preview.Requirements)
+	}
+	if preview.ServiceName != "bank" {
+		t.Errorf("ServiceName = %q, want %q", preview.ServiceName, "bank")
+	}
+	if preview.ExpectedRepositoryName != "YYYY-cybersibir-service-<service-id>" {
+		t.Errorf("ExpectedRepositoryName = %q", preview.ExpectedRepositoryName)
+	}
+	if preview.CheckerDirectory != "checker_bank" {
+		t.Errorf("CheckerDirectory = %q, want %q", preview.CheckerDirectory, "checker_bank")
+	}
+}
+
+func TestPreviewFromGithub_AcceptsAnyYearAndOwnerCase(t *testing.T) {
+	repoZip := createZip(map[string]string{
+		"2026-cybersibir-service-vault-notes/README.md":                       "# Vault Notes\nDesc",
+		"2026-cybersibir-service-vault-notes/vuln-service/docker-compose.yml": "services: {}",
+		"2026-cybersibir-service-vault-notes/vuln-service/app.py":             "print('service')",
+		"2026-cybersibir-service-vault-notes/checker_vaultnotes/checker.py":   "exit(101)",
+		"2026-cybersibir-service-vault-notes/writeups/README.md":              "writeup",
+		"2026-cybersibir-service-vault-notes/exploits/poc.py":                 "exploit",
+	})
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/zip")
+		if _, err := w.Write(repoZip); err != nil {
+			t.Fatalf("write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	origCodeloadURL := codeloadURL
+	defer func() { codeloadURL = origCodeloadURL }()
+	codeloadURL = func(_, _, _ string) string {
+		return server.URL
+	}
+
+	q := newMockImportQuerier()
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+
+	preview, err := svc.PreviewFromGithub(context.Background(), GithubImportRequest{
+		RepoURL: "https://github.com/SibirCTF/2026-cybersibir-service-vault-notes.git",
+		Ref:     "main",
+	}, true)
+	if err != nil {
+		t.Fatalf("PreviewFromGithub: %v", err)
+	}
+	if !preview.Valid {
+		t.Fatalf("preview should be valid, got requirements: %#v", preview.Requirements)
+	}
+	if preview.ServiceName != "vaultnotes" {
+		t.Errorf("ServiceName = %q, want %q", preview.ServiceName, "vaultnotes")
+	}
+	if preview.ExpectedRepositoryName != "YYYY-cybersibir-service-<service-id>" {
+		t.Errorf("ExpectedRepositoryName = %q", preview.ExpectedRepositoryName)
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -71,10 +72,172 @@ func detectRootPrefix(zipReader *zip.Reader) string {
 		return ""
 	}
 	for seg := range seen {
-		if seg == kindService || seg == kindChecker {
+		if seg == kindService || seg == kindChecker || seg == kindVulnService || strings.HasPrefix(seg, checkerDirPrefix) {
 			return ""
 		}
 		return seg + "/"
+	}
+	return ""
+}
+
+func serviceIDFromRepo(repo string) string {
+	matches := serviceRepoNameRe.FindStringSubmatch(repo)
+	if len(matches) != serviceRepoNameMatchCount {
+		return ""
+	}
+	id := matches[1]
+	if !serviceIDRe.MatchString(id) {
+		return ""
+	}
+	return id
+}
+
+func serviceIDFromCheckerDir(dir string) string {
+	if !strings.HasPrefix(dir, checkerDirPrefix) {
+		return ""
+	}
+	id := strings.TrimPrefix(dir, checkerDirPrefix)
+	if !serviceNameRe.MatchString(id) {
+		return ""
+	}
+	return id
+}
+
+func isReadmeName(name string) bool {
+	for _, candidate := range readmeCandidates {
+		if strings.EqualFold(name, candidate) {
+			return true
+		}
+	}
+	return false
+}
+
+func isComposeName(name string) bool {
+	for _, candidate := range composeCandidates {
+		if strings.EqualFold(name, candidate) {
+			return true
+		}
+	}
+	return false
+}
+
+func inspectSourceLayout(zr *zip.Reader, source importSourceInfo) sourceLayout {
+	layout := sourceLayout{
+		RootPrefix: detectRootPrefix(zr),
+		ServiceID:  serviceIDFromRepo(source.Repo),
+	}
+	if layout.RootPrefix != "" {
+		layout.RootName = strings.TrimSuffix(layout.RootPrefix, "/")
+	}
+
+	checkerSeen := make(map[string]bool)
+	for _, f := range zr.File {
+		name := strings.TrimPrefix(f.Name, "/")
+		if layout.RootPrefix != "" {
+			if !strings.HasPrefix(name, layout.RootPrefix) {
+				continue
+			}
+			name = strings.TrimPrefix(name, layout.RootPrefix)
+		}
+
+		rel := safeRelPath(name)
+		if rel == "" {
+			continue
+		}
+		parts := strings.Split(rel, "/")
+		top := parts[0]
+		if top == "" {
+			continue
+		}
+
+		if len(parts) == 1 && !f.FileInfo().IsDir() && isReadmeName(top) {
+			layout.HasRootReadme = true
+		}
+
+		switch {
+		case top == kindVulnService:
+			layout.HasNewService = true
+			if len(parts) == 2 && !f.FileInfo().IsDir() && isComposeName(parts[1]) {
+				layout.ComposeFile = strings.Join(parts, "/")
+			}
+		case top == kindService:
+			layout.HasOldService = true
+		case top == kindChecker:
+			layout.HasOldChecker = true
+		case top == kindWriteups:
+			layout.HasWriteups = true
+		case top == kindExploits:
+			layout.HasExploits = true
+		case top == kindVulnServiceDev:
+			layout.HasDevDir = true
+		case strings.HasPrefix(top, checkerDirPrefix):
+			if !checkerSeen[top] {
+				checkerSeen[top] = true
+				layout.CheckerDirs = append(layout.CheckerDirs, top)
+			}
+		}
+	}
+
+	sort.Strings(layout.CheckerDirs)
+	if len(layout.CheckerDirs) == 1 {
+		layout.ServiceID = serviceIDFromCheckerDir(layout.CheckerDirs[0])
+	}
+
+	switch {
+	case layout.HasNewService:
+		layout.ServiceDir = kindVulnService
+		layout.ServicePrefix = layout.RootPrefix + kindVulnService + "/"
+	case layout.HasOldService:
+		layout.ServiceDir = kindService
+		layout.ServicePrefix = layout.RootPrefix + kindService + "/"
+	}
+
+	expectedCheckerDir := ""
+	if layout.ServiceID != "" {
+		expectedCheckerDir = checkerDirPrefix + layout.ServiceID
+	}
+	for _, dir := range layout.CheckerDirs {
+		if dir == expectedCheckerDir {
+			layout.CheckerDir = dir
+			break
+		}
+	}
+	if layout.CheckerDir == "" && len(layout.CheckerDirs) == 1 {
+		layout.CheckerDir = layout.CheckerDirs[0]
+	}
+	if layout.CheckerDir != "" {
+		layout.CheckerPrefix = layout.RootPrefix + layout.CheckerDir + "/"
+	} else if layout.HasOldChecker {
+		layout.CheckerDir = kindChecker
+		layout.CheckerPrefix = layout.RootPrefix + kindChecker + "/"
+	}
+
+	return layout
+}
+
+func inspectSourceLayoutFromBytes(zipBytes []byte, source importSourceInfo) (sourceLayout, error) {
+	zr, err := zip.NewReader(bytes.NewReader(zipBytes), int64(len(zipBytes)))
+	if err != nil {
+		return sourceLayout{}, fmt.Errorf("reading zip: %w", err)
+	}
+	return inspectSourceLayout(zr, source), nil
+}
+
+func resolveImportServiceName(meta *BundleMetadata, layout sourceLayout, source importSourceInfo) string {
+	if layout.ServiceID != "" {
+		return layout.ServiceID
+	}
+	if meta != nil {
+		name := strings.TrimSpace(meta.Name)
+		if name != "" && serviceNameRe.MatchString(name) {
+			return name
+		}
+	}
+	if source.Repo != "" && serviceNameRe.MatchString(source.Repo) {
+		return source.Repo
+	}
+	if meta != nil {
+		return strings.TrimSpace(meta.Name)
 	}
 	return ""
 }
@@ -84,11 +247,20 @@ const (
 	licenseApache20     = "Apache-2.0"
 	licenseFileBasename = "LICENSE"
 
-	kindService   = "service"
-	kindChecker   = "checker"
-	readmeMD      = "README.md"
-	statusPresent = "present"
-	defaultGitRef = "main"
+	kindService        = "service"
+	kindChecker        = "checker"
+	kindVulnService    = "vuln-service"
+	kindVulnServiceDev = "vuln-service_dev"
+	kindWriteups       = "writeups"
+	kindExploits       = "exploits"
+	checkerDirPrefix   = "checker_"
+	readmeMD           = "README.md"
+	statusPresent      = "present"
+	defaultGitRef      = "main"
+
+	expectedGithubOwner       = "SibirCTF"
+	serviceRepoPattern        = "YYYY-cybersibir-service-<service-id>"
+	serviceRepoNameMatchCount = 2
 )
 
 var (
@@ -98,7 +270,35 @@ var (
 		licenseFileBasename, "LICENSE.txt",
 		"COPYING", "COPYING.txt",
 	}
+	composeCandidates = []string{"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
+	serviceIDRe       = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]*$`)
+	serviceRepoNameRe = regexp.MustCompile(`^\d{4}-cybersibir-service-([a-z0-9][a-z0-9_-]*)$`)
 )
+
+type importSourceInfo struct {
+	Source string
+	Owner  string
+	Repo   string
+}
+
+type sourceLayout struct {
+	RootPrefix    string
+	RootName      string
+	ServiceDir    string
+	ServicePrefix string
+	CheckerDir    string
+	CheckerPrefix string
+	CheckerDirs   []string
+	ServiceID     string
+	ComposeFile   string
+	HasRootReadme bool
+	HasWriteups   bool
+	HasExploits   bool
+	HasDevDir     bool
+	HasNewService bool
+	HasOldService bool
+	HasOldChecker bool
+}
 
 func readFirstFromZip(zr *zip.Reader, rootPrefix string, candidates []string) []byte {
 	for _, name := range candidates {
@@ -228,9 +428,8 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 		return nil, fmt.Errorf("reading zip: %w", err)
 	}
 
-	rootPrefix := detectRootPrefix(srcReader)
-	servicePrefix := rootPrefix + "service/"
-	checkerPrefix := rootPrefix + "checker/"
+	layout := inspectSourceLayout(srcReader, importSourceInfo{})
+	rootPrefix := layout.RootPrefix
 
 	var buf bytes.Buffer
 	w := zip.NewWriter(&buf)
@@ -239,16 +438,8 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 	fileCount := 0
 	serviceFound := false
 
-	hasService := false
-	hasChecker := false
-	for _, f := range srcReader.File {
-		if strings.HasPrefix(f.Name, servicePrefix) {
-			hasService = true
-		}
-		if strings.HasPrefix(f.Name, checkerPrefix) {
-			hasChecker = true
-		}
-	}
+	hasService := layout.ServicePrefix != ""
+	hasChecker := layout.CheckerPrefix != ""
 
 	rootReadme := readFirstFromZip(srcReader, rootPrefix, readmeCandidates)
 	rootLicense := readFirstFromZip(srcReader, rootPrefix, licenseCandidates)
@@ -283,14 +474,20 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 	}
 
 	if hasService {
-		serviceFound, err = copyTree(srcReader, w, servicePrefix, "service/", nil, &totalBytes, &fileCount, cb)
+		serviceFound, err = copyTree(srcReader, w, layout.ServicePrefix, "service/", nil, &totalBytes, &fileCount, cb)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		var excludes []string
+		excludes := []string{kindVulnService + "/", kindVulnServiceDev + "/", kindWriteups + "/", kindExploits + "/"}
 		if hasChecker {
-			excludes = []string{"checker/"}
+			excludes = append(excludes, layout.CheckerDir+"/")
+		}
+		if layout.HasOldChecker {
+			excludes = append(excludes, kindChecker+"/")
+		}
+		for _, checkerDir := range layout.CheckerDirs {
+			excludes = append(excludes, checkerDir+"/")
 		}
 		serviceFound, err = copyTree(srcReader, w, rootPrefix, "service/", excludes, &totalBytes, &fileCount, cb)
 		if err != nil {
@@ -299,7 +496,19 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 	}
 
 	if hasChecker {
-		if _, err = copyTree(srcReader, w, checkerPrefix, "checker/", nil, &totalBytes, &fileCount, nil); err != nil {
+		if _, err = copyTree(srcReader, w, layout.CheckerPrefix, "checker/", nil, &totalBytes, &fileCount, nil); err != nil {
+			return nil, err
+		}
+	}
+
+	if layout.HasWriteups {
+		if _, err = copyTree(srcReader, w, rootPrefix+kindWriteups+"/", kindWriteups+"/", nil, &totalBytes, &fileCount, nil); err != nil {
+			return nil, err
+		}
+	}
+
+	if layout.HasExploits {
+		if _, err = copyTree(srcReader, w, rootPrefix+kindExploits+"/", kindExploits+"/", nil, &totalBytes, &fileCount, nil); err != nil {
 			return nil, err
 		}
 	}

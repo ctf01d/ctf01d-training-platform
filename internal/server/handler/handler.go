@@ -990,6 +990,30 @@ func (h *Handler) HandleImportServiceFromGithub(c *gin.Context) {
 	c.JSON(http.StatusCreated, importResultToHTTP(result))
 }
 
+func (h *Handler) HandlePreviewServiceGithubImport(c *gin.Context) {
+	req, ok := bindJSON[httpserver.GithubImportRequest](c)
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == roleAdmin
+	importReq := svcsvc.GithubImportRequest{
+		RepoURL: req.RepoUrl,
+	}
+	if req.Ref != nil {
+		importReq.Ref = *req.Ref
+	}
+	if req.Subdir != nil {
+		importReq.Subdir = *req.Subdir
+	}
+	result, err := h.svcImport.PreviewFromGithub(c.Request.Context(), importReq, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, importPreviewToHTTP(result))
+}
+
 func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 	file, err := c.FormFile("archive")
 	if err != nil {
@@ -1019,6 +1043,37 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, importResultToHTTP(result))
+}
+
+func (h *Handler) HandlePreviewServiceZipImport(c *gin.Context) {
+	file, err := c.FormFile("archive")
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "archive file is required"})
+		return
+	}
+	f, err := file.Open()
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	defer f.Close()
+	zipBytes, err := io.ReadAll(io.LimitReader(f, h.maxUploadBytes+1))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	if int64(len(zipBytes)) > h.maxUploadBytes {
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "archive file too large"})
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == roleAdmin
+	result, err := h.svcImport.PreviewFromZipUpload(c.Request.Context(), zipBytes, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, importPreviewToHTTP(result))
 }
 
 func (h *Handler) ListServices(c *gin.Context, _ httpserver.ListServicesParams) {
@@ -1074,8 +1129,16 @@ func (h *Handler) ImportServiceFromGithub(c *gin.Context) {
 	h.HandleImportServiceFromGithub(c)
 }
 
+func (h *Handler) PreviewServiceGithubImport(c *gin.Context) {
+	h.HandlePreviewServiceGithubImport(c)
+}
+
 func (h *Handler) ImportServiceFromZip(c *gin.Context) {
 	h.HandleImportServiceFromZip(c)
+}
+
+func (h *Handler) PreviewServiceZipImport(c *gin.Context) {
+	h.HandlePreviewServiceZipImport(c)
 }
 
 func (h *Handler) GetCtf01dExportOptions(c *gin.Context, id int64) {

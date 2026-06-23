@@ -115,19 +115,58 @@ func (e ScoreboardStatus) Valid() bool {
 
 // Defines values for ServiceCheckStatus.
 const (
-	Failed  ServiceCheckStatus = "failed"
-	Ok      ServiceCheckStatus = "ok"
-	Unknown ServiceCheckStatus = "unknown"
+	ServiceCheckStatusFailed  ServiceCheckStatus = "failed"
+	ServiceCheckStatusOk      ServiceCheckStatus = "ok"
+	ServiceCheckStatusUnknown ServiceCheckStatus = "unknown"
 )
 
 // Valid indicates whether the value is a known member of the ServiceCheckStatus enum.
 func (e ServiceCheckStatus) Valid() bool {
 	switch e {
-	case Failed:
+	case ServiceCheckStatusFailed:
 		return true
-	case Ok:
+	case ServiceCheckStatusOk:
 		return true
-	case Unknown:
+	case ServiceCheckStatusUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ServiceImportPreviewSource.
+const (
+	Github ServiceImportPreviewSource = "github"
+	Zip    ServiceImportPreviewSource = "zip"
+)
+
+// Valid indicates whether the value is a known member of the ServiceImportPreviewSource enum.
+func (e ServiceImportPreviewSource) Valid() bool {
+	switch e {
+	case Github:
+		return true
+	case Zip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ServiceImportValidationItemStatus.
+const (
+	ServiceImportValidationItemStatusError   ServiceImportValidationItemStatus = "error"
+	ServiceImportValidationItemStatusOk      ServiceImportValidationItemStatus = "ok"
+	ServiceImportValidationItemStatusWarning ServiceImportValidationItemStatus = "warning"
+)
+
+// Valid indicates whether the value is a known member of the ServiceImportValidationItemStatus enum.
+func (e ServiceImportValidationItemStatus) Valid() bool {
+	switch e {
+	case ServiceImportValidationItemStatusError:
+		return true
+	case ServiceImportValidationItemStatusOk:
+		return true
+	case ServiceImportValidationItemStatusWarning:
 		return true
 	default:
 		return false
@@ -703,6 +742,37 @@ type ServiceCreate struct {
 	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
 }
 
+// ServiceImportPreview defines model for ServiceImportPreview.
+type ServiceImportPreview struct {
+	CheckerDirectory       *string                       `json:"checker_directory,omitempty"`
+	ExistingServiceId      *int64                        `json:"existing_service_id,omitempty"`
+	ExpectedRepositoryName string                        `json:"expected_repository_name"`
+	HasDevDirectory        bool                          `json:"has_dev_directory"`
+	RepositoryName         *string                       `json:"repository_name,omitempty"`
+	RepositoryOwner        *string                       `json:"repository_owner,omitempty"`
+	Requirements           []ServiceImportValidationItem `json:"requirements"`
+	RootDirectory          *string                       `json:"root_directory,omitempty"`
+	ServiceDirectory       *string                       `json:"service_directory,omitempty"`
+	ServiceName            string                        `json:"service_name"`
+	Source                 ServiceImportPreviewSource    `json:"source"`
+	Valid                  bool                          `json:"valid"`
+	Warnings               []string                      `json:"warnings"`
+}
+
+// ServiceImportPreviewSource defines model for ServiceImportPreview.Source.
+type ServiceImportPreviewSource string
+
+// ServiceImportValidationItem defines model for ServiceImportValidationItem.
+type ServiceImportValidationItem struct {
+	Id      string                            `json:"id"`
+	Message string                            `json:"message"`
+	Status  ServiceImportValidationItemStatus `json:"status"`
+	Title   string                            `json:"title"`
+}
+
+// ServiceImportValidationItemStatus defines model for ServiceImportValidationItem.Status.
+type ServiceImportValidationItemStatus string
+
 // ServiceList defines model for ServiceList.
 type ServiceList struct {
 	Items      []Service  `json:"items"`
@@ -1052,6 +1122,11 @@ type ImportServiceFromZipMultipartBody struct {
 	Archive openapi_types.File `json:"archive"`
 }
 
+// PreviewServiceZipImportMultipartBody defines parameters for PreviewServiceZipImport.
+type PreviewServiceZipImportMultipartBody struct {
+	Archive openapi_types.File `json:"archive"`
+}
+
 // DownloadServiceArchiveParamsKind defines parameters for DownloadServiceArchive.
 type DownloadServiceArchiveParamsKind string
 
@@ -1147,8 +1222,14 @@ type CreateServiceJSONRequestBody = ServiceCreate
 // ImportServiceFromGithubJSONRequestBody defines body for ImportServiceFromGithub for application/json ContentType.
 type ImportServiceFromGithubJSONRequestBody = GithubImportRequest
 
+// PreviewServiceGithubImportJSONRequestBody defines body for PreviewServiceGithubImport for application/json ContentType.
+type PreviewServiceGithubImportJSONRequestBody = GithubImportRequest
+
 // ImportServiceFromZipMultipartRequestBody defines body for ImportServiceFromZip for multipart/form-data ContentType.
 type ImportServiceFromZipMultipartRequestBody ImportServiceFromZipMultipartBody
+
+// PreviewServiceZipImportMultipartRequestBody defines body for PreviewServiceZipImport for multipart/form-data ContentType.
+type PreviewServiceZipImportMultipartRequestBody PreviewServiceZipImportMultipartBody
 
 // UpdateServiceJSONRequestBody defines body for UpdateService for application/json ContentType.
 type UpdateServiceJSONRequestBody = ServiceUpdate
@@ -1308,9 +1389,15 @@ type ServerInterface interface {
 	// Import a service from GitHub
 	// (POST /services/import/github)
 	ImportServiceFromGithub(c *gin.Context)
+	// Preview and validate a GitHub service import
+	// (POST /services/import/github/preview)
+	PreviewServiceGithubImport(c *gin.Context)
 	// Import a service from a ZIP file
 	// (POST /services/import/zip)
 	ImportServiceFromZip(c *gin.Context)
+	// Preview and validate a ZIP service import
+	// (POST /services/import/zip/preview)
+	PreviewServiceZipImport(c *gin.Context)
 	// Delete a service
 	// (DELETE /services/{id})
 	DeleteService(c *gin.Context, id int64)
@@ -2256,6 +2343,21 @@ func (siw *ServerInterfaceWrapper) ImportServiceFromGithub(c *gin.Context) {
 	siw.Handler.ImportServiceFromGithub(c)
 }
 
+// PreviewServiceGithubImport operation middleware
+func (siw *ServerInterfaceWrapper) PreviewServiceGithubImport(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PreviewServiceGithubImport(c)
+}
+
 // ImportServiceFromZip operation middleware
 func (siw *ServerInterfaceWrapper) ImportServiceFromZip(c *gin.Context) {
 
@@ -2269,6 +2371,21 @@ func (siw *ServerInterfaceWrapper) ImportServiceFromZip(c *gin.Context) {
 	}
 
 	siw.Handler.ImportServiceFromZip(c)
+}
+
+// PreviewServiceZipImport operation middleware
+func (siw *ServerInterfaceWrapper) PreviewServiceZipImport(c *gin.Context) {
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PreviewServiceZipImport(c)
 }
 
 // DeleteService operation middleware
@@ -3722,7 +3839,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/services", wrapper.ListServices)
 	router.POST(options.BaseURL+"/services", wrapper.CreateService)
 	router.POST(options.BaseURL+"/services/import/github", wrapper.ImportServiceFromGithub)
+	router.POST(options.BaseURL+"/services/import/github/preview", wrapper.PreviewServiceGithubImport)
 	router.POST(options.BaseURL+"/services/import/zip", wrapper.ImportServiceFromZip)
+	router.POST(options.BaseURL+"/services/import/zip/preview", wrapper.PreviewServiceZipImport)
 	router.DELETE(options.BaseURL+"/services/:id", wrapper.DeleteService)
 	router.GET(options.BaseURL+"/services/:id", wrapper.GetService)
 	router.PATCH(options.BaseURL+"/services/:id", wrapper.UpdateService)

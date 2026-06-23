@@ -167,6 +167,72 @@ components:
           type: array
           items:
             type: string
+    ServiceImportValidationItem:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - message
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum:
+            - ok
+            - warning
+            - error
+        message:
+          type: string
+    ServiceImportPreview:
+      type: object
+      required:
+        - source
+        - valid
+        - service_name
+        - expected_repository_name
+        - has_dev_directory
+        - requirements
+        - warnings
+      properties:
+        source:
+          type: string
+          enum:
+            - github
+            - zip
+        valid:
+          type: boolean
+        service_name:
+          type: string
+        repository_owner:
+          type: string
+        repository_name:
+          type: string
+        expected_repository_name:
+          type: string
+        root_directory:
+          type: string
+        service_directory:
+          type: string
+        checker_directory:
+          type: string
+        has_dev_directory:
+          type: boolean
+        existing_service_id:
+          type: integer
+          format: int64
+          nullable: true
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceImportValidationItem'
+        warnings:
+          type: array
+          items:
+            type: string
 paths:
   /services:
     get:
@@ -504,6 +570,33 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Import a service from GitHub
+  /services/import/github/preview:
+    post:
+      operationId: previewServiceGithubImport
+      tags:
+        - services
+      summary: Preview and validate a GitHub service import
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GithubImportRequest'
+      responses:
+        '200':
+          description: Import preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceImportPreview'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Preview and validate a GitHub service import
   /services/import/zip:
     post:
       operationId: importServiceFromZip
@@ -537,3 +630,36 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Import a service from a ZIP file
+  /services/import/zip/preview:
+    post:
+      operationId: previewServiceZipImport
+      tags:
+        - services
+      summary: Preview and validate a ZIP service import
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - archive
+              properties:
+                archive:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceImportPreview'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Preview and validate a ZIP service import

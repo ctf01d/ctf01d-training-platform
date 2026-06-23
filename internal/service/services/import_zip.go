@@ -2,16 +2,17 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
+
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 )
 
 func (s *ImportService) ImportFromZipUpload(ctx context.Context, zipBytes []byte, isAdmin bool) (*ImportResult, error) {
 	if len(zipBytes) == 0 {
-		return nil, errors.New("empty zip upload")
+		return nil, errs.NewValidationError(map[string]string{"archive": "file is required"})
 	}
 	if err := validateZipBytes(zipBytes); err != nil {
-		return nil, fmt.Errorf("invalid zip: %w", err)
+		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("invalid zip: %v", err)})
 	}
 	return s.ImportFromZip(ctx, zipBytes, isAdmin)
 }

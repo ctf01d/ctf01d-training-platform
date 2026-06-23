@@ -4,6 +4,8 @@ import type { components } from "./schema";
 export type Service = components["schemas"]["Service"];
 export type ServiceCreate = components["schemas"]["ServiceCreate"];
 export type ServiceUpdate = components["schemas"]["ServiceUpdate"];
+export type ServiceImportPreview =
+  components["schemas"]["ServiceImportPreview"];
 
 export async function listServices(query?: {
   page?: number;
@@ -86,8 +88,22 @@ export async function importServiceFromGithub(
   return client.POST("/services/import/github", { body });
 }
 
+export async function previewServiceGithubImport(
+  body: components["schemas"]["GithubImportRequest"],
+) {
+  return client.POST("/services/import/github/preview", { body });
+}
+
 export async function importServiceFromZip(formData: FormData) {
   const response = await fetch("/api/v1/services/import/zip", {
+    method: "POST",
+    body: formData,
+  });
+  return response;
+}
+
+export async function previewServiceZipImport(formData: FormData) {
+  const response = await fetch("/api/v1/services/import/zip/preview", {
     method: "POST",
     body: formData,
   });

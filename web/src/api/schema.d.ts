@@ -636,6 +636,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/services/import/github/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview and validate a GitHub service import
+         * @description Preview and validate a GitHub service import
+         */
+        post: operations["previewServiceGithubImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/services/import/zip": {
         parameters: {
             query?: never;
@@ -650,6 +670,26 @@ export interface paths {
          * @description Import a service from a ZIP file
          */
         post: operations["importServiceFromZip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/import/zip/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview and validate a ZIP service import
+         * @description Preview and validate a ZIP service import
+         */
+        post: operations["previewServiceZipImport"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1553,6 +1593,30 @@ export interface components {
         };
         ImportResult: {
             service: components["schemas"]["Service"];
+            warnings: string[];
+        };
+        ServiceImportValidationItem: {
+            id: string;
+            title: string;
+            /** @enum {string} */
+            status: "ok" | "warning" | "error";
+            message: string;
+        };
+        ServiceImportPreview: {
+            /** @enum {string} */
+            source: "github" | "zip";
+            valid: boolean;
+            service_name: string;
+            repository_owner?: string;
+            repository_name?: string;
+            expected_repository_name: string;
+            root_directory?: string;
+            service_directory?: string;
+            checker_directory?: string;
+            has_dev_directory: boolean;
+            /** Format: int64 */
+            existing_service_id?: number | null;
+            requirements: components["schemas"]["ServiceImportValidationItem"][];
             warnings: string[];
         };
         TeamMembership: components["schemas"]["Timestamped"] & {
@@ -2894,6 +2958,32 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
+    previewServiceGithubImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GithubImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Import preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceImportPreview"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
     importServiceFromZip: {
         parameters: {
             query?: never;
@@ -2917,6 +3007,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    previewServiceZipImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archive: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Import preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceImportPreview"];
                 };
             };
             401: components["responses"]["Unauthorized"];

@@ -1058,6 +1058,7 @@ a:focus-visible {
 .detail-section,
 .create-form,
 .edit-form,
+.import-wizard,
 .upload-form {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1632,6 +1633,147 @@ a:focus-visible {
   padding: 18px;
 }
 
+.import-wizard {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.import-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.import-step {
+  min-width: 92px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.import-step.is-active {
+  border-color: #bfdbfe;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+.import-source-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.import-source-tabs .tab {
+  margin-bottom: 0;
+}
+
+.import-fields {
+  display: grid;
+  gap: 0;
+}
+
+.import-preview {
+  display: grid;
+  gap: 14px;
+  padding-top: 2px;
+}
+
+.import-preview-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.import-preview-meta div {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.import-preview-meta span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.import-preview-meta strong {
+  display: block;
+  min-width: 0;
+  color: var(--text);
+  font-size: .9rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.import-check-list {
+  display: grid;
+  gap: 8px;
+}
+
+.import-check {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.import-check-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: .72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.import-check-ok .import-check-status {
+  background: var(--success-soft);
+  color: #166534;
+}
+
+.import-check-warning .import-check-status {
+  background: var(--warning-soft);
+  color: #92400e;
+}
+
+.import-check-error .import-check-status {
+  background: var(--danger-soft);
+  color: #991b1b;
+}
+
+.import-check strong {
+  display: block;
+  color: var(--text);
+  font-size: .92rem;
+  line-height: 1.25;
+}
+
+.import-check p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: .86rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .create-form,
 .edit-form {
   display: grid;
@@ -2011,6 +2153,10 @@ a:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .import-preview-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .games-page .card-grid,
   .universities-page .card-grid,
   .game-card {
@@ -2102,10 +2248,16 @@ a:focus-visible {
     font-size: 1.35rem;
   }
 
+  .import-preview-meta,
+  .import-check {
+    grid-template-columns: 1fr;
+  }
+
   .detail-card,
   .detail-section,
   .create-form,
   .edit-form,
+  .import-wizard,
   .upload-form,
   .ecard-link {
     padding: 14px;

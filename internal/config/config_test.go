@@ -45,8 +45,8 @@ func TestLoad_Defaults(t *testing.T) {
 	if cfg.Log.Level != "info" {
 		t.Errorf("Log.Level = %q, want info", cfg.Log.Level)
 	}
-	if cfg.CORS.AllowedOrigins != "http://localhost:5173" {
-		t.Errorf("CORS.AllowedOrigins = %q, want http://localhost:5173", cfg.CORS.AllowedOrigins)
+	if cfg.CORS.AllowedOrigins != "http://localhost:5173,http://127.0.0.1:5173" {
+		t.Errorf("CORS.AllowedOrigins = %q, want localhost and 127.0.0.1 dev origins", cfg.CORS.AllowedOrigins)
 	}
 	if cfg.Storage.Dir != "./storage" {
 		t.Errorf("Storage.Dir = %q, want ./storage", cfg.Storage.Dir)

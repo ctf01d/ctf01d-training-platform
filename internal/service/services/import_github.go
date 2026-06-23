@@ -28,6 +28,29 @@ type ImportResult struct {
 	Warnings []string
 }
 
+type ImportValidationItem struct {
+	ID      string
+	Title   string
+	Status  string
+	Message string
+}
+
+type ImportPreview struct {
+	Source                 string
+	Valid                  bool
+	ServiceName            string
+	RepositoryOwner        string
+	RepositoryName         string
+	ExpectedRepositoryName string
+	RootDirectory          string
+	ServiceDirectory       string
+	CheckerDirectory       string
+	HasDevDirectory        bool
+	ExistingServiceID      *int64
+	Requirements           []ImportValidationItem
+	Warnings               []string
+}
+
 type ImportQuerier interface {
 	GetServiceByName(ctx context.Context, name string) (db.Service, error)
 	CreateService(ctx context.Context, arg db.CreateServiceParams) (db.Service, error)
@@ -68,7 +91,218 @@ func NewImportService(q ImportQuerier, store storage.Storage, maxUploadBytes int
 	}
 }
 
+func (s *ImportService) PreviewFromGithub(ctx context.Context, req GithubImportRequest, isAdmin bool) (*ImportPreview, error) {
+	if req.Subdir != "" {
+		return nil, errs.NewValidationError(map[string]string{"subdir": "import is not yet supported"})
+	}
+
+	owner, repo, parsedRef, err := parseGitHubURL(req.RepoURL)
+	if err != nil {
+		return nil, errs.NewValidationError(map[string]string{"repo_url": "must be a valid GitHub repository URL"})
+	}
+
+	ref := req.Ref
+	if ref == "" {
+		ref = parsedRef
+	}
+	if ref == "" {
+		ref = defaultGitRef
+	}
+
+	zipBytes, err := s.fetchRepoZip(ctx, owner, repo, ref)
+	if err != nil {
+		return nil, errs.NewValidationError(map[string]string{"repo_url": fmt.Sprintf("downloading repository: %v", err)})
+	}
+
+	source := importSourceInfo{Source: "github", Owner: owner, Repo: repo}
+	return s.previewArchive(ctx, zipBytes, source, isAdmin)
+}
+
+func (s *ImportService) PreviewFromZipUpload(ctx context.Context, zipBytes []byte, isAdmin bool) (*ImportPreview, error) {
+	if len(zipBytes) == 0 {
+		return nil, errs.NewValidationError(map[string]string{"archive": "file is required"})
+	}
+	if err := validateZipBytes(zipBytes); err != nil {
+		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
+	}
+	return s.previewArchive(ctx, zipBytes, importSourceInfo{Source: "zip"}, isAdmin)
+}
+
 var serviceNameRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+func (s *ImportService) previewArchive(ctx context.Context, zipBytes []byte, source importSourceInfo, isAdmin bool) (*ImportPreview, error) {
+	layout, err := inspectSourceLayoutFromBytes(zipBytes, source)
+	if err != nil {
+		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
+	}
+
+	var meta *BundleMetadata
+	var bundleErr error
+	bundleBytes, err := BuildBundle(zipBytes)
+	if err != nil {
+		bundleErr = err
+	} else {
+		meta, err = ExtractMetadata(bundleBytes)
+		if err != nil {
+			bundleErr = err
+		}
+	}
+
+	serviceName := resolveImportServiceName(meta, layout, source)
+	preview := buildImportPreview(layout, source, serviceName)
+	if bundleErr != nil {
+		preview.Requirements = append(preview.Requirements, ImportValidationItem{
+			ID:      "archive",
+			Title:   "Archive can be normalized",
+			Status:  "error",
+			Message: bundleErr.Error(),
+		})
+	}
+
+	s.addDuplicatePreviewStatus(ctx, preview, source, serviceName, isAdmin)
+	finalizeImportPreview(preview)
+	return preview, nil
+}
+
+func buildImportPreview(layout sourceLayout, source importSourceInfo, serviceName string) *ImportPreview {
+	preview := &ImportPreview{
+		Source:                 source.Source,
+		ServiceName:            serviceName,
+		RepositoryOwner:        source.Owner,
+		RepositoryName:         source.Repo,
+		ExpectedRepositoryName: serviceRepoPattern,
+		RootDirectory:          layout.RootName,
+		ServiceDirectory:       layout.ServiceDir,
+		CheckerDirectory:       layout.CheckerDir,
+		HasDevDirectory:        layout.HasDevDir,
+		Requirements:           make([]ImportValidationItem, 0, 10),
+		Warnings:               []string{},
+	}
+
+	if source.Source == "github" {
+		if strings.EqualFold(source.Owner, expectedGithubOwner) {
+			preview.addRequirement("github_owner", "GitHub organization", "ok", "repository is in github.com/"+expectedGithubOwner)
+		} else {
+			preview.addRequirement("github_owner", "GitHub organization", "error", "repository must be in github.com/"+expectedGithubOwner)
+		}
+		if serviceIDFromRepo(source.Repo) != "" {
+			preview.addRequirement("repository_name", "Repository name", "ok", "matches "+serviceRepoPattern)
+		} else {
+			preview.addRequirement("repository_name", "Repository name", "error", "must match "+serviceRepoPattern)
+		}
+	} else if layout.RootName != "" && serviceIDFromRepo(layout.RootName) != "" {
+		preview.addRequirement("repository_name", "Repository name", "ok", "archive root looks like "+serviceRepoPattern)
+	} else {
+		preview.addRequirement("repository_name", "Repository name", "warning", "ZIP upload cannot prove the final GitHub repository name")
+	}
+
+	if serviceName != "" && serviceNameRe.MatchString(serviceName) {
+		preview.addRequirement("service_id", "Service ID", "ok", "will be imported as "+serviceName)
+	} else if serviceName != "" {
+		preview.addRequirement("service_id", "Service ID", "error", "derived service name must match [a-zA-Z0-9_-]+")
+	} else {
+		preview.addRequirement("service_id", "Service ID", "error", "service ID was not found in repository name, checker directory, or metadata")
+	}
+
+	if layout.HasRootReadme {
+		preview.addRequirement("root_readme", "README.md", "ok", "root README.md is present")
+	} else {
+		preview.addRequirement("root_readme", "README.md", "error", "root README.md is required")
+	}
+
+	if layout.HasNewService {
+		preview.addRequirement("vuln_service", "vuln-service", "ok", "service directory is present")
+	} else if layout.HasOldService {
+		preview.addRequirement("vuln_service", "vuln-service", "error", "legacy service/ was found, but vuln-service/ is required")
+	} else {
+		preview.addRequirement("vuln_service", "vuln-service", "error", "vuln-service/ directory is required")
+	}
+
+	if layout.ComposeFile != "" {
+		preview.addRequirement("docker_compose", "docker compose", "ok", layout.ComposeFile+" is present")
+	} else {
+		preview.addRequirement("docker_compose", "docker compose", "error", "vuln-service must contain docker-compose.yml, docker-compose.yaml, compose.yml, or compose.yaml")
+	}
+
+	expectedCheckerDir := ""
+	if serviceName != "" && serviceNameRe.MatchString(serviceName) {
+		expectedCheckerDir = checkerDirPrefix + serviceName
+	}
+	if expectedCheckerDir != "" && layout.CheckerDir == expectedCheckerDir {
+		preview.addRequirement("checker", "checker_<idservice>", "ok", layout.CheckerDir+" is present")
+	} else if len(layout.CheckerDirs) > 0 && expectedCheckerDir != "" {
+		preview.addRequirement("checker", "checker_<idservice>", "error", "checker directory must be named "+expectedCheckerDir)
+	} else if len(layout.CheckerDirs) > 0 {
+		preview.addRequirement("checker", "checker_<idservice>", "ok", layout.CheckerDir+" is present")
+	} else if layout.HasOldChecker && expectedCheckerDir != "" {
+		preview.addRequirement("checker", "checker_<idservice>", "error", "legacy checker/ was found, but "+expectedCheckerDir+" is required")
+	} else if layout.HasOldChecker {
+		preview.addRequirement("checker", "checker_<idservice>", "error", "legacy checker/ was found, but checker_<idservice>/ is required")
+	} else if expectedCheckerDir != "" {
+		preview.addRequirement("checker", "checker_<idservice>", "error", expectedCheckerDir+" directory is required")
+	} else {
+		preview.addRequirement("checker", "checker_<idservice>", "error", "checker_<idservice> directory is required")
+	}
+
+	if layout.HasWriteups {
+		preview.addRequirement("writeups", "writeups", "ok", "writeups/ is present")
+	} else {
+		preview.addRequirement("writeups", "writeups", "error", "writeups/ directory is required")
+	}
+
+	if layout.HasExploits {
+		preview.addRequirement("exploits", "exploits", "ok", "exploits/ is present")
+	} else {
+		preview.addRequirement("exploits", "exploits", "error", "exploits/ directory is required")
+	}
+
+	if layout.HasDevDir {
+		preview.addRequirement("vuln_service_dev", "vuln-service_dev", "ok", "optional build directory is present")
+	} else {
+		preview.addRequirement("vuln_service_dev", "vuln-service_dev", "warning", "optional directory is not present")
+	}
+
+	return preview
+}
+
+func (p *ImportPreview) addRequirement(id, title, status, message string) {
+	p.Requirements = append(p.Requirements, ImportValidationItem{
+		ID:      id,
+		Title:   title,
+		Status:  status,
+		Message: message,
+	})
+}
+
+func (s *ImportService) addDuplicatePreviewStatus(ctx context.Context, preview *ImportPreview, source importSourceInfo, serviceName string, isAdmin bool) {
+	if serviceName == "" || !serviceNameRe.MatchString(serviceName) {
+		return
+	}
+	existing, err := s.q.GetServiceByName(ctx, serviceName)
+	if err != nil {
+		preview.addRequirement("duplicate", "Existing service", "ok", "no service with this name exists")
+		return
+	}
+	preview.ExistingServiceID = &existing.ID
+	if source.Source == "github" && isAdmin {
+		preview.addRequirement("duplicate", "Existing service", "warning", "existing service will be updated by GitHub import")
+		return
+	}
+	preview.addRequirement("duplicate", "Existing service", "error", "service with this name already exists")
+}
+
+func finalizeImportPreview(preview *ImportPreview) {
+	preview.Valid = true
+	preview.Warnings = preview.Warnings[:0]
+	for _, item := range preview.Requirements {
+		switch item.Status {
+		case "error":
+			preview.Valid = false
+		case "warning":
+			preview.Warnings = append(preview.Warnings, item.Message)
+		}
+	}
+}
 
 func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRequest, isAdmin bool) (*ImportResult, error) {
 	if req.Subdir != "" {
@@ -90,12 +324,17 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 
 	zipBytes, err := s.fetchRepoZip(ctx, owner, repo, ref)
 	if err != nil {
-		return nil, fmt.Errorf("downloading repository: %w", err)
+		return nil, errs.NewValidationError(map[string]string{"repo_url": fmt.Sprintf("downloading repository: %v", err)})
+	}
+	source := importSourceInfo{Source: "github", Owner: owner, Repo: repo}
+	layout, err := inspectSourceLayoutFromBytes(zipBytes, source)
+	if err != nil {
+		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
 	}
 
 	bundleBytes, err := BuildBundle(zipBytes)
 	if err != nil {
-		return nil, fmt.Errorf("building bundle: %w", err)
+		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("building bundle: %v", err)})
 	}
 
 	meta, err := ExtractMetadata(bundleBytes)
@@ -104,14 +343,20 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 	}
 
 	var warnings []string
+	preview := buildImportPreview(layout, source, resolveImportServiceName(meta, layout, source))
+	finalizeImportPreview(preview)
+	warnings = append(warnings, preview.Warnings...)
+	if !preview.Valid {
+		warnings = append(warnings, "repository layout does not satisfy all Cybersibir service requirements")
+	}
 
-	name := meta.Name
+	name := resolveImportServiceName(meta, layout, source)
 	if name == "" {
 		name = repo
 		warnings = append(warnings, "no name found in metadata, using repository name")
 	}
 	if !serviceNameRe.MatchString(name) {
-		return nil, fmt.Errorf("invalid service name derived from import: %q", name)
+		return nil, errs.NewValidationError(map[string]string{"name": fmt.Sprintf("invalid service name derived from import: %q", name)})
 	}
 
 	archiveURL := githubArchiveURL(owner, repo, ref)
@@ -126,7 +371,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 	existing, err := s.q.GetServiceByName(ctx, name)
 	if err == nil {
 		if !isAdmin {
-			return nil, fmt.Errorf("service with name %q already exists; only admins can update existing services via import", name)
+			return nil, errs.ErrConflict
 		}
 		return s.updateFromImport(ctx, existing.ID, name, bundleBytes, meta, archiveURL, training, isAdmin, warnings)
 	}
@@ -142,7 +387,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 	})
 	if err != nil {
 		if isDuplicateKey(err) {
-			return nil, fmt.Errorf("service with name %q already exists", name)
+			return nil, errs.ErrConflict
 		}
 		return nil, fmt.Errorf("creating service: %w", err)
 	}
@@ -235,12 +480,18 @@ func (s *ImportService) saveBundleArchivesForSvc(ctx context.Context, svc db.Ser
 
 func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAdmin bool) (*ImportResult, error) {
 	if err := validateZipBytes(zipBytes); err != nil {
-		return nil, fmt.Errorf("invalid zip: %w", err)
+		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("invalid zip: %v", err)})
+	}
+
+	source := importSourceInfo{Source: "zip"}
+	layout, err := inspectSourceLayoutFromBytes(zipBytes, source)
+	if err != nil {
+		return nil, errs.NewValidationError(map[string]string{"archive": err.Error()})
 	}
 
 	bundleBytes, err := BuildBundle(zipBytes)
 	if err != nil {
-		return nil, fmt.Errorf("building bundle: %w", err)
+		return nil, errs.NewValidationError(map[string]string{"archive": fmt.Sprintf("building bundle: %v", err)})
 	}
 
 	meta, err := ExtractMetadata(bundleBytes)
@@ -249,13 +500,19 @@ func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAd
 	}
 
 	var warnings []string
+	preview := buildImportPreview(layout, source, resolveImportServiceName(meta, layout, source))
+	finalizeImportPreview(preview)
+	warnings = append(warnings, preview.Warnings...)
+	if !preview.Valid {
+		warnings = append(warnings, "repository layout does not satisfy all Cybersibir service requirements")
+	}
 
-	name := meta.Name
+	name := resolveImportServiceName(meta, layout, source)
 	if name == "" {
-		return nil, errors.New("could not determine service name from zip")
+		return nil, errs.NewValidationError(map[string]string{"name": "could not determine service name from zip"})
 	}
 	if !serviceNameRe.MatchString(name) {
-		return nil, fmt.Errorf("invalid service name derived from import: %q", name)
+		return nil, errs.NewValidationError(map[string]string{"name": fmt.Sprintf("invalid service name derived from import: %q", name)})
 	}
 
 	var training json.RawMessage
@@ -275,7 +532,7 @@ func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAd
 	})
 	if err != nil {
 		if isDuplicateKey(err) {
-			return nil, fmt.Errorf("service with name %q already exists", name)
+			return nil, errs.ErrConflict
 		}
 		return nil, fmt.Errorf("creating service: %w", err)
 	}
