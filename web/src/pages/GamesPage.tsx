@@ -8,6 +8,7 @@ import { ErrorDisplay } from "../components/ErrorDisplay";
 import { RelativeTime, Duration } from "../components/DetailInfo";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
+import { datetimeLocalToRFC3339 } from "../api/datetime";
 
 /**
  * Map of lower-cased organizer name -> team (or null when no team matches).
@@ -83,7 +84,11 @@ export default function GamesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
-    const { data, error: err } = await gamesApi.createGame(form);
+    const { data, error: err } = await gamesApi.createGame({
+      ...form,
+      starts_at: datetimeLocalToRFC3339(form.starts_at),
+      ends_at: datetimeLocalToRFC3339(form.ends_at),
+    });
     setCreating(false);
     if (err) {
       setError(err);

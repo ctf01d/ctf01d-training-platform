@@ -188,7 +188,7 @@ textarea {
   top: 100%;
   left: 0;
   z-index: 130;
-  display: grid;
+  display: none;
   min-width: 180px;
   padding: 6px;
   border: 1px solid var(--line);
@@ -196,13 +196,16 @@ textarea {
   background: var(--surface);
   box-shadow: var(--shadow-md);
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateY(-4px);
   transition: opacity .12s ease, transform .12s ease;
 }
 
 .nav-menu.is-open .nav-menu-content {
+  display: grid;
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
 }
@@ -305,7 +308,7 @@ textarea {
   top: 100%;
   right: 0;
   z-index: 130;
-  display: grid;
+  display: none;
   min-width: 220px;
   padding: 6px;
   border: 1px solid var(--line);
@@ -313,13 +316,16 @@ textarea {
   background: var(--surface);
   box-shadow: var(--shadow-md);
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateY(-4px);
   transition: opacity .12s ease, transform .12s ease;
 }
 
 .account-menu.is-open .account-menu-content {
+  display: grid;
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
 }
@@ -2174,6 +2180,15 @@ a:focus-visible {
     min-height: 56px;
   }
 
+  .nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
   .header-right {
     gap: 6px;
   }
@@ -2284,6 +2299,13 @@ a:focus-visible {
   .nav-menu-trigger {
     padding: 7px 8px;
     font-size: .84rem;
+  }
+
+  .nav-menu-content {
+    position: fixed;
+    top: 54px;
+    left: auto;
+    right: 52px;
   }
 
   .account-menu-trigger {

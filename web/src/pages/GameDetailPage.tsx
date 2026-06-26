@@ -34,6 +34,10 @@ import {
   safeHref,
 } from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
+import {
+  datetimeLocalToRFC3339,
+  rfc3339ToDatetimeLocal,
+} from "../api/datetime";
 
 export default function GameDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -209,7 +213,21 @@ export default function GameDetailPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    const { data, error: err } = await gamesApi.updateGame(gameId, editForm);
+    const { data, error: err } = await gamesApi.updateGame(gameId, {
+      ...editForm,
+      starts_at: datetimeLocalToRFC3339(editForm.starts_at),
+      ends_at: datetimeLocalToRFC3339(editForm.ends_at),
+      registration_opens_at: datetimeLocalToRFC3339(
+        editForm.registration_opens_at,
+      ),
+      registration_closes_at: datetimeLocalToRFC3339(
+        editForm.registration_closes_at,
+      ),
+      scoreboard_opens_at: datetimeLocalToRFC3339(editForm.scoreboard_opens_at),
+      scoreboard_closes_at: datetimeLocalToRFC3339(
+        editForm.scoreboard_closes_at,
+      ),
+    });
     setSaving(false);
     if (err) {
       setError(err);
@@ -226,15 +244,19 @@ export default function GameDetailPage() {
     setEditForm({
       name: game.name ?? undefined,
       organizer: game.organizer ?? undefined,
-      starts_at: game.starts_at ?? undefined,
-      ends_at: game.ends_at ?? undefined,
+      starts_at: rfc3339ToDatetimeLocal(game.starts_at),
+      ends_at: rfc3339ToDatetimeLocal(game.ends_at),
       avatar_url: game.avatar_url ?? undefined,
       site_url: game.site_url ?? undefined,
       ctftime_url: game.ctftime_url ?? undefined,
-      registration_opens_at: game.registration_opens_at ?? undefined,
-      registration_closes_at: game.registration_closes_at ?? undefined,
-      scoreboard_opens_at: game.scoreboard_opens_at ?? undefined,
-      scoreboard_closes_at: game.scoreboard_closes_at ?? undefined,
+      registration_opens_at: rfc3339ToDatetimeLocal(
+        game.registration_opens_at,
+      ),
+      registration_closes_at: rfc3339ToDatetimeLocal(
+        game.registration_closes_at,
+      ),
+      scoreboard_opens_at: rfc3339ToDatetimeLocal(game.scoreboard_opens_at),
+      scoreboard_closes_at: rfc3339ToDatetimeLocal(game.scoreboard_closes_at),
       vpn_url: game.vpn_url ?? undefined,
       vpn_config_url: game.vpn_config_url ?? undefined,
       access_instructions: game.access_instructions ?? undefined,
