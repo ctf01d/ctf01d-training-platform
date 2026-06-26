@@ -14,7 +14,7 @@ import (
 type BuilderQuerier interface {
 	GetGameByID(ctx context.Context, id int64) (db.Game, error)
 	ListGameTeamsByGame(ctx context.Context, gameID int64) ([]db.GameTeam, error)
-	ListServicesByGame(ctx context.Context, gameID int64) ([]int64, error)
+	ListServiceIDsByGame(ctx context.Context, gameID int64) ([]int64, error)
 	GetServiceByID(ctx context.Context, id int64) (db.Service, error)
 	GetTeamByID(ctx context.Context, id int64) (db.Team, error)
 }
@@ -52,7 +52,7 @@ func (b *Builder) BuildParams(ctx context.Context, gameID int64, req Ctf01dExpor
 		return nil, fmt.Errorf("list game teams: %w", err)
 	}
 
-	serviceIDs, err := b.q.ListServicesByGame(ctx, gameID)
+	serviceIDs, err := b.q.ListServiceIDsByGame(ctx, gameID)
 	if err != nil {
 		return nil, fmt.Errorf("list services: %w", err)
 	}
@@ -120,7 +120,7 @@ func (b *Builder) BuildOptions(ctx context.Context, gameID int64) (*Ctf01dExport
 		return nil, fmt.Errorf("list game teams: %w", err)
 	}
 
-	serviceIDs, err := b.q.ListServicesByGame(ctx, gameID)
+	serviceIDs, err := b.q.ListServiceIDsByGame(ctx, gameID)
 	if err != nil {
 		return nil, fmt.Errorf("list services: %w", err)
 	}

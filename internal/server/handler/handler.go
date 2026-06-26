@@ -633,6 +633,17 @@ func (h *Handler) RemoveGameService(c *gin.Context, id int64, serviceId int64) {
 	h.HandleRemoveGameService(c)
 }
 
+func (h *Handler) SetGameServiceStatus(c *gin.Context, id int64, serviceId int64) {
+	c.Set("id", id)
+	c.Set("service_id", serviceId)
+	h.HandleSetGameServiceStatus(c)
+}
+
+func (h *Handler) PublishGame(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandlePublishGame(c)
+}
+
 func (h *Handler) ListGameTeams(c *gin.Context, id int64) {
 	c.Set("id", id)
 	h.HandleListGameTeams(c)

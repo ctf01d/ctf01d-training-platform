@@ -483,15 +483,18 @@ type Game struct {
 	Id                   int64                   `json:"id"`
 	Name                 *string                 `json:"name,omitempty"`
 	Organizer            *string                 `json:"organizer,omitempty"`
+	Published            *bool                   `json:"published,omitempty"`
 	RegistrationClosesAt *time.Time              `json:"registration_closes_at,omitempty"`
 	RegistrationOpensAt  *time.Time              `json:"registration_opens_at,omitempty"`
 	RegistrationStatus   *GameRegistrationStatus `json:"registration_status,omitempty"`
+	Requirements         *string                 `json:"requirements,omitempty"`
 	ScoreboardClosesAt   *time.Time              `json:"scoreboard_closes_at,omitempty"`
 	ScoreboardOpensAt    *time.Time              `json:"scoreboard_opens_at,omitempty"`
 	ScoreboardStatus     *GameScoreboardStatus   `json:"scoreboard_status,omitempty"`
 	SiteUrl              *string                 `json:"site_url,omitempty"`
 	StartsAt             *time.Time              `json:"starts_at,omitempty"`
 	Status               *GameStatus             `json:"status,omitempty"`
+	Theme                *string                 `json:"theme,omitempty"`
 	UpdatedAt            *time.Time              `json:"updated_at,omitempty"`
 	VpnConfigUrl         *string                 `json:"vpn_config_url,omitempty"`
 	VpnUrl               *string                 `json:"vpn_url,omitempty"`
@@ -515,12 +518,15 @@ type GameCreate struct {
 	EndsAt               *time.Time `json:"ends_at,omitempty"`
 	Name                 *string    `json:"name,omitempty"`
 	Organizer            *string    `json:"organizer,omitempty"`
+	Published            *bool      `json:"published,omitempty"`
 	RegistrationClosesAt *time.Time `json:"registration_closes_at,omitempty"`
 	RegistrationOpensAt  *time.Time `json:"registration_opens_at,omitempty"`
+	Requirements         *string    `json:"requirements,omitempty"`
 	ScoreboardClosesAt   *time.Time `json:"scoreboard_closes_at,omitempty"`
 	ScoreboardOpensAt    *time.Time `json:"scoreboard_opens_at,omitempty"`
 	SiteUrl              *string    `json:"site_url,omitempty"`
 	StartsAt             *time.Time `json:"starts_at,omitempty"`
+	Theme                *string    `json:"theme,omitempty"`
 	VpnConfigUrl         *string    `json:"vpn_config_url,omitempty"`
 	VpnUrl               *string    `json:"vpn_url,omitempty"`
 }
@@ -529,6 +535,12 @@ type GameCreate struct {
 type GameList struct {
 	Items      []Game     `json:"items"`
 	Pagination Pagination `json:"pagination"`
+}
+
+// GameServiceLink defines model for GameServiceLink.
+type GameServiceLink struct {
+	ServiceId int64  `json:"service_id"`
+	Status    string `json:"status"`
 }
 
 // GameTeam defines model for GameTeam.
@@ -581,10 +593,12 @@ type GameUpdate struct {
 	Organizer            *string    `json:"organizer,omitempty"`
 	RegistrationClosesAt *time.Time `json:"registration_closes_at,omitempty"`
 	RegistrationOpensAt  *time.Time `json:"registration_opens_at,omitempty"`
+	Requirements         *string    `json:"requirements,omitempty"`
 	ScoreboardClosesAt   *time.Time `json:"scoreboard_closes_at,omitempty"`
 	ScoreboardOpensAt    *time.Time `json:"scoreboard_opens_at,omitempty"`
 	SiteUrl              *string    `json:"site_url,omitempty"`
 	StartsAt             *time.Time `json:"starts_at,omitempty"`
+	Theme                *string    `json:"theme,omitempty"`
 	VpnConfigUrl         *string    `json:"vpn_config_url,omitempty"`
 	VpnUrl               *string    `json:"vpn_url,omitempty"`
 }
@@ -1088,14 +1102,21 @@ type bearerAuthContextKey string
 
 // ListGamesParams defines parameters for ListGames.
 type ListGamesParams struct {
-	Page    *PageParam    `form:"page,omitempty" json:"page,omitempty"`
-	PerPage *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
-	Q       *string       `form:"q,omitempty" json:"q,omitempty"`
+	Page      *PageParam    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage   *PerPageParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+	Q         *string       `form:"q,omitempty" json:"q,omitempty"`
+	Published *bool         `form:"published,omitempty" json:"published,omitempty"`
 }
 
 // AddGameServiceJSONBody defines parameters for AddGameService.
 type AddGameServiceJSONBody struct {
-	ServiceId int64 `json:"service_id"`
+	ServiceId int64   `json:"service_id"`
+	Status    *string `json:"status,omitempty"`
+}
+
+// SetGameServiceStatusJSONBody defines parameters for SetGameServiceStatus.
+type SetGameServiceStatusJSONBody struct {
+	Status string `json:"status"`
 }
 
 // UploadProfileAvatarMultipartBody defines parameters for UploadProfileAvatar.
@@ -1197,6 +1218,9 @@ type ExportCtf01dJSONRequestBody = Ctf01dExportRequest
 
 // AddGameServiceJSONRequestBody defines body for AddGameService for application/json ContentType.
 type AddGameServiceJSONRequestBody AddGameServiceJSONBody
+
+// SetGameServiceStatusJSONRequestBody defines body for SetGameServiceStatus for application/json ContentType.
+type SetGameServiceStatusJSONRequestBody SetGameServiceStatusJSONBody
 
 // ReorderGameTeamsJSONRequestBody defines body for ReorderGameTeams for application/json ContentType.
 type ReorderGameTeamsJSONRequestBody = ReorderRequest
@@ -1326,6 +1350,9 @@ type ServerInterface interface {
 	// Finalize game results
 	// (POST /games/{id}/finalize)
 	FinalizeGame(c *gin.Context, id int64)
+	// Publish a planning game into the games section
+	// (POST /games/{id}/publish)
+	PublishGame(c *gin.Context, id int64)
 	// Get scoreboard for a game
 	// (GET /games/{id}/scoreboard)
 	GetGameScoreboard(c *gin.Context, id int64)
@@ -1338,6 +1365,9 @@ type ServerInterface interface {
 	// Unlink a service from a game
 	// (DELETE /games/{id}/services/{service_id})
 	RemoveGameService(c *gin.Context, id int64, serviceId int64)
+	// Set the planning status of a linked service
+	// (PATCH /games/{id}/services/{service_id})
+	SetGameServiceStatus(c *gin.Context, id int64, serviceId int64)
 	// List teams in a game
 	// (GET /games/{id}/teams)
 	ListGameTeams(c *gin.Context, id int64)
@@ -1664,6 +1694,14 @@ func (siw *ServerInterfaceWrapper) ListGames(c *gin.Context) {
 		return
 	}
 
+	// ------------- Optional query parameter "published" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "published", c.Request.URL.Query(), &params.Published, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter published: %w", err), http.StatusBadRequest)
+		return
+	}
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -1849,6 +1887,33 @@ func (siw *ServerInterfaceWrapper) FinalizeGame(c *gin.Context) {
 	siw.Handler.FinalizeGame(c, id)
 }
 
+// PublishGame operation middleware
+func (siw *ServerInterfaceWrapper) PublishGame(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PublishGame(c, id)
+}
+
 // GetGameScoreboard operation middleware
 func (siw *ServerInterfaceWrapper) GetGameScoreboard(c *gin.Context) {
 
@@ -1960,6 +2025,42 @@ func (siw *ServerInterfaceWrapper) RemoveGameService(c *gin.Context) {
 	}
 
 	siw.Handler.RemoveGameService(c, id, serviceId)
+}
+
+// SetGameServiceStatus operation middleware
+func (siw *ServerInterfaceWrapper) SetGameServiceStatus(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "service_id" -------------
+	var serviceId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "service_id", c.Param("service_id"), &serviceId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter service_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SetGameServiceStatus(c, id, serviceId)
 }
 
 // ListGameTeams operation middleware
@@ -3818,10 +3919,12 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/games/:id/export/ctf01d", wrapper.ExportCtf01d)
 	router.GET(options.BaseURL+"/games/:id/export/ctf01d/options", wrapper.GetCtf01dExportOptions)
 	router.POST(options.BaseURL+"/games/:id/finalize", wrapper.FinalizeGame)
+	router.POST(options.BaseURL+"/games/:id/publish", wrapper.PublishGame)
 	router.GET(options.BaseURL+"/games/:id/scoreboard", wrapper.GetGameScoreboard)
 	router.GET(options.BaseURL+"/games/:id/services", wrapper.ListGameServices)
 	router.POST(options.BaseURL+"/games/:id/services", wrapper.AddGameService)
 	router.DELETE(options.BaseURL+"/games/:id/services/:service_id", wrapper.RemoveGameService)
+	router.PATCH(options.BaseURL+"/games/:id/services/:service_id", wrapper.SetGameServiceStatus)
 	router.GET(options.BaseURL+"/games/:id/teams", wrapper.ListGameTeams)
 	router.POST(options.BaseURL+"/games/:id/teams/reorder", wrapper.ReorderGameTeams)
 	router.POST(options.BaseURL+"/games/:id/unfinalize", wrapper.UnfinalizeGame)

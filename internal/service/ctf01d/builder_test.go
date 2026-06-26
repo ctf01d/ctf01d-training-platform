@@ -27,7 +27,7 @@ func (m *mockBuilderQuerier) ListGameTeamsByGame(_ context.Context, _ int64) ([]
 	return m.gameTeams, nil
 }
 
-func (m *mockBuilderQuerier) ListServicesByGame(_ context.Context, _ int64) ([]int64, error) {
+func (m *mockBuilderQuerier) ListServiceIDsByGame(_ context.Context, _ int64) ([]int64, error) {
 	return m.serviceIDs, nil
 }
 

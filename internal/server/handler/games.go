@@ -31,7 +31,13 @@ func (h *Handler) HandleListGames(c *gin.Context) {
 		q = &v
 	}
 
-	result, err := h.games.List(c.Request.Context(), page, perPage, q)
+	var published *bool
+	if v := c.Query("published"); v != "" {
+		b := v == "true" || v == "1"
+		published = &b
+	}
+
+	result, err := h.games.List(c.Request.Context(), page, perPage, q, published)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -77,6 +83,9 @@ func (h *Handler) HandleCreateGame(c *gin.Context) {
 		VpnConfigUrl:         req.VpnConfigUrl,
 		AccessInstructions:   req.AccessInstructions,
 		AccessSecret:         req.AccessSecret,
+		Published:            req.Published,
+		Theme:                req.Theme,
+		Requirements:         req.Requirements,
 	}
 
 	game, err := h.games.Create(c.Request.Context(), params)
@@ -136,6 +145,8 @@ func (h *Handler) HandleUpdateGame(c *gin.Context) {
 		VpnConfigUrl:         req.VpnConfigUrl,
 		AccessInstructions:   req.AccessInstructions,
 		AccessSecret:         req.AccessSecret,
+		Theme:                req.Theme,
+		Requirements:         req.Requirements,
 	}
 
 	game, err := h.games.Update(c.Request.Context(), id, params)
@@ -205,15 +216,17 @@ func (h *Handler) HandleListGameServices(c *gin.Context) {
 		return
 	}
 
-	serviceIDs, err := h.games.ListServices(c.Request.Context(), id)
+	links, err := h.games.ListServices(c.Request.Context(), id)
 	if err != nil {
 		respondError(c, err)
 		return
 	}
 
-	ids := make([]int64, len(serviceIDs))
-	copy(ids, serviceIDs)
-	c.JSON(http.StatusOK, ids)
+	out := make([]httpserver.GameServiceLink, len(links))
+	for i, l := range links {
+		out[i] = httpserver.GameServiceLink{ServiceId: l.ServiceID, Status: l.Status}
+	}
+	c.JSON(http.StatusOK, out)
 }
 
 func (h *Handler) HandleAddGameService(c *gin.Context) {
@@ -223,19 +236,64 @@ func (h *Handler) HandleAddGameService(c *gin.Context) {
 	}
 
 	var req struct {
-		ServiceId int64 `json:"service_id"`
+		ServiceId int64   `json:"service_id"`
+		Status    *string `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "invalid JSON"})
 		return
 	}
 
-	if err := h.games.AddService(c.Request.Context(), id, req.ServiceId); err != nil {
+	if err := h.games.AddService(c.Request.Context(), id, req.ServiceId, req.Status); err != nil {
 		respondError(c, err)
 		return
 	}
 
 	c.Status(http.StatusOK)
+}
+
+func (h *Handler) HandleSetGameServiceStatus(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	serviceID, ok := parseIDParam(c, "service_id")
+	if !ok {
+		return
+	}
+
+	var req struct {
+		Status string `json:"status"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "invalid JSON"})
+		return
+	}
+
+	if err := h.games.SetServiceStatus(c.Request.Context(), id, serviceID, req.Status); err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) HandlePublishGame(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+
+	game, err := h.games.Publish(c.Request.Context(), id)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+
+	viewerRole, _ := middleware.CurrentRole(c)
+	userID, hasUser := middleware.CurrentUserID(c)
+
+	c.JSON(http.StatusOK, gameToHTTP(*game, h.canAccessGameSecrets(c, game.ID, viewerRole, hasUser, userID)))
 }
 
 func (h *Handler) HandleRemoveGameService(c *gin.Context) {
@@ -270,6 +328,9 @@ func gameToHTTP(g gamesvc.Game, canAccessSecrets bool) httpserver.Game {
 		CtftimeUrl:           g.CtftimeUrl,
 		Finalized:            g.Finalized,
 		FinalizedAt:          g.FinalizedAt,
+		Published:            &g.Published,
+		Theme:                g.Theme,
+		Requirements:         g.Requirements,
 		RegistrationOpensAt:  g.RegistrationOpensAt,
 		RegistrationClosesAt: g.RegistrationClosesAt,
 		ScoreboardOpensAt:    g.ScoreboardOpensAt,

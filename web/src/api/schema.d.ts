@@ -205,6 +205,30 @@ export interface paths {
         delete: operations["removeGameService"];
         options?: never;
         head?: never;
+        /**
+         * Set the planning status of a linked service
+         * @description Set the planning status of a linked service
+         */
+        patch: operations["setGameServiceStatus"];
+        trace?: never;
+    };
+    "/games/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish a planning game into the games section
+         * @description Publish a planning game into the games section
+         */
+        post: operations["publishGame"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -1333,6 +1357,9 @@ export interface components {
             vpn_config_url?: string | null;
             access_instructions?: string | null;
             access_secret?: string | null;
+            published?: boolean;
+            theme?: string | null;
+            requirements?: string | null;
             /** @enum {string} */
             readonly status?: "upcoming" | "ongoing" | "past" | "unknown";
             /** @enum {string} */
@@ -1362,6 +1389,9 @@ export interface components {
             vpn_config_url?: string;
             access_instructions?: string;
             access_secret?: string;
+            published?: boolean;
+            theme?: string;
+            requirements?: string;
         };
         GameUpdate: {
             name?: string;
@@ -1385,10 +1415,17 @@ export interface components {
             vpn_config_url?: string;
             access_instructions?: string;
             access_secret?: string;
+            theme?: string;
+            requirements?: string;
         };
         GameList: {
             items: components["schemas"]["Game"][];
             pagination: components["schemas"]["Pagination"];
+        };
+        GameServiceLink: {
+            /** Format: int64 */
+            service_id: number;
+            status: string;
         };
         Ctf01dExportOptions: {
             /** @default 8080 */
@@ -2065,6 +2102,7 @@ export interface operations {
                 page?: components["parameters"]["PageParam"];
                 per_page?: components["parameters"]["PerPageParam"];
                 q?: string;
+                published?: boolean;
             };
             header?: never;
             path?: never;
@@ -2196,13 +2234,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List of service IDs */
+            /** @description List of linked services with planning status */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": number[];
+                    "application/json": components["schemas"]["GameServiceLink"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -2223,6 +2261,7 @@ export interface operations {
                 "application/json": {
                     /** Format: int64 */
                     service_id: number;
+                    status?: string;
                 };
             };
         };
@@ -2257,6 +2296,60 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    setGameServiceStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                service_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    status: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Status updated */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    publishGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Game published */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Game"];
+                };
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];

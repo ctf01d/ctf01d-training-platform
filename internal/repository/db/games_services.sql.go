@@ -10,27 +10,28 @@ import (
 )
 
 const addService = `-- name: AddService :exec
-INSERT INTO games_services (game_id, service_id)
-VALUES ($1, $2)
+INSERT INTO games_services (game_id, service_id, status)
+VALUES ($1, $2, COALESCE($3, 'planning'))
 ON CONFLICT (game_id, service_id) DO NOTHING
 `
 
 type AddServiceParams struct {
-	GameID    int64 `json:"game_id"`
-	ServiceID int64 `json:"service_id"`
+	GameID    int64       `json:"game_id"`
+	ServiceID int64       `json:"service_id"`
+	Status    interface{} `json:"status"`
 }
 
 func (q *Queries) AddService(ctx context.Context, arg AddServiceParams) error {
-	_, err := q.db.Exec(ctx, addService, arg.GameID, arg.ServiceID)
+	_, err := q.db.Exec(ctx, addService, arg.GameID, arg.ServiceID, arg.Status)
 	return err
 }
 
-const listServicesByGame = `-- name: ListServicesByGame :many
+const listServiceIDsByGame = `-- name: ListServiceIDsByGame :many
 SELECT service_id FROM games_services WHERE game_id = $1
 `
 
-func (q *Queries) ListServicesByGame(ctx context.Context, gameID int64) ([]int64, error) {
-	rows, err := q.db.Query(ctx, listServicesByGame, gameID)
+func (q *Queries) ListServiceIDsByGame(ctx context.Context, gameID int64) ([]int64, error) {
+	rows, err := q.db.Query(ctx, listServiceIDsByGame, gameID)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +50,35 @@ func (q *Queries) ListServicesByGame(ctx context.Context, gameID int64) ([]int64
 	return items, nil
 }
 
+const listServicesByGame = `-- name: ListServicesByGame :many
+SELECT service_id, status FROM games_services WHERE game_id = $1
+`
+
+type ListServicesByGameRow struct {
+	ServiceID int64  `json:"service_id"`
+	Status    string `json:"status"`
+}
+
+func (q *Queries) ListServicesByGame(ctx context.Context, gameID int64) ([]ListServicesByGameRow, error) {
+	rows, err := q.db.Query(ctx, listServicesByGame, gameID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListServicesByGameRow
+	for rows.Next() {
+		var i ListServicesByGameRow
+		if err := rows.Scan(&i.ServiceID, &i.Status); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const removeService = `-- name: RemoveService :exec
 DELETE FROM games_services WHERE game_id = $1 AND service_id = $2
 `
@@ -60,5 +90,21 @@ type RemoveServiceParams struct {
 
 func (q *Queries) RemoveService(ctx context.Context, arg RemoveServiceParams) error {
 	_, err := q.db.Exec(ctx, removeService, arg.GameID, arg.ServiceID)
+	return err
+}
+
+const setServiceStatus = `-- name: SetServiceStatus :exec
+UPDATE games_services SET status = $3
+WHERE game_id = $1 AND service_id = $2
+`
+
+type SetServiceStatusParams struct {
+	GameID    int64  `json:"game_id"`
+	ServiceID int64  `json:"service_id"`
+	Status    string `json:"status"`
+}
+
+func (q *Queries) SetServiceStatus(ctx context.Context, arg SetServiceStatusParams) error {
+	_, err := q.db.Exec(ctx, setServiceStatus, arg.GameID, arg.ServiceID, arg.Status)
 	return err
 }

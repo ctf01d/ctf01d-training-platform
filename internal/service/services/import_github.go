@@ -383,6 +383,7 @@ func (s *ImportService) ImportFromGithub(ctx context.Context, req GithubImportRe
 	svc, err := s.q.CreateService(ctx, db.CreateServiceParams{
 		Name:              name,
 		PublicDescription: &meta.PublicDescription,
+		Author:            metaAuthorPtr(meta),
 		Copyright:         &meta.Copyright,
 		Public:            true,
 		ServiceArchiveUrl: &archiveURL,
@@ -405,6 +406,7 @@ func (s *ImportService) updateFromImport(ctx context.Context, id int64, name str
 		ID:                id,
 		Name:              name,
 		PublicDescription: &meta.PublicDescription,
+		Author:            metaAuthorPtr(meta),
 		Copyright:         &meta.Copyright,
 		ServiceArchiveUrl: &archiveURL,
 		Ctf01dTraining:    training,
@@ -529,6 +531,7 @@ func (s *ImportService) ImportFromZip(ctx context.Context, zipBytes []byte, isAd
 	svc, err := s.q.CreateService(ctx, db.CreateServiceParams{
 		Name:              name,
 		PublicDescription: &meta.PublicDescription,
+		Author:            metaAuthorPtr(meta),
 		Copyright:         &meta.Copyright,
 		Public:            true,
 		Ctf01dTraining:    training,

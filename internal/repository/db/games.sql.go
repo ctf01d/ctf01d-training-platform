@@ -14,10 +14,16 @@ import (
 const countGames = `-- name: CountGames :one
 SELECT count(*) FROM games
 WHERE (name ILIKE '%' || $1 || '%' OR $1 IS NULL)
+  AND (published = $2 OR $2 IS NULL)
 `
 
-func (q *Queries) CountGames(ctx context.Context, searchQuery *string) (int64, error) {
-	row := q.db.QueryRow(ctx, countGames, searchQuery)
+type CountGamesParams struct {
+	SearchQuery *string `json:"search_query"`
+	Published   *bool   `json:"published"`
+}
+
+func (q *Queries) CountGames(ctx context.Context, arg CountGamesParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countGames, arg.SearchQuery, arg.Published)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -27,9 +33,9 @@ const createGame = `-- name: CreateGame :one
 INSERT INTO games (name, organizer, starts_at, ends_at, avatar_url, site_url, ctftime_url,
     finalized, finalized_at, registration_opens_at, registration_closes_at,
     scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url,
-    access_instructions, access_secret)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-RETURNING id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret
+    access_instructions, access_secret, published, theme, requirements)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+RETURNING id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret, published, theme, requirements
 `
 
 type CreateGameParams struct {
@@ -50,6 +56,9 @@ type CreateGameParams struct {
 	VpnConfigUrl         *string            `json:"vpn_config_url"`
 	AccessInstructions   *string            `json:"access_instructions"`
 	AccessSecret         *string            `json:"access_secret"`
+	Published            bool               `json:"published"`
+	Theme                *string            `json:"theme"`
+	Requirements         *string            `json:"requirements"`
 }
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, error) {
@@ -71,6 +80,9 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, e
 		arg.VpnConfigUrl,
 		arg.AccessInstructions,
 		arg.AccessSecret,
+		arg.Published,
+		arg.Theme,
+		arg.Requirements,
 	)
 	var i Game
 	err := row.Scan(
@@ -94,6 +106,9 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, e
 		&i.VpnConfigUrl,
 		&i.AccessInstructions,
 		&i.AccessSecret,
+		&i.Published,
+		&i.Theme,
+		&i.Requirements,
 	)
 	return i, err
 }
@@ -108,7 +123,7 @@ func (q *Queries) DeleteGame(ctx context.Context, id int64) error {
 }
 
 const getGameByID = `-- name: GetGameByID :one
-SELECT id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret FROM games WHERE id = $1
+SELECT id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret, published, theme, requirements FROM games WHERE id = $1
 `
 
 func (q *Queries) GetGameByID(ctx context.Context, id int64) (Game, error) {
@@ -135,13 +150,17 @@ func (q *Queries) GetGameByID(ctx context.Context, id int64) (Game, error) {
 		&i.VpnConfigUrl,
 		&i.AccessInstructions,
 		&i.AccessSecret,
+		&i.Published,
+		&i.Theme,
+		&i.Requirements,
 	)
 	return i, err
 }
 
 const listGames = `-- name: ListGames :many
-SELECT id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret FROM games
+SELECT id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret, published, theme, requirements FROM games
 WHERE (name ILIKE '%' || $3 || '%' OR $3 IS NULL)
+  AND (published = $4 OR $4 IS NULL)
 ORDER BY starts_at DESC NULLS LAST, created_at DESC, id DESC
 LIMIT $1 OFFSET $2
 `
@@ -150,10 +169,16 @@ type ListGamesParams struct {
 	Limit       int32   `json:"limit"`
 	Offset      int32   `json:"offset"`
 	SearchQuery *string `json:"search_query"`
+	Published   *bool   `json:"published"`
 }
 
 func (q *Queries) ListGames(ctx context.Context, arg ListGamesParams) ([]Game, error) {
-	rows, err := q.db.Query(ctx, listGames, arg.Limit, arg.Offset, arg.SearchQuery)
+	rows, err := q.db.Query(ctx, listGames,
+		arg.Limit,
+		arg.Offset,
+		arg.SearchQuery,
+		arg.Published,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -182,6 +207,9 @@ func (q *Queries) ListGames(ctx context.Context, arg ListGamesParams) ([]Game, e
 			&i.VpnConfigUrl,
 			&i.AccessInstructions,
 			&i.AccessSecret,
+			&i.Published,
+			&i.Theme,
+			&i.Requirements,
 		); err != nil {
 			return nil, err
 		}
@@ -196,7 +224,7 @@ func (q *Queries) ListGames(ctx context.Context, arg ListGamesParams) ([]Game, e
 const setFinalized = `-- name: SetFinalized :one
 UPDATE games SET finalized = $2, finalized_at = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret
+RETURNING id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret, published, theme, requirements
 `
 
 type SetFinalizedParams struct {
@@ -229,6 +257,51 @@ func (q *Queries) SetFinalized(ctx context.Context, arg SetFinalizedParams) (Gam
 		&i.VpnConfigUrl,
 		&i.AccessInstructions,
 		&i.AccessSecret,
+		&i.Published,
+		&i.Theme,
+		&i.Requirements,
+	)
+	return i, err
+}
+
+const setPublished = `-- name: SetPublished :one
+UPDATE games SET published = $2, updated_at = now()
+WHERE id = $1
+RETURNING id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret, published, theme, requirements
+`
+
+type SetPublishedParams struct {
+	ID        int64 `json:"id"`
+	Published bool  `json:"published"`
+}
+
+func (q *Queries) SetPublished(ctx context.Context, arg SetPublishedParams) (Game, error) {
+	row := q.db.QueryRow(ctx, setPublished, arg.ID, arg.Published)
+	var i Game
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Organizer,
+		&i.StartsAt,
+		&i.EndsAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.AvatarUrl,
+		&i.SiteUrl,
+		&i.CtftimeUrl,
+		&i.Finalized,
+		&i.FinalizedAt,
+		&i.RegistrationOpensAt,
+		&i.RegistrationClosesAt,
+		&i.ScoreboardOpensAt,
+		&i.ScoreboardClosesAt,
+		&i.VpnUrl,
+		&i.VpnConfigUrl,
+		&i.AccessInstructions,
+		&i.AccessSecret,
+		&i.Published,
+		&i.Theme,
+		&i.Requirements,
 	)
 	return i, err
 }
@@ -250,9 +323,11 @@ UPDATE games SET
     vpn_config_url = COALESCE($14, vpn_config_url),
     access_instructions = COALESCE($15, access_instructions),
     access_secret = COALESCE($16, access_secret),
+    theme = COALESCE($17, theme),
+    requirements = COALESCE($18, requirements),
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret
+RETURNING id, name, organizer, starts_at, ends_at, created_at, updated_at, avatar_url, site_url, ctftime_url, finalized, finalized_at, registration_opens_at, registration_closes_at, scoreboard_opens_at, scoreboard_closes_at, vpn_url, vpn_config_url, access_instructions, access_secret, published, theme, requirements
 `
 
 type UpdateGameParams struct {
@@ -272,6 +347,8 @@ type UpdateGameParams struct {
 	VpnConfigUrl         *string            `json:"vpn_config_url"`
 	AccessInstructions   *string            `json:"access_instructions"`
 	AccessSecret         *string            `json:"access_secret"`
+	Theme                *string            `json:"theme"`
+	Requirements         *string            `json:"requirements"`
 }
 
 func (q *Queries) UpdateGame(ctx context.Context, arg UpdateGameParams) (Game, error) {
@@ -292,6 +369,8 @@ func (q *Queries) UpdateGame(ctx context.Context, arg UpdateGameParams) (Game, e
 		arg.VpnConfigUrl,
 		arg.AccessInstructions,
 		arg.AccessSecret,
+		arg.Theme,
+		arg.Requirements,
 	)
 	var i Game
 	err := row.Scan(
@@ -315,6 +394,9 @@ func (q *Queries) UpdateGame(ctx context.Context, arg UpdateGameParams) (Game, e
 		&i.VpnConfigUrl,
 		&i.AccessInstructions,
 		&i.AccessSecret,
+		&i.Published,
+		&i.Theme,
+		&i.Requirements,
 	)
 	return i, err
 }

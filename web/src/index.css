@@ -2389,3 +2389,106 @@ a:focus-visible {
     padding: 24px;
   }
 }
+
+/* Game planning page */
+.planning-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.planning-published-note {
+  color: var(--muted-strong);
+  background: var(--surface-muted);
+  border: 1px solid var(--border, #e4e7ec);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+.planning-theme {
+  color: var(--text);
+  margin: 0 0 12px;
+}
+.planning-md-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.markdown-body {
+  color: var(--text);
+  line-height: 1.6;
+}
+.markdown-body h2 {
+  font-size: 18px;
+  margin: 20px 0 8px;
+}
+.markdown-body h3 {
+  font-size: 15px;
+  margin: 16px 0 6px;
+}
+.markdown-body ul,
+.markdown-body ol {
+  margin: 6px 0 12px;
+  padding-left: 22px;
+}
+.markdown-body li {
+  margin: 3px 0;
+}
+.markdown-body code {
+  background: var(--surface-strong);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.planning-service-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.planning-service-card {
+  border: 1px solid var(--border, #e4e7ec);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+  background: var(--surface);
+}
+.planning-service-card h4 {
+  margin: 0 0 10px;
+}
+.planning-service-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.planning-service-meta dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.planning-service-meta dd {
+  margin: 2px 0 0;
+  color: var(--text);
+}
+.planning-vulns ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+.planning-list {
+  margin: 0 0 20px;
+}
+.planning-list-items {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.planning-list-items li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

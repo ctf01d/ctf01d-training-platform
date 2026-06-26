@@ -4,11 +4,13 @@ import type { components } from "./schema";
 export type Game = components["schemas"]["Game"];
 export type GameCreate = components["schemas"]["GameCreate"];
 export type GameUpdate = components["schemas"]["GameUpdate"];
+export type GameServiceLink = components["schemas"]["GameServiceLink"];
 
 export async function listGames(query?: {
   page?: number;
   per_page?: number;
   q?: string;
+  published?: boolean;
 }) {
   return client.GET("/games", { params: { query } });
 }
@@ -49,10 +51,14 @@ export async function listGameServices(id: number) {
   return client.GET("/games/{id}/services", { params: { path: { id } } });
 }
 
-export async function addGameService(id: number, serviceId: number) {
+export async function addGameService(
+  id: number,
+  serviceId: number,
+  status?: string,
+) {
   return client.POST("/games/{id}/services", {
     params: { path: { id } },
-    body: { service_id: serviceId },
+    body: { service_id: serviceId, status },
   });
 }
 
@@ -60,6 +66,21 @@ export async function removeGameService(id: number, serviceId: number) {
   return client.DELETE("/games/{id}/services/{service_id}", {
     params: { path: { id, service_id: serviceId } },
   });
+}
+
+export async function setGameServiceStatus(
+  id: number,
+  serviceId: number,
+  status: string,
+) {
+  return client.PATCH("/games/{id}/services/{service_id}", {
+    params: { path: { id, service_id: serviceId } },
+    body: { status },
+  });
+}
+
+export async function publishGame(id: number) {
+  return client.POST("/games/{id}/publish", { params: { path: { id } } });
 }
 
 export async function finalizeGame(id: number) {

@@ -127,6 +127,7 @@ func (m *mockImportQuerier) CreateService(_ context.Context, arg db.CreateServic
 		ID:                id,
 		Name:              arg.Name,
 		PublicDescription: arg.PublicDescription,
+		Author:            arg.Author,
 		Copyright:         arg.Copyright,
 		Public:            arg.Public,
 		ServiceArchiveUrl: arg.ServiceArchiveUrl,
@@ -453,6 +454,32 @@ func TestExtractMetadata_FromTrainingJSON(t *testing.T) {
 	}
 	if meta.PublicDescription != "A super checker service" {
 		t.Errorf("PublicDescription = %q, want %q", meta.PublicDescription, "A super checker service")
+	}
+}
+
+func TestExtractMetadata_AuthorAndCopyrightFromTrainingJSON(t *testing.T) {
+	training := map[string]interface{}{
+		"display_name": "VaultNotes",
+		"description":  "A trading service",
+		"author":       "IgorPolyakov (@hotorcelexo)",
+		"year":         2026,
+	}
+	trainingJSON, _ := json.Marshal(training)
+
+	bundle := createZipWithBytes(map[string][]byte{
+		"service/ctf01d-training.json": trainingJSON,
+	})
+
+	meta, err := ExtractMetadata(bundle)
+	if err != nil {
+		t.Fatalf("ExtractMetadata: %v", err)
+	}
+	if meta.Author != "IgorPolyakov (@hotorcelexo)" {
+		t.Errorf("Author = %q, want %q", meta.Author, "IgorPolyakov (@hotorcelexo)")
+	}
+	// No LICENSE present, so copyright is derived from author + year.
+	if meta.Copyright != "© 2026 IgorPolyakov (@hotorcelexo)" {
+		t.Errorf("Copyright = %q, want %q", meta.Copyright, "© 2026 IgorPolyakov (@hotorcelexo)")
 	}
 }
 
@@ -795,6 +822,36 @@ func TestImportFromZip_BasicFlow(t *testing.T) {
 	}
 	if result.Service.ServiceLocalPath == nil {
 		t.Error("ServiceLocalPath should not be nil")
+	}
+}
+
+func TestImportFromZip_SetsAuthorFromTraining(t *testing.T) {
+	training := map[string]interface{}{
+		"display_name": "AuthSvc",
+		"description":  "A service with an author",
+		"author":       "Jane Doe",
+		"year":         2026,
+	}
+	tj, _ := json.Marshal(training)
+	zipData := createZipWithBytes(map[string][]byte{
+		"service/README.md":            []byte("# AuthSvc\nDesc"),
+		"service/ctf01d-training.json": tj,
+		"service/main.py":              []byte("code"),
+	})
+
+	q := newMockImportQuerier()
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+
+	result, err := svc.ImportFromZip(context.Background(), zipData, true)
+	if err != nil {
+		t.Fatalf("ImportFromZip: %v", err)
+	}
+	if result.Service.Author == nil || *result.Service.Author != "Jane Doe" {
+		t.Errorf("Author = %v, want %q", result.Service.Author, "Jane Doe")
+	}
+	if result.Service.Copyright == nil || *result.Service.Copyright != "© 2026 Jane Doe" {
+		t.Errorf("Copyright = %v, want %q", result.Service.Copyright, "© 2026 Jane Doe")
 	}
 }
 

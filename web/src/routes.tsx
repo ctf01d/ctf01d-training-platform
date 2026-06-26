@@ -4,6 +4,7 @@ import { ProtectedRoute, AdminRoute } from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import GamesPage from "./pages/GamesPage";
 import GameDetailPage from "./pages/GameDetailPage";
+import GamePlanningPage from "./pages/GamePlanningPage";
 import ServicesPage from "./pages/ServicesPage";
 import ServiceDetailPage from "./pages/ServiceDetailPage";
 import TeamsPage from "./pages/TeamsPage";
@@ -26,6 +27,14 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <GamesPage /> },
       { path: "games", element: <GamesPage /> },
+      {
+        path: "games/:id/planning",
+        element: (
+          <ProtectedRoute>
+            <GamePlanningPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: "games/:id", element: <GameDetailPage /> },
       { path: "services", element: <ServicesPage /> },
       { path: "services/:id", element: <ServiceDetailPage /> },

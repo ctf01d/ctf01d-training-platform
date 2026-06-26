@@ -136,9 +136,10 @@ export default function GameDetailPage() {
   const fetchServices = useCallback(async () => {
     const { data } = await gamesApi.listGameServices(gameId);
     if (data) {
-      setServiceIds(data);
+      const ids = data.map((link) => link.service_id);
+      setServiceIds(ids);
       const details: Record<number, Service> = {};
-      for (const sid of data) {
+      for (const sid of ids) {
         const r = await servicesApi.getService(sid);
         if (r.data) details[sid] = r.data;
       }

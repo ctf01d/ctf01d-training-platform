@@ -205,6 +205,10 @@ paths:
           in: query
           schema:
             type: string
+        - name: published
+          in: query
+          schema:
+            type: boolean
       responses:
         '200':
           description: List of games
@@ -341,14 +345,13 @@ paths:
             format: int64
       responses:
         '200':
-          description: List of service IDs
+          description: List of linked services with planning status
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: integer
-                  format: int64
+                  $ref: '#/components/schemas/GameServiceLink'
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
@@ -381,6 +384,8 @@ paths:
                 service_id:
                   type: integer
                   format: int64
+                status:
+                  type: string
       responses:
         '200':
           description: Service linked
@@ -392,6 +397,48 @@ paths:
           $ref: '#/components/responses/Unauthorized'
       description: Link a service to a game
   /games/{id}/services/{service_id}:
+    patch:
+      operationId: setGameServiceStatus
+      tags:
+        - games
+      summary: Set the planning status of a linked service
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+      responses:
+        '204':
+          description: Status updated
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Set the planning status of a linked service
     delete:
       operationId: removeGameService
       tags:
@@ -421,6 +468,34 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Unlink a service from a game
+  /games/{id}/publish:
+    post:
+      operationId: publishGame
+      tags:
+        - games
+      summary: Publish a planning game into the games section
+      x-required-role: player
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Game published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Publish a planning game into the games section
   /games/{id}/finalize:
     post:
       operationId: finalizeGame
@@ -2652,6 +2727,14 @@ components:
             access_secret:
               type: string
               nullable: true
+            published:
+              type: boolean
+            theme:
+              type: string
+              nullable: true
+            requirements:
+              type: string
+              nullable: true
             status:
               type: string
               enum:
@@ -2715,6 +2798,12 @@ components:
           type: string
         access_secret:
           type: string
+        published:
+          type: boolean
+        theme:
+          type: string
+        requirements:
+          type: string
     GameUpdate:
       type: object
       properties:
@@ -2754,6 +2843,10 @@ components:
           type: string
         access_secret:
           type: string
+        theme:
+          type: string
+        requirements:
+          type: string
     GameList:
       type: object
       required:
@@ -2766,6 +2859,17 @@ components:
             $ref: '#/components/schemas/Game'
         pagination:
           $ref: '#/components/schemas/Pagination'
+    GameServiceLink:
+      type: object
+      required:
+        - service_id
+        - status
+      properties:
+        service_id:
+          type: integer
+          format: int64
+        status:
+          type: string
     Ctf01dExportOptions:
       type: object
       properties:

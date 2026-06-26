@@ -9,6 +9,10 @@ import { RelativeTime, Duration } from "../components/DetailInfo";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
 import { datetimeLocalToRFC3339 } from "../api/datetime";
+import {
+  DEFAULT_GAME_THEME,
+  DEFAULT_GAME_REQUIREMENTS,
+} from "./gamePlanningTemplate";
 
 /**
  * Map of lower-cased organizer name -> team (or null when no team matches).
@@ -31,6 +35,7 @@ export default function GamesPage() {
   const [form, setForm] = useState<GameCreate>({});
   const [creating, setCreating] = useState(false);
   const [organizerTeams, setOrganizerTeams] = useState<OrganizerTeams>({});
+  const [planningGames, setPlanningGames] = useState<Game[]>([]);
 
   const fetchGames = useCallback(async () => {
     setLoading(true);
@@ -39,6 +44,7 @@ export default function GamesPage() {
       page,
       per_page: perPage,
       q: searchQuery || undefined,
+      published: true,
     });
     if (err) {
       setError(err);
@@ -49,9 +55,25 @@ export default function GamesPage() {
     setLoading(false);
   }, [page, searchQuery]);
 
+  const fetchPlanningGames = useCallback(async () => {
+    if (!isPlayer) {
+      setPlanningGames([]);
+      return;
+    }
+    const { data } = await gamesApi.listGames({
+      per_page: 100,
+      published: false,
+    });
+    if (data) setPlanningGames(data.items);
+  }, [isPlayer]);
+
   useEffect(() => {
     void fetchGames();
   }, [fetchGames]);
+
+  useEffect(() => {
+    void fetchPlanningGames();
+  }, [fetchPlanningGames]);
 
   // Resolve organizer names to teams so they can be rendered as links.
   useEffect(() => {
@@ -96,6 +118,28 @@ export default function GamesPage() {
     }
     if (data) {
       navigate(`/games/${data.id}`);
+    }
+  };
+
+  // Create a draft game prefilled with the CyberSibir planning template and
+  // open its planning page; it stays out of the games list until published.
+  const handlePlan = async () => {
+    setCreating(true);
+    const { data, error: err } = await gamesApi.createGame({
+      ...form,
+      starts_at: datetimeLocalToRFC3339(form.starts_at),
+      ends_at: datetimeLocalToRFC3339(form.ends_at),
+      published: false,
+      theme: DEFAULT_GAME_THEME,
+      requirements: DEFAULT_GAME_REQUIREMENTS,
+    });
+    setCreating(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    if (data) {
+      navigate(`/games/${data.id}/planning`);
     }
   };
 
@@ -160,10 +204,41 @@ export default function GamesPage() {
               }
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={creating}>
-            {creating ? "Creating..." : "Create"}
-          </button>
+          <div className="form-actions">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={creating}
+            >
+              {creating ? "Creating..." : "Create"}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={creating}
+              onClick={() => void handlePlan()}
+              title="Создать черновик с ТЗ и открыть планирование"
+            >
+              Plan Game
+            </button>
+          </div>
         </form>
+      )}
+
+      {isPlayer && planningGames.length > 0 && (
+        <section className="planning-list">
+          <h3>В планировании</h3>
+          <ul className="planning-list-items">
+            {planningGames.map((g) => (
+              <li key={g.id}>
+                <Link to={`/games/${g.id}/planning`}>
+                  {g.name ?? `Game #${g.id}`}
+                </Link>
+                <CardBadge variant="pending">planning</CardBadge>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <ErrorDisplay error={error} onRetry={fetchGames} />

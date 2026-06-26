@@ -264,6 +264,83 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
+            <label>Private Description</label>
+            <textarea
+              value={createForm.private_description ?? ""}
+              onChange={(e) =>
+                setCreateForm((f) => ({
+                  ...f,
+                  private_description: e.target.value,
+                }))
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Copyright</label>
+            <input
+              value={createForm.copyright ?? ""}
+              onChange={(e) =>
+                setCreateForm((f) => ({ ...f, copyright: e.target.value }))
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Avatar URL</label>
+            <input
+              type="url"
+              value={createForm.avatar_url ?? ""}
+              onChange={(e) =>
+                setCreateForm((f) => ({ ...f, avatar_url: e.target.value }))
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Writeup URL</label>
+            <input
+              type="url"
+              value={createForm.writeup_url ?? ""}
+              onChange={(e) =>
+                setCreateForm((f) => ({ ...f, writeup_url: e.target.value }))
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Exploits URL</label>
+            <input
+              type="url"
+              value={createForm.exploits_url ?? ""}
+              onChange={(e) =>
+                setCreateForm((f) => ({ ...f, exploits_url: e.target.value }))
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Service Archive URL</label>
+            <input
+              type="url"
+              value={createForm.service_archive_url ?? ""}
+              onChange={(e) =>
+                setCreateForm((f) => ({
+                  ...f,
+                  service_archive_url: e.target.value,
+                }))
+              }
+            />
+          </div>
+          <div className="form-group">
+            <label>Checker Archive URL</label>
+            <input
+              type="url"
+              value={createForm.checker_archive_url ?? ""}
+              onChange={(e) =>
+                setCreateForm((f) => ({
+                  ...f,
+                  checker_archive_url: e.target.value,
+                }))
+              }
+            />
+          </div>
+          <div className="form-group">
             <label>Public</label>
             <input
               type="checkbox"

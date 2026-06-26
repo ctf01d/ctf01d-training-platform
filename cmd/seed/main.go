@@ -856,8 +856,8 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 			return err
 		}
 		set := map[int64]bool{}
-		for _, id := range ids {
-			set[id] = true
+		for _, row := range ids {
+			set[row.ServiceID] = true
 		}
 		linkedByGame[g.ID] = set
 	}

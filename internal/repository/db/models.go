@@ -42,6 +42,9 @@ type Game struct {
 	VpnConfigUrl         *string            `json:"vpn_config_url"`
 	AccessInstructions   *string            `json:"access_instructions"`
 	AccessSecret         *string            `json:"access_secret"`
+	Published            bool               `json:"published"`
+	Theme                *string            `json:"theme"`
+	Requirements         *string            `json:"requirements"`
 }
 
 type GameTeam struct {
@@ -58,8 +61,9 @@ type GameTeam struct {
 }
 
 type GamesService struct {
-	GameID    int64 `json:"game_id"`
-	ServiceID int64 `json:"service_id"`
+	GameID    int64  `json:"game_id"`
+	ServiceID int64  `json:"service_id"`
+	Status    string `json:"status"`
 }
 
 type Result struct {

@@ -33,9 +33,18 @@ type Game struct {
 	VpnConfigUrl         *string            `json:"vpn_config_url"`
 	AccessInstructions   *string            `json:"access_instructions"`
 	AccessSecret         *string            `json:"access_secret"`
+	Published            bool               `json:"published"`
+	Theme                *string            `json:"theme"`
+	Requirements         *string            `json:"requirements"`
 	Status               GameStatus         `json:"status"`
 	RegistrationStatus   RegistrationStatus `json:"registration_status"`
 	ScoreboardStatusVal  ScoreboardStatus   `json:"scoreboard_status"`
+}
+
+// GameServiceLink is a service attached to a game together with its planning status.
+type GameServiceLink struct {
+	ServiceID int64  `json:"service_id"`
+	Status    string `json:"status"`
 }
 
 type GameListResult struct {
@@ -61,6 +70,9 @@ type CreateParams struct {
 	VpnConfigUrl         *string    `json:"vpn_config_url"`
 	AccessInstructions   *string    `json:"access_instructions"`
 	AccessSecret         *string    `json:"access_secret"`
+	Published            *bool      `json:"published"`
+	Theme                *string    `json:"theme"`
+	Requirements         *string    `json:"requirements"`
 }
 
 type UpdateParams struct {
@@ -79,22 +91,26 @@ type UpdateParams struct {
 	VpnConfigUrl         *string    `json:"vpn_config_url"`
 	AccessInstructions   *string    `json:"access_instructions"`
 	AccessSecret         *string    `json:"access_secret"`
+	Theme                *string    `json:"theme"`
+	Requirements         *string    `json:"requirements"`
 }
 
 type GameQuerier interface {
 	CreateGame(ctx context.Context, arg db.CreateGameParams) (db.Game, error)
 	GetGameByID(ctx context.Context, id int64) (db.Game, error)
 	ListGames(ctx context.Context, arg db.ListGamesParams) ([]db.Game, error)
-	CountGames(ctx context.Context, searchQuery *string) (int64, error)
+	CountGames(ctx context.Context, arg db.CountGamesParams) (int64, error)
 	UpdateGame(ctx context.Context, arg db.UpdateGameParams) (db.Game, error)
 	DeleteGame(ctx context.Context, id int64) error
 	SetFinalized(ctx context.Context, arg db.SetFinalizedParams) (db.Game, error)
+	SetPublished(ctx context.Context, arg db.SetPublishedParams) (db.Game, error)
 }
 
 type GamesServiceQuerier interface {
 	AddService(ctx context.Context, arg db.AddServiceParams) error
 	RemoveService(ctx context.Context, arg db.RemoveServiceParams) error
-	ListServicesByGame(ctx context.Context, gameID int64) ([]int64, error)
+	ListServicesByGame(ctx context.Context, gameID int64) ([]db.ListServicesByGameRow, error)
+	SetServiceStatus(ctx context.Context, arg db.SetServiceStatusParams) error
 }
 
 type ResultQuerier interface {
@@ -191,6 +207,11 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*Game, error
 		return nil, errs.NewValidationError(map[string]string{"ends_at": "must be after starts_at"})
 	}
 
+	published := true
+	if params.Published != nil {
+		published = *params.Published
+	}
+
 	dbGame, err := s.games.CreateGame(ctx, db.CreateGameParams{
 		Name:                 params.Name,
 		Organizer:            params.Organizer,
@@ -209,6 +230,9 @@ func (s *Service) Create(ctx context.Context, params CreateParams) (*Game, error
 		VpnConfigUrl:         params.VpnConfigUrl,
 		AccessInstructions:   params.AccessInstructions,
 		AccessSecret:         params.AccessSecret,
+		Published:            published,
+		Theme:                params.Theme,
+		Requirements:         params.Requirements,
 	})
 	if err != nil {
 		return nil, mapDBError(err)
@@ -226,7 +250,7 @@ func (s *Service) GetByID(ctx context.Context, id int64) (*Game, error) {
 	return &g, nil
 }
 
-func (s *Service) List(ctx context.Context, page, perPage int, query *string) (*GameListResult, error) {
+func (s *Service) List(ctx context.Context, page, perPage int, query *string, published *bool) (*GameListResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -243,12 +267,12 @@ func (s *Service) List(ctx context.Context, page, perPage int, query *string) (*
 		return nil, err
 	}
 
-	items, err := s.games.ListGames(ctx, db.ListGamesParams{Limit: limit, Offset: offset, SearchQuery: query})
+	items, err := s.games.ListGames(ctx, db.ListGamesParams{Limit: limit, Offset: offset, SearchQuery: query, Published: published})
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := s.games.CountGames(ctx, query)
+	total, err := s.games.CountGames(ctx, db.CountGamesParams{SearchQuery: query, Published: published})
 	if err != nil {
 		return nil, err
 	}
@@ -308,6 +332,8 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*G
 		VpnConfigUrl:         params.VpnConfigUrl,
 		AccessInstructions:   params.AccessInstructions,
 		AccessSecret:         params.AccessSecret,
+		Theme:                params.Theme,
+		Requirements:         params.Requirements,
 	})
 	if err != nil {
 		return nil, mapNotFound(err)
@@ -320,16 +346,42 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 	return s.games.DeleteGame(ctx, id)
 }
 
-func (s *Service) AddService(ctx context.Context, gameID, serviceID int64) error {
-	return s.gamesSvc.AddService(ctx, db.AddServiceParams{GameID: gameID, ServiceID: serviceID})
+// Publish flips a planning game into the published games section.
+func (s *Service) Publish(ctx context.Context, id int64) (*Game, error) {
+	dbGame, err := s.games.SetPublished(ctx, db.SetPublishedParams{ID: id, Published: true})
+	if err != nil {
+		return nil, mapNotFound(err)
+	}
+	g := fromDB(dbGame)
+	return &g, nil
+}
+
+func (s *Service) AddService(ctx context.Context, gameID, serviceID int64, status *string) error {
+	var st interface{}
+	if status != nil && *status != "" {
+		st = *status
+	}
+	return s.gamesSvc.AddService(ctx, db.AddServiceParams{GameID: gameID, ServiceID: serviceID, Status: st})
 }
 
 func (s *Service) RemoveService(ctx context.Context, gameID, serviceID int64) error {
 	return s.gamesSvc.RemoveService(ctx, db.RemoveServiceParams{GameID: gameID, ServiceID: serviceID})
 }
 
-func (s *Service) ListServices(ctx context.Context, gameID int64) ([]int64, error) {
-	return s.gamesSvc.ListServicesByGame(ctx, gameID)
+func (s *Service) SetServiceStatus(ctx context.Context, gameID, serviceID int64, status string) error {
+	return s.gamesSvc.SetServiceStatus(ctx, db.SetServiceStatusParams{GameID: gameID, ServiceID: serviceID, Status: status})
+}
+
+func (s *Service) ListServices(ctx context.Context, gameID int64) ([]GameServiceLink, error) {
+	rows, err := s.gamesSvc.ListServicesByGame(ctx, gameID)
+	if err != nil {
+		return nil, err
+	}
+	links := make([]GameServiceLink, len(rows))
+	for i, r := range rows {
+		links[i] = GameServiceLink{ServiceID: r.ServiceID, Status: r.Status}
+	}
+	return links, nil
 }
 
 func (s *Service) Finalize(ctx context.Context, gameID int64) (*Game, error) {
@@ -480,6 +532,9 @@ func fromDB(g db.Game) Game {
 		VpnConfigUrl:         g.VpnConfigUrl,
 		AccessInstructions:   g.AccessInstructions,
 		AccessSecret:         g.AccessSecret,
+		Published:            g.Published,
+		Theme:                g.Theme,
+		Requirements:         g.Requirements,
 		Status:               ComputeStatus(startsAt, endsAt, now),
 		RegistrationStatus:   ComputeRegistrationStatus(regOpensAt, regClosesAt, now),
 		ScoreboardStatusVal:  ComputeScoreboardStatus(scOpensAt, scClosesAt, now),

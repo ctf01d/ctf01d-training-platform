@@ -18,7 +18,8 @@ type mockGameQuerier struct {
 }
 
 type mockGamesServiceQuerier struct {
-	pairs map[string]bool
+	pairs    map[string]bool
+	statuses map[string]string
 }
 
 type mockResultQuerier struct {
@@ -33,7 +34,7 @@ type mockTxRunner struct{}
 
 func newMocks() (*mockGameQuerier, *mockGamesServiceQuerier, *mockResultQuerier, *mockFinalResultQuerier, *mockTxRunner) {
 	gq := &mockGameQuerier{games: make(map[int64]db.Game), nextID: 1}
-	gsq := &mockGamesServiceQuerier{pairs: make(map[string]bool)}
+	gsq := &mockGamesServiceQuerier{pairs: make(map[string]bool), statuses: make(map[string]string)}
 	rq := &mockResultQuerier{results: make(map[int64][]db.Result)}
 	frq := &mockFinalResultQuerier{finalResults: make(map[int64][]db.FinalResult)}
 	tx := &mockTxRunner{}
@@ -67,6 +68,7 @@ func (m *mockGameQuerier) CreateGame(_ context.Context, arg db.CreateGameParams)
 		ScoreboardOpensAt: arg.ScoreboardOpensAt, ScoreboardClosesAt: arg.ScoreboardClosesAt,
 		VpnUrl: arg.VpnUrl, VpnConfigUrl: arg.VpnConfigUrl,
 		AccessInstructions: arg.AccessInstructions, AccessSecret: arg.AccessSecret,
+		Published: arg.Published, Theme: arg.Theme, Requirements: arg.Requirements,
 	}
 	m.games[id] = g
 	return g, nil
@@ -91,7 +93,7 @@ func (m *mockGameQuerier) ListGames(_ context.Context, arg db.ListGamesParams) (
 	return result, nil
 }
 
-func (m *mockGameQuerier) CountGames(_ context.Context, _ *string) (int64, error) {
+func (m *mockGameQuerier) CountGames(_ context.Context, _ db.CountGamesParams) (int64, error) {
 	return int64(len(m.games)), nil
 }
 
@@ -131,6 +133,17 @@ func (m *mockGameQuerier) SetFinalized(_ context.Context, arg db.SetFinalizedPar
 	return g, nil
 }
 
+func (m *mockGameQuerier) SetPublished(_ context.Context, arg db.SetPublishedParams) (db.Game, error) {
+	g, ok := m.games[arg.ID]
+	if !ok {
+		return db.Game{}, pgx.ErrNoRows
+	}
+	g.Published = arg.Published
+	g.UpdatedAt = time.Now()
+	m.games[arg.ID] = g
+	return g, nil
+}
+
 func (m *mockGamesServiceQuerier) AddService(_ context.Context, arg db.AddServiceParams) error {
 	key := svcKey(arg.GameID, arg.ServiceID)
 	m.pairs[key] = true
@@ -143,9 +156,27 @@ func (m *mockGamesServiceQuerier) RemoveService(_ context.Context, arg db.Remove
 	return nil
 }
 
-func (m *mockGamesServiceQuerier) ListServicesByGame(_ context.Context, _ int64) ([]int64, error) {
-	var result []int64
+func (m *mockGamesServiceQuerier) ListServicesByGame(_ context.Context, gameID int64) ([]db.ListServicesByGameRow, error) {
+	var result []db.ListServicesByGameRow
+	for key := range m.pairs {
+		var g, s int64
+		if _, err := fmt.Sscanf(key, "%d:%d", &g, &s); err == nil && g == gameID {
+			status := m.statuses[key]
+			if status == "" {
+				status = "planning"
+			}
+			result = append(result, db.ListServicesByGameRow{ServiceID: s, Status: status})
+		}
+	}
 	return result, nil
+}
+
+func (m *mockGamesServiceQuerier) SetServiceStatus(_ context.Context, arg db.SetServiceStatusParams) error {
+	if m.statuses == nil {
+		m.statuses = map[string]string{}
+	}
+	m.statuses[svcKey(arg.GameID, arg.ServiceID)] = arg.Status
+	return nil
 }
 
 func svcKey(gameID, serviceID int64) string {
@@ -239,7 +270,7 @@ func TestList(t *testing.T) {
 		mustCreateGame(t, svc, CreateParams{Name: &n})
 	}
 
-	result, err := svc.List(context.Background(), 1, 3, nil)
+	result, err := svc.List(context.Background(), 1, 3, nil, nil)
 	if err != nil {
 		t.Fatalf("List: %v", err)
 	}
@@ -371,7 +402,7 @@ func TestAddService(t *testing.T) {
 	gq, gsq, rq, frq, tx := newMocks()
 	svc := NewService(gq, gsq, rq, frq, tx)
 
-	err := svc.AddService(context.Background(), 1, 10)
+	err := svc.AddService(context.Background(), 1, 10, nil)
 	if err != nil {
 		t.Fatalf("AddService: %v", err)
 	}
@@ -384,7 +415,7 @@ func TestRemoveService(t *testing.T) {
 	gq, gsq, rq, frq, tx := newMocks()
 	svc := NewService(gq, gsq, rq, frq, tx)
 
-	if err := svc.AddService(context.Background(), 1, 10); err != nil {
+	if err := svc.AddService(context.Background(), 1, 10, nil); err != nil {
 		t.Fatalf("AddService: %v", err)
 	}
 	err := svc.RemoveService(context.Background(), 1, 10)
@@ -393,6 +424,73 @@ func TestRemoveService(t *testing.T) {
 	}
 	if gsq.pairs[svcKey(1, 10)] {
 		t.Error("expected service to be removed")
+	}
+}
+
+func TestCreate_PlanningDefaultsAndPublish(t *testing.T) {
+	gq, gsq, rq, frq, tx := newMocks()
+	svc := NewService(gq, gsq, rq, frq, tx)
+
+	notPublished := false
+	game, err := svc.Create(context.Background(), CreateParams{
+		Name:         ptrStr("Planning Game"),
+		Published:    &notPublished,
+		Theme:        ptrStr("Cyberpunk MegaSibirsk"),
+		Requirements: ptrStr("## ТЗ"),
+	})
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if game.Published {
+		t.Error("expected new planning game to be unpublished")
+	}
+	if game.Theme == nil || *game.Theme != "Cyberpunk MegaSibirsk" {
+		t.Errorf("Theme = %v", game.Theme)
+	}
+
+	published, err := svc.Publish(context.Background(), game.ID)
+	if err != nil {
+		t.Fatalf("Publish: %v", err)
+	}
+	if !published.Published {
+		t.Error("expected game to be published after Publish")
+	}
+}
+
+func TestCreate_DefaultsPublished(t *testing.T) {
+	gq, gsq, rq, frq, tx := newMocks()
+	svc := NewService(gq, gsq, rq, frq, tx)
+
+	game, err := svc.Create(context.Background(), CreateParams{Name: ptrStr("Quick Game")})
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if !game.Published {
+		t.Error("expected game to default to published when flag omitted")
+	}
+}
+
+func TestServiceStatusFlow(t *testing.T) {
+	gq, gsq, rq, frq, tx := newMocks()
+	svc := NewService(gq, gsq, rq, frq, tx)
+
+	if err := svc.AddService(context.Background(), 1, 10, ptrStr("design")); err != nil {
+		t.Fatalf("AddService: %v", err)
+	}
+	links, err := svc.ListServices(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("ListServices: %v", err)
+	}
+	if len(links) != 1 || links[0].ServiceID != 10 {
+		t.Fatalf("links = %#v", links)
+	}
+
+	if err := svc.SetServiceStatus(context.Background(), 1, 10, "ready"); err != nil {
+		t.Fatalf("SetServiceStatus: %v", err)
+	}
+	links, _ = svc.ListServices(context.Background(), 1)
+	if links[0].Status != "ready" {
+		t.Errorf("status = %q, want ready", links[0].Status)
 	}
 }
 

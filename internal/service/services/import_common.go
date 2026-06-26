@@ -39,6 +39,7 @@ const (
 type BundleMetadata struct {
 	Name              string
 	PublicDescription string
+	Author            string
 	Copyright         string
 	License           string
 	Ctf01dTraining    json.RawMessage
@@ -389,6 +390,15 @@ func readReadmeFromZip(zr *zip.Reader) []byte {
 	return nil
 }
 
+// metaAuthorPtr returns the imported author as a pointer, or nil when absent,
+// so imports don't persist an empty author string.
+func metaAuthorPtr(meta *BundleMetadata) *string {
+	if meta.Author == "" {
+		return nil
+	}
+	return &meta.Author
+}
+
 func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 	r, err := zip.NewReader(bytes.NewReader(bundleZipBytes), int64(len(bundleZipBytes)))
 	if err != nil {
@@ -413,6 +423,9 @@ func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 		if desc, ok := training["description"].(string); ok && strings.TrimSpace(desc) != "" {
 			meta.PublicDescription = strings.TrimSpace(desc)
 		}
+		if author, ok := training["author"].(string); ok && strings.TrimSpace(author) != "" {
+			meta.Author = strings.TrimSpace(author)
+		}
 		meta.Ctf01dTraining = trainingJSON
 	}
 
@@ -425,6 +438,16 @@ func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 	if licenseText != nil {
 		meta.License = detectLicense(string(licenseText))
 		meta.Copyright = extractCopyright(string(licenseText))
+	}
+
+	// Fall back to the training manifest's author/year for copyright when the
+	// LICENSE file didn't yield one.
+	if meta.Copyright == "" && meta.Author != "" {
+		if year, ok := training["year"].(float64); ok && year > 0 {
+			meta.Copyright = fmt.Sprintf("© %d %s", int(year), meta.Author)
+		} else {
+			meta.Copyright = "© " + meta.Author
+		}
 	}
 
 	return meta, nil
