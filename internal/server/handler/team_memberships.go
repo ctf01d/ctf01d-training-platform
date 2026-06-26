@@ -126,7 +126,14 @@ func (h *Handler) HandleDeleteTeamMembership(c *gin.Context) {
 		return
 	}
 
-	if err := h.memberships.Delete(c.Request.Context(), id); err != nil {
+	actorID, ok := middleware.CurrentUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse{Code: codeUnauthorized, Message: msgNotAuthenticated})
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+
+	if err := h.memberships.Delete(c.Request.Context(), id, actorID, role); err != nil {
 		respondError(c, err)
 		return
 	}

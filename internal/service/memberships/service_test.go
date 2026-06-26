@@ -653,13 +653,92 @@ func TestDelete(t *testing.T) {
 	mq, eq, tq, tx := newMocks()
 	svc := NewService(mq, eq, tq, tx)
 
-	memID := seedOwner(mq, 10)
-	err := svc.Delete(context.Background(), memID)
-	if err != nil {
+	// Admin removes a regular (non-owner) member.
+	memID := seedPendingMember(mq, eq)
+	if err := svc.Delete(context.Background(), memID, 1, "admin"); err != nil {
 		t.Fatalf("Delete: %v", err)
 	}
-	_, err = svc.GetByID(context.Background(), memID)
-	if err != errs.ErrNotFound {
+	if _, err := svc.GetByID(context.Background(), memID); err != errs.ErrNotFound {
 		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+
+	removed := false
+	for _, e := range eq.events {
+		if e.Action == "removed" {
+			removed = true
+		}
+	}
+	if !removed {
+		t.Errorf("expected a 'removed' audit event to be recorded")
+	}
+}
+
+func TestDelete_CaptainClearsTeamCaptain(t *testing.T) {
+	mq, eq, tq, tx := newMocks()
+	svc := NewService(mq, eq, tq, tx)
+
+	captainID := int32(20)
+	tq.teams[1] = db.Team{ID: 1, Name: "Team A", CaptainID: &captainID, CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	tq.byCaptain[captainID] = 1
+
+	seedOwner(mq, 10) // manager actor
+	captainRole := "captain"
+	approvedStatus := "approved"
+	mem, err := mq.CreateTeamMembership(context.Background(), db.CreateTeamMembershipParams{
+		TeamID: 1, UserID: 20, Role: &captainRole, Status: &approvedStatus,
+	})
+	if err != nil {
+		t.Fatalf("seed membership: %v", err)
+	}
+
+	if err := svc.Delete(context.Background(), mem.ID, 10, "player"); err != nil {
+		t.Fatalf("Delete captain: %v", err)
+	}
+
+	team, _ := tq.GetTeamByID(context.Background(), 1)
+	if team.CaptainID != nil {
+		t.Errorf("team.CaptainID = %v, want nil after removing captain", team.CaptainID)
+	}
+}
+
+func TestDelete_ManagerCanRemoveMember(t *testing.T) {
+	mq, eq, tq, tx := newMocks()
+	svc := NewService(mq, eq, tq, tx)
+
+	seedOwner(mq, 10)                  // actor: approved team owner (manager)
+	memID := seedPendingMember(mq, eq) // target: a player member
+	if err := svc.Delete(context.Background(), memID, 10, "player"); err != nil {
+		t.Fatalf("manager Delete: %v", err)
+	}
+	if _, err := svc.GetByID(context.Background(), memID); err != errs.ErrNotFound {
+		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestDelete_NonManagerForbidden(t *testing.T) {
+	mq, eq, tq, tx := newMocks()
+	svc := NewService(mq, eq, tq, tx)
+
+	memID := seedPendingMember(mq, eq)
+	// Actor 30 holds no managing membership in the team.
+	if err := svc.Delete(context.Background(), memID, 30, "player"); err != errs.ErrForbidden {
+		t.Fatalf("expected ErrForbidden, got %v", err)
+	}
+	if _, err := svc.GetByID(context.Background(), memID); err != nil {
+		t.Errorf("membership should remain after forbidden delete, got %v", err)
+	}
+}
+
+func TestDelete_LastOwnerBlocked(t *testing.T) {
+	mq, eq, tq, tx := newMocks()
+	svc := NewService(mq, eq, tq, tx)
+
+	memID := seedOwner(mq, 10)
+	err := svc.Delete(context.Background(), memID, 1, "admin")
+	if _, ok := err.(*errs.ValidationError); !ok {
+		t.Errorf("expected ValidationError for last owner, got %v", err)
+	}
+	if _, err := svc.GetByID(context.Background(), memID); err != nil {
+		t.Errorf("last owner should remain after blocked delete, got %v", err)
 	}
 }

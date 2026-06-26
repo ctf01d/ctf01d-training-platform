@@ -9,7 +9,6 @@ var OperationRequiredRoles = map[string]string{
 	"DELETE /games/{id}/services/{service_id}": "player",
 	"DELETE /results/{id}":                     "player",
 	"DELETE /services/{id}":                    "player",
-	"DELETE /team-memberships/{id}":            "admin",
 	"DELETE /universities/{id}":                "admin",
 	"DELETE /users/{id}":                       "admin",
 	"DELETE /users/{id}/sessions/{sessionId}":  "admin",

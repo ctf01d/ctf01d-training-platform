@@ -1422,7 +1422,7 @@ paths:
       tags:
         - team-memberships
       summary: Delete a team membership
-      x-required-role: admin
+      x-required-role: authenticated
       security:
         - BearerAuth: []
       parameters:

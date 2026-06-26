@@ -70,6 +70,7 @@ const (
 
 	memActionInvite   = "invite"
 	memActionAccepted = "accepted"
+	memActionRemoved  = "removed"
 
 	msgMembershipNotPending = "membership is not pending"
 	fieldStatus             = "status"
@@ -282,8 +283,62 @@ func (s *Service) Update(ctx context.Context, id int64, role, status string) (*M
 	return &m, nil
 }
 
-func (s *Service) Delete(ctx context.Context, id int64) error {
-	return s.q.DeleteTeamMembership(ctx, id)
+func (s *Service) Delete(ctx context.Context, id int64, actorID int64, globalRole string) error {
+	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
+		tq := s.txQ(q)
+		mem, err := tq.q.GetTeamMembershipByID(ctx, id)
+		if err != nil {
+			return mapNotFound(err)
+		}
+		if err := s.canManageMembership(ctx, mem.TeamID, actorID, globalRole, tq.q); err != nil {
+			return err
+		}
+
+		// Do not allow removing the last approved owner, mirroring SetRole.
+		if mem.Role != nil && *mem.Role == memRoleOwner && mem.Status != nil && *mem.Status == memStatusApproved {
+			members, err := tq.q.ListTeamMembershipsByTeam(ctx, mem.TeamID)
+			if err != nil {
+				return err
+			}
+			ownerCount := int64(0)
+			for _, m := range members {
+				if m.Role != nil && *m.Role == memRoleOwner && m.Status != nil && *m.Status == memStatusApproved {
+					ownerCount++
+				}
+			}
+			if ownerCount <= 1 {
+				return errs.NewValidationError(map[string]string{"role": "cannot remove the last owner"})
+			}
+		}
+
+		if err := tq.q.DeleteTeamMembership(ctx, id); err != nil {
+			return err
+		}
+
+		// Removing an approved captain must clear the team's captain reference,
+		// mirroring SetRole; otherwise teams.captain_id dangles to a non-member.
+		if mem.Role != nil && *mem.Role == memRoleCaptain && mem.Status != nil && *mem.Status == memStatusApproved {
+			if _, err := tq.teams.ClearCaptain(ctx, mem.TeamID); err != nil {
+				return err
+			}
+		}
+
+		actorID32, err := int32Ptr(actorID)
+		if err != nil {
+			return err
+		}
+		_, err = tq.events.CreateEvent(ctx, db.CreateEventParams{
+			TeamID:     mem.TeamID,
+			UserID:     mem.UserID,
+			ActorID:    actorID32,
+			Action:     memActionRemoved,
+			FromRole:   mem.Role,
+			ToRole:     mem.Role,
+			FromStatus: mem.Status,
+			ToStatus:   mem.Status,
+		})
+		return err
+	})
 }
 
 func (s *Service) Approve(ctx context.Context, membershipID int64, actorID int64, globalRole string) error {

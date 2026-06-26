@@ -201,6 +201,12 @@ export default function TeamDetailPage() {
         m.status === "approved",
     );
 
+  // The actions column is also needed for a non-manager whose own membership is
+  // pending (an invite), so they can Accept/Decline it from the team page.
+  const showMemberActions =
+    isManager ||
+    members.some((m) => m.user_id === user?.id && m.status === "pending");
+
   const startEdit = () => {
     if (!team) return;
     setEditForm({
@@ -494,7 +500,7 @@ export default function TeamDetailPage() {
                 <th>Member</th>
                 <th>Role</th>
                 <th>Status</th>
-                {isManager && <th></th>}
+                {showMemberActions && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -542,9 +548,9 @@ export default function TeamDetailPage() {
                   <td>
                     <CardBadge variant={m.status}>{m.status}</CardBadge>
                   </td>
-                  {isManager && (
+                  {showMemberActions && (
                     <td className="actions-cell">
-                      {m.status === "pending" && (
+                      {isManager && m.status === "pending" && (
                         <>
                           <ActionButton
                             onClick={() =>
@@ -592,17 +598,19 @@ export default function TeamDetailPage() {
                           </ActionButton>
                         </>
                       )}
-                      <ActionButton
-                        onClick={() =>
-                          void handleMembershipAction(() =>
-                            membershipsApi.deleteTeamMembership(m.id),
-                          )
-                        }
-                        variant="danger"
-                        confirm="Remove this member?"
-                      >
-                        Remove
-                      </ActionButton>
+                      {isManager && (
+                        <ActionButton
+                          onClick={() =>
+                            void handleMembershipAction(() =>
+                              membershipsApi.deleteTeamMembership(m.id),
+                            )
+                          }
+                          variant="danger"
+                          confirm="Remove this member?"
+                        >
+                          Remove
+                        </ActionButton>
+                      )}
                     </td>
                   )}
                 </tr>
