@@ -240,7 +240,7 @@ func (h *Handler) HandleAddGameService(c *gin.Context) {
 		Status    *string `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "invalid JSON"})
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: msgInvalidJSON})
 		return
 	}
 
@@ -266,7 +266,7 @@ func (h *Handler) HandleSetGameServiceStatus(c *gin.Context) {
 		Status string `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: "invalid JSON"})
+		c.JSON(http.StatusUnprocessableEntity, errorResponse{Code: codeValidationError, Message: msgInvalidJSON})
 		return
 	}
 

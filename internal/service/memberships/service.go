@@ -68,6 +68,8 @@ const (
 	memStatusApproved = "approved"
 	memStatusRejected = "rejected"
 
+	memFieldRole = "role"
+
 	memActionInvite   = "invite"
 	memActionAccepted = "accepted"
 	memActionRemoved  = "removed"
@@ -307,7 +309,7 @@ func (s *Service) Delete(ctx context.Context, id int64, actorID int64, globalRol
 				}
 			}
 			if ownerCount <= 1 {
-				return errs.NewValidationError(map[string]string{"role": "cannot remove the last owner"})
+				return errs.NewValidationError(map[string]string{memFieldRole: "cannot remove the last owner"})
 			}
 		}
 
@@ -523,7 +525,7 @@ func (s *Service) Decline(ctx context.Context, membershipID int64, userID int64)
 
 func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole string, actorID int64, globalRole string) error {
 	if !managingRoles[newRole] && newRole != memRolePlayer && newRole != memRoleGuest {
-		return errs.NewValidationError(map[string]string{"role": "invalid role"})
+		return errs.NewValidationError(map[string]string{memFieldRole: "invalid role"})
 	}
 
 	return s.tx.RunInTx(ctx, func(q *db.Queries) error {
@@ -553,7 +555,7 @@ func (s *Service) SetRole(ctx context.Context, membershipID int64, newRole strin
 				}
 			}
 			if ownerCount <= 1 {
-				return errs.NewValidationError(map[string]string{"role": "cannot remove the last owner"})
+				return errs.NewValidationError(map[string]string{memFieldRole: "cannot remove the last owner"})
 			}
 		}
 

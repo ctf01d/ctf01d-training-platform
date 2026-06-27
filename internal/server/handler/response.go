@@ -27,6 +27,7 @@ const (
 
 	msgMustFitInt32     = "must fit int32"
 	msgNotAuthenticated = "not authenticated"
+	msgInvalidJSON      = "invalid JSON"
 
 	memStatusApproved = "approved"
 )
@@ -64,7 +65,7 @@ func bindJSON[T any](c *gin.Context) (T, bool) {
 			_ = syntaxErr
 			c.JSON(http.StatusUnprocessableEntity, errorResponse{
 				Code:    codeValidationError,
-				Message: "invalid JSON",
+				Message: msgInvalidJSON,
 			})
 			return req, false
 		}
