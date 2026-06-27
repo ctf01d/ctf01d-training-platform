@@ -36,6 +36,13 @@ export default function GamesPage() {
   const [creating, setCreating] = useState(false);
   const [organizerTeams, setOrganizerTeams] = useState<OrganizerTeams>({});
   const [planningGames, setPlanningGames] = useState<Game[]>([]);
+  const [teamOptions, setTeamOptions] = useState<{ id: number; name: string }[]>(
+    [],
+  );
+  // The exact schedule is often unknown when a game is first created, so the
+  // form lets the organizer pick just a year instead of a full datetime.
+  const [dateMode, setDateMode] = useState<"datetime" | "year">("datetime");
+  const [year, setYear] = useState("");
 
   const fetchGames = useCallback(async () => {
     setLoading(true);
@@ -75,6 +82,18 @@ export default function GamesPage() {
     void fetchPlanningGames();
   }, [fetchPlanningGames]);
 
+  // Load existing teams to offer as organizer suggestions when the create form
+  // opens. The organizer is stored as a team name, so matching an existing team
+  // lets GamesPage render it as a link.
+  useEffect(() => {
+    if (!showCreate || teamOptions.length > 0) return;
+    void teamsApi
+      .listAllTeams()
+      .then((teams) =>
+        setTeamOptions(teams.map((t) => ({ id: t.id, name: t.name }))),
+      );
+  }, [showCreate, teamOptions.length]);
+
   // Resolve organizer names to teams so they can be rendered as links.
   useEffect(() => {
     const names = Array.from(
@@ -103,13 +122,29 @@ export default function GamesPage() {
     });
   }, [games, organizerTeams]);
 
+  // Build the starts_at/ends_at payload from whichever date mode is active.
+  // In "year" mode a bare year is stored as midnight on January 1st so it still
+  // fits the date-time schema; ends_at is left unset until the schedule is known.
+  const resolveDates = (): Pick<GameCreate, "starts_at" | "ends_at"> => {
+    if (dateMode === "year") {
+      const y = year.trim();
+      return {
+        starts_at: /^\d{4}$/.test(y) ? `${y}-01-01T00:00:00Z` : undefined,
+        ends_at: undefined,
+      };
+    }
+    return {
+      starts_at: datetimeLocalToRFC3339(form.starts_at),
+      ends_at: datetimeLocalToRFC3339(form.ends_at),
+    };
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     const { data, error: err } = await gamesApi.createGame({
       ...form,
-      starts_at: datetimeLocalToRFC3339(form.starts_at),
-      ends_at: datetimeLocalToRFC3339(form.ends_at),
+      ...resolveDates(),
     });
     setCreating(false);
     if (err) {
@@ -127,8 +162,7 @@ export default function GamesPage() {
     setCreating(true);
     const { data, error: err } = await gamesApi.createGame({
       ...form,
-      starts_at: datetimeLocalToRFC3339(form.starts_at),
-      ends_at: datetimeLocalToRFC3339(form.ends_at),
+      ...resolveDates(),
       published: false,
       theme: DEFAULT_GAME_THEME,
       requirements: DEFAULT_GAME_REQUIREMENTS,
@@ -176,34 +210,70 @@ export default function GamesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Organizer</label>
+            <label>Organizer Team</label>
             <input
+              list="organizer-team-options"
+              placeholder="Select an existing team"
               value={form.organizer ?? ""}
               onChange={(e) =>
                 setForm((f) => ({ ...f, organizer: e.target.value }))
               }
             />
+            <datalist id="organizer-team-options">
+              {teamOptions.map((t) => (
+                <option key={t.id} value={t.name} />
+              ))}
+            </datalist>
           </div>
           <div className="form-group">
-            <label>Starts At</label>
-            <input
-              type="datetime-local"
-              value={form.starts_at ?? ""}
+            <label>Schedule</label>
+            <select
+              value={dateMode}
               onChange={(e) =>
-                setForm((f) => ({ ...f, starts_at: e.target.value }))
+                setDateMode(e.target.value as "datetime" | "year")
               }
-            />
+            >
+              <option value="datetime">Exact date &amp; time</option>
+              <option value="year">Year only</option>
+            </select>
           </div>
-          <div className="form-group">
-            <label>Ends At</label>
-            <input
-              type="datetime-local"
-              value={form.ends_at ?? ""}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, ends_at: e.target.value }))
-              }
-            />
-          </div>
+          {dateMode === "year" ? (
+            <div className="form-group">
+              <label>Year</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={2000}
+                max={2100}
+                placeholder="2027"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="form-group">
+                <label>Starts At</label>
+                <input
+                  type="datetime-local"
+                  value={form.starts_at ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, starts_at: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label>Ends At</label>
+                <input
+                  type="datetime-local"
+                  value={form.ends_at ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, ends_at: e.target.value }))
+                  }
+                />
+              </div>
+            </>
+          )}
           <div className="form-actions">
             <button
               type="submit"
