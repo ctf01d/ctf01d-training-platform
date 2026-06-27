@@ -38,10 +38,6 @@ function statusMeta(value: string): ServiceStatusOption {
 }
 
 type Training = {
-  service_port?: number;
-  ports?: Record<string, number> | number[];
-  languages?: string[];
-  tech_stack?: string[];
   author?: string;
   description?: string;
   vulnerabilities?: Array<{ name?: string; description?: string }>;
@@ -52,18 +48,12 @@ function training(service: Service): Training {
 }
 
 function servicePorts(service: Service): string {
-  const t = training(service);
-  const out: number[] = [];
-  if (Array.isArray(t.ports)) out.push(...t.ports);
-  else if (t.ports && typeof t.ports === "object")
-    out.push(...Object.values(t.ports));
-  if (t.service_port) out.push(t.service_port);
-  return out.length ? Array.from(new Set(out)).join(", ") : "—";
+  const ports = service.ports ?? [];
+  return ports.length ? Array.from(new Set(ports)).join(", ") : "—";
 }
 
 function serviceTech(service: Service): string {
-  const t = training(service);
-  const tech = t.tech_stack ?? t.languages ?? [];
+  const tech = service.tech_stack ?? [];
   return tech.length ? tech.join(", ") : "—";
 }
 

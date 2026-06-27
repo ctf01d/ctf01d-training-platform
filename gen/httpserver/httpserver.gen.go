@@ -721,11 +721,13 @@ type Service struct {
 	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
 	Id                 int64                   `json:"id"`
 	Name               string                  `json:"name"`
+	Ports              []int32                 `json:"ports"`
 	PrivateDescription *string                 `json:"private_description,omitempty"`
 	Public             bool                    `json:"public"`
 	PublicDescription  *string                 `json:"public_description,omitempty"`
 	ServiceArchive     *ServiceArchiveMeta     `json:"service_archive,omitempty"`
 	ServiceArchiveUrl  *string                 `json:"service_archive_url,omitempty"`
+	TechStack          []string                `json:"tech_stack"`
 	UpdatedAt          *time.Time              `json:"updated_at,omitempty"`
 	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
 }
@@ -749,10 +751,12 @@ type ServiceCreate struct {
 	Ctf01dTraining     *map[string]interface{} `json:"ctf01d_training,omitempty"`
 	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
 	Name               string                  `json:"name"`
+	Ports              *[]int32                `json:"ports,omitempty"`
 	PrivateDescription *string                 `json:"private_description,omitempty"`
 	Public             *bool                   `json:"public,omitempty"`
 	PublicDescription  *string                 `json:"public_description,omitempty"`
 	ServiceArchiveUrl  *string                 `json:"service_archive_url,omitempty"`
+	TechStack          *[]string               `json:"tech_stack,omitempty"`
 	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
 }
 
@@ -802,10 +806,12 @@ type ServiceUpdate struct {
 	Ctf01dTraining     *map[string]interface{} `json:"ctf01d_training,omitempty"`
 	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
 	Name               *string                 `json:"name,omitempty"`
+	Ports              *[]int32                `json:"ports,omitempty"`
 	PrivateDescription *string                 `json:"private_description,omitempty"`
 	Public             *bool                   `json:"public,omitempty"`
 	PublicDescription  *string                 `json:"public_description,omitempty"`
 	ServiceArchiveUrl  *string                 `json:"service_archive_url,omitempty"`
+	TechStack          *[]string               `json:"tech_stack,omitempty"`
 	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
 }
 

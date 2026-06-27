@@ -782,6 +782,12 @@ func (h *Handler) HandleCreateService(c *gin.Context) {
 		ExploitsUrl:        req.ExploitsUrl,
 		Ctf01dTraining:     training,
 	}
+	if req.Ports != nil {
+		params.Ports = *req.Ports
+	}
+	if req.TechStack != nil {
+		params.TechStack = *req.TechStack
+	}
 	svc, err := h.svcService.Create(c.Request.Context(), params, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -838,6 +844,12 @@ func (h *Handler) HandleUpdateService(c *gin.Context) {
 		WriteupUrl:         req.WriteupUrl,
 		ExploitsUrl:        req.ExploitsUrl,
 		Ctf01dTraining:     training,
+	}
+	if req.Ports != nil {
+		params.Ports = *req.Ports
+	}
+	if req.TechStack != nil {
+		params.TechStack = *req.TechStack
 	}
 	svc, err := h.svcService.Update(c.Request.Context(), id, params, isAdmin)
 	if err != nil {

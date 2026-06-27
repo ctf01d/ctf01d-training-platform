@@ -3191,6 +3191,8 @@ components:
             - public
             - check_status
             - ctf01d_training
+            - ports
+            - tech_stack
           properties:
             id:
               type: integer
@@ -3243,6 +3245,15 @@ components:
             ctf01d_training:
               type: object
               nullable: true
+            ports:
+              type: array
+              items:
+                type: integer
+                format: int32
+            tech_stack:
+              type: array
+              items:
+                type: string
     ServiceCreate:
       type: object
       required:
@@ -3272,6 +3283,15 @@ components:
           type: string
         ctf01d_training:
           type: object
+        ports:
+          type: array
+          items:
+            type: integer
+            format: int32
+        tech_stack:
+          type: array
+          items:
+            type: string
     ServiceUpdate:
       type: object
       properties:
@@ -3299,6 +3319,15 @@ components:
           type: string
         ctf01d_training:
           type: object
+        ports:
+          type: array
+          items:
+            type: integer
+            format: int32
+        tech_stack:
+          type: array
+          items:
+            type: string
     ServiceList:
       type: object
       required:

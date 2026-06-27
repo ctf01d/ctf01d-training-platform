@@ -55,6 +55,8 @@ export default function ServicesPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState<ServiceCreate>({ name: "" });
+  const [portsInput, setPortsInput] = useState("");
+  const [techInput, setTechInput] = useState("");
   const [creating, setCreating] = useState(false);
 
   const [showImportWizard, setShowImportWizard] = useState(false);
@@ -91,7 +93,12 @@ export default function ServicesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
-    const { data, error: err } = await servicesApi.createService(createForm);
+    const body: ServiceCreate = { ...createForm };
+    const ports = servicesApi.parsePorts(portsInput);
+    if (ports.length) body.ports = ports;
+    const tech = servicesApi.parseTechStack(techInput);
+    if (tech.length) body.tech_stack = tech;
+    const { data, error: err } = await servicesApi.createService(body);
     setCreating(false);
     if (err) {
       setError(err);
@@ -338,6 +345,22 @@ export default function ServicesPage() {
                   checker_archive_url: e.target.value,
                 }))
               }
+            />
+          </div>
+          <div className="form-group">
+            <label>Ports</label>
+            <input
+              placeholder="e.g. 8080, 9000"
+              value={portsInput}
+              onChange={(e) => setPortsInput(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label>Tech stack</label>
+            <input
+              placeholder="e.g. Python, PostgreSQL, nginx"
+              value={techInput}
+              onChange={(e) => setTechInput(e.target.value)}
             />
           </div>
           <div className="form-group">

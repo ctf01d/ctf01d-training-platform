@@ -33,9 +33,11 @@ func (q *Queries) CountServices(ctx context.Context, arg CountServicesParams) (i
 const createService = `-- name: CreateService :one
 INSERT INTO services (name, public_description, private_description, author, copyright,
     avatar_url, public, service_archive_url, checker_archive_url, writeup_url, exploits_url,
-    check_status, ctf01d_training)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training
+    check_status, ctf01d_training, ports, tech_stack)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+    COALESCE($14::integer[], '{}'),
+    COALESCE($15::text[], '{}'))
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
 `
 
 type CreateServiceParams struct {
@@ -52,6 +54,8 @@ type CreateServiceParams struct {
 	ExploitsUrl        *string         `json:"exploits_url"`
 	CheckStatus        string          `json:"check_status"`
 	Ctf01dTraining     json.RawMessage `json:"ctf01d_training"`
+	Ports              []int32         `json:"ports"`
+	TechStack          []string        `json:"tech_stack"`
 }
 
 func (q *Queries) CreateService(ctx context.Context, arg CreateServiceParams) (Service, error) {
@@ -69,6 +73,8 @@ func (q *Queries) CreateService(ctx context.Context, arg CreateServiceParams) (S
 		arg.ExploitsUrl,
 		arg.CheckStatus,
 		arg.Ctf01dTraining,
+		arg.Ports,
+		arg.TechStack,
 	)
 	var i Service
 	err := row.Scan(
@@ -97,6 +103,8 @@ func (q *Queries) CreateService(ctx context.Context, arg CreateServiceParams) (S
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
@@ -111,7 +119,7 @@ func (q *Queries) DeleteService(ctx context.Context, id int64) error {
 }
 
 const getServiceByID = `-- name: GetServiceByID :one
-SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training FROM services WHERE id = $1
+SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack FROM services WHERE id = $1
 `
 
 func (q *Queries) GetServiceByID(ctx context.Context, id int64) (Service, error) {
@@ -143,12 +151,14 @@ func (q *Queries) GetServiceByID(ctx context.Context, id int64) (Service, error)
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
 
 const getServiceByName = `-- name: GetServiceByName :one
-SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training FROM services WHERE name = $1
+SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack FROM services WHERE name = $1
 `
 
 func (q *Queries) GetServiceByName(ctx context.Context, name string) (Service, error) {
@@ -180,12 +190,14 @@ func (q *Queries) GetServiceByName(ctx context.Context, name string) (Service, e
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
 
 const listServices = `-- name: ListServices :many
-SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training FROM services
+SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack FROM services
 WHERE (public = $3 OR $3 IS NULL)
   AND (name ILIKE '%' || $4 || '%' OR $4 IS NULL)
 ORDER BY created_at DESC, id DESC
@@ -239,6 +251,8 @@ func (q *Queries) ListServices(ctx context.Context, arg ListServicesParams) ([]S
 			&i.CheckerLocalSha256,
 			&i.CheckerDownloadedAt,
 			&i.Ctf01dTraining,
+			&i.Ports,
+			&i.TechStack,
 		); err != nil {
 			return nil, err
 		}
@@ -256,7 +270,7 @@ UPDATE services SET
     checker_archive_url = COALESCE($3, checker_archive_url),
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
 `
 
 type SetArchiveURLsParams struct {
@@ -294,6 +308,8 @@ func (q *Queries) SetArchiveURLs(ctx context.Context, arg SetArchiveURLsParams) 
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
@@ -301,7 +317,7 @@ func (q *Queries) SetArchiveURLs(ctx context.Context, arg SetArchiveURLsParams) 
 const setCheckStatus = `-- name: SetCheckStatus :one
 UPDATE services SET check_status = $2, checked_at = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
 `
 
 type SetCheckStatusParams struct {
@@ -339,6 +355,8 @@ func (q *Queries) SetCheckStatus(ctx context.Context, arg SetCheckStatusParams) 
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
@@ -351,7 +369,7 @@ UPDATE services SET
     checker_downloaded_at = $5,
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
 `
 
 type SetCheckerLocalParams struct {
@@ -397,6 +415,8 @@ func (q *Queries) SetCheckerLocal(ctx context.Context, arg SetCheckerLocalParams
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
@@ -404,7 +424,7 @@ func (q *Queries) SetCheckerLocal(ctx context.Context, arg SetCheckerLocalParams
 const setPublic = `-- name: SetPublic :one
 UPDATE services SET public = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
 `
 
 type SetPublicParams struct {
@@ -441,6 +461,8 @@ func (q *Queries) SetPublic(ctx context.Context, arg SetPublicParams) (Service, 
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
@@ -453,7 +475,7 @@ UPDATE services SET
     service_downloaded_at = $5,
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
 `
 
 type SetServiceLocalParams struct {
@@ -499,6 +521,8 @@ func (q *Queries) SetServiceLocal(ctx context.Context, arg SetServiceLocalParams
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }
@@ -517,9 +541,11 @@ UPDATE services SET
     writeup_url = COALESCE($11, writeup_url),
     exploits_url = COALESCE($12, exploits_url),
     ctf01d_training = COALESCE($13, ctf01d_training),
+    ports = COALESCE($14::integer[], ports),
+    tech_stack = COALESCE($15::text[], tech_stack),
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
 `
 
 type UpdateServiceParams struct {
@@ -536,6 +562,8 @@ type UpdateServiceParams struct {
 	WriteupUrl         *string         `json:"writeup_url"`
 	ExploitsUrl        *string         `json:"exploits_url"`
 	Ctf01dTraining     json.RawMessage `json:"ctf01d_training"`
+	Ports              []int32         `json:"ports"`
+	TechStack          []string        `json:"tech_stack"`
 }
 
 func (q *Queries) UpdateService(ctx context.Context, arg UpdateServiceParams) (Service, error) {
@@ -553,6 +581,8 @@ func (q *Queries) UpdateService(ctx context.Context, arg UpdateServiceParams) (S
 		arg.WriteupUrl,
 		arg.ExploitsUrl,
 		arg.Ctf01dTraining,
+		arg.Ports,
+		arg.TechStack,
 	)
 	var i Service
 	err := row.Scan(
@@ -581,6 +611,8 @@ func (q *Queries) UpdateService(ctx context.Context, arg UpdateServiceParams) (S
 		&i.CheckerLocalSha256,
 		&i.CheckerDownloadedAt,
 		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
 	)
 	return i, err
 }

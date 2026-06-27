@@ -1590,6 +1590,8 @@ export interface components {
             service_archive?: components["schemas"]["ServiceArchiveMeta"];
             checker_archive?: components["schemas"]["ServiceArchiveMeta"];
             ctf01d_training: Record<string, never> | null;
+            ports: number[];
+            tech_stack: string[];
         };
         ServiceCreate: {
             name: string;
@@ -1604,6 +1606,8 @@ export interface components {
             writeup_url?: string;
             exploits_url?: string;
             ctf01d_training?: Record<string, never>;
+            ports?: number[];
+            tech_stack?: string[];
         };
         ServiceUpdate: {
             name?: string;
@@ -1618,6 +1622,8 @@ export interface components {
             writeup_url?: string;
             exploits_url?: string;
             ctf01d_training?: Record<string, never>;
+            ports?: number[];
+            tech_stack?: string[];
         };
         ServiceList: {
             items: components["schemas"]["Service"][];

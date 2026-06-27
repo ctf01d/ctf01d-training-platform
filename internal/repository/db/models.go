@@ -101,6 +101,8 @@ type Service struct {
 	CheckerLocalSha256  *string            `json:"checker_local_sha256"`
 	CheckerDownloadedAt pgtype.Timestamptz `json:"checker_downloaded_at"`
 	Ctf01dTraining      json.RawMessage    `json:"ctf01d_training"`
+	Ports               []int32            `json:"ports"`
+	TechStack           []string           `json:"tech_stack"`
 }
 
 type Team struct {

@@ -2,6 +2,25 @@ import client from "./client";
 import type { components } from "./schema";
 
 export type Service = components["schemas"]["Service"];
+
+/** Parse a comma/space separated list of port numbers into a deduped int array. */
+export function parsePorts(input: string): number[] {
+  const out = input
+    .split(/[\s,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => Number(s))
+    .filter((n) => Number.isInteger(n) && n > 0 && n <= 65535);
+  return Array.from(new Set(out));
+}
+
+/** Parse a comma separated list of technologies into a trimmed string array. */
+export function parseTechStack(input: string): string[] {
+  return input
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 export type ServiceCreate = components["schemas"]["ServiceCreate"];
 export type ServiceUpdate = components["schemas"]["ServiceUpdate"];
 export type ServiceImportPreview =

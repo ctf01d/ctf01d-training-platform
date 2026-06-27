@@ -39,6 +39,8 @@ type ServiceModel struct {
 	CheckerLocalSha256  *string
 	CheckerDownloadedAt *time.Time
 	Ctf01dTraining      json.RawMessage
+	Ports               []int32
+	TechStack           []string
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 }
@@ -63,6 +65,8 @@ type CreateParams struct {
 	WriteupUrl         *string
 	ExploitsUrl        *string
 	Ctf01dTraining     json.RawMessage
+	Ports              []int32
+	TechStack          []string
 }
 
 type UpdateParams struct {
@@ -78,6 +82,8 @@ type UpdateParams struct {
 	WriteupUrl         *string
 	ExploitsUrl        *string
 	Ctf01dTraining     json.RawMessage
+	Ports              []int32
+	TechStack          []string
 }
 
 type Querier interface {
@@ -127,6 +133,8 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 		ExploitsUrl:        params.ExploitsUrl,
 		CheckStatus:        checkStatusUnknown,
 		Ctf01dTraining:     training,
+		Ports:              params.Ports,
+		TechStack:          params.TechStack,
 	})
 	if err != nil {
 		return nil, mapDBError(err)
@@ -263,6 +271,8 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isA
 		WriteupUrl:         params.WriteupUrl,
 		ExploitsUrl:        params.ExploitsUrl,
 		Ctf01dTraining:     training,
+		Ports:              params.Ports,
+		TechStack:          params.TechStack,
 	})
 	if err != nil {
 		return nil, mapDBError(err)
@@ -309,6 +319,8 @@ func fromDB(s db.Service, isAdmin bool) ServiceModel {
 		ExploitsUrl:       s.ExploitsUrl,
 		CheckStatus:       s.CheckStatus,
 		Ctf01dTraining:    s.Ctf01dTraining,
+		Ports:             s.Ports,
+		TechStack:         s.TechStack,
 		CreatedAt:         s.CreatedAt,
 		UpdatedAt:         s.UpdatedAt,
 	}

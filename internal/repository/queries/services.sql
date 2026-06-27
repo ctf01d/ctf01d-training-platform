@@ -1,8 +1,10 @@
 -- name: CreateService :one
 INSERT INTO services (name, public_description, private_description, author, copyright,
     avatar_url, public, service_archive_url, checker_archive_url, writeup_url, exploits_url,
-    check_status, ctf01d_training)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    check_status, ctf01d_training, ports, tech_stack)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+    COALESCE(sqlc.narg('ports')::integer[], '{}'),
+    COALESCE(sqlc.narg('tech_stack')::text[], '{}'))
 RETURNING *;
 
 -- name: GetServiceByID :one
@@ -37,6 +39,8 @@ UPDATE services SET
     writeup_url = COALESCE($11, writeup_url),
     exploits_url = COALESCE($12, exploits_url),
     ctf01d_training = COALESCE($13, ctf01d_training),
+    ports = COALESCE(sqlc.narg('ports')::integer[], ports),
+    tech_stack = COALESCE(sqlc.narg('tech_stack')::text[], tech_stack),
     updated_at = now()
 WHERE id = $1
 RETURNING *;

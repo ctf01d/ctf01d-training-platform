@@ -124,15 +124,21 @@ func TestRemainingHTTPRoutesFlow(t *testing.T) {
 		"subdir":   "service",
 	}, ownerToken), http.StatusUnprocessableEntity, "github import unsupported subdir")
 
+	t.Log("Step: publish game")
+	requireStatus(t, makeReq(t, engine, http.MethodPost, fmt.Sprintf("/api/v1/games/%d/publish", gameID), nil, ownerToken), http.StatusOK, "publish game")
+
 	t.Log("Step: game-services routes")
 	requireStatus(t, makeReq(t, engine, http.MethodPost, fmt.Sprintf("/api/v1/games/%d/services", gameID), map[string]interface{}{
 		"service_id": serviceID,
 	}, ownerToken), http.StatusOK, "add game service")
+	requireStatus(t, makeReq(t, engine, http.MethodPatch, fmt.Sprintf("/api/v1/games/%d/services/%d", gameID, serviceID), map[string]interface{}{
+		"status": "ready",
+	}, ownerToken), http.StatusNoContent, "set game service status")
 	w = makeReq(t, engine, http.MethodGet, fmt.Sprintf("/api/v1/games/%d/services", gameID), nil, ownerToken)
 	requireStatus(t, w, http.StatusOK, "list game services")
-	serviceIDs := parseNumberArray(t, w)
-	if len(serviceIDs) != 1 || serviceIDs[0] != serviceID {
-		t.Fatalf("list game services: got %v, want [%d]", serviceIDs, serviceID)
+	links := parseGameServiceLinks(t, w)
+	if len(links) != 1 || links[0].ServiceID != serviceID || links[0].Status != "ready" {
+		t.Fatalf("list game services: got %+v, want service_id=%d status=ready", links, serviceID)
 	}
 	requireStatus(t, makeReq(t, engine, http.MethodDelete, fmt.Sprintf("/api/v1/games/%d/services/%d", gameID, serviceID), nil, ownerToken), http.StatusNoContent, "remove game service")
 
@@ -188,15 +194,23 @@ func membershipIDForUser(t *testing.T, engine *gin.Engine, teamID, userID int64,
 	return 0
 }
 
-func parseNumberArray(t *testing.T, w *httptest.ResponseRecorder) []int64 {
+type gameServiceLink struct {
+	ServiceID int64
+	Status    string
+}
+
+func parseGameServiceLinks(t *testing.T, w *httptest.ResponseRecorder) []gameServiceLink {
 	t.Helper()
-	var raw []float64
-	if err := json.Unmarshal(w.Body.Bytes(), &raw); err != nil {
-		t.Fatalf("parsing number array: %v, body: %s", err, w.Body.String())
+	var raw []struct {
+		ServiceId float64 `json:"service_id"`
+		Status    string  `json:"status"`
 	}
-	result := make([]int64, len(raw))
+	if err := json.Unmarshal(w.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("parsing game service links: %v, body: %s", err, w.Body.String())
+	}
+	result := make([]gameServiceLink, len(raw))
 	for i, v := range raw {
-		result[i] = int64(v)
+		result[i] = gameServiceLink{ServiceID: int64(v.ServiceId), Status: v.Status}
 	}
 	return result
 }

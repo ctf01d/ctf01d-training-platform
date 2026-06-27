@@ -23,6 +23,14 @@ func serviceToHTTP(s svcsvc.ServiceModel) httpserver.Service {
 		ExploitsUrl:       s.ExploitsUrl,
 		CreatedAt:         &s.CreatedAt,
 		UpdatedAt:         &s.UpdatedAt,
+		Ports:             s.Ports,
+		TechStack:         s.TechStack,
+	}
+	if result.Ports == nil {
+		result.Ports = []int32{}
+	}
+	if result.TechStack == nil {
+		result.TechStack = []string{}
 	}
 
 	if s.Ctf01dTraining != nil {

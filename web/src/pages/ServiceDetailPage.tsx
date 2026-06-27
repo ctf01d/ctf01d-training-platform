@@ -41,6 +41,8 @@ export default function ServiceDetailPage() {
 
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<ServiceUpdate>({});
+  const [portsInput, setPortsInput] = useState("");
+  const [techInput, setTechInput] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [serviceArchiveFile, setServiceArchiveFile] = useState<File | null>(
@@ -78,14 +80,21 @@ export default function ServiceDetailPage() {
       writeup_url: service.writeup_url ?? undefined,
       exploits_url: service.exploits_url ?? undefined,
     });
+    setPortsInput((service.ports ?? []).join(", "));
+    setTechInput((service.tech_stack ?? []).join(", "));
     setEditing(true);
   };
 
   const handleSave = async () => {
     setSaving(true);
+    const body: ServiceUpdate = {
+      ...editForm,
+      ports: servicesApi.parsePorts(portsInput),
+      tech_stack: servicesApi.parseTechStack(techInput),
+    };
     const { data, error: err } = await servicesApi.updateService(
       serviceId,
-      editForm,
+      body,
     );
     setSaving(false);
     if (err) {
@@ -277,6 +286,16 @@ export default function ServiceDetailPage() {
               <InfoGroup title="Overview">
                 <InfoRow label="Author">{service.author ?? "—"}</InfoRow>
                 <InfoRow label="Copyright">{service.copyright ?? "—"}</InfoRow>
+                <InfoRow label="Ports">
+                  {service.ports && service.ports.length
+                    ? service.ports.join(", ")
+                    : "—"}
+                </InfoRow>
+                <InfoRow label="Tech stack">
+                  {service.tech_stack && service.tech_stack.length
+                    ? service.tech_stack.join(", ")
+                    : "—"}
+                </InfoRow>
                 <InfoRow label="Visibility">
                   <CardBadge variant={service.public ? "public" : "private"}>
                     {service.public ? "public" : "private"}
@@ -382,6 +401,22 @@ export default function ServiceDetailPage() {
                   private_description: e.target.value,
                 }))
               }
+            />
+          </div>
+          <div className="form-group">
+            <label>Ports</label>
+            <input
+              placeholder="e.g. 8080, 9000"
+              value={portsInput}
+              onChange={(e) => setPortsInput(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label>Tech stack</label>
+            <input
+              placeholder="e.g. Python, PostgreSQL, nginx"
+              value={techInput}
+              onChange={(e) => setTechInput(e.target.value)}
             />
           </div>
           <div className="form-group">
