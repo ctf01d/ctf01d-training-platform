@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useI18n } from "../i18n/I18nContext";
 
 interface ApiError {
   code?: string;
@@ -12,24 +13,25 @@ interface ErrorDisplayProps {
 }
 
 export function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
+  const { t } = useI18n();
   if (!error) return null;
 
   const fieldErrors =
     error.details && typeof error.details === "object"
       ? Object.entries(error.details).map(([field, msg]) => (
           <div key={field} className="field-error">
-            <strong>{field}:</strong> {String(msg)}
+            <strong>{field}:</strong> {t(String(msg))}
           </div>
         ))
       : null;
 
   return (
     <div className="error-display">
-      <p>{error.message ?? error.code ?? "An error occurred"}</p>
+      <p>{t(error.message ?? error.code ?? "An error occurred")}</p>
       {fieldErrors && <div className="field-errors">{fieldErrors}</div>}
       {onRetry && (
         <button onClick={onRetry} className="btn btn-sm">
-          Retry
+          {t("Retry")}
         </button>
       )}
     </div>
@@ -37,18 +39,20 @@ export function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
 }
 
 export function ForbiddenDisplay() {
+  const { t } = useI18n();
   return (
     <div className="error-display">
-      You do not have permission to access this resource.
+      {t("You do not have permission to access this resource.")}
     </div>
   );
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
+  const { t } = useI18n();
   return (
     <div className="error-display">
-      <h3>Something went wrong</h3>
-      <p>{error.message}</p>
+      <h3>{t("Something went wrong")}</h3>
+      <p>{t(error.message)}</p>
     </div>
   );
 }

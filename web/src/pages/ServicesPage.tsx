@@ -16,6 +16,7 @@ import {
 import { ErrorDisplay, handleApiError } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 
 const checkBadgeVariant: Record<string, string> = {
   ok: "ok",
@@ -39,7 +40,8 @@ const importStatusLabel: Record<string, string> = {
 };
 
 export default function ServicesPage() {
-  usePageTitle("Services");
+  const { t } = useI18n();
+  usePageTitle(t("Services"));
   const { isPlayer } = useAuth();
   const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
@@ -200,12 +202,12 @@ export default function ServicesPage() {
               setPage(1);
             }}
           >
-            <option value="">All</option>
-            <option value="true">Public</option>
-            <option value="false">Private</option>
+            <option value="">{t("All")}</option>
+            <option value="true">{t("Public")}</option>
+            <option value="false">{t("Private")}</option>
           </select>
           <input
-            placeholder="Search services..."
+            placeholder={t("Search services...")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -222,7 +224,7 @@ export default function ServicesPage() {
                 setShowImportWizard(false);
               }}
             >
-              {showCreate ? "Cancel" : "Create Service"}
+              {showCreate ? t("Cancel") : t("Create Service")}
             </button>
             <button
               className="btn"
@@ -231,7 +233,7 @@ export default function ServicesPage() {
                 setShowCreate(false);
               }}
             >
-              {showImportWizard ? "Close Import" : "Import Service"}
+              {showImportWizard ? t("Close Import") : t("Import Service")}
             </button>
           </div>
         )}
@@ -240,7 +242,7 @@ export default function ServicesPage() {
       {showCreate && (
         <form onSubmit={(e) => void handleCreate(e)} className="create-form">
           <div className="form-group">
-            <label>Name *</label>
+            <label>{t("Name *")}</label>
             <input
               value={createForm.name}
               onChange={(e) =>
@@ -250,7 +252,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Author</label>
+            <label>{t("Author")}</label>
             <input
               value={createForm.author ?? ""}
               onChange={(e) =>
@@ -259,7 +261,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Public Description</label>
+            <label>{t("Public Description")}</label>
             <textarea
               value={createForm.public_description ?? ""}
               onChange={(e) =>
@@ -271,7 +273,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Private Description</label>
+            <label>{t("Private Description")}</label>
             <textarea
               value={createForm.private_description ?? ""}
               onChange={(e) =>
@@ -283,7 +285,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Copyright</label>
+            <label>{t("Copyright")}</label>
             <input
               value={createForm.copyright ?? ""}
               onChange={(e) =>
@@ -292,7 +294,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Avatar URL</label>
+            <label>{t("Avatar URL")}</label>
             <input
               type="url"
               value={createForm.avatar_url ?? ""}
@@ -302,7 +304,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Writeup URL</label>
+            <label>{t("Writeup URL")}</label>
             <input
               type="url"
               value={createForm.writeup_url ?? ""}
@@ -312,7 +314,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Exploits URL</label>
+            <label>{t("Exploits URL")}</label>
             <input
               type="url"
               value={createForm.exploits_url ?? ""}
@@ -322,7 +324,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Service Archive URL</label>
+            <label>{t("Service Archive URL")}</label>
             <input
               type="url"
               value={createForm.service_archive_url ?? ""}
@@ -335,7 +337,7 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Checker Archive URL</label>
+            <label>{t("Checker Archive URL")}</label>
             <input
               type="url"
               value={createForm.checker_archive_url ?? ""}
@@ -348,23 +350,23 @@ export default function ServicesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Ports</label>
+            <label>{t("Ports")}</label>
             <input
-              placeholder="e.g. 8080, 9000"
+              placeholder={t("e.g. 8080, 9000")}
               value={portsInput}
               onChange={(e) => setPortsInput(e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label>Tech stack</label>
+            <label>{t("Tech stack")}</label>
             <input
-              placeholder="e.g. Python, PostgreSQL, nginx"
+              placeholder={t("e.g. Python, PostgreSQL, nginx")}
               value={techInput}
               onChange={(e) => setTechInput(e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label>Public</label>
+            <label>{t("Public")}</label>
             <input
               type="checkbox"
               checked={createForm.public ?? false}
@@ -374,7 +376,7 @@ export default function ServicesPage() {
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={creating}>
-            {creating ? "Creating..." : "Create"}
+            {creating ? t("Creating...") : t("Create")}
           </button>
         </form>
       )}
@@ -394,7 +396,7 @@ export default function ServicesPage() {
                   resetImportPreview();
                 }}
               >
-                GitHub
+                {t("GitHub")}
               </button>
               <button
                 type="button"
@@ -404,29 +406,29 @@ export default function ServicesPage() {
                   resetImportPreview();
                 }}
               >
-                ZIP
+                {t("ZIP")}
               </button>
             </div>
 
-            <div className="import-steps" aria-label="Import steps">
+            <div className="import-steps" aria-label={t("Import steps")}>
               <span
                 className={`import-step ${
                   preview ? "is-complete" : "is-active"
                 }`}
               >
-                Source
+                {t("Source")}
               </span>
               <span
                 className={`import-step ${
                   preview?.valid ? "is-complete" : preview ? "is-active" : ""
                 }`}
               >
-                Validate
+                {t("Validate")}
               </span>
               <span
                 className={`import-step ${preview?.valid ? "is-active" : ""}`}
               >
-                Import
+                {t("Import")}
               </span>
             </div>
           </div>
@@ -434,7 +436,7 @@ export default function ServicesPage() {
           {importSource === "github" ? (
             <div className="import-fields">
               <div className="form-group">
-                <label>Repo URL *</label>
+                <label>{t("Repo URL *")}</label>
                 <input
                   value={githubUrl}
                   onChange={(e) => {
@@ -447,7 +449,7 @@ export default function ServicesPage() {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Ref</label>
+                  <label>{t("Ref")}</label>
                   <input
                     value={githubRef}
                     onChange={(e) => {
@@ -458,7 +460,7 @@ export default function ServicesPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Subdirectory</label>
+                  <label>{t("Subdirectory")}</label>
                   <input
                     value={githubSubdir}
                     onChange={(e) => {
@@ -471,7 +473,7 @@ export default function ServicesPage() {
             </div>
           ) : (
             <div className="form-group">
-              <label>ZIP Archive *</label>
+              <label>{t("ZIP Archive *")}</label>
               <input
                 type="file"
                 accept=".zip"
@@ -492,7 +494,7 @@ export default function ServicesPage() {
                 previewing || (importSource === "zip" ? !zipFile : !githubUrl)
               }
             >
-              {previewing ? "Validating..." : "Validate"}
+              {previewing ? t("Validating...") : t("Validate")}
             </button>
             <button
               type="button"
@@ -500,7 +502,7 @@ export default function ServicesPage() {
               disabled={!preview?.valid || importing || previewing}
               onClick={() => void handleImport()}
             >
-              {importing ? "Importing..." : "Import"}
+              {importing ? t("Importing...") : t("Import")}
             </button>
           </div>
 
@@ -508,19 +510,19 @@ export default function ServicesPage() {
             <div className="import-preview">
               <div className="import-preview-meta">
                 <div>
-                  <span>Service ID</span>
+                  <span>{t("Service ID")}</span>
                   <strong>{preview.service_name || "—"}</strong>
                 </div>
                 <div>
-                  <span>Expected repo</span>
+                  <span>{t("Expected repo")}</span>
                   <strong>{preview.expected_repository_name}</strong>
                 </div>
                 <div>
-                  <span>Service dir</span>
+                  <span>{t("Service dir")}</span>
                   <strong>{preview.service_directory ?? "—"}</strong>
                 </div>
                 <div>
-                  <span>Checker dir</span>
+                  <span>{t("Checker dir")}</span>
                   <strong>{preview.checker_directory ?? "—"}</strong>
                 </div>
               </div>
@@ -532,7 +534,7 @@ export default function ServicesPage() {
                     className={`import-check import-check-${item.status}`}
                   >
                     <span className="import-check-status">
-                      {importStatusLabel[item.status] ?? item.status}
+                      {t(importStatusLabel[item.status] ?? item.status)}
                     </span>
                     <div>
                       <strong>{item.title}</strong>
@@ -551,7 +553,7 @@ export default function ServicesPage() {
       <CardGrid
         loading={loading}
         isEmpty={services.length === 0}
-        emptyMessage="No services found"
+        emptyMessage={t("No services found")}
       >
         {services.map((s) => (
           <EntityCard
@@ -563,19 +565,19 @@ export default function ServicesPage() {
             badges={
               <>
                 <CardBadge variant={s.public ? "public" : "private"}>
-                  {s.public ? "public" : "private"}
+                  {t(s.public ? "public" : "private")}
                 </CardBadge>
                 <CardBadge
                   variant={checkBadgeVariant[s.check_status] ?? "unknown"}
                 >
-                  {s.check_status}
+                  {t(s.check_status)}
                 </CardBadge>
               </>
             }
           >
-            <CardMeta label="Author">{s.author ?? "—"}</CardMeta>
+            <CardMeta label={t("Author")}>{s.author ?? "—"}</CardMeta>
             {s.public_description && (
-              <CardMeta label="About">{s.public_description}</CardMeta>
+              <CardMeta label={t("About")}>{s.public_description}</CardMeta>
             )}
           </EntityCard>
         ))}

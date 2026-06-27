@@ -185,6 +185,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		Telegram:    req.Telegram,
 		Github:      req.Github,
 		Email:       req.Email,
+		Language:    enumStringPtr(req.Language),
 	}
 
 	user, err := h.users.UpdateProfile(c.Request.Context(), userID, params)
@@ -435,6 +436,7 @@ func userToHTTPWithPrivate(u usersvc.User, includePrivate bool) httpserver.User 
 		Id:          u.ID,
 		UserName:    u.UserName,
 		DisplayName: u.DisplayName,
+		Language:    httpserver.UserLanguage(u.Language),
 		Role:        httpserver.UserRole(u.Role),
 		Rating:      u.Rating,
 		AvatarUrl:   u.AvatarUrl,
@@ -451,6 +453,14 @@ func userToHTTPWithPrivate(u usersvc.User, includePrivate bool) httpserver.User 
 		result.LastLoginAt = u.LastLoginAt
 	}
 	return result
+}
+
+func enumStringPtr[T ~string](value *T) *string {
+	if value == nil {
+		return nil
+	}
+	s := string(*value)
+	return &s
 }
 
 func parseIDParam(c *gin.Context, param string) (int64, bool) {

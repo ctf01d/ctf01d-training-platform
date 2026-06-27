@@ -3721,6 +3721,7 @@ components:
             - id
             - user_name
             - display_name
+            - language
             - role
             - rating
             - is_blocked
@@ -3732,6 +3733,11 @@ components:
               type: string
             display_name:
               type: string
+            language:
+              type: string
+              enum:
+                - en
+                - ru
             role:
               type: string
               enum:
@@ -3831,6 +3837,11 @@ components:
         email:
           type: string
           nullable: true
+        language:
+          type: string
+          enum:
+            - en
+            - ru
     PasswordUpdate:
       type: object
       required:

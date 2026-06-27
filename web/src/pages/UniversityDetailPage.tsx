@@ -18,8 +18,10 @@ import {
   safeHref,
 } from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function UniversityDetailPage() {
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const universityId = Number(id);
   const navigate = useNavigate();
@@ -91,11 +93,11 @@ export default function UniversityDetailPage() {
     navigate("/universities");
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">{t("Loading...")}</div>;
   if (!university)
     return <ErrorDisplay error={error} onRetry={fetchUniversity} />;
 
-  const title = university.name ?? `University #${university.id}`;
+  const title = university.name ?? `${t("University")} #${university.id}`;
 
   return (
     <div className="page detail-page">
@@ -104,14 +106,14 @@ export default function UniversityDetailPage() {
       {!editing ? (
         <>
           <DetailHero
-            kicker={`University #${university.id}`}
+            kicker={`${t("University")} #${university.id}`}
             title={title}
             avatarUrl={university.avatar_url}
             avatarText={title}
             summary={[
-              { label: "Teams", value: `${teams.length}` },
+              { label: t("Teams"), value: `${teams.length}` },
               {
-                label: "Site",
+                label: t("Site"),
                 value: university.site_url
                   ? renderLink(university.site_url)
                   : "—",
@@ -123,7 +125,7 @@ export default function UniversityDetailPage() {
                   className="btn btn-sm"
                   onClick={() => navigate("/universities")}
                 >
-                  Back
+                  {t("Back")}
                 </button>
                 {university.site_url && (
                   <a
@@ -132,7 +134,7 @@ export default function UniversityDetailPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Site
+                    {t("Site")}
                   </a>
                 )}
                 {isAdmin && (
@@ -140,16 +142,16 @@ export default function UniversityDetailPage() {
                     className="btn btn-sm btn-primary"
                     onClick={startEdit}
                   >
-                    Edit
+                    {t("Edit")}
                   </button>
                 )}
                 {isAdmin && (
                   <ActionButton
                     onClick={handleDelete}
                     variant="danger"
-                    confirm="Delete this university?"
+                    confirm={t("Delete this university?")}
                   >
-                    Delete
+                    {t("Delete")}
                   </ActionButton>
                 )}
               </>
@@ -158,24 +160,24 @@ export default function UniversityDetailPage() {
 
           <div className="detail-section">
             <div className="section-head">
-              <h3>University Info</h3>
+              <h3>{t("University Info")}</h3>
             </div>
             <InfoGroups>
-              <InfoGroup title="Profile">
-                <InfoRow label="Name">{university.name ?? "—"}</InfoRow>
-                <InfoRow label="Site">
+              <InfoGroup title={t("Profile")}>
+                <InfoRow label={t("Name")}>{university.name ?? "—"}</InfoRow>
+                <InfoRow label={t("Site")}>
                   {renderLink(university.site_url)}
                 </InfoRow>
-                <InfoRow label="Logo">
+                <InfoRow label={t("Logo")}>
                   {renderLogo(university.avatar_url)}
                 </InfoRow>
               </InfoGroup>
 
-              <InfoGroup title="Meta">
-                <InfoRow label="Added">
+              <InfoGroup title={t("Meta")}>
+                <InfoRow label={t("Added")}>
                   {formatDateTime(university.created_at)}
                 </InfoRow>
-                <InfoRow label="Updated">
+                <InfoRow label={t("Updated")}>
                   {formatDateTime(university.updated_at)}
                 </InfoRow>
               </InfoGroup>
@@ -191,7 +193,7 @@ export default function UniversityDetailPage() {
           className="edit-form"
         >
           <div className="form-group">
-            <label>Name</label>
+            <label>{t("Name")}</label>
             <input
               value={editForm.name ?? ""}
               onChange={(e) =>
@@ -200,7 +202,7 @@ export default function UniversityDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Site URL</label>
+            <label>{t("Site URL")}</label>
             <input
               value={editForm.site_url ?? ""}
               onChange={(e) =>
@@ -209,7 +211,7 @@ export default function UniversityDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Avatar URL</label>
+            <label>{t("Avatar URL")}</label>
             <input
               value={editForm.avatar_url ?? ""}
               onChange={(e) =>
@@ -219,14 +221,14 @@ export default function UniversityDetailPage() {
           </div>
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("Saving...") : t("Save")}
             </button>
             <button
               type="button"
               className="btn"
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </form>
@@ -235,7 +237,7 @@ export default function UniversityDetailPage() {
       <div className="detail-section">
         <div className="section-head">
           <h3>
-            Teams <SectionCount n={teams.length} />
+            {t("Teams")} <SectionCount n={teams.length} />
           </h3>
         </div>
         {teams.length > 0 ? (
@@ -247,7 +249,7 @@ export default function UniversityDetailPage() {
             ))}
           </div>
         ) : (
-          <p className="section-empty">No teams from this university.</p>
+          <p className="section-empty">{t("No teams from this university.")}</p>
         )}
       </div>
     </div>

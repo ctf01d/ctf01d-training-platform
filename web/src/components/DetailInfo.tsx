@@ -1,4 +1,10 @@
 import { useState, useEffect, type ReactNode } from "react";
+import {
+  formatRelativeLiteral,
+  getCurrentLanguage,
+  localeForLanguage,
+  translateCurrent,
+} from "../i18n/runtime";
 
 /** Shared building blocks for entity detail pages (hero + grouped info). */
 
@@ -127,12 +133,14 @@ export function renderLink(url?: string | null): ReactNode {
 export function renderLogo(url?: string | null): ReactNode {
   if (!url) return <span className="muted-dash">—</span>;
   if (url.startsWith("data:"))
-    return <em className="muted-dash">embedded image</em>;
+    return <em className="muted-dash">{translateCurrent("embedded image")}</em>;
   return renderLink(url);
 }
 
 export function formatDateTime(value?: string | null): string {
-  return value ? new Date(value).toLocaleString() : "—";
+  return value
+    ? new Date(value).toLocaleString(localeForLanguage(getCurrentLanguage()))
+    : "—";
 }
 
 /** GitHub-style relative phrasing: "4 days ago", "in 8 hours", "just now". */
@@ -155,11 +163,10 @@ export function formatRelativeTime(value?: string | null): string {
   for (const [ms, name] of units) {
     const n = Math.floor(abs / ms);
     if (n >= 1) {
-      const label = `${n} ${name}${n === 1 ? "" : "s"}`;
-      return future ? `in ${label}` : `${label} ago`;
+      return formatRelativeLiteral(n, name, future);
     }
   }
-  return "just now";
+  return translateCurrent("just now");
 }
 
 /**
@@ -178,10 +185,11 @@ export function formatDuration(
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
   const parts: string[] = [];
-  if (days) parts.push(`${days}d`);
-  if (hours) parts.push(`${hours}h`);
-  if (minutes && !days) parts.push(`${minutes}m`);
-  return parts.join(" ") || "0m";
+  if (days) parts.push(`${days}${getCurrentLanguage() === "ru" ? "д" : "d"}`);
+  if (hours) parts.push(`${hours}${getCurrentLanguage() === "ru" ? "ч" : "h"}`);
+  if (minutes && !days)
+    parts.push(`${minutes}${getCurrentLanguage() === "ru" ? "м" : "m"}`);
+  return parts.join(" ") || (getCurrentLanguage() === "ru" ? "0м" : "0m");
 }
 
 /**
@@ -202,10 +210,13 @@ export function Duration({
 
 /** Full date/time including the timezone, e.g. for tooltips. */
 export function formatDateTimeWithZone(value: string): string {
-  return new Date(value).toLocaleString(undefined, {
-    dateStyle: "full",
-    timeStyle: "long",
-  });
+  return new Date(value).toLocaleString(
+    localeForLanguage(getCurrentLanguage()),
+    {
+      dateStyle: "full",
+      timeStyle: "long",
+    },
+  );
 }
 
 /**

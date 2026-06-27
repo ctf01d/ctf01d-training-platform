@@ -1786,6 +1786,8 @@ export interface components {
             user_name: string;
             display_name: string;
             /** @enum {string} */
+            language: "en" | "ru";
+            /** @enum {string} */
             role: "guest" | "player" | "admin";
             rating: number;
             avatar_url?: string | null;
@@ -1825,6 +1827,8 @@ export interface components {
             telegram?: string | null;
             github?: string | null;
             email?: string | null;
+            /** @enum {string} */
+            language?: "en" | "ru";
         };
         PasswordUpdate: {
             password: string;

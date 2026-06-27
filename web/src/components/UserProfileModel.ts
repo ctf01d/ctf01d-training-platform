@@ -1,4 +1,5 @@
 import type { User, UserProfileUpdate } from "../api/users";
+import { normalizeLanguage } from "../i18n/runtime";
 
 export type UserProfileFormState = {
   display_name: string;
@@ -6,6 +7,7 @@ export type UserProfileFormState = {
   telegram: string;
   github: string;
   email: string;
+  language: User["language"];
 };
 
 export type UserPasswordFormState = {
@@ -20,6 +22,7 @@ export function emptyUserProfileForm(): UserProfileFormState {
     telegram: "",
     github: "",
     email: "",
+    language: "en",
   };
 }
 
@@ -30,6 +33,7 @@ export function userProfileFormFromUser(user: User): UserProfileFormState {
     telegram: user.telegram ?? "",
     github: user.github ?? "",
     email: user.email ?? "",
+    language: normalizeLanguage(user.language),
   };
 }
 
@@ -42,6 +46,7 @@ export function profileUpdateFromForm(
     telegram: form.telegram || null,
     github: form.github || null,
     email: form.email || null,
+    language: normalizeLanguage(form.language),
   };
 }
 

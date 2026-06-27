@@ -25,8 +25,10 @@ import {
   type UserPasswordFormState,
   type UserProfileFormState,
 } from "../components/UserProfileModel";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function UserDetailPage() {
+  const { t, roleLabel } = useI18n();
   const { id } = useParams<{ id: string }>();
   const userId = Number(id);
   const navigate = useNavigate();
@@ -98,7 +100,7 @@ export default function UserDetailPage() {
     }
     if (data) {
       applyUser(data);
-      setSuccess("Profile updated successfully.");
+      setSuccess(t("Profile updated successfully."));
     }
   };
 
@@ -123,7 +125,7 @@ export default function UserDetailPage() {
       return;
     }
     setPasswordForm({ password: "", confirm: "" });
-    setSuccess("Password updated successfully.");
+    setSuccess(t("Password updated successfully."));
   };
 
   const handleRoleChange = async (role: UserRole) => {
@@ -198,7 +200,7 @@ export default function UserDetailPage() {
     navigate("/users");
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">{t("Loading...")}</div>;
   if (!user) return <ErrorDisplay error={error} onRetry={fetchUser} />;
 
   return (
@@ -211,14 +213,14 @@ export default function UserDetailPage() {
         actions={
           <>
             <button className="btn btn-sm" onClick={() => navigate("/users")}>
-              Back
+              {t("Back")}
             </button>
             <button
               className="btn btn-sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
             >
-              {uploadingAvatar ? "Uploading..." : "Upload avatar"}
+              {uploadingAvatar ? t("Uploading...") : t("Upload avatar")}
             </button>
             <input
               ref={fileInputRef}
@@ -233,49 +235,53 @@ export default function UserDetailPage() {
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Account</h3>
+          <h3>{t("Account")}</h3>
         </div>
         <InfoGroups>
-          <InfoGroup title="Access">
-            <InfoRow label="Role">
+          <InfoGroup title={t("Access")}>
+            <InfoRow label={t("Role")}>
               <select
                 value={user.role}
                 onChange={(e) => handleRoleChange(e.target.value as UserRole)}
                 disabled={user.id === currentUser?.id}
               >
-                <option value="guest">Guest</option>
-                <option value="player">Player</option>
-                <option value="admin">Admin</option>
+                <option value="guest">{roleLabel("guest")}</option>
+                <option value="player">{roleLabel("player")}</option>
+                <option value="admin">{roleLabel("admin")}</option>
               </select>
               {user.id === currentUser?.id && (
                 <span className="section-hint" style={{ marginLeft: "0.5rem" }}>
-                  You cannot change your own role.
+                  {t("You cannot change your own role.")}
                 </span>
               )}
             </InfoRow>
-            <InfoRow label="Blocked">
-              {user.is_blocked ? "Yes" : "No"}
+            <InfoRow label={t("Blocked")}>
+              {user.is_blocked ? t("Yes") : t("No")}
               {user.id !== currentUser?.id && (
                 <button
                   className={`btn btn-sm ${user.is_blocked ? "" : "btn-danger"}`}
                   style={{ marginLeft: "0.5rem" }}
                   onClick={handleToggleBlock}
                 >
-                  {user.is_blocked ? "Unblock" : "Block"}
+                  {user.is_blocked ? t("Unblock") : t("Block")}
                 </button>
               )}
             </InfoRow>
           </InfoGroup>
-          <InfoGroup title="Meta">
-            <InfoRow label="Created">{formatDateTime(user.created_at)}</InfoRow>
-            <InfoRow label="Updated">{formatDateTime(user.updated_at)}</InfoRow>
+          <InfoGroup title={t("Meta")}>
+            <InfoRow label={t("Created")}>
+              {formatDateTime(user.created_at)}
+            </InfoRow>
+            <InfoRow label={t("Updated")}>
+              {formatDateTime(user.updated_at)}
+            </InfoRow>
           </InfoGroup>
         </InfoGroups>
       </div>
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Profile</h3>
+          <h3>{t("Profile")}</h3>
         </div>
         <UserProfileEditForm
           form={form}
@@ -287,7 +293,7 @@ export default function UserDetailPage() {
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Password</h3>
+          <h3>{t("Password")}</h3>
         </div>
         <UserPasswordForm
           form={passwordForm}
@@ -300,7 +306,7 @@ export default function UserDetailPage() {
       <div className="detail-section">
         <div className="section-head">
           <h3>
-            Active Sessions <SectionCount n={sessions.length} />
+            {t("Active sessions")} <SectionCount n={sessions.length} />
           </h3>
         </div>
         <UserSessionsTable sessions={sessions} onRevoke={handleRevokeSession} />
@@ -308,25 +314,29 @@ export default function UserDetailPage() {
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Danger Zone</h3>
+          <h3>{t("Danger Zone")}</h3>
         </div>
         {user.id === currentUser?.id ? (
-          <p className="section-empty">You cannot delete your own account.</p>
+          <p className="section-empty">
+            {t("You cannot delete your own account.")}
+          </p>
         ) : !deleteOpen ? (
           <button
             className="btn btn-danger"
             onClick={() => setDeleteOpen(true)}
           >
-            Delete user
+            {t("Delete user")}
           </button>
         ) : (
           <form onSubmit={handleDelete} className="edit-form">
             <p>
-              This permanently deletes <strong>@{user.user_name}</strong> and
-              all references to them. Confirm with your admin password.
+              {t(
+                "This permanently deletes @{username} and all references to them. Confirm with your admin password.",
+                { username: user.user_name },
+              )}
             </p>
             <div className="form-group">
-              <label>Your password</label>
+              <label>{t("Your password")}</label>
               <input
                 type="password"
                 value={deletePassword}
@@ -340,7 +350,7 @@ export default function UserDetailPage() {
                 className="btn btn-danger"
                 disabled={deleting || !deletePassword}
               >
-                {deleting ? "Deleting..." : "Confirm delete"}
+                {deleting ? t("Deleting...") : t("Confirm delete")}
               </button>
               <button
                 type="button"
@@ -350,7 +360,7 @@ export default function UserDetailPage() {
                   setDeletePassword("");
                 }}
               >
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           </form>

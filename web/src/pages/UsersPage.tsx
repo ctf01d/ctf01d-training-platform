@@ -10,9 +10,11 @@ import {
 } from "../components/Card";
 import { ErrorDisplay } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function UsersPage() {
-  usePageTitle("Users");
+  const { t, roleLabel } = useI18n();
+  usePageTitle(t("Users"));
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
@@ -75,7 +77,7 @@ export default function UsersPage() {
       <div className="page-header">
         <div className="filters">
           <input
-            placeholder="Search users..."
+            placeholder={t("Search users...")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -87,14 +89,18 @@ export default function UsersPage() {
           className="btn btn-primary"
           onClick={() => setShowCreate(!showCreate)}
         >
-          {showCreate ? "Cancel" : "Create User"}
+          {showCreate ? t("Cancel") : t("Create User")}
         </button>
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="create-form" autoComplete="off">
+        <form
+          onSubmit={handleCreate}
+          className="create-form"
+          autoComplete="off"
+        >
           <div className="form-group">
-            <label>Username</label>
+            <label>{t("Username")}</label>
             <input
               value={createForm.user_name}
               onChange={(e) =>
@@ -105,7 +111,7 @@ export default function UsersPage() {
             />
           </div>
           <div className="form-group">
-            <label>Display Name</label>
+            <label>{t("Display Name")}</label>
             <input
               value={createForm.display_name}
               onChange={(e) =>
@@ -115,7 +121,7 @@ export default function UsersPage() {
             />
           </div>
           <div className="form-group">
-            <label>Password</label>
+            <label>{t("Password")}</label>
             <input
               type="password"
               value={createForm.password}
@@ -127,7 +133,7 @@ export default function UsersPage() {
             />
           </div>
           <div className="form-group">
-            <label>Role</label>
+            <label>{t("Role")}</label>
             <select
               value={createForm.role}
               onChange={(e) =>
@@ -137,13 +143,13 @@ export default function UsersPage() {
                 }))
               }
             >
-              <option value="guest">Guest</option>
-              <option value="player">Player</option>
-              <option value="admin">Admin</option>
+              <option value="guest">{roleLabel("guest")}</option>
+              <option value="player">{roleLabel("player")}</option>
+              <option value="admin">{roleLabel("admin")}</option>
             </select>
           </div>
           <div className="form-group">
-            <label>Avatar URL</label>
+            <label>{t("Avatar URL")}</label>
             <input
               value={createForm.avatar_url ?? ""}
               onChange={(e) =>
@@ -155,7 +161,7 @@ export default function UsersPage() {
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={creating}>
-            {creating ? "Creating..." : "Create"}
+            {creating ? t("Creating...") : t("Create")}
           </button>
         </form>
       )}
@@ -165,7 +171,7 @@ export default function UsersPage() {
       <CardGrid
         loading={loading}
         isEmpty={users.length === 0}
-        emptyMessage="No users found"
+        emptyMessage={t("No users found")}
       >
         {users.map((u) => (
           <EntityCard
@@ -176,15 +182,15 @@ export default function UsersPage() {
             title={u.display_name}
             badges={
               <>
-                <CardBadge variant={u.role}>{u.role}</CardBadge>
+                <CardBadge variant={u.role}>{roleLabel(u.role)}</CardBadge>
                 {u.is_blocked && (
-                  <CardBadge variant="danger">blocked</CardBadge>
+                  <CardBadge variant="danger">{t("blocked")}</CardBadge>
                 )}
               </>
             }
           >
-            <CardMeta label="Username">@{u.user_name}</CardMeta>
-            <CardMeta label="Rating">{u.rating}</CardMeta>
+            <CardMeta label={t("Username")}>@{u.user_name}</CardMeta>
+            <CardMeta label={t("Rating")}>{u.rating}</CardMeta>
           </EntityCard>
         ))}
       </CardGrid>

@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
@@ -15,6 +16,7 @@ type User struct {
 	ID          int64      `json:"id"`
 	UserName    string     `json:"user_name"`
 	DisplayName string     `json:"display_name"`
+	Language    string     `json:"language"`
 	Role        string     `json:"role"`
 	Rating      int        `json:"rating"`
 	AvatarUrl   *string    `json:"avatar_url,omitempty"`
@@ -60,6 +62,7 @@ type ProfileUpdateParams struct {
 	Telegram    *string `json:"telegram,omitempty"`
 	Github      *string `json:"github,omitempty"`
 	Email       *string `json:"email,omitempty"`
+	Language    *string `json:"language,omitempty"`
 }
 
 // AdminUpdateParams carries the profile fields an admin may edit from the user
@@ -72,11 +75,15 @@ type AdminUpdateParams struct {
 	Telegram    *string `json:"telegram,omitempty"`
 	Github      *string `json:"github,omitempty"`
 	Email       *string `json:"email,omitempty"`
+	Language    *string `json:"language,omitempty"`
 }
 
 var userNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
-const defaultRole = "guest"
+const (
+	defaultRole     = "guest"
+	defaultLanguage = "en"
+)
 
 // fieldPassword is the validation-error field key for the password input.
 const fieldPassword = "password"
@@ -269,6 +276,15 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 		displayName = *params.DisplayName
 	}
 
+	language := userLanguage(existing.Language)
+	if params.Language != nil {
+		normalizedLanguage, ok := normalizeLanguage(*params.Language)
+		if !ok {
+			return nil, errs.NewValidationError(map[string]string{"language": "must be one of: en, ru"})
+		}
+		language = normalizedLanguage
+	}
+
 	var passwordDigest *string
 	if params.Password != nil {
 		if len(*params.Password) < minPasswordLength {
@@ -290,6 +306,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 		Telegram:       normalizeOptional(params.Telegram),
 		Github:         normalizeOptional(params.Github),
 		Email:          normalizeOptional(params.Email),
+		Language:       language,
 	})
 	if err != nil {
 		return nil, err
@@ -400,6 +417,7 @@ func fromDB(u db.User) User {
 		ID:          u.ID,
 		UserName:    u.UserName,
 		DisplayName: u.DisplayName,
+		Language:    userLanguage(u.Language),
 		Role:        u.Role,
 		Rating:      int(u.Rating),
 		AvatarUrl:   u.AvatarUrl,
@@ -422,6 +440,23 @@ func normalizeOptional(v *string) *string {
 		return nil
 	}
 	return v
+}
+
+func normalizeLanguage(value string) (string, bool) {
+	language := strings.ToLower(strings.TrimSpace(value))
+	switch language {
+	case "en", "ru":
+		return language, true
+	default:
+		return "", false
+	}
+}
+
+func userLanguage(value string) string {
+	if normalized, ok := normalizeLanguage(value); ok {
+		return normalized
+	}
+	return defaultLanguage
 }
 
 func mapNotFound(err error) error {

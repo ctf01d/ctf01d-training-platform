@@ -3,11 +3,14 @@ import { Link } from "react-router-dom";
 import * as universitiesApi from "../api/universities";
 import type { University, UniversityCreate } from "../api/universities";
 import { CardGrid, Pagination } from "../components/Card";
+import { formatDateTime } from "../components/DetailInfo";
 import { ErrorDisplay } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function UniversitiesPage() {
-  usePageTitle("Universities");
+  const { t } = useI18n();
+  usePageTitle(t("Universities"));
   const [universities, setUniversities] = useState<University[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message?: string } | null>(null);
@@ -60,7 +63,7 @@ export default function UniversitiesPage() {
       <div className="page-header">
         <div className="filters">
           <input
-            placeholder="Search universities..."
+            placeholder={t("Search universities...")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -72,14 +75,14 @@ export default function UniversitiesPage() {
           className="btn btn-primary"
           onClick={() => setShowCreate(!showCreate)}
         >
-          {showCreate ? "Cancel" : "Create University"}
+          {showCreate ? t("Cancel") : t("Create University")}
         </button>
       </div>
 
       {showCreate && (
         <form onSubmit={handleCreate} className="create-form">
           <div className="form-group">
-            <label>Name</label>
+            <label>{t("Name")}</label>
             <input
               value={createForm.name ?? ""}
               onChange={(e) =>
@@ -88,7 +91,7 @@ export default function UniversitiesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Site URL</label>
+            <label>{t("Site URL")}</label>
             <input
               value={createForm.site_url ?? ""}
               onChange={(e) =>
@@ -97,7 +100,7 @@ export default function UniversitiesPage() {
             />
           </div>
           <div className="form-group">
-            <label>Avatar URL</label>
+            <label>{t("Avatar URL")}</label>
             <input
               value={createForm.avatar_url ?? ""}
               onChange={(e) =>
@@ -106,7 +109,7 @@ export default function UniversitiesPage() {
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={creating}>
-            {creating ? "Creating..." : "Create"}
+            {creating ? t("Creating...") : t("Create")}
           </button>
         </form>
       )}
@@ -116,7 +119,7 @@ export default function UniversitiesPage() {
       <CardGrid
         loading={loading}
         isEmpty={universities.length === 0}
-        emptyMessage="No universities found"
+        emptyMessage={t("No universities found")}
       >
         {universities.map((u) => (
           <UniversityCard key={u.id} university={u} />
@@ -134,8 +137,9 @@ export default function UniversitiesPage() {
 }
 
 function UniversityCard({ university }: { university: University }) {
+  const { t } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
-  const title = university.name ?? `University #${university.id}`;
+  const title = university.name ?? `${t("University")} #${university.id}`;
   const href = safeUrl(university.site_url);
   const hasImage = Boolean(university.avatar_url && !imageFailed);
 
@@ -153,7 +157,7 @@ function UniversityCard({ university }: { university: University }) {
 
         <dl className="game-card-meta">
           <div>
-            <dt>Site</dt>
+            <dt>{t("Site")}</dt>
             <dd>
               {href ? (
                 <a href={href} target="_blank" rel="noreferrer">
@@ -169,11 +173,11 @@ function UniversityCard({ university }: { university: University }) {
             <dd>{university.id}</dd>
           </div>
           <div>
-            <dt>Added</dt>
+            <dt>{t("Added")}</dt>
             <dd>{formatDateTime(university.created_at)}</dd>
           </div>
           <div>
-            <dt>Updated</dt>
+            <dt>{t("Updated")}</dt>
             <dd>{formatDateTime(university.updated_at)}</dd>
           </div>
         </dl>
@@ -219,8 +223,4 @@ function formatHost(url: string) {
   } catch {
     return url;
   }
-}
-
-function formatDateTime(value?: string | null) {
-  return value ? new Date(value).toLocaleDateString() : "—";
 }

@@ -344,6 +344,24 @@ func (e TeamMembershipUpdateStatus) Valid() bool {
 	}
 }
 
+// Defines values for UserLanguage.
+const (
+	UserLanguageEn UserLanguage = "en"
+	UserLanguageRu UserLanguage = "ru"
+)
+
+// Valid indicates whether the value is a known member of the UserLanguage enum.
+func (e UserLanguage) Valid() bool {
+	switch e {
+	case UserLanguageEn:
+		return true
+	case UserLanguageRu:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UserRole.
 const (
 	UserRoleAdmin  UserRole = "admin"
@@ -380,6 +398,24 @@ func (e UserCreateRole) Valid() bool {
 	case UserCreateRoleGuest:
 		return true
 	case UserCreateRolePlayer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserProfileUpdateLanguage.
+const (
+	UserProfileUpdateLanguageEn UserProfileUpdateLanguage = "en"
+	UserProfileUpdateLanguageRu UserProfileUpdateLanguage = "ru"
+)
+
+// Valid indicates whether the value is a known member of the UserProfileUpdateLanguage enum.
+func (e UserProfileUpdateLanguage) Valid() bool {
+	switch e {
+	case UserProfileUpdateLanguageEn:
+		return true
+	case UserProfileUpdateLanguageRu:
 		return true
 	default:
 		return false
@@ -968,22 +1004,26 @@ type UniversityUpdate struct {
 
 // User defines model for User.
 type User struct {
-	AvatarUrl   *string    `json:"avatar_url,omitempty"`
-	Bio         *string    `json:"bio,omitempty"`
-	CreatedAt   *time.Time `json:"created_at,omitempty"`
-	DisplayName string     `json:"display_name"`
-	Email       *string    `json:"email,omitempty"`
-	Github      *string    `json:"github,omitempty"`
-	Id          int64      `json:"id"`
-	IsBlocked   bool       `json:"is_blocked"`
-	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
-	LastLoginIp *string    `json:"last_login_ip,omitempty"`
-	Rating      int        `json:"rating"`
-	Role        UserRole   `json:"role"`
-	Telegram    *string    `json:"telegram,omitempty"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
-	UserName    string     `json:"user_name"`
+	AvatarUrl   *string      `json:"avatar_url,omitempty"`
+	Bio         *string      `json:"bio,omitempty"`
+	CreatedAt   *time.Time   `json:"created_at,omitempty"`
+	DisplayName string       `json:"display_name"`
+	Email       *string      `json:"email,omitempty"`
+	Github      *string      `json:"github,omitempty"`
+	Id          int64        `json:"id"`
+	IsBlocked   bool         `json:"is_blocked"`
+	Language    UserLanguage `json:"language"`
+	LastLoginAt *time.Time   `json:"last_login_at,omitempty"`
+	LastLoginIp *string      `json:"last_login_ip,omitempty"`
+	Rating      int          `json:"rating"`
+	Role        UserRole     `json:"role"`
+	Telegram    *string      `json:"telegram,omitempty"`
+	UpdatedAt   *time.Time   `json:"updated_at,omitempty"`
+	UserName    string       `json:"user_name"`
 }
+
+// UserLanguage defines model for User.Language.
+type UserLanguage string
 
 // UserRole defines model for User.Role.
 type UserRole string
@@ -1019,13 +1059,17 @@ type UserList struct {
 
 // UserProfileUpdate defines model for UserProfileUpdate.
 type UserProfileUpdate struct {
-	Bio         *string `json:"bio,omitempty"`
-	DisplayName *string `json:"display_name,omitempty"`
-	Email       *string `json:"email,omitempty"`
-	Github      *string `json:"github,omitempty"`
-	Password    *string `json:"password,omitempty"`
-	Telegram    *string `json:"telegram,omitempty"`
+	Bio         *string                    `json:"bio,omitempty"`
+	DisplayName *string                    `json:"display_name,omitempty"`
+	Email       *string                    `json:"email,omitempty"`
+	Github      *string                    `json:"github,omitempty"`
+	Language    *UserProfileUpdateLanguage `json:"language,omitempty"`
+	Password    *string                    `json:"password,omitempty"`
+	Telegram    *string                    `json:"telegram,omitempty"`
 }
+
+// UserProfileUpdateLanguage defines model for UserProfileUpdate.Language.
+type UserProfileUpdateLanguage string
 
 // UserRoleUpdate defines model for UserRoleUpdate.
 type UserRoleUpdate struct {

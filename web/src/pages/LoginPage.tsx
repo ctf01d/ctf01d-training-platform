@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function LoginPage() {
-  usePageTitle("Login");
+  const { t } = useI18n();
+  usePageTitle(t("Login"));
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,7 +26,7 @@ export default function LoginPage() {
       await login(userName, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : t("Login failed"));
     } finally {
       setLoading(false);
     }
@@ -34,10 +36,10 @@ export default function LoginPage() {
     <div className="login-page">
       <form onSubmit={handleSubmit} className="login-form">
         <h1>CTF01D Training Platform</h1>
-        <h2>Sign In</h2>
-        {error && <div className="error-display">{error}</div>}
+        <h2>{t("Sign In")}</h2>
+        {error && <div className="error-display">{t(error)}</div>}
         <div className="form-group">
-          <label>Username</label>
+          <label>{t("Username")}</label>
           <input
             type="text"
             value={userName}
@@ -48,7 +50,7 @@ export default function LoginPage() {
           />
         </div>
         <div className="form-group">
-          <label>Password</label>
+          <label>{t("Password")}</label>
           <input
             type="password"
             value={password}
@@ -58,7 +60,7 @@ export default function LoginPage() {
           />
         </div>
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? t("Signing in...") : t("Sign In")}
         </button>
       </form>
     </div>

@@ -27,10 +27,12 @@ import {
   safeHref,
 } from "../components/DetailInfo";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 
 type TeamMembershipEvent = components["schemas"]["TeamMembershipEvent"];
 
 export default function TeamDetailPage() {
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const teamId = Number(id);
   const navigate = useNavigate();
@@ -102,11 +104,11 @@ export default function TeamDetailPage() {
       const gameIds = Array.from(new Set(data.items.map((w) => w.game_id)));
       for (const gameID of gameIds) {
         const r = await gamesApi.getGame(gameID);
-        if (r.data) names[gameID] = r.data.name ?? `Game #${gameID}`;
+        if (r.data) names[gameID] = r.data.name ?? `${t("Game")} #${gameID}`;
       }
       setGameNames((prev) => ({ ...prev, ...names }));
     }
-  }, [teamId, user]);
+  }, [teamId, t, user]);
 
   const fetchUsers = useCallback(async () => {
     if (!user) return;
@@ -142,7 +144,7 @@ export default function TeamDetailPage() {
           roster.data?.items.some((gt) => gt.team_id === teamId) ?? false;
       }
       if (!participated) continue;
-      names[g.id] = g.name ?? `Game #${g.id}`;
+      names[g.id] = g.name ?? `${t("Game")} #${g.id}`;
       played.push({
         gameId: g.id,
         name: names[g.id],
@@ -152,7 +154,7 @@ export default function TeamDetailPage() {
     }
     setGameNames((prev) => ({ ...prev, ...names }));
     setPlayedGames(played);
-  }, [teamId, user]);
+  }, [teamId, t, user]);
 
   useEffect(() => {
     void fetchTeam();
@@ -186,8 +188,10 @@ export default function TeamDetailPage() {
 
   const userLabel = useCallback(
     (uid: number) =>
-      users[uid]?.display_name ?? users[uid]?.user_name ?? `User #${uid}`,
-    [users],
+      users[uid]?.display_name ??
+      users[uid]?.user_name ??
+      `${t("User")} #${uid}`,
+    [t, users],
   );
 
   const isManager =
@@ -300,7 +304,7 @@ export default function TeamDetailPage() {
     await fetchWriteups();
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">{t("Loading...")}</div>;
   if (!team) return <ErrorDisplay error={error} onRetry={fetchTeam} />;
 
   const myMembership = members.find((m) => m.user_id === user?.id);
@@ -312,7 +316,7 @@ export default function TeamDetailPage() {
   const universityNode =
     team.university_id != null ? (
       <Link to={`/universities/${team.university_id}`}>
-        {universityName ?? `University #${team.university_id}`}
+        {universityName ?? `${t("University")} #${team.university_id}`}
       </Link>
     ) : (
       "—"
@@ -325,7 +329,7 @@ export default function TeamDetailPage() {
       {!editing ? (
         <>
           <DetailHero
-            kicker={`Team #${team.id}`}
+            kicker={`${t("Team")} #${team.id}`}
             title={team.name}
             avatarUrl={team.avatar_url}
             avatarText={team.name}
@@ -333,24 +337,27 @@ export default function TeamDetailPage() {
               myMembership ? (
                 <>
                   <CardBadge variant={myMembership.role}>
-                    {myMembership.role}
+                    {t(myMembership.role)}
                   </CardBadge>
                   <CardBadge variant={myMembership.status}>
-                    {myMembership.status}
+                    {t(myMembership.status)}
                   </CardBadge>
                 </>
               ) : undefined
             }
             summary={[
               {
-                label: "Members",
-                value: `${approvedCount} approved · ${members.length} total`,
+                label: t("Members"),
+                value: t("{approved} approved · {total} total", {
+                  approved: approvedCount,
+                  total: members.length,
+                }),
               },
               {
-                label: "Captain",
+                label: t("Captain"),
                 value: team.captain_id ? userLabel(team.captain_id) : "—",
               },
-              { label: "University", value: universityNode },
+              { label: t("University"), value: universityNode },
             ]}
             actions={
               <>
@@ -358,7 +365,7 @@ export default function TeamDetailPage() {
                   className="btn btn-sm"
                   onClick={() => navigate("/teams")}
                 >
-                  Back
+                  {t("Back")}
                 </button>
                 {team.website && (
                   <a
@@ -367,7 +374,7 @@ export default function TeamDetailPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Website
+                    {t("Website")}
                   </a>
                 )}
                 {isManager && (
@@ -375,7 +382,7 @@ export default function TeamDetailPage() {
                     className="btn btn-sm btn-primary"
                     onClick={startEdit}
                   >
-                    Edit
+                    {t("Edit")}
                   </button>
                 )}
                 {user && !myMembership && !isManager && (
@@ -384,16 +391,16 @@ export default function TeamDetailPage() {
                     onClick={() => void handleJoin()}
                     disabled={joinLoading}
                   >
-                    {joinLoading ? "Requesting..." : "Request to Join"}
+                    {joinLoading ? t("Requesting...") : t("Request to Join")}
                   </button>
                 )}
                 {isManager && (
                   <ActionButton
                     onClick={handleDelete}
                     variant="danger"
-                    confirm="Delete this team?"
+                    confirm={t("Delete this team?")}
                   >
-                    Delete
+                    {t("Delete")}
                   </ActionButton>
                 )}
               </>
@@ -403,11 +410,11 @@ export default function TeamDetailPage() {
           {hasTeamInfo && (
             <div className="detail-section">
               <div className="section-head">
-                <h3>Team Info</h3>
+                <h3>{t("Team Info")}</h3>
               </div>
               <InfoGroups className="team-info-groups">
-                <InfoGroup title="About" className="team-info-about">
-                  <InfoRow label="Description">{team.description}</InfoRow>
+                <InfoGroup title={t("About")} className="team-info-about">
+                  <InfoRow label={t("Description")}>{team.description}</InfoRow>
                 </InfoGroup>
               </InfoGroups>
             </div>
@@ -422,7 +429,7 @@ export default function TeamDetailPage() {
           className="edit-form"
         >
           <div className="form-group">
-            <label>Name</label>
+            <label>{t("Name")}</label>
             <input
               value={editForm.name ?? ""}
               onChange={(e) =>
@@ -431,7 +438,7 @@ export default function TeamDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Description</label>
+            <label>{t("Description")}</label>
             <input
               value={editForm.description ?? ""}
               onChange={(e) =>
@@ -440,7 +447,7 @@ export default function TeamDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Website</label>
+            <label>{t("Website")}</label>
             <input
               value={editForm.website ?? ""}
               onChange={(e) =>
@@ -449,7 +456,7 @@ export default function TeamDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Avatar URL</label>
+            <label>{t("Avatar URL")}</label>
             <input
               value={editForm.avatar_url ?? ""}
               onChange={(e) =>
@@ -458,9 +465,9 @@ export default function TeamDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>University</label>
+            <label>{t("University")}</label>
             <FilterSelect
-              placeholder="Search universities…"
+              placeholder={t("Search universities...")}
               allowClear
               value={editForm.university_id ?? null}
               onChange={(id) =>
@@ -468,20 +475,20 @@ export default function TeamDetailPage() {
               }
               options={universities.map((u) => ({
                 id: u.id,
-                label: u.name ?? `University #${u.id}`,
+                label: u.name ?? `${t("University")} #${u.id}`,
               }))}
             />
           </div>
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("Saving...") : t("Save")}
             </button>
             <button
               type="button"
               className="btn"
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </form>
@@ -490,16 +497,16 @@ export default function TeamDetailPage() {
       <div className="detail-section">
         <div className="section-head">
           <h3>
-            Members <SectionCount n={members.length} />
+            {t("Members")} <SectionCount n={members.length} />
           </h3>
         </div>
         {members.length > 0 ? (
           <table className="data-table">
             <thead>
               <tr>
-                <th>Member</th>
-                <th>Role</th>
-                <th>Status</th>
+                <th>{t("Member")}</th>
+                <th>{t("Role")}</th>
+                <th>{t("Status")}</th>
                 {showMemberActions && <th></th>}
               </tr>
             </thead>
@@ -537,16 +544,16 @@ export default function TeamDetailPage() {
                           ] as const
                         ).map((r) => (
                           <option key={r} value={r}>
-                            {r}
+                            {t(r)}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      <CardBadge variant={m.role}>{m.role}</CardBadge>
+                      <CardBadge variant={m.role}>{t(m.role)}</CardBadge>
                     )}
                   </td>
                   <td>
-                    <CardBadge variant={m.status}>{m.status}</CardBadge>
+                    <CardBadge variant={m.status}>{t(m.status)}</CardBadge>
                   </td>
                   {showMemberActions && (
                     <td className="actions-cell">
@@ -560,7 +567,7 @@ export default function TeamDetailPage() {
                             }
                             variant="success"
                           >
-                            Approve
+                            {t("Approve")}
                           </ActionButton>
                           <ActionButton
                             onClick={() =>
@@ -570,7 +577,7 @@ export default function TeamDetailPage() {
                             }
                             variant="danger"
                           >
-                            Reject
+                            {t("Reject")}
                           </ActionButton>
                         </>
                       )}
@@ -584,7 +591,7 @@ export default function TeamDetailPage() {
                             }
                             variant="success"
                           >
-                            Accept
+                            {t("Accept")}
                           </ActionButton>
                           <ActionButton
                             onClick={() =>
@@ -594,7 +601,7 @@ export default function TeamDetailPage() {
                             }
                             variant="danger"
                           >
-                            Decline
+                            {t("Decline")}
                           </ActionButton>
                         </>
                       )}
@@ -606,9 +613,9 @@ export default function TeamDetailPage() {
                             )
                           }
                           variant="danger"
-                          confirm="Remove this member?"
+                          confirm={t("Remove this member?")}
                         >
-                          Remove
+                          {t("Remove")}
                         </ActionButton>
                       )}
                     </td>
@@ -618,7 +625,7 @@ export default function TeamDetailPage() {
             </tbody>
           </table>
         ) : (
-          <p className="section-empty">No members.</p>
+          <p className="section-empty">{t("No members.")}</p>
         )}
 
         {isManager && (
@@ -628,7 +635,7 @@ export default function TeamDetailPage() {
               onChange={(e) => setInviteUserId(e.target.value)}
               required
             >
-              <option value="">Invite user…</option>
+              <option value="">{t("Invite user...")}</option>
               {invitableUsers.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.display_name} ({u.user_name})
@@ -640,7 +647,7 @@ export default function TeamDetailPage() {
               className="btn btn-sm"
               disabled={inviteLoading}
             >
-              {inviteLoading ? "Inviting..." : "Invite"}
+              {inviteLoading ? t("Inviting...") : t("Invite")}
             </button>
           </form>
         )}
@@ -651,7 +658,7 @@ export default function TeamDetailPage() {
           <div className="detail-section">
             <div className="section-head">
               <h3>
-                Games <SectionCount n={playedGames.length} />
+                {t("Games")} <SectionCount n={playedGames.length} />
               </h3>
             </div>
             {playedGames.length > 0 ? (
@@ -685,7 +692,10 @@ export default function TeamDetailPage() {
                           className="score-cell"
                           title={
                             hasPlacement
-                              ? `Placed ${rank} of ${total} teams`
+                              ? t("Placed {rank} of {total} teams", {
+                                  rank,
+                                  total,
+                                })
                               : undefined
                           }
                         >
@@ -706,23 +716,23 @@ export default function TeamDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="section-empty">No games played yet.</p>
+              <p className="section-empty">{t("No games played yet.")}</p>
             )}
           </div>
 
           <div className="detail-section">
             <div className="section-head">
               <h3>
-                Writeups <SectionCount n={writeups.length} />
+                {t("Writeups")} <SectionCount n={writeups.length} />
               </h3>
             </div>
             {writeups.length > 0 ? (
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Game</th>
-                    <th>Title</th>
-                    <th>Link</th>
+                    <th>{t("Game")}</th>
+                    <th>{t("Title")}</th>
+                    <th>{t("Link")}</th>
                     {isManager && <th></th>}
                   </tr>
                 </thead>
@@ -731,7 +741,7 @@ export default function TeamDetailPage() {
                     <tr key={w.id}>
                       <td>
                         <Link to={`/games/${w.game_id}`}>
-                          {gameNames[w.game_id] ?? `Game #${w.game_id}`}
+                          {gameNames[w.game_id] ?? `${t("Game")} #${w.game_id}`}
                         </Link>
                       </td>
                       <td>{w.title}</td>
@@ -741,7 +751,7 @@ export default function TeamDetailPage() {
                           target="_blank"
                           rel="noreferrer"
                         >
-                          Open ↗
+                          {t("Open ↗")}
                         </a>
                       </td>
                       {isManager && (
@@ -749,9 +759,9 @@ export default function TeamDetailPage() {
                           <ActionButton
                             onClick={() => void handleDeleteWriteup(w.id)}
                             variant="danger"
-                            confirm="Delete this writeup?"
+                            confirm={t("Delete this writeup?")}
                           >
-                            Delete
+                            {t("Delete")}
                           </ActionButton>
                         </td>
                       )}
@@ -760,14 +770,14 @@ export default function TeamDetailPage() {
                 </tbody>
               </table>
             ) : (
-              <p className="section-empty">No writeups.</p>
+              <p className="section-empty">{t("No writeups.")}</p>
             )}
           </div>
 
           <div className="detail-section">
             <div className="section-head">
               <h3>
-                Events <SectionCount n={eventsTotal} />
+                {t("Events")} <SectionCount n={eventsTotal} />
               </h3>
             </div>
             {events.length > 0 ? (
@@ -775,11 +785,11 @@ export default function TeamDetailPage() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Member</th>
-                      <th>Action</th>
-                      <th>Role change</th>
-                      <th>Status change</th>
+                      <th>{t("Date")}</th>
+                      <th>{t("Member")}</th>
+                      <th>{t("Action")}</th>
+                      <th>{t("Role change")}</th>
+                      <th>{t("Status change")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -787,15 +797,15 @@ export default function TeamDetailPage() {
                       <tr key={ev.id}>
                         <td>{formatDateTime(ev.created_at)}</td>
                         <td>{userLabel(ev.user_id)}</td>
-                        <td>{ev.action}</td>
+                        <td>{t(ev.action)}</td>
                         <td>
                           {ev.from_role && ev.to_role
-                            ? `${ev.from_role} → ${ev.to_role}`
+                            ? `${t(ev.from_role)} → ${t(ev.to_role)}`
                             : "—"}
                         </td>
                         <td>
                           {ev.from_status && ev.to_status
-                            ? `${ev.from_status} → ${ev.to_status}`
+                            ? `${t(ev.from_status)} → ${t(ev.to_status)}`
                             : "—"}
                         </td>
                       </tr>
@@ -809,10 +819,10 @@ export default function TeamDetailPage() {
                       disabled={eventsPage <= 1}
                       onClick={() => setEventsPage(eventsPage - 1)}
                     >
-                      Prev
+                      {t("Prev")}
                     </button>
                     <span>
-                      Page {eventsPage} of{" "}
+                      {t("Page")} {eventsPage} {t("of")}{" "}
                       {Math.ceil(eventsTotal / eventsPerPage)}
                     </span>
                     <button
@@ -822,13 +832,13 @@ export default function TeamDetailPage() {
                       }
                       onClick={() => setEventsPage(eventsPage + 1)}
                     >
-                      Next
+                      {t("Next")}
                     </button>
                   </div>
                 )}
               </>
             ) : (
-              <p className="section-empty">No events.</p>
+              <p className="section-empty">{t("No events.")}</p>
             )}
           </div>
         </>

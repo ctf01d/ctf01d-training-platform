@@ -8,6 +8,7 @@ import { ErrorDisplay } from "../components/ErrorDisplay";
 import { RelativeTime, Duration } from "../components/DetailInfo";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 import { datetimeLocalToRFC3339 } from "../api/datetime";
 import {
   DEFAULT_GAME_THEME,
@@ -21,7 +22,8 @@ import {
 type OrganizerTeams = Record<string, { id: number; name: string } | null>;
 
 export default function GamesPage() {
-  usePageTitle("Games");
+  const { t } = useI18n();
+  usePageTitle(t("Games"));
   const { isPlayer } = useAuth();
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
@@ -36,9 +38,9 @@ export default function GamesPage() {
   const [creating, setCreating] = useState(false);
   const [organizerTeams, setOrganizerTeams] = useState<OrganizerTeams>({});
   const [planningGames, setPlanningGames] = useState<Game[]>([]);
-  const [teamOptions, setTeamOptions] = useState<{ id: number; name: string }[]>(
-    [],
-  );
+  const [teamOptions, setTeamOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
   // The exact schedule is often unknown when a game is first created, so the
   // form lets the organizer pick just a year instead of a full datetime.
   const [dateMode, setDateMode] = useState<"datetime" | "year">("datetime");
@@ -182,7 +184,7 @@ export default function GamesPage() {
       <div className="page-header">
         <div className="filters">
           <input
-            placeholder="Search games..."
+            placeholder={t("Search games...")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -195,7 +197,7 @@ export default function GamesPage() {
             className="btn btn-primary"
             onClick={() => setShowCreate(!showCreate)}
           >
-            {showCreate ? "Cancel" : "Create Game"}
+            {showCreate ? t("Cancel") : t("Create Game")}
           </button>
         )}
       </div>
@@ -203,17 +205,17 @@ export default function GamesPage() {
       {showCreate && (
         <form onSubmit={handleCreate} className="create-form">
           <div className="form-group">
-            <label>Name</label>
+            <label>{t("Name")}</label>
             <input
               value={form.name ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             />
           </div>
           <div className="form-group">
-            <label>Organizer Team</label>
+            <label>{t("Organizer Team")}</label>
             <input
               list="organizer-team-options"
-              placeholder="Select an existing team"
+              placeholder={t("Select an existing team")}
               value={form.organizer ?? ""}
               onChange={(e) =>
                 setForm((f) => ({ ...f, organizer: e.target.value }))
@@ -226,20 +228,20 @@ export default function GamesPage() {
             </datalist>
           </div>
           <div className="form-group">
-            <label>Schedule</label>
+            <label>{t("Schedule")}</label>
             <select
               value={dateMode}
               onChange={(e) =>
                 setDateMode(e.target.value as "datetime" | "year")
               }
             >
-              <option value="datetime">Exact date &amp; time</option>
-              <option value="year">Year only</option>
+              <option value="datetime">{t("Exact date & time")}</option>
+              <option value="year">{t("Year only")}</option>
             </select>
           </div>
           {dateMode === "year" ? (
             <div className="form-group">
-              <label>Year</label>
+              <label>{t("Year")}</label>
               <input
                 type="number"
                 inputMode="numeric"
@@ -253,7 +255,7 @@ export default function GamesPage() {
           ) : (
             <>
               <div className="form-group">
-                <label>Starts At</label>
+                <label>{t("Starts At")}</label>
                 <input
                   type="datetime-local"
                   value={form.starts_at ?? ""}
@@ -263,7 +265,7 @@ export default function GamesPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Ends At</label>
+                <label>{t("Ends At")}</label>
                 <input
                   type="datetime-local"
                   value={form.ends_at ?? ""}
@@ -280,16 +282,16 @@ export default function GamesPage() {
               className="btn btn-primary"
               disabled={creating}
             >
-              {creating ? "Creating..." : "Create"}
+              {creating ? t("Creating...") : t("Create")}
             </button>
             <button
               type="button"
               className="btn"
               disabled={creating}
               onClick={() => void handlePlan()}
-              title="Create a draft with requirements and open planning"
+              title={t("Create a draft with requirements and open planning")}
             >
-              Plan Game
+              {t("Plan Game")}
             </button>
           </div>
         </form>
@@ -297,7 +299,7 @@ export default function GamesPage() {
 
       {isPlayer && planningGames.length > 0 && (
         <section className="games-section">
-          <h3 className="games-section-title">In planning</h3>
+          <h3 className="games-section-title">{t("In planning")}</h3>
           <CardGrid isEmpty={false}>
             {planningGames.map((g) => (
               <GameCard
@@ -315,12 +317,12 @@ export default function GamesPage() {
 
       <section className="games-section">
         {isPlayer && planningGames.length > 0 && (
-          <h3 className="games-section-title">Published</h3>
+          <h3 className="games-section-title">{t("Published")}</h3>
         )}
         <CardGrid
           loading={loading}
           isEmpty={games.length === 0}
-          emptyMessage="No games found"
+          emptyMessage={t("No games found")}
         >
           {games.map((g) => (
             <GameCard key={g.id} game={g} organizerTeams={organizerTeams} />
@@ -347,8 +349,9 @@ function GameCard({
   organizerTeams: OrganizerTeams;
   planning?: boolean;
 }) {
+  const { t } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
-  const title = game.name ?? `Game #${game.id}`;
+  const title = game.name ?? `${t("Game")} #${game.id}`;
   const hasImage = Boolean(game.avatar_url && !imageFailed);
   const organizerTeam = game.organizer
     ? organizerTeams[game.organizer.trim().toLowerCase()]
@@ -365,21 +368,21 @@ function GameCard({
           </Link>
           <div className="game-card-badges">
             {planning ? (
-              <CardBadge variant="pending">planning</CardBadge>
+              <CardBadge variant="pending">{t("planning")}</CardBadge>
             ) : (
               <CardBadge variant={game.status ?? "unknown"}>
-                {game.status ?? "unknown"}
+                {t(game.status ?? "unknown")}
               </CardBadge>
             )}
             {game.finalized && (
-              <CardBadge variant="approved">finalized</CardBadge>
+              <CardBadge variant="approved">{t("finalized")}</CardBadge>
             )}
           </div>
         </div>
 
         <dl className="game-card-meta">
           <div>
-            <dt>Organizer</dt>
+            <dt>{t("Organizer")}</dt>
             <dd>
               {organizerTeam ? (
                 <Link to={`/teams/${organizerTeam.id}`}>
@@ -391,30 +394,30 @@ function GameCard({
             </dd>
           </div>
           <div>
-            <dt>Date</dt>
+            <dt>{t("Date")}</dt>
             <dd>
               <RelativeTime value={game.starts_at} />
             </dd>
           </div>
           <div>
-            <dt>Duration</dt>
+            <dt>{t("Duration")}</dt>
             <dd>
               <Duration start={game.starts_at} end={game.ends_at} />
             </dd>
           </div>
           <div>
-            <dt>Registration</dt>
+            <dt>{t("Registration")}</dt>
             <dd>
               <CardBadge variant={game.registration_status ?? "unscheduled"}>
-                {game.registration_status ?? "unscheduled"}
+                {t(game.registration_status ?? "unscheduled")}
               </CardBadge>
             </dd>
           </div>
           <div>
-            <dt>Scoreboard</dt>
+            <dt>{t("Scoreboard")}</dt>
             <dd>
               <CardBadge variant={game.scoreboard_status ?? "closed"}>
-                {game.scoreboard_status ?? "closed"}
+                {t(game.scoreboard_status ?? "closed")}
               </CardBadge>
             </dd>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useI18n } from "../i18n/I18nContext";
 
 export interface FilterSelectOption {
   id: number;
@@ -28,6 +29,7 @@ export function FilterSelect({
   allowClear?: boolean;
   required?: boolean;
 }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -59,7 +61,7 @@ export function FilterSelect({
         ref={inputRef}
         type="text"
         value={open ? query : (selected?.label ?? "")}
-        placeholder={selected ? selected.label : placeholder}
+        placeholder={selected ? selected.label : t(placeholder)}
         onFocus={() => {
           setOpen(true);
           setQuery("");
@@ -88,7 +90,7 @@ export function FilterSelect({
         <button
           type="button"
           className="filter-select-clear"
-          title="Clear"
+          title={t("Clear")}
           onClick={() => {
             onChange(null);
             setQuery("");
@@ -100,7 +102,7 @@ export function FilterSelect({
       {open && (
         <ul className="filter-select-menu">
           {filtered.length === 0 ? (
-            <li className="filter-select-empty">No matches</li>
+            <li className="filter-select-empty">{t("No matches")}</li>
           ) : (
             filtered.map((o) => (
               <li key={o.id}>

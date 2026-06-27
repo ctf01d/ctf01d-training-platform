@@ -6,9 +6,11 @@ import { CardGrid, EntityCard, CardMeta, Pagination } from "../components/Card";
 import { ErrorDisplay } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function TeamsPage() {
-  usePageTitle("Teams");
+  const { t } = useI18n();
+  usePageTitle(t("Teams"));
   const { isPlayer } = useAuth();
   const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -76,7 +78,7 @@ export default function TeamsPage() {
       <div className="page-header">
         <div className="filters">
           <input
-            placeholder="Search teams..."
+            placeholder={t("Search teams...")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -89,7 +91,7 @@ export default function TeamsPage() {
             className="btn btn-primary"
             onClick={() => setShowCreate(!showCreate)}
           >
-            {showCreate ? "Cancel" : "Create Team"}
+            {showCreate ? t("Cancel") : t("Create Team")}
           </button>
         )}
       </div>
@@ -97,7 +99,7 @@ export default function TeamsPage() {
       {showCreate && (
         <form onSubmit={handleCreate} className="create-form">
           <div className="form-group">
-            <label>Name</label>
+            <label>{t("Name")}</label>
             <input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -105,7 +107,7 @@ export default function TeamsPage() {
             />
           </div>
           <div className="form-group">
-            <label>Description</label>
+            <label>{t("Description")}</label>
             <input
               value={form.description ?? ""}
               onChange={(e) =>
@@ -114,7 +116,7 @@ export default function TeamsPage() {
             />
           </div>
           <div className="form-group">
-            <label>Website</label>
+            <label>{t("Website")}</label>
             <input
               value={form.website ?? ""}
               onChange={(e) =>
@@ -123,7 +125,7 @@ export default function TeamsPage() {
             />
           </div>
           <div className="form-group">
-            <label>Avatar URL</label>
+            <label>{t("Avatar URL")}</label>
             <input
               value={form.avatar_url ?? ""}
               onChange={(e) =>
@@ -132,7 +134,7 @@ export default function TeamsPage() {
             />
           </div>
           <div className="form-group">
-            <label>University ID</label>
+            <label>{t("University ID")}</label>
             <input
               type="number"
               value={form.university_id ?? ""}
@@ -145,7 +147,7 @@ export default function TeamsPage() {
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={creating}>
-            {creating ? "Creating..." : "Create"}
+            {creating ? t("Creating...") : t("Create")}
           </button>
         </form>
       )}
@@ -155,29 +157,31 @@ export default function TeamsPage() {
       <CardGrid
         loading={loading}
         isEmpty={teams.length === 0}
-        emptyMessage="No teams found"
+        emptyMessage={t("No teams found")}
       >
-        {teams.map((t) => (
+        {teams.map((team) => (
           <EntityCard
-            key={t.id}
-            to={`/teams/${t.id}`}
-            avatarUrl={t.avatar_url}
-            avatarText={t.name}
-            title={t.name}
+            key={team.id}
+            to={`/teams/${team.id}`}
+            avatarUrl={team.avatar_url}
+            avatarText={team.name}
+            title={team.name}
           >
-            {t.description && (
-              <CardMeta label="About">{t.description}</CardMeta>
+            {team.description && (
+              <CardMeta label={t("About")}>{team.description}</CardMeta>
             )}
-            <CardMeta label="Members">{memberCounts[t.id] ?? "..."}</CardMeta>
-            {t.website && (
-              <CardMeta label="Website">
+            <CardMeta label={t("Members")}>
+              {memberCounts[team.id] ?? "..."}
+            </CardMeta>
+            {team.website && (
+              <CardMeta label={t("Website")}>
                 <a
-                  href={t.website}
+                  href={team.website}
                   target="_blank"
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {t.website}
+                  {team.website}
                 </a>
               </CardMeta>
             )}

@@ -4,6 +4,7 @@ import type { User, UserSession } from "../api/users";
 import { ErrorDisplay, handleApiError } from "../components/ErrorDisplay";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 import {
   InfoGroups,
   InfoGroup,
@@ -27,7 +28,8 @@ import {
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
-  usePageTitle(user?.display_name ?? "Profile");
+  const { t, roleLabel, languageLabel, setLanguage } = useI18n();
+  usePageTitle(user?.display_name ?? t("Profile"));
 
   const [form, setForm] = useState<UserProfileFormState>(
     emptyUserProfileForm(),
@@ -135,12 +137,12 @@ export default function ProfilePage() {
     }
   };
 
-  if (!user) return <div className="loading">Loading...</div>;
+  if (!user) return <div className="loading">{t("Loading...")}</div>;
 
   return (
     <div className="page detail-page">
       <ErrorDisplay error={error} />
-      {success && <div className="success-message">{success}</div>}
+      {success && <div className="success-message">{t(success)}</div>}
 
       <UserDetailHero
         user={user}
@@ -151,7 +153,7 @@ export default function ProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
             >
-              {uploadingAvatar ? "Uploading..." : "Upload avatar"}
+              {uploadingAvatar ? t("Uploading...") : t("Upload avatar")}
             </button>
             <input
               ref={fileInputRef}
@@ -166,47 +168,51 @@ export default function ProfilePage() {
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Account</h3>
+          <h3>{t("Account")}</h3>
         </div>
         <InfoGroups>
-          <InfoGroup title="Access">
-            <InfoRow label="Role">{user.role}</InfoRow>
-            <InfoRow label="Rating">{user.rating}</InfoRow>
-            <InfoRow label="Status">
-              {user.is_blocked ? "Blocked" : "Active"}
+          <InfoGroup title={t("Access")}>
+            <InfoRow label={t("Role")}>{roleLabel(user.role)}</InfoRow>
+            <InfoRow label={t("Rating")}>{user.rating}</InfoRow>
+            <InfoRow label={t("Status")}>
+              {user.is_blocked ? t("Blocked") : t("Active")}
             </InfoRow>
           </InfoGroup>
-          <InfoGroup title="Login">
-            <InfoRow label="Last IP">{user.last_login_ip ?? "—"}</InfoRow>
-            <InfoRow label="Last login">
+          <InfoGroup title={t("Login")}>
+            <InfoRow label={t("Last IP")}>{user.last_login_ip ?? "—"}</InfoRow>
+            <InfoRow label={t("Last login")}>
               {user.last_login_at ? formatDateTime(user.last_login_at) : "—"}
             </InfoRow>
-            <InfoRow label="Active sessions">{sessions.length}</InfoRow>
+            <InfoRow label={t("Active sessions")}>{sessions.length}</InfoRow>
           </InfoGroup>
-          <InfoGroup title="Profile">
-            <InfoRow label="About">{user.bio || "—"}</InfoRow>
-            <InfoRow label="Telegram">{user.telegram || "—"}</InfoRow>
-            <InfoRow label="GitHub">{user.github || "—"}</InfoRow>
-            <InfoRow label="Email">{user.email || "—"}</InfoRow>
+          <InfoGroup title={t("Profile")}>
+            <InfoRow label={t("About")}>{user.bio || "—"}</InfoRow>
+            <InfoRow label={t("Telegram")}>{user.telegram || "—"}</InfoRow>
+            <InfoRow label={t("GitHub")}>{user.github || "—"}</InfoRow>
+            <InfoRow label={t("Email")}>{user.email || "—"}</InfoRow>
+            <InfoRow label={t("Language")}>
+              {languageLabel(user.language)}
+            </InfoRow>
           </InfoGroup>
         </InfoGroups>
       </div>
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Profile</h3>
+          <h3>{t("Profile")}</h3>
         </div>
         <UserProfileEditForm
           form={form}
           setForm={setForm}
           onSubmit={handleSave}
           saving={saving}
+          onLanguageChange={setLanguage}
         />
       </div>
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Password</h3>
+          <h3>{t("Password")}</h3>
         </div>
         <UserPasswordForm
           form={passwordForm}
@@ -219,7 +225,7 @@ export default function ProfilePage() {
       <div className="detail-section">
         <div className="section-head">
           <h3>
-            Active Sessions <SectionCount n={sessions.length} />
+            {t("Active sessions")} <SectionCount n={sessions.length} />
           </h3>
           <button
             type="button"
@@ -227,11 +233,11 @@ export default function ProfilePage() {
             onClick={fetchSessions}
             disabled={sessionsLoading}
           >
-            {sessionsLoading ? "Refreshing..." : "Refresh"}
+            {sessionsLoading ? t("Refreshing...") : t("Refresh")}
           </button>
         </div>
         {sessionsLoading ? (
-          <div className="loading">Loading...</div>
+          <div className="loading">{t("Loading...")}</div>
         ) : (
           <UserSessionsTable sessions={sessions} showExpires />
         )}

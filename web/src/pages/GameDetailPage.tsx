@@ -38,8 +38,10 @@ import {
   datetimeLocalToRFC3339,
   rfc3339ToDatetimeLocal,
 } from "../api/datetime";
+import { useI18n } from "../i18n/I18nContext";
 
 export default function GameDetailPage() {
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const gameId = Number(id);
   const navigate = useNavigate();
@@ -208,8 +210,8 @@ export default function GameDetailPage() {
     (tid: number) =>
       teamNames[tid] ??
       allTeams.find((t) => t.id === tid)?.name ??
-      `Team #${tid}`,
-    [teamNames, allTeams],
+      `${t("Team")} #${tid}`,
+    [teamNames, allTeams, t],
   );
 
   const handleSave = async () => {
@@ -250,9 +252,7 @@ export default function GameDetailPage() {
       avatar_url: game.avatar_url ?? undefined,
       site_url: game.site_url ?? undefined,
       ctftime_url: game.ctftime_url ?? undefined,
-      registration_opens_at: rfc3339ToDatetimeLocal(
-        game.registration_opens_at,
-      ),
+      registration_opens_at: rfc3339ToDatetimeLocal(game.registration_opens_at),
       registration_closes_at: rfc3339ToDatetimeLocal(
         game.registration_closes_at,
       ),
@@ -404,12 +404,12 @@ export default function GameDetailPage() {
     await fetchWriteups();
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">{t("Loading...")}</div>;
   if (!game) return <ErrorDisplay error={error} onRetry={fetchGame} />;
 
   const canEdit = isPlayer;
   const canManageWriteups = isAdmin || manageableTeamIds.length > 0;
-  const title = game.name ?? `Game #${game.id}`;
+  const title = game.name ?? `${t("Game")} #${game.id}`;
 
   const organizerNode = game.organizer ? (
     organizerTeam ? (
@@ -439,16 +439,41 @@ export default function GameDetailPage() {
     isAdmin && (game.access_secret || game.access_instructions),
   );
   const gameTabs: Array<{ href: string; label: string; count?: number }> = [
-    { href: "#overview", label: "Overview" },
-    { href: "#services", label: "Services", count: serviceIds.length },
-    { href: "#teams", label: "Teams", count: gameTeams.length },
+    { href: "#overview", label: t("Overview") },
+    { href: "#services", label: t("Services"), count: serviceIds.length },
+    { href: "#teams", label: t("Teams"), count: gameTeams.length },
     ...(user
-      ? [{ href: "#results", label: "Results", count: results.length }]
+      ? [{ href: "#results", label: t("Results"), count: results.length }]
       : []),
     ...(user
-      ? [{ href: "#writeups", label: "Writeups", count: writeups.length }]
+      ? [{ href: "#writeups", label: t("Writeups"), count: writeups.length }]
       : []),
-    ...(canEdit ? [{ href: "#actions", label: "Actions" }] : []),
+    ...(canEdit ? [{ href: "#actions", label: t("Actions") }] : []),
+  ];
+  const textFields: Array<{ field: keyof GameUpdate; label: string }> = [
+    { field: "name", label: t("Name") },
+    { field: "organizer", label: t("Organizer") },
+    { field: "avatar_url", label: t("Avatar URL") },
+    { field: "site_url", label: t("Site URL") },
+    { field: "ctftime_url", label: t("CTFtime URL") },
+    { field: "vpn_url", label: t("VPN URL") },
+    { field: "vpn_config_url", label: t("VPN config URL") },
+    { field: "access_instructions", label: t("Access instructions") },
+    { field: "access_secret", label: t("Access secret") },
+  ];
+  const datetimeFields: Array<{ field: keyof GameUpdate; label: string }> = [
+    { field: "starts_at", label: t("Starts At") },
+    { field: "ends_at", label: t("Ends At") },
+    {
+      field: "registration_opens_at",
+      label: t("Registration Opens At"),
+    },
+    {
+      field: "registration_closes_at",
+      label: t("Registration Closes At"),
+    },
+    { field: "scoreboard_opens_at", label: t("Scoreboard Opens At") },
+    { field: "scoreboard_closes_at", label: t("Scoreboard Closes At") },
   ];
 
   return (
@@ -458,43 +483,44 @@ export default function GameDetailPage() {
       {!editing ? (
         <>
           <DetailHero
-            kicker={`Game #${game.id}`}
+            kicker={`${t("Game")} #${game.id}`}
             title={title}
             avatarUrl={game.avatar_url}
             avatarText={title}
             badges={
               <>
                 <CardBadge variant={game.status ?? "unknown"}>
-                  {game.status ?? "unknown"}
+                  {t(game.status ?? "unknown")}
                 </CardBadge>
                 {game.finalized && (
-                  <CardBadge variant="approved">finalized</CardBadge>
+                  <CardBadge variant="approved">{t("finalized")}</CardBadge>
                 )}
                 <CardBadge variant={game.registration_status ?? "unscheduled"}>
-                  registration {game.registration_status ?? "unscheduled"}
+                  {t("Registration")}{" "}
+                  {t(game.registration_status ?? "unscheduled")}
                 </CardBadge>
                 <CardBadge variant={game.scoreboard_status ?? "closed"}>
-                  scoreboard {game.scoreboard_status ?? "closed"}
+                  {t("Scoreboard")} {t(game.scoreboard_status ?? "closed")}
                 </CardBadge>
               </>
             }
             summary={[
-              { label: "Organizer", value: organizerNode },
+              { label: t("Organizer"), value: organizerNode },
               {
-                label: "Starts",
+                label: t("Starts"),
                 value: <RelativeTime value={game.starts_at} />,
               },
               {
-                label: "Duration",
+                label: t("Duration"),
                 value: <Duration start={game.starts_at} end={game.ends_at} />,
               },
               ...(game.finalized
                 ? [
                     {
-                      label: "Finalized",
+                      label: t("Finalized"),
                       value: game.finalized_at
                         ? formatDate(game.finalized_at)
-                        : "yes",
+                        : t("Yes"),
                     },
                   ]
                 : []),
@@ -505,7 +531,7 @@ export default function GameDetailPage() {
                   className="btn btn-sm"
                   onClick={() => navigate("/games")}
                 >
-                  Back
+                  {t("Back")}
                 </button>
                 {game.site_url && (
                   <a
@@ -514,7 +540,7 @@ export default function GameDetailPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Site
+                    {t("Site")}
                   </a>
                 )}
                 {game.ctftime_url && (
@@ -542,14 +568,17 @@ export default function GameDetailPage() {
                     className="btn btn-sm btn-primary"
                     onClick={startEdit}
                   >
-                    Edit
+                    {t("Edit")}
                   </button>
                 )}
               </>
             }
           />
 
-          <nav className="tabs game-context-tabs" aria-label="Game navigation">
+          <nav
+            className="tabs game-context-tabs"
+            aria-label={t("Game navigation")}
+          >
             {gameTabs.map((item) => (
               <a className="tab" href={item.href} key={item.href}>
                 <span>{item.label}</span>
@@ -559,68 +588,74 @@ export default function GameDetailPage() {
               </a>
             ))}
             <Link className="tab" to={`/scoreboard?game=${game.id}`}>
-              Scoreboard
+              {t("Scoreboard")}
             </Link>
           </nav>
 
           <div className="detail-section" id="overview">
             <div className="section-head">
-              <h3>Game Info</h3>
+              <h3>{t("Game Info")}</h3>
             </div>
             <InfoGroups className="game-info-groups">
-              <InfoGroup title="Schedule">
-                <InfoRow label="Starts">{formatDate(game.starts_at)}</InfoRow>
-                <InfoRow label="Ends">{formatDate(game.ends_at)}</InfoRow>
-                <InfoRow label="Duration">
+              <InfoGroup title={t("Schedule")}>
+                <InfoRow label={t("Starts")}>
+                  {formatDate(game.starts_at)}
+                </InfoRow>
+                <InfoRow label={t("Ends")}>{formatDate(game.ends_at)}</InfoRow>
+                <InfoRow label={t("Duration")}>
                   <Duration start={game.starts_at} end={game.ends_at} />
                 </InfoRow>
               </InfoGroup>
 
-              <InfoGroup title="Registration">
-                <InfoRow label="Status">
+              <InfoGroup title={t("Registration")}>
+                <InfoRow label={t("Status")}>
                   <CardBadge
                     variant={game.registration_status ?? "unscheduled"}
                   >
-                    {game.registration_status ?? "unscheduled"}
+                    {t(game.registration_status ?? "unscheduled")}
                   </CardBadge>
                 </InfoRow>
-                <InfoRow label="Opens">
+                <InfoRow label={t("Opens")}>
                   {formatDate(game.registration_opens_at)}
                 </InfoRow>
-                <InfoRow label="Closes">
+                <InfoRow label={t("Closes")}>
                   {formatDate(game.registration_closes_at)}
                 </InfoRow>
               </InfoGroup>
 
-              <InfoGroup title="Scoreboard">
-                <InfoRow label="Status">
+              <InfoGroup title={t("Scoreboard")}>
+                <InfoRow label={t("Status")}>
                   <CardBadge variant={game.scoreboard_status ?? "closed"}>
-                    {game.scoreboard_status ?? "closed"}
+                    {t(game.scoreboard_status ?? "closed")}
                   </CardBadge>
                 </InfoRow>
-                <InfoRow label="Opens">
+                <InfoRow label={t("Opens")}>
                   {formatDate(game.scoreboard_opens_at)}
                 </InfoRow>
-                <InfoRow label="Closes">
+                <InfoRow label={t("Closes")}>
                   {formatDate(game.scoreboard_closes_at)}
                 </InfoRow>
               </InfoGroup>
 
               {hasGameLinks && (
-                <InfoGroup title="Links">
+                <InfoGroup title={t("Links")}>
                   {game.site_url && (
-                    <InfoRow label="Site">{renderLink(game.site_url)}</InfoRow>
+                    <InfoRow label={t("Site")}>
+                      {renderLink(game.site_url)}
+                    </InfoRow>
                   )}
                   {game.ctftime_url && (
-                    <InfoRow label="CTFtime">
+                    <InfoRow label={t("CTFtime")}>
                       {renderLink(game.ctftime_url)}
                     </InfoRow>
                   )}
                   {game.vpn_url && (
-                    <InfoRow label="VPN">{renderLink(game.vpn_url)}</InfoRow>
+                    <InfoRow label={t("VPN")}>
+                      {renderLink(game.vpn_url)}
+                    </InfoRow>
                   )}
                   {game.vpn_config_url && (
-                    <InfoRow label="VPN config">
+                    <InfoRow label={t("VPN config")}>
                       {renderLink(game.vpn_config_url)}
                     </InfoRow>
                   )}
@@ -628,14 +663,17 @@ export default function GameDetailPage() {
               )}
 
               {hasAdminAccess && (
-                <InfoGroup title="Access (admin)" className="game-info-access">
+                <InfoGroup
+                  title={t("Access (admin)")}
+                  className="game-info-access"
+                >
                   {game.access_secret && (
-                    <InfoRow label="Secret">
+                    <InfoRow label={t("Secret")}>
                       <code>{game.access_secret}</code>
                     </InfoRow>
                   )}
                   {game.access_instructions && (
-                    <InfoRow label="Instructions">
+                    <InfoRow label={t("Instructions")}>
                       {game.access_instructions}
                     </InfoRow>
                   )}
@@ -652,25 +690,9 @@ export default function GameDetailPage() {
           }}
           className="edit-form"
         >
-          {(
-            [
-              "name",
-              "organizer",
-              "avatar_url",
-              "site_url",
-              "ctftime_url",
-              "vpn_url",
-              "vpn_config_url",
-              "access_instructions",
-              "access_secret",
-            ] as const
-          ).map((field) => (
+          {textFields.map(({ field, label }) => (
             <div className="form-group" key={field}>
-              <label>
-                {field
-                  .replace(/_/g, " ")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())}
-              </label>
+              <label>{label}</label>
               <input
                 value={(editForm[field] as string) ?? ""}
                 onChange={(e) =>
@@ -679,22 +701,9 @@ export default function GameDetailPage() {
               />
             </div>
           ))}
-          {(
-            [
-              "starts_at",
-              "ends_at",
-              "registration_opens_at",
-              "registration_closes_at",
-              "scoreboard_opens_at",
-              "scoreboard_closes_at",
-            ] as const
-          ).map((field) => (
+          {datetimeFields.map(({ field, label }) => (
             <div className="form-group" key={field}>
-              <label>
-                {field
-                  .replace(/_/g, " ")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())}
-              </label>
+              <label>{label}</label>
               <input
                 type="datetime-local"
                 value={(editForm[field] as string) ?? ""}
@@ -706,14 +715,14 @@ export default function GameDetailPage() {
           ))}
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("Saving...") : t("Save")}
             </button>
             <button
               type="button"
               className="btn"
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </form>
@@ -722,30 +731,32 @@ export default function GameDetailPage() {
       {canEdit && (
         <div className="detail-section" id="actions">
           <div className="section-head">
-            <h3>Actions</h3>
+            <h3>{t("Actions")}</h3>
           </div>
           <div className="action-buttons">
             {game.finalized ? (
-              <ActionButton onClick={handleUnfinalize}>Unfinalize</ActionButton>
+              <ActionButton onClick={handleUnfinalize}>
+                {t("Unfinalize")}
+              </ActionButton>
             ) : (
               <ActionButton
                 onClick={handleFinalize}
-                confirm="Finalize this game?"
+                confirm={t("Finalize this game?")}
               >
-                Finalize
+                {t("Finalize")}
               </ActionButton>
             )}
             <ActionButton onClick={handleExportCtf01d}>
-              Export ctf01d
+              {t("Export ctf01d")}
             </ActionButton>
             <ActionButton
               onClick={() => {
                 void gamesApi.deleteGame(gameId).then(() => navigate("/games"));
               }}
               variant="danger"
-              confirm="Delete this game?"
+              confirm={t("Delete this game?")}
             >
-              Delete
+              {t("Delete")}
             </ActionButton>
           </div>
         </div>
@@ -754,7 +765,7 @@ export default function GameDetailPage() {
       <div className="detail-section" id="services">
         <div className="section-head">
           <h3>
-            Services <SectionCount n={serviceIds.length} />
+            {t("Services")} <SectionCount n={serviceIds.length} />
           </h3>
         </div>
         {serviceIds.length > 0 ? (
@@ -762,13 +773,13 @@ export default function GameDetailPage() {
             {serviceIds.map((sid) => (
               <span className="entity-chip" key={sid}>
                 <a href={`/services/${sid}`}>
-                  {serviceDetails[sid]?.name ?? `Service #${sid}`}
+                  {serviceDetails[sid]?.name ?? `${t("Service")} #${sid}`}
                 </a>
                 {canEdit && (
                   <button
                     type="button"
                     className="chip-remove"
-                    title="Unlink service"
+                    title={t("Unlink service")}
                     onClick={() => void handleRemoveService(sid)}
                   >
                     ×
@@ -778,7 +789,7 @@ export default function GameDetailPage() {
             ))}
           </div>
         ) : (
-          <p className="section-empty">No services linked.</p>
+          <p className="section-empty">{t("No services linked.")}</p>
         )}
         {canEdit && (
           <form
@@ -786,7 +797,7 @@ export default function GameDetailPage() {
             className="inline-form"
           >
             <FilterSelect
-              placeholder="Search services…"
+              placeholder={t("Search services...")}
               required
               value={addServiceId ? Number(addServiceId) : null}
               onChange={(id) => setAddServiceId(id ? String(id) : "")}
@@ -799,7 +810,7 @@ export default function GameDetailPage() {
               }))}
             />
             <button type="submit" className="btn btn-sm">
-              Link service
+              {t("Link service")}
             </button>
           </form>
         )}
@@ -808,7 +819,7 @@ export default function GameDetailPage() {
       <div className="detail-section" id="teams">
         <div className="section-head">
           <h3>
-            Roster <SectionCount n={gameTeams.length} />
+            {t("Roster")} <SectionCount n={gameTeams.length} />
           </h3>
         </div>
         {gameTeams.length > 0 ? (
@@ -816,8 +827,8 @@ export default function GameDetailPage() {
             <thead>
               <tr>
                 <th className="rank-cell">#</th>
-                <th>Team</th>
-                <th>IP address</th>
+                <th>{t("Team")}</th>
+                <th>{t("IP address")}</th>
                 {canEdit && <th></th>}
               </tr>
             </thead>
@@ -843,7 +854,7 @@ export default function GameDetailPage() {
                           onClick={() => void handleRemoveTeam(gt.id)}
                           variant="danger"
                         >
-                          Remove
+                          {t("Remove")}
                         </ActionButton>
                       </td>
                     )}
@@ -852,7 +863,7 @@ export default function GameDetailPage() {
             </tbody>
           </table>
         ) : (
-          <p className="section-empty">No teams in roster.</p>
+          <p className="section-empty">{t("No teams in roster.")}</p>
         )}
         {canEdit && (
           <form onSubmit={(e) => void handleAddTeam(e)} className="inline-form">
@@ -866,7 +877,7 @@ export default function GameDetailPage() {
               }
               required
             >
-              <option value="">Select team…</option>
+              <option value="">{t("Select team...")}</option>
               {availableTeams.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
@@ -874,21 +885,21 @@ export default function GameDetailPage() {
               ))}
             </select>
             <input
-              placeholder="IP address (optional)"
+              placeholder={t("IP address (optional)")}
               value={addTeamForm.ip_address ?? ""}
               onChange={(e) =>
                 setAddTeamForm((f) => ({ ...f, ip_address: e.target.value }))
               }
             />
             <button type="submit" className="btn btn-sm">
-              Add team
+              {t("Add team")}
             </button>
             <button
               type="button"
               className="btn btn-sm"
               onClick={() => void handleReorder()}
             >
-              Reorder
+              {t("Reorder")}
             </button>
           </form>
         )}
@@ -899,16 +910,16 @@ export default function GameDetailPage() {
           <div className="detail-section" id="results">
             <div className="section-head">
               <h3>
-                Results <SectionCount n={results.length} />
+                {t("Results")} <SectionCount n={results.length} />
               </h3>
             </div>
             {rankedResults.length > 0 ? (
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th className="rank-cell">Rank</th>
-                    <th>Team</th>
-                    <th className="numeric">Score</th>
+                    <th className="rank-cell">{t("Rank")}</th>
+                    <th>{t("Team")}</th>
+                    <th className="numeric">{t("Score")}</th>
                     {canEdit && <th></th>}
                   </tr>
                 </thead>
@@ -940,9 +951,9 @@ export default function GameDetailPage() {
                           <ActionButton
                             onClick={() => void handleDeleteResult(r.id)}
                             variant="danger"
-                            confirm="Delete this result?"
+                            confirm={t("Delete this result?")}
                           >
-                            Delete
+                            {t("Delete")}
                           </ActionButton>
                         </td>
                       )}
@@ -951,7 +962,7 @@ export default function GameDetailPage() {
                 </tbody>
               </table>
             ) : (
-              <p className="section-empty">No results yet.</p>
+              <p className="section-empty">{t("No results yet.")}</p>
             )}
             {canEdit && (
               <form
@@ -968,7 +979,7 @@ export default function GameDetailPage() {
                   }
                   required
                 >
-                  <option value="">Select team…</option>
+                  <option value="">{t("Select team...")}</option>
                   {gameTeams.map((gt) => (
                     <option key={gt.id} value={gt.team_id}>
                       {nameOf(gt.team_id)}
@@ -977,7 +988,7 @@ export default function GameDetailPage() {
                 </select>
                 <input
                   type="number"
-                  placeholder="Score"
+                  placeholder={t("Score")}
                   value={addResultForm.score ?? ""}
                   onChange={(e) =>
                     setAddResultForm((f) => ({
@@ -988,7 +999,7 @@ export default function GameDetailPage() {
                   required
                 />
                 <button type="submit" className="btn btn-sm">
-                  Add result
+                  {t("Add result")}
                 </button>
               </form>
             )}
@@ -997,16 +1008,16 @@ export default function GameDetailPage() {
           <div className="detail-section" id="writeups">
             <div className="section-head">
               <h3>
-                Writeups <SectionCount n={writeups.length} />
+                {t("Writeups")} <SectionCount n={writeups.length} />
               </h3>
             </div>
             {writeups.length > 0 ? (
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Team</th>
-                    <th>Title</th>
-                    <th>Link</th>
+                    <th>{t("Team")}</th>
+                    <th>{t("Title")}</th>
+                    <th>{t("Link")}</th>
                     {canManageWriteups && <th></th>}
                   </tr>
                 </thead>
@@ -1021,7 +1032,7 @@ export default function GameDetailPage() {
                           target="_blank"
                           rel="noreferrer"
                         >
-                          Open ↗
+                          {t("Open ↗")}
                         </a>
                       </td>
                       {canManageWriteups && (
@@ -1031,9 +1042,9 @@ export default function GameDetailPage() {
                             <ActionButton
                               onClick={() => void handleDeleteWriteup(w.id)}
                               variant="danger"
-                              confirm="Delete this writeup?"
+                              confirm={t("Delete this writeup?")}
                             >
-                              Delete
+                              {t("Delete")}
                             </ActionButton>
                           )}
                         </td>
@@ -1043,7 +1054,7 @@ export default function GameDetailPage() {
                 </tbody>
               </table>
             ) : (
-              <p className="section-empty">No writeups yet.</p>
+              <p className="section-empty">{t("No writeups yet.")}</p>
             )}
             {canManageWriteups && (
               <form
@@ -1060,7 +1071,7 @@ export default function GameDetailPage() {
                   }
                   required
                 >
-                  <option value="">Select team…</option>
+                  <option value="">{t("Select team...")}</option>
                   {writeupTeamOptions.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.name}
@@ -1068,7 +1079,7 @@ export default function GameDetailPage() {
                   ))}
                 </select>
                 <input
-                  placeholder="Title"
+                  placeholder={t("Title")}
                   value={addWriteupForm.title}
                   onChange={(e) =>
                     setAddWriteupForm((f) => ({ ...f, title: e.target.value }))
@@ -1084,7 +1095,7 @@ export default function GameDetailPage() {
                   required
                 />
                 <button type="submit" className="btn btn-sm">
-                  Add writeup
+                  {t("Add writeup")}
                 </button>
               </form>
             )}

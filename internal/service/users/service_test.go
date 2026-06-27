@@ -46,6 +46,7 @@ func (m *mockQuerier) CreateUser(_ context.Context, arg db.CreateUserParams) (db
 		ID:             id,
 		UserName:       arg.UserName,
 		DisplayName:    arg.DisplayName,
+		Language:       defaultLanguage,
 		Role:           arg.Role,
 		Rating:         arg.Rating,
 		AvatarUrl:      arg.AvatarUrl,
@@ -122,6 +123,7 @@ func (m *mockQuerier) UpdateUserProfileAdmin(_ context.Context, arg db.UpdateUse
 	u.Telegram = arg.Telegram
 	u.Github = arg.Github
 	u.Email = arg.Email
+	u.Language = arg.Language
 	u.UpdatedAt = time.Now()
 	m.users[arg.ID] = u
 	return u, nil
@@ -217,6 +219,9 @@ func TestCreate_Success(t *testing.T) {
 	}
 	if u.Role != "guest" {
 		t.Errorf("Role = %q, want %q", u.Role, "guest")
+	}
+	if u.Language != defaultLanguage {
+		t.Errorf("Language = %q, want %q", u.Language, defaultLanguage)
 	}
 }
 
@@ -514,6 +519,50 @@ func TestChangePassword_NotFound(t *testing.T) {
 	_, err := svc.ChangePassword(context.Background(), 999, "newpassword")
 	if !isErr(err, errs.ErrNotFound) {
 		t.Fatalf("expected not found, got %v", err)
+	}
+}
+
+func TestUpdateProfile_LanguageChange(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created := mustCreateUser(t, svc, CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	language := "ru"
+	updated, err := svc.UpdateProfile(context.Background(), created.ID, ProfileUpdateParams{
+		Language: &language,
+	})
+	if err != nil {
+		t.Fatalf("UpdateProfile: %v", err)
+	}
+	if updated.Language != "ru" {
+		t.Fatalf("Language = %q, want %q", updated.Language, "ru")
+	}
+	if q.users[created.ID].Language != "ru" {
+		t.Fatalf("stored language = %q, want %q", q.users[created.ID].Language, "ru")
+	}
+}
+
+func TestUpdateProfile_InvalidLanguage(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created := mustCreateUser(t, svc, CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	language := "de"
+	_, err := svc.UpdateProfile(context.Background(), created.ID, ProfileUpdateParams{
+		Language: &language,
+	})
+	if !isValidation(err) {
+		t.Fatalf("expected validation error, got %v", err)
 	}
 }
 

@@ -1,16 +1,8 @@
-import type {
-  Dispatch,
-  FormEvent,
-  ReactNode,
-  SetStateAction,
-} from "react";
+import type { Dispatch, FormEvent, ReactNode, SetStateAction } from "react";
 import type { User, UserSession } from "../api/users";
+import { useI18n } from "../i18n/I18nContext";
 import { ActionButton } from "./ErrorDisplay";
-import {
-  DetailHero,
-  formatDateTime,
-  formatRelativeTime,
-} from "./DetailInfo";
+import { DetailHero, formatDateTime, formatRelativeTime } from "./DetailInfo";
 import {
   userTitle,
   type UserPasswordFormState,
@@ -24,21 +16,29 @@ export function UserDetailHero({
   user: User;
   actions?: ReactNode;
 }) {
+  const { t, roleLabel } = useI18n();
   const title = userTitle(user);
 
   return (
     <DetailHero
-      kicker={`User #${user.id}`}
+      kicker={`${t("User")} #${user.id}`}
       title={title}
       avatarUrl={user.avatar_url}
       avatarText={title}
       avatarMode="photo"
-      badges={<span className={`badge badge-${user.role}`}>{user.role}</span>}
+      badges={
+        <span className={`badge badge-${user.role}`}>
+          {roleLabel(user.role)}
+        </span>
+      }
       summary={[
-        { label: "Username", value: `@${user.user_name}` },
-        { label: "Role", value: user.role },
-        { label: "Rating", value: `${user.rating}` },
-        { label: "Status", value: user.is_blocked ? "Blocked" : "Active" },
+        { label: t("Username"), value: `@${user.user_name}` },
+        { label: t("Role"), value: roleLabel(user.role) },
+        { label: t("Rating"), value: `${user.rating}` },
+        {
+          label: t("Status"),
+          value: user.is_blocked ? t("Blocked") : t("Active"),
+        },
       ]}
       actions={actions}
     />
@@ -50,16 +50,19 @@ export function UserProfileEditForm({
   setForm,
   onSubmit,
   saving,
+  onLanguageChange,
 }: {
   form: UserProfileFormState;
   setForm: Dispatch<SetStateAction<UserProfileFormState>>;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   saving: boolean;
+  onLanguageChange?: (language: User["language"]) => void;
 }) {
+  const { t, languageLabel } = useI18n();
   return (
     <form onSubmit={onSubmit} className="edit-form" autoComplete="off">
       <div className="form-group">
-        <label>Display Name</label>
+        <label>{t("Display Name")}</label>
         <input
           value={form.display_name}
           onChange={(e) =>
@@ -70,30 +73,28 @@ export function UserProfileEditForm({
         />
       </div>
       <div className="form-group">
-        <label>About</label>
+        <label>{t("About")}</label>
         <textarea
           value={form.bio}
           onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
         />
       </div>
       <div className="form-group">
-        <label>Telegram</label>
+        <label>{t("Telegram")}</label>
         <input
           value={form.telegram}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, telegram: e.target.value }))
-          }
+          onChange={(e) => setForm((f) => ({ ...f, telegram: e.target.value }))}
         />
       </div>
       <div className="form-group">
-        <label>GitHub</label>
+        <label>{t("GitHub")}</label>
         <input
           value={form.github}
           onChange={(e) => setForm((f) => ({ ...f, github: e.target.value }))}
         />
       </div>
       <div className="form-group">
-        <label>Email</label>
+        <label>{t("Email")}</label>
         <input
           type="email"
           value={form.email}
@@ -101,9 +102,26 @@ export function UserProfileEditForm({
           autoComplete="off"
         />
       </div>
+      <div className="form-group">
+        <label>{t("Language")}</label>
+        <select
+          value={form.language}
+          onChange={(e) => {
+            const language = e.target.value as User["language"];
+            setForm((f) => ({
+              ...f,
+              language,
+            }));
+            onLanguageChange?.(language);
+          }}
+        >
+          <option value="en">{`🇺🇸 ${languageLabel("en")}`}</option>
+          <option value="ru">{`🇷🇺 ${languageLabel("ru")}`}</option>
+        </select>
+      </div>
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? "Saving..." : "Save profile"}
+          {saving ? t("Saving...") : t("Save profile")}
         </button>
       </div>
     </form>
@@ -121,27 +139,27 @@ export function UserPasswordForm({
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   changing: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <form onSubmit={onSubmit} className="edit-form password-form">
       <p className="section-hint">
-        Setting a new password takes effect immediately. It does not affect the
-        rest of the profile.
+        {t(
+          "Setting a new password takes effect immediately. It does not affect the rest of the profile.",
+        )}
       </p>
       <div className="form-group">
-        <label>New Password</label>
+        <label>{t("New Password")}</label>
         <input
           type="password"
           autoComplete="new-password"
           minLength={6}
           value={form.password}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, password: e.target.value }))
-          }
+          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
           required
         />
       </div>
       <div className="form-group">
-        <label>Confirm Password</label>
+        <label>{t("Confirm Password")}</label>
         <input
           type="password"
           autoComplete="new-password"
@@ -157,7 +175,7 @@ export function UserPasswordForm({
           className="btn btn-primary"
           disabled={changing || !form.password || !form.confirm}
         >
-          {changing ? "Updating..." : "Change password"}
+          {changing ? t("Updating...") : t("Change password")}
         </button>
       </div>
     </form>
@@ -173,19 +191,20 @@ export function UserSessionsTable({
   showExpires?: boolean;
   onRevoke?: (sessionId: number) => void;
 }) {
+  const { t } = useI18n();
   if (sessions.length === 0) {
-    return <p className="section-empty">No active sessions.</p>;
+    return <p className="section-empty">{t("No active sessions.")}</p>;
   }
 
   return (
     <table className="data-table">
       <thead>
         <tr>
-          <th>IP address</th>
-          <th>Client</th>
-          <th>Last seen</th>
-          <th>Started</th>
-          {showExpires && <th>Expires</th>}
+          <th>{t("IP address")}</th>
+          <th>{t("Client")}</th>
+          <th>{t("Last seen")}</th>
+          <th>{t("Started")}</th>
+          {showExpires && <th>{t("Expires")}</th>}
           {onRevoke && <th></th>}
         </tr>
       </thead>
@@ -196,7 +215,7 @@ export function UserSessionsTable({
               {s.ip_address ?? "—"}
               {s.current && (
                 <span className="badge" style={{ marginLeft: "0.5rem" }}>
-                  current
+                  {t("current")}
                 </span>
               )}
             </td>
@@ -209,9 +228,9 @@ export function UserSessionsTable({
                 <ActionButton
                   onClick={() => onRevoke(s.id)}
                   variant="danger"
-                  confirm="Revoke this session?"
+                  confirm={t("Revoke this session?")}
                 >
-                  Revoke
+                  {t("Revoke")}
                 </ActionButton>
               </td>
             )}

@@ -19,6 +19,7 @@ import {
 } from "../components/DetailInfo";
 import { usePageTitle } from "../components/usePageTitle";
 import { useAuth } from "../auth/AuthContext";
+import { useI18n } from "../i18n/I18nContext";
 
 const checkBadgeVariant: Record<string, string> = {
   ok: "ok",
@@ -29,6 +30,7 @@ const checkBadgeVariant: Record<string, string> = {
 };
 
 export default function ServiceDetailPage() {
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const serviceId = Number(id);
   const navigate = useNavigate();
@@ -201,7 +203,7 @@ export default function ServiceDetailPage() {
     navigate("/services");
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">{t("Loading...")}</div>;
   if (!service) return <ErrorDisplay error={error} onRetry={fetchService} />;
 
   const canEdit = isPlayer;
@@ -214,25 +216,25 @@ export default function ServiceDetailPage() {
       {!editing ? (
         <>
           <DetailHero
-            kicker={`Service #${service.id}`}
+            kicker={`${t("Service")} #${service.id}`}
             title={service.name}
             avatarUrl={service.avatar_url}
             avatarText={service.name}
             badges={
               <>
                 <CardBadge variant={service.public ? "public" : "private"}>
-                  {service.public ? "public" : "private"}
+                  {service.public ? t("public") : t("private")}
                 </CardBadge>
                 <CardBadge variant={checkVariant}>
-                  check {service.check_status}
+                  {t("Check")} {t(service.check_status)}
                 </CardBadge>
               </>
             }
             summary={[
-              { label: "Author", value: service.author ?? "—" },
-              { label: "Copyright", value: service.copyright ?? "—" },
+              { label: t("Author"), value: service.author ?? "—" },
+              { label: t("Copyright"), value: service.copyright ?? "—" },
               {
-                label: "Last check",
+                label: t("Last check"),
                 value: service.checked_at
                   ? formatDateTime(service.checked_at)
                   : "—",
@@ -244,7 +246,7 @@ export default function ServiceDetailPage() {
                   className="btn btn-sm"
                   onClick={() => navigate("/services")}
                 >
-                  Back
+                  {t("Back")}
                 </button>
                 {service.writeup_url && (
                   <a
@@ -253,7 +255,7 @@ export default function ServiceDetailPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Writeup
+                    {t("Writeup")}
                   </a>
                 )}
                 {service.exploits_url && (
@@ -263,7 +265,7 @@ export default function ServiceDetailPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Exploits
+                    {t("Exploits")}
                   </a>
                 )}
                 {canEdit && (
@@ -271,7 +273,7 @@ export default function ServiceDetailPage() {
                     className="btn btn-sm btn-primary"
                     onClick={startEdit}
                   >
-                    Edit
+                    {t("Edit")}
                   </button>
                 )}
               </>
@@ -280,64 +282,66 @@ export default function ServiceDetailPage() {
 
           <div className="detail-section">
             <div className="section-head">
-              <h3>Service Info</h3>
+              <h3>{t("Service Info")}</h3>
             </div>
             <InfoGroups>
-              <InfoGroup title="Overview">
-                <InfoRow label="Author">{service.author ?? "—"}</InfoRow>
-                <InfoRow label="Copyright">{service.copyright ?? "—"}</InfoRow>
-                <InfoRow label="Ports">
+              <InfoGroup title={t("Overview")}>
+                <InfoRow label={t("Author")}>{service.author ?? "—"}</InfoRow>
+                <InfoRow label={t("Copyright")}>
+                  {service.copyright ?? "—"}
+                </InfoRow>
+                <InfoRow label={t("Ports")}>
                   {service.ports && service.ports.length
                     ? service.ports.join(", ")
                     : "—"}
                 </InfoRow>
-                <InfoRow label="Tech stack">
+                <InfoRow label={t("Tech stack")}>
                   {service.tech_stack && service.tech_stack.length
                     ? service.tech_stack.join(", ")
                     : "—"}
                 </InfoRow>
-                <InfoRow label="Visibility">
+                <InfoRow label={t("Visibility")}>
                   <CardBadge variant={service.public ? "public" : "private"}>
-                    {service.public ? "public" : "private"}
+                    {service.public ? t("public") : t("private")}
                   </CardBadge>
                 </InfoRow>
               </InfoGroup>
 
-              <InfoGroup title="Check">
-                <InfoRow label="Status">
+              <InfoGroup title={t("Check")}>
+                <InfoRow label={t("Status")}>
                   <CardBadge variant={checkVariant}>
-                    {service.check_status}
+                    {t(service.check_status)}
                   </CardBadge>
                 </InfoRow>
-                <InfoRow label="Checked">
+                <InfoRow label={t("Checked")}>
                   {service.checked_at
                     ? formatDateTime(service.checked_at)
                     : "—"}
                 </InfoRow>
               </InfoGroup>
 
-              <InfoGroup title="Description">
-                <InfoRow label="Public">
+              <InfoGroup title={t("Description")}>
+                <InfoRow label={t("Public")}>
                   {service.public_description ?? "—"}
                 </InfoRow>
                 {isAdmin && service.private_description && (
-                  <InfoRow label="Private">
+                  <InfoRow label={t("Private")}>
                     {service.private_description}
                   </InfoRow>
                 )}
               </InfoGroup>
 
-              <InfoGroup title="Sources">
-                <InfoRow label="Service URL">
+              <InfoGroup title={t("Sources")}>
+                <InfoRow label={t("Service URL")}>
                   {renderLink(service.service_archive_url)}
                 </InfoRow>
-                <InfoRow label="Checker URL">
+                <InfoRow label={t("Checker URL")}>
                   {renderLink(service.checker_archive_url)}
                 </InfoRow>
-                <InfoRow label="Writeup">
+                <InfoRow label={t("Writeup")}>
                   {renderLink(service.writeup_url)}
                 </InfoRow>
-                <InfoRow label="Exploits">
+                <InfoRow label={t("Exploits")}>
                   {renderLink(service.exploits_url)}
                 </InfoRow>
               </InfoGroup>
@@ -353,7 +357,7 @@ export default function ServiceDetailPage() {
           className="edit-form"
         >
           <div className="form-group">
-            <label>Name</label>
+            <label>{t("Name")}</label>
             <input
               value={editForm.name ?? ""}
               onChange={(e) =>
@@ -362,7 +366,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Author</label>
+            <label>{t("Author")}</label>
             <input
               value={editForm.author ?? ""}
               onChange={(e) =>
@@ -371,7 +375,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Copyright</label>
+            <label>{t("Copyright")}</label>
             <input
               value={editForm.copyright ?? ""}
               onChange={(e) =>
@@ -380,7 +384,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Public Description</label>
+            <label>{t("Public Description")}</label>
             <textarea
               value={editForm.public_description ?? ""}
               onChange={(e) =>
@@ -392,7 +396,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Private Description</label>
+            <label>{t("Private Description")}</label>
             <textarea
               value={editForm.private_description ?? ""}
               onChange={(e) =>
@@ -404,23 +408,23 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Ports</label>
+            <label>{t("Ports")}</label>
             <input
-              placeholder="e.g. 8080, 9000"
+              placeholder={t("e.g. 8080, 9000")}
               value={portsInput}
               onChange={(e) => setPortsInput(e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label>Tech stack</label>
+            <label>{t("Tech stack")}</label>
             <input
-              placeholder="e.g. Python, PostgreSQL, nginx"
+              placeholder={t("e.g. Python, PostgreSQL, nginx")}
               value={techInput}
               onChange={(e) => setTechInput(e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label>Public</label>
+            <label>{t("Public")}</label>
             <input
               type="checkbox"
               checked={editForm.public ?? false}
@@ -430,7 +434,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Service Archive URL</label>
+            <label>{t("Service Archive URL")}</label>
             <input
               value={editForm.service_archive_url ?? ""}
               onChange={(e) =>
@@ -442,7 +446,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Checker Archive URL</label>
+            <label>{t("Checker Archive URL")}</label>
             <input
               value={editForm.checker_archive_url ?? ""}
               onChange={(e) =>
@@ -454,7 +458,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Writeup URL</label>
+            <label>{t("Writeup URL")}</label>
             <input
               value={editForm.writeup_url ?? ""}
               onChange={(e) =>
@@ -463,7 +467,7 @@ export default function ServiceDetailPage() {
             />
           </div>
           <div className="form-group">
-            <label>Exploits URL</label>
+            <label>{t("Exploits URL")}</label>
             <input
               value={editForm.exploits_url ?? ""}
               onChange={(e) =>
@@ -473,14 +477,14 @@ export default function ServiceDetailPage() {
           </div>
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("Saving...") : t("Save")}
             </button>
             <button
               type="button"
               className="btn"
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </form>
@@ -489,24 +493,24 @@ export default function ServiceDetailPage() {
       {canEdit && (
         <div className="detail-section">
           <div className="section-head">
-            <h3>Actions</h3>
+            <h3>{t("Actions")}</h3>
           </div>
           <div className="action-buttons">
             <ActionButton onClick={handleTogglePublic}>
-              {service.public ? "Make Private" : "Make Public"}
+              {service.public ? t("Make Private") : t("Make Public")}
             </ActionButton>
             <ActionButton onClick={handleCheckChecker}>
-              Check Checker
+              {t("Check Checker")}
             </ActionButton>
             <ActionButton onClick={handleRedownload}>
-              Re-download Archives
+              {t("Re-download Archives")}
             </ActionButton>
             <ActionButton
               onClick={handleDelete}
               variant="danger"
-              confirm="Delete this service?"
+              confirm={t("Delete this service?")}
             >
-              Delete
+              {t("Delete")}
             </ActionButton>
           </div>
         </div>
@@ -514,17 +518,17 @@ export default function ServiceDetailPage() {
 
       <div className="detail-section">
         <div className="section-head">
-          <h3>Archives</h3>
+          <h3>{t("Archives")}</h3>
         </div>
         <div className="archive-grid">
           <ArchiveCard
-            title="Service archive"
+            title={t("Service archive")}
             meta={service.service_archive}
             canDownload={Boolean(user)}
             onDownload={() => void handleDownload("service")}
           />
           <ArchiveCard
-            title="Checker archive"
+            title={t("Checker archive")}
             meta={service.checker_archive}
             canDownload={Boolean(user)}
             onDownload={() => void handleDownload("checker")}
@@ -533,7 +537,7 @@ export default function ServiceDetailPage() {
         {canEdit && (
           <form onSubmit={(e) => void handleUpload(e)} className="upload-form">
             <div className="form-group">
-              <label>Service Archive</label>
+              <label>{t("Service Archive")}</label>
               <input
                 type="file"
                 accept=".zip"
@@ -543,7 +547,7 @@ export default function ServiceDetailPage() {
               />
             </div>
             <div className="form-group">
-              <label>Checker Archive</label>
+              <label>{t("Checker Archive")}</label>
               <input
                 type="file"
                 accept=".zip"
@@ -559,7 +563,7 @@ export default function ServiceDetailPage() {
                 uploading || (!serviceArchiveFile && !checkerArchiveFile)
               }
             >
-              {uploading ? "Uploading..." : "Upload Archives"}
+              {uploading ? t("Uploading...") : t("Upload Archives")}
             </button>
           </form>
         )}
@@ -579,19 +583,20 @@ function ArchiveCard({
   canDownload: boolean;
   onDownload: () => void;
 }) {
+  const { t } = useI18n();
   const present = Boolean(meta);
   return (
     <div className={`archive-card${present ? "" : " is-empty"}`}>
       <div className="archive-card-head">
         <span className="archive-card-title">{title}</span>
         <CardBadge variant={present ? "ok" : "unknown"}>
-          {present ? "present" : "none"}
+          {present ? t("present") : t("none")}
         </CardBadge>
       </div>
       {present ? (
         <dl className="archive-card-meta">
           <div>
-            <dt>Size</dt>
+            <dt>{t("Size")}</dt>
             <dd>{formatSize(meta?.size)}</dd>
           </div>
           {meta?.sha256 && (
@@ -604,11 +609,11 @@ function ArchiveCard({
           )}
         </dl>
       ) : (
-        <p className="archive-card-empty">Not uploaded</p>
+        <p className="archive-card-empty">{t("Not uploaded")}</p>
       )}
       {canDownload && (
         <button className="btn btn-sm" onClick={onDownload} disabled={!present}>
-          Download
+          {t("Download")}
         </button>
       )}
     </div>

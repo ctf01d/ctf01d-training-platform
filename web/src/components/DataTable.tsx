@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { useI18n } from "../i18n/I18nContext";
 
 interface Column<T> {
   header: string;
@@ -29,11 +30,12 @@ export function DataTable<T extends { id?: number }>({
   onPageChange,
   actions,
 }: DataTableProps<T>) {
+  const { t } = useI18n();
   const totalPages = Math.ceil(total / perPage);
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">{t("Loading...")}</div>;
   if (data.length === 0)
-    return <div className="empty-state">{emptyMessage}</div>;
+    return <div className="empty-state">{t(emptyMessage)}</div>;
 
   return (
     <div className="table-shell">
@@ -42,10 +44,10 @@ export function DataTable<T extends { id?: number }>({
           <tr>
             {columns.map((col) => (
               <th key={col.header} className={col.className}>
-                {col.header}
+                {t(col.header)}
               </th>
             ))}
-            {actions && <th>Actions</th>}
+            {actions && <th>{t("Actions")}</th>}
           </tr>
         </thead>
         <tbody>
@@ -68,17 +70,17 @@ export function DataTable<T extends { id?: number }>({
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
           >
-            Prev
+            {t("Prev")}
           </button>
           <span>
-            Page {page} of {totalPages} ({total} items)
+            {t("Page")} {page} {t("of")} {totalPages} ({total} {t("items")})
           </span>
           <button
             className="btn btn-sm"
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
           >
-            Next
+            {t("Next")}
           </button>
         </div>
       )}

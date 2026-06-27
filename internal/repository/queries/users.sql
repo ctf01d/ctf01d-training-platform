@@ -47,6 +47,7 @@ SET display_name = $2,
     telegram = $6,
     github = $7,
     email = $8,
+    language = $9,
     updated_at = now()
 WHERE id = $1
 RETURNING *;

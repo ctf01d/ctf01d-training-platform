@@ -8,19 +8,22 @@ import { ErrorDisplay } from "../components/ErrorDisplay";
 import { CardBadge } from "../components/Card";
 import { TeamLink } from "../components/TeamLink";
 import { usePageTitle } from "../components/usePageTitle";
+import { useI18n } from "../i18n/I18nContext";
 
 type ScoreboardEntry = components["schemas"]["ScoreboardEntry"];
 type GlobalScoreboard = components["schemas"]["GlobalScoreboard"];
 type Scoreboard = components["schemas"]["Scoreboard"];
 
 function StatusBadge({ status }: { status: string }) {
-  return <CardBadge variant={status}>{status}</CardBadge>;
+  const { t } = useI18n();
+  return <CardBadge variant={status}>{t(status)}</CardBadge>;
 }
 
 const fmtScore = (score: number) => score.toLocaleString();
 
 export default function ScoreboardPage() {
-  usePageTitle("Scoreboard");
+  const { t } = useI18n();
+  usePageTitle(t("Scoreboard"));
   const [searchParams, setSearchParams] = useSearchParams();
   const queryGameId =
     searchParams.get("game") ?? searchParams.get("game_id") ?? "";
@@ -103,37 +106,37 @@ export default function ScoreboardPage() {
 
   return (
     <div className="page">
-      <div className="tabs" role="tablist" aria-label="Scoreboard scope">
+      <div className="tabs" role="tablist" aria-label={t("Scoreboard scope")}>
         <button
           className={`btn btn-sm ${tab === "global" ? "btn-primary" : ""}`}
           onClick={selectGlobalTab}
         >
-          Global
+          {t("Global")}
         </button>
         <button
           className={`btn btn-sm ${tab === "game" ? "btn-primary" : ""}`}
           onClick={selectGameTab}
         >
-          By Game
+          {t("By Game")}
         </button>
       </div>
 
       {tab === "global" && (
         <div className="detail-section">
-          <h3>Global Scoreboard</h3>
+          <h3>{t("Global Scoreboard")}</h3>
           <ErrorDisplay error={globalError} onRetry={fetchGlobal} />
           {globalLoading ? (
-            <div className="loading">Loading...</div>
+            <div className="loading">{t("Loading...")}</div>
           ) : globalEntries.length === 0 ? (
-            <div className="empty-state">No scoreboard entries</div>
+            <div className="empty-state">{t("No scoreboard entries")}</div>
           ) : (
             <div className="table-shell table-shell-scroll">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Position</th>
-                    <th>Team</th>
-                    <th className="numeric">Total Score</th>
+                    <th>{t("Position")}</th>
+                    <th>{t("Team")}</th>
+                    <th className="numeric">{t("Total Score")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -159,16 +162,16 @@ export default function ScoreboardPage() {
 
       {tab === "game" && (
         <div className="detail-section">
-          <h3>Game Scoreboard</h3>
+          <h3>{t("Game Scoreboard")}</h3>
           <div className="form-group">
             <select
               value={selectedGameId}
               onChange={(e) => selectGame(e.target.value)}
             >
-              <option value="">Select a game...</option>
+              <option value="">{t("Select a game...")}</option>
               {games.map((g) => (
                 <option key={g.id} value={g.id}>
-                  {g.name ?? `Game #${g.id}`}
+                  {g.name ?? `${t("Game")} #${g.id}`}
                 </option>
               ))}
             </select>
@@ -177,23 +180,25 @@ export default function ScoreboardPage() {
           <ErrorDisplay error={gameError} />
 
           {gameLoading ? (
-            <div className="loading">Loading...</div>
+            <div className="loading">{t("Loading...")}</div>
           ) : gameScoreboard ? (
             <>
               <div className="status-line">
-                <span>Status:</span>
+                <span>{t("Status:")}</span>
                 <StatusBadge status={gameScoreboard.status} />
               </div>
               {gameScoreboard.entries.length === 0 ? (
-                <div className="empty-state">No entries for this game</div>
+                <div className="empty-state">
+                  {t("No entries for this game")}
+                </div>
               ) : (
                 <div className="table-shell table-shell-scroll">
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Position</th>
-                        <th>Team</th>
-                        <th className="numeric">Score</th>
+                        <th>{t("Position")}</th>
+                        <th>{t("Team")}</th>
+                        <th className="numeric">{t("Score")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -220,7 +225,7 @@ export default function ScoreboardPage() {
             </>
           ) : selectedGameId ? null : (
             <div className="empty-state">
-              Select a game to view its scoreboard
+              {t("Select a game to view its scoreboard")}
             </div>
           )}
         </div>

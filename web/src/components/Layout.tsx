@@ -7,15 +7,11 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-
-const primaryLinks = [
-  { to: "/games", label: "Games" },
-  { to: "/teams", label: "Teams" },
-  { to: "/scoreboard", label: "Scoreboard" },
-];
+import { useI18n } from "../i18n/I18nContext";
 
 export default function Layout() {
   const { user, logout, isAdmin, isPlayer } = useAuth();
+  const { t, roleLabel } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState<"admin" | "account" | null>(null);
@@ -78,6 +74,11 @@ export default function Layout() {
     (user?.display_name ?? user?.user_name ?? "?").trim().slice(0, 2) || "?"
   ).toUpperCase();
   const userAvatar = user?.avatar_url?.trim();
+  const primaryLinks = [
+    { to: "/games", label: t("Games") },
+    { to: "/teams", label: t("Teams") },
+    { to: "/scoreboard", label: t("Scoreboard") },
+  ];
 
   return (
     <div className="layout">
@@ -87,13 +88,13 @@ export default function Layout() {
             <span className="logo-mark">01</span>
             <span className="logo-text">CTF01D</span>
           </Link>
-          <nav className="nav" aria-label="Primary navigation">
+          <nav className="nav" aria-label={t("Primary navigation")}>
             {primaryLinks.map((link) => (
               <NavLink key={link.to} to={link.to}>
                 {link.label}
               </NavLink>
             ))}
-            {isPlayer && <NavLink to="/results">Results</NavLink>}
+            {isPlayer && <NavLink to="/results">{t("Results")}</NavLink>}
             {isAdmin && (
               <div
                 className={`nav-menu ${adminActive ? "is-active" : ""} ${
@@ -108,26 +109,26 @@ export default function Layout() {
                   aria-expanded={adminOpen}
                   onClick={() => toggleMenu("admin")}
                 >
-                  Admin
+                  {t("Admin")}
                 </button>
                 <div className="nav-menu-content" role="menu">
                   <NavLink to="/services" role="menuitem" onClick={closeMenu}>
-                    Services
+                    {t("Services")}
                   </NavLink>
                   <NavLink
                     to="/universities"
                     role="menuitem"
                     onClick={closeMenu}
                   >
-                    Universities
+                    {t("Universities")}
                   </NavLink>
                   <NavLink to="/users" role="menuitem" onClick={closeMenu}>
-                    Users
+                    {t("Users")}
                   </NavLink>
                 </div>
               </div>
             )}
-            {!isAdmin && <NavLink to="/services">Services</NavLink>}
+            {!isAdmin && <NavLink to="/services">{t("Services")}</NavLink>}
           </nav>
           <div className="header-right">
             {user ? (
@@ -142,7 +143,7 @@ export default function Layout() {
                   className="account-menu-trigger"
                   aria-haspopup="menu"
                   aria-expanded={accountOpen}
-                  aria-label="Account menu"
+                  aria-label={t("Account menu")}
                   onClick={() => toggleMenu("account")}
                 >
                   <span className="account-avatar">
@@ -166,11 +167,11 @@ export default function Layout() {
                       <span className="account-menu-name">
                         {user.display_name}
                       </span>
-                      <span className="user-role">{user.role}</span>
+                      <span className="user-role">{roleLabel(user.role)}</span>
                     </span>
                   </div>
                   <NavLink to="/profile" role="menuitem" onClick={closeMenu}>
-                    Profile
+                    {t("Profile")}
                   </NavLink>
                   <button
                     type="button"
@@ -178,13 +179,13 @@ export default function Layout() {
                     onClick={handleLogout}
                     role="menuitem"
                   >
-                    Logout
+                    {t("Logout")}
                   </button>
                 </div>
               </div>
             ) : (
               <Link to="/login" className="btn btn-sm">
-                Login
+                {t("Login")}
               </Link>
             )}
           </div>

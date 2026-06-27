@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/auth"
@@ -202,6 +203,7 @@ func userFromDB(u db.User) usersvc.User {
 		ID:          u.ID,
 		UserName:    u.UserName,
 		DisplayName: u.DisplayName,
+		Language:    userLanguage(u.Language),
 		Role:        u.Role,
 		Rating:      int(u.Rating),
 		AvatarUrl:   u.AvatarUrl,
@@ -222,4 +224,13 @@ func strToPtr(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func userLanguage(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "ru":
+		return "ru"
+	default:
+		return "en"
+	}
 }

@@ -105,6 +105,7 @@ func addTestUser(store *mockUserStore, id int64, userName, password string) {
 		ID:             id,
 		UserName:       userName,
 		DisplayName:    "Display " + userName,
+		Language:       "ru",
 		Role:           "player",
 		Rating:         0,
 		PasswordDigest: &hash,
@@ -126,6 +127,9 @@ func TestLogin_Success(t *testing.T) {
 	}
 	if user.UserName != "alice" {
 		t.Errorf("expected alice, got %s", user.UserName)
+	}
+	if user.Language != "ru" {
+		t.Errorf("expected language ru, got %s", user.Language)
 	}
 	if user.LastLoginIp == nil || *user.LastLoginIp != "1.2.3.4" {
 		t.Errorf("expected last login IP 1.2.3.4, got %v", user.LastLoginIp)
@@ -180,6 +184,9 @@ func TestMe_Success(t *testing.T) {
 	}
 	if user.UserName != "alice" {
 		t.Errorf("expected alice, got %s", user.UserName)
+	}
+	if user.Language != "ru" {
+		t.Errorf("expected language ru, got %s", user.Language)
 	}
 }
 

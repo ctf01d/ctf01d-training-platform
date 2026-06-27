@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useI18n } from "../i18n/I18nContext";
 
 export function CardGrid({
   loading,
@@ -12,8 +13,9 @@ export function CardGrid({
   emptyMessage?: string;
   children: ReactNode;
 }) {
-  if (loading) return <div className="loading">Loading...</div>;
-  if (isEmpty) return <div className="empty-state">{emptyMessage}</div>;
+  const { t } = useI18n();
+  if (loading) return <div className="loading">{t("Loading...")}</div>;
+  if (isEmpty) return <div className="empty-state">{t(emptyMessage)}</div>;
   return <div className="card-grid">{children}</div>;
 }
 
@@ -93,9 +95,10 @@ export function CardMeta({
   label: string;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <div className="ecard-meta">
-      <span className="ecard-meta-label">{label}</span>
+      <span className="ecard-meta-label">{t(label)}</span>
       <span className="ecard-meta-value">{children}</span>
     </div>
   );
@@ -112,6 +115,7 @@ export function Pagination({
   total: number;
   onPageChange: (page: number) => void;
 }) {
+  const { t } = useI18n();
   const totalPages = Math.ceil(total / perPage);
   if (totalPages <= 1) return null;
   return (
@@ -121,17 +125,17 @@ export function Pagination({
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
-        Prev
+        {t("Prev")}
       </button>
       <span>
-        Page {page} of {totalPages} ({total} items)
+        {t("Page")} {page} {t("of")} {totalPages} ({total} {t("items")})
       </span>
       <button
         className="btn btn-sm"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >
-        Next
+        {t("Next")}
       </button>
     </div>
   );

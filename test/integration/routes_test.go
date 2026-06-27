@@ -31,8 +31,13 @@ func TestRemainingHTTPRoutesFlow(t *testing.T) {
 	requireStatus(t, makeReq(t, engine, http.MethodDelete, "/api/v1/session", nil, logoutToken), http.StatusNoContent, "logout")
 	w := makeReq(t, engine, http.MethodPatch, "/api/v1/profile", map[string]interface{}{
 		"display_name": "Owner Updated",
+		"language":     "ru",
 	}, ownerToken)
 	requireStatus(t, w, http.StatusOK, "update profile")
+	profile := parseJSON(t, w)
+	if profile["language"] != "ru" {
+		t.Fatalf("expected profile language ru, got %v", profile["language"])
+	}
 
 	t.Log("Step: update user role")
 	w = makeReq(t, engine, http.MethodPost, "/api/v1/users", map[string]interface{}{
