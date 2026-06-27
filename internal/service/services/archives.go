@@ -241,8 +241,10 @@ var errBlockedHost = errors.New("URL resolves to a blocked or private address")
 
 var blockedIPCheck = isBlockedIP
 
-var blockedNets []*net.IPNet
-var blockedNetsOnce sync.Once
+var (
+	blockedNets     []*net.IPNet
+	blockedNetsOnce sync.Once
+)
 
 func initBlockedNets() {
 	blockedNetsOnce.Do(func() {

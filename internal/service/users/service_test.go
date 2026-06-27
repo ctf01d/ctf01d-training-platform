@@ -581,18 +581,18 @@ func TestUpdateProfile_ThemeChange(t *testing.T) {
 		Password:    "secret123",
 	})
 
-	theme := "midnight"
+	theme := themeMidnight
 	updated, err := svc.UpdateProfile(context.Background(), created.ID, ProfileUpdateParams{
 		Theme: &theme,
 	})
 	if err != nil {
 		t.Fatalf("UpdateProfile: %v", err)
 	}
-	if updated.Theme != "midnight" {
-		t.Fatalf("Theme = %q, want %q", updated.Theme, "midnight")
+	if updated.Theme != themeMidnight {
+		t.Fatalf("Theme = %q, want %q", updated.Theme, themeMidnight)
 	}
-	if q.users[created.ID].Theme != "midnight" {
-		t.Fatalf("stored theme = %q, want %q", q.users[created.ID].Theme, "midnight")
+	if q.users[created.ID].Theme != themeMidnight {
+		t.Fatalf("stored theme = %q, want %q", q.users[created.ID].Theme, themeMidnight)
 	}
 }
 

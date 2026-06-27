@@ -667,8 +667,10 @@ func writeDataURLToFile(dataURL string, dir string, preferName string) (string, 
 	return "", errors.New("invalid data:image URL")
 }
 
-var exporterBlockedNets []*net.IPNet
-var exporterBlockedNetsOnce sync.Once
+var (
+	exporterBlockedNets     []*net.IPNet
+	exporterBlockedNetsOnce sync.Once
+)
 
 func initExporterBlockedNets() {
 	exporterBlockedNetsOnce.Do(func() {

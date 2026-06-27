@@ -83,19 +83,26 @@ type AdminUpdateParams struct {
 
 var userNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
+// Selectable UI themes, kept in sync with the `theme` enum in the OpenAPI spec
+// and the frontend theme catalog.
+const (
+	themeClassic  = "classic"
+	themeIndigo   = "indigo"
+	themeDark     = "dark"
+	themeMidnight = "midnight"
+)
+
 const (
 	defaultRole     = "guest"
 	defaultLanguage = "en"
-	defaultTheme    = "classic"
+	defaultTheme    = themeClassic
 )
 
-// validThemes is the set of selectable UI themes, kept in sync with the
-// `theme` enum in the OpenAPI spec and the frontend theme catalog.
 var validThemes = map[string]struct{}{
-	"classic":  {},
-	"indigo":   {},
-	"dark":     {},
-	"midnight": {},
+	themeClassic:  {},
+	themeIndigo:   {},
+	themeDark:     {},
+	themeMidnight: {},
 }
 
 // fieldPassword is the validation-error field key for the password input.

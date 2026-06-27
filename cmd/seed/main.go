@@ -341,18 +341,30 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	type rosterTeam struct{ cfg, name, ip string }
 
 	cyber2025Roster := []rosterTeam{
-		{"t01", "QarabagTeam", "10.10.1.3"}, {"t02", "W@zz4b1", "10.10.2.3"},
-		{"t03", "smiley-from-telega", "10.10.3.3"}, {"t04", "R3T4RD0Z", "10.10.4.3"},
-		{"t05", "химозный рулет", "10.10.5.3"}, {"t06", "SiBears", "10.10.6.3"},
-		{"t07", "kekw", "10.10.7.3"}, {"t08", "CyberCringe", "10.10.8.3"},
-		{"t09", "NFB", "10.10.9.3"}, {"t10", "SharLike", "10.10.10.3"},
-		{"t11", "ScareCrow", "10.10.11.3"}, {"t12", "d34dl1n3", "10.10.12.3"},
-		{"t14", "4Ray", "10.10.14.3"}, {"t15", "N0N@me13", "10.10.15.3"},
-		{"t16", "XAKCET", "10.10.16.3"}, {"t17", "TyumGUard", "10.10.17.3"},
-		{"t18", "datapoison", "10.10.18.3"}, {"t19", "Netoverkill", "10.10.19.3"},
-		{"t20", "CUT", "10.10.20.3"}, {"t21", "Ibeee", "10.10.21.3"},
-		{"t22", "o1d_bu7_go1d", "10.10.22.3"}, {"t23", "CyberPatriots", "10.10.23.3"},
-		{"t24", "vim>nano", "10.10.24.3"}, {"t26", "Циферки", "10.10.26.3"},
+		{"t01", "QarabagTeam", "10.10.1.3"},
+		{"t02", "W@zz4b1", "10.10.2.3"},
+		{"t03", "smiley-from-telega", "10.10.3.3"},
+		{"t04", "R3T4RD0Z", "10.10.4.3"},
+		{"t05", "химозный рулет", "10.10.5.3"},
+		{"t06", "SiBears", "10.10.6.3"},
+		{"t07", "kekw", "10.10.7.3"},
+		{"t08", "CyberCringe", "10.10.8.3"},
+		{"t09", "NFB", "10.10.9.3"},
+		{"t10", "SharLike", "10.10.10.3"},
+		{"t11", "ScareCrow", "10.10.11.3"},
+		{"t12", "d34dl1n3", "10.10.12.3"},
+		{"t14", "4Ray", "10.10.14.3"},
+		{"t15", "N0N@me13", "10.10.15.3"},
+		{"t16", "XAKCET", "10.10.16.3"},
+		{"t17", "TyumGUard", "10.10.17.3"},
+		{"t18", "datapoison", "10.10.18.3"},
+		{"t19", "Netoverkill", "10.10.19.3"},
+		{"t20", "CUT", "10.10.20.3"},
+		{"t21", "Ibeee", "10.10.21.3"},
+		{"t22", "o1d_bu7_go1d", "10.10.22.3"},
+		{"t23", "CyberPatriots", "10.10.23.3"},
+		{"t24", "vim>nano", "10.10.24.3"},
+		{"t26", "Циферки", "10.10.26.3"},
 	}
 	for _, r := range cyber2025Roster {
 		descr := fmt.Sprintf("CyberSibir 2025 roster · ctf01d_id: %s · IP: %s · Активна: yes", r.cfg, r.ip)
@@ -363,16 +375,26 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	cyber2026Roster := []rosterTeam{
-		{"t01", "SharLike", "10.10.1.3"}, {"t02", "CUT", "10.10.2.3"},
-		{"t03", "SiBears", "10.10.3.3"}, {"t04", "N0N@me13", "10.10.4.3"},
-		{"t05", "4Ray", "10.10.5.3"}, {"t06", "Error Yager", "10.10.6.3"},
-		{"t07", "1sk4nd3r", "10.10.7.3"}, {"t08", "Netrunners", "10.10.8.3"},
-		{"t09", "ufoufo", "10.10.9.3"}, {"t10", "W@zz4bi", "10.10.10.3"},
-		{"t11", "QarabagTeam", "10.10.11.3"}, {"t12", "ыыыыЫЫЫЫЫ", "10.10.12.3"},
-		{"t13", "d34dl1n3", "10.10.13.3"}, {"t14", "...", "10.10.14.3"},
-		{"t15", "Mustang", "10.10.15.3"}, {"t16", "КиберМамонты", "10.10.16.3"},
-		{"t17", "The Power of Elijah", "10.10.17.3"}, {"t18", "Циферки", "10.10.18.3"},
-		{"t19", "avek", "10.10.19.3"}, {"t20", "КиберПатриоты", "10.10.20.3"},
+		{"t01", "SharLike", "10.10.1.3"},
+		{"t02", "CUT", "10.10.2.3"},
+		{"t03", "SiBears", "10.10.3.3"},
+		{"t04", "N0N@me13", "10.10.4.3"},
+		{"t05", "4Ray", "10.10.5.3"},
+		{"t06", "Error Yager", "10.10.6.3"},
+		{"t07", "1sk4nd3r", "10.10.7.3"},
+		{"t08", "Netrunners", "10.10.8.3"},
+		{"t09", "ufoufo", "10.10.9.3"},
+		{"t10", "W@zz4bi", "10.10.10.3"},
+		{"t11", "QarabagTeam", "10.10.11.3"},
+		{"t12", "ыыыыЫЫЫЫЫ", "10.10.12.3"},
+		{"t13", "d34dl1n3", "10.10.13.3"},
+		{"t14", "...", "10.10.14.3"},
+		{"t15", "Mustang", "10.10.15.3"},
+		{"t16", "КиберМамонты", "10.10.16.3"},
+		{"t17", "The Power of Elijah", "10.10.17.3"},
+		{"t18", "Циферки", "10.10.18.3"},
+		{"t19", "avek", "10.10.19.3"},
+		{"t20", "КиберПатриоты", "10.10.20.3"},
 		{"t21", "NetOverkill", "10.10.21.3"},
 	}
 	for _, r := range cyber2026Roster {
@@ -384,14 +406,22 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	sibir2018Roster := []rosterTeam{
-		{"team1", "Life", "10.218.1.2"}, {"team2", "Void*", "10.218.2.2"},
-		{"team3", "SiBears", "10.218.3.2"}, {"team4", "Novosibirsk SU X", "10.218.4.2"},
-		{"team5", "paperwhale", "10.218.5.2"}, {"team6", "Omaviat", "10.218.6.2"},
-		{"team7", "CatchFM", "10.218.7.2"}, {"team8", "RWX", "10.218.8.2"},
-		{"team9", "SharLike", "10.218.9.2"}, {"team10", "d34dl1n3", "10.218.10.2"},
-		{"team11", "n57u n00bz", "10.218.11.2"}, {"team12", "VoidHack", "10.218.12.2"},
-		{"team13", "Новосибирский Д'Артаньян", "10.218.13.2"}, {"team14", "Trash Querty", "10.218.14.2"},
-		{"team15", "Life (Guest)", "10.218.15.2"}, {"team16", "HawkSquad", "10.218.16.2"},
+		{"team1", "Life", "10.218.1.2"},
+		{"team2", "Void*", "10.218.2.2"},
+		{"team3", "SiBears", "10.218.3.2"},
+		{"team4", "Novosibirsk SU X", "10.218.4.2"},
+		{"team5", "paperwhale", "10.218.5.2"},
+		{"team6", "Omaviat", "10.218.6.2"},
+		{"team7", "CatchFM", "10.218.7.2"},
+		{"team8", "RWX", "10.218.8.2"},
+		{"team9", "SharLike", "10.218.9.2"},
+		{"team10", "d34dl1n3", "10.218.10.2"},
+		{"team11", "n57u n00bz", "10.218.11.2"},
+		{"team12", "VoidHack", "10.218.12.2"},
+		{"team13", "Новосибирский Д'Артаньян", "10.218.13.2"},
+		{"team14", "Trash Querty", "10.218.14.2"},
+		{"team15", "Life (Guest)", "10.218.15.2"},
+		{"team16", "HawkSquad", "10.218.16.2"},
 		{"team18", "NeosFun", "10.218.18.2"},
 	}
 	for _, r := range sibir2018Roster {
@@ -591,13 +621,30 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	scoreboard2025 := []sbRow{
-		{"TyumGUard", 8746.5}, {"smiley-from-telega", 8404.6}, {"W@zz4b1", 8145.0},
-		{"QarabagTeam", 4646.7}, {"химозный рулет", 4595.1}, {"datapoison", 4578.5},
-		{"4Ray", 4476.9}, {"SiBears", 4407.6}, {"N0N@me13", 4350.8}, {"CUT", 4318.1},
-		{"Ibeee", 3958.7}, {"vim>nano", 3224.9}, {"NFB", 3190.0}, {"o1d_bu7_go1d", 2891.9},
-		{"Циферки", 2693.1}, {"ScareCrow", 2567.4}, {"d34dl1n3", 2451.2}, {"SharLike", 1826.1},
-		{"R3T4RD0Z", 1518.7}, {"Netoverkill", 1498.4}, {"kekw", 1442.8}, {"CyberCringe", 1390.8},
-		{"CyberPatriots", 1223.8}, {"XAKCET", 810.4},
+		{"TyumGUard", 8746.5},
+		{"smiley-from-telega", 8404.6},
+		{"W@zz4b1", 8145.0},
+		{"QarabagTeam", 4646.7},
+		{"химозный рулет", 4595.1},
+		{"datapoison", 4578.5},
+		{"4Ray", 4476.9},
+		{"SiBears", 4407.6},
+		{"N0N@me13", 4350.8},
+		{"CUT", 4318.1},
+		{"Ibeee", 3958.7},
+		{"vim>nano", 3224.9},
+		{"NFB", 3190.0},
+		{"o1d_bu7_go1d", 2891.9},
+		{"Циферки", 2693.1},
+		{"ScareCrow", 2567.4},
+		{"d34dl1n3", 2451.2},
+		{"SharLike", 1826.1},
+		{"R3T4RD0Z", 1518.7},
+		{"Netoverkill", 1498.4},
+		{"kekw", 1442.8},
+		{"CyberCringe", 1390.8},
+		{"CyberPatriots", 1223.8},
+		{"XAKCET", 810.4},
 	}
 	for _, r := range scoreboard2025 {
 		if err := addResult("CyberSibir 2025", r.name, int32(r.points*1000)); err != nil {
@@ -607,11 +654,26 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 
 	// CyberSibir 2026 final scoreboard (jury results, see 2026-cybersibir-jury).
 	scoreboard2026 := []sbRow{
-		{"CUT", 1155889}, {"N0N@me13", 954308}, {"W@zz4bi", 923699}, {"SiBears", 890034},
-		{"1sk4nd3r", 878913}, {"ыыыыЫЫЫЫЫ", 676518}, {"QarabagTeam", 605961}, {"NetOverkill", 564279},
-		{"КиберПатриоты", 513650}, {"SharLike", 510505}, {"Циферки", 467274}, {"ufoufo", 428504},
-		{"Netrunners", 416576}, {"The Power of Elijah", 353371}, {"d34dl1n3", 283019}, {"4Ray", 282953},
-		{"Mustang", 173919}, {"Error Yager", 161678}, {"КиберМамонты", 69414}, {"...", 40230},
+		{"CUT", 1155889},
+		{"N0N@me13", 954308},
+		{"W@zz4bi", 923699},
+		{"SiBears", 890034},
+		{"1sk4nd3r", 878913},
+		{"ыыыыЫЫЫЫЫ", 676518},
+		{"QarabagTeam", 605961},
+		{"NetOverkill", 564279},
+		{"КиберПатриоты", 513650},
+		{"SharLike", 510505},
+		{"Циферки", 467274},
+		{"ufoufo", 428504},
+		{"Netrunners", 416576},
+		{"The Power of Elijah", 353371},
+		{"d34dl1n3", 283019},
+		{"4Ray", 282953},
+		{"Mustang", 173919},
+		{"Error Yager", 161678},
+		{"КиберМамонты", 69414},
+		{"...", 40230},
 		{"avek", 20697},
 	}
 	for _, r := range scoreboard2026 {
@@ -621,9 +683,17 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	scoreboard2023 := []sbRow{
-		{"SiBears", 7893.1}, {"ыыыыЫЫЫЫЫ", 7386.4}, {"CubaLibre", 5832.6}, {"QarabagTeam", 5570.8},
-		{"Продам гараж за флаги", 5511.9}, {"o1d_bu7_go1d", 4528.1}, {"SharLike", 2817.4},
-		{"d34dl1n3", 2658.4}, {"A4PT Reshetneva", 2569.5}, {"ИнфоБесы", 1783.5}, {"LCD", 897.7},
+		{"SiBears", 7893.1},
+		{"ыыыыЫЫЫЫЫ", 7386.4},
+		{"CubaLibre", 5832.6},
+		{"QarabagTeam", 5570.8},
+		{"Продам гараж за флаги", 5511.9},
+		{"o1d_bu7_go1d", 4528.1},
+		{"SharLike", 2817.4},
+		{"d34dl1n3", 2658.4},
+		{"A4PT Reshetneva", 2569.5},
+		{"ИнфоБесы", 1783.5},
+		{"LCD", 897.7},
 	}
 	for _, r := range scoreboard2023 {
 		if err := addResult("SibirCTF 2023", r.name, int32(r.points*1000)); err != nil {
@@ -632,10 +702,22 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	scoreboard2019 := []sbRow{
-		{"Суслобатя", 89430.9}, {"Dragon Hat", 88713.5}, {"Tanuki squad", 55170.2}, {"SiBears", 51399.1},
-		{"Omaviat", 47788.8}, {"SharNear", 42291.8}, {"rwx", 41812.4}, {"UkVQ", 36416.3},
-		{"4ерниkа", 32676.4}, {"Keva19", 32497.7}, {"a-cool-team", 26495.9}, {"Life", 26139.0},
-		{"d34dl1n3", 24739.2}, {"CatchFM", 24347.0}, {"BANOЧKA", 6261.2}, {"Team 16", 4727.0},
+		{"Суслобатя", 89430.9},
+		{"Dragon Hat", 88713.5},
+		{"Tanuki squad", 55170.2},
+		{"SiBears", 51399.1},
+		{"Omaviat", 47788.8},
+		{"SharNear", 42291.8},
+		{"rwx", 41812.4},
+		{"UkVQ", 36416.3},
+		{"4ерниkа", 32676.4},
+		{"Keva19", 32497.7},
+		{"a-cool-team", 26495.9},
+		{"Life", 26139.0},
+		{"d34dl1n3", 24739.2},
+		{"CatchFM", 24347.0},
+		{"BANOЧKA", 6261.2},
+		{"Team 16", 4727.0},
 	}
 	for _, r := range scoreboard2019 {
 		if err := addResult("SibirCTF 2019", r.name, int32(r.points)); err != nil {
@@ -644,10 +726,17 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	scoreboard2016 := []sbRow{
-		{"SiBears", 3250.770}, {"Yozik", 18.790}, {"Team Information Offensive", 45.940},
-		{"FoXXXeS", 304.700}, {"Mu574n9", 359.700}, {"!2day", 982.820}, {"SharLike", 1186.730},
-		{"(_xXx_-=HOBOCu6uPCKuE_IICbl_1337=-_xXx_)", 1436.590}, {"Life", 1753.340},
-		{"xXx_Я_не_ХЛЕБ_я_КОТ_хХх", 1763.670}, {"paperwhale", 0.810},
+		{"SiBears", 3250.770},
+		{"Yozik", 18.790},
+		{"Team Information Offensive", 45.940},
+		{"FoXXXeS", 304.700},
+		{"Mu574n9", 359.700},
+		{"!2day", 982.820},
+		{"SharLike", 1186.730},
+		{"(_xXx_-=HOBOCu6uPCKuE_IICbl_1337=-_xXx_)", 1436.590},
+		{"Life", 1753.340},
+		{"xXx_Я_не_ХЛЕБ_я_КОТ_хХх", 1763.670},
+		{"paperwhale", 0.810},
 	}
 	for _, r := range scoreboard2016 {
 		if err := addResult("SibirCTF 2016", r.name, int32(r.points*1000)); err != nil {
@@ -671,10 +760,22 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	scoreboard2018 := []sbRow{
-		{"Новосиб", 7760.15}, {"SharLike", 4450.17}, {"VoidHack", 4028.91}, {"SiBears", 3602.50},
-		{"Novosibir", 1736.33}, {"HawkSqu", 1086.32}, {"Void*", 1130.22}, {"RWX", 1068.26},
-		{"NeosFun", 1047.88}, {"Life (Guest)", 932.49}, {"CatchFM", 903.86}, {"paperwhale", 890.19},
-		{"d34dl1n3", 829.86}, {"Omaviat", 780.55}, {"Life", 778.84}, {"Trash Querty", 618.19},
+		{"Новосиб", 7760.15},
+		{"SharLike", 4450.17},
+		{"VoidHack", 4028.91},
+		{"SiBears", 3602.50},
+		{"Novosibir", 1736.33},
+		{"HawkSqu", 1086.32},
+		{"Void*", 1130.22},
+		{"RWX", 1068.26},
+		{"NeosFun", 1047.88},
+		{"Life (Guest)", 932.49},
+		{"CatchFM", 903.86},
+		{"paperwhale", 890.19},
+		{"d34dl1n3", 829.86},
+		{"Omaviat", 780.55},
+		{"Life", 778.84},
+		{"Trash Querty", 618.19},
 		{"n57u n00bz", 390.13},
 	}
 	alias2018 := map[string]string{
@@ -692,8 +793,12 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	scoreboard2014 := []sbRow{
-		{"h34dump", 1501}, {"Yozik", 1163}, {"Brizz", 659}, {"Mustang", 626},
-		{"Сборная АлтГТУ", 476}, {"Life", 318},
+		{"h34dump", 1501},
+		{"Yozik", 1163},
+		{"Brizz", 659},
+		{"Mustang", 626},
+		{"Сборная АлтГТУ", 476},
+		{"Life", 318},
 	}
 	for _, r := range scoreboard2014 {
 		if err := addResult("SibirCTF 2014", r.name, int32(r.points)); err != nil {
