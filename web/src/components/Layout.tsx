@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useI18n } from "../i18n/I18nContext";
+import { THEMES, applyTheme, getStoredTheme, setTheme, type ThemeId } from "../theme";
 
 export default function Layout() {
   const { user, logout, isAdmin, isPlayer } = useAuth();
@@ -26,6 +27,17 @@ export default function Layout() {
   );
   const adminOpen = openMenu === "admin";
   const accountOpen = openMenu === "account";
+  const [theme, setThemeState] = useState<ThemeId>(getStoredTheme);
+
+  const chooseTheme = (id: ThemeId) => {
+    setTheme(id);
+    setThemeState(id);
+  };
+
+  useEffect(() => {
+    // Keep the DOM in sync with the stored choice (e.g. after a fresh mount).
+    applyTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     setOpenMenu(null);
@@ -169,6 +181,26 @@ export default function Layout() {
                       </span>
                       <span className="user-role">{roleLabel(user.role)}</span>
                     </span>
+                  </div>
+                  <div className="account-menu-themes" role="group" aria-label="Theme">
+                    <span className="account-menu-section">Theme</span>
+                    <div className="theme-options">
+                      {THEMES.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          className={`theme-swatch theme-swatch--${option.id} ${
+                            theme === option.id ? "is-active" : ""
+                          }`}
+                          onClick={() => chooseTheme(option.id)}
+                          aria-pressed={theme === option.id}
+                          title={option.label}
+                        >
+                          <span className="theme-swatch-dot" aria-hidden="true" />
+                          <span className="theme-swatch-label">{option.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <NavLink to="/profile" role="menuitem" onClick={closeMenu}>
                     {t("Profile")}
