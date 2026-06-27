@@ -19,12 +19,12 @@ type ServiceStatusOption = {
 // Planning states mirror the CyberSibir doc; variants reuse existing badge
 // colors (red = early/rejected, yellow = mid, green = done/accepted).
 const STATUS_OPTIONS: ServiceStatusOption[] = [
-  { value: "planning", label: "Планирование ТЗ", variant: "rejected" },
-  { value: "design", label: "Проектирование", variant: "rejected" },
-  { value: "in_progress", label: "В работе", variant: "pending" },
-  { value: "ready", label: "Готово", variant: "ok" },
-  { value: "review", label: "Проверка", variant: "upcoming" },
-  { value: "accepted", label: "Принято", variant: "approved" },
+  { value: "planning", label: "Requirements", variant: "rejected" },
+  { value: "design", label: "Design", variant: "rejected" },
+  { value: "in_progress", label: "In progress", variant: "pending" },
+  { value: "ready", label: "Ready", variant: "ok" },
+  { value: "review", label: "Review", variant: "upcoming" },
+  { value: "accepted", label: "Accepted", variant: "approved" },
 ];
 
 function statusMeta(value: string): ServiceStatusOption {
@@ -93,7 +93,7 @@ export default function GamePlanningPage() {
   const [addServiceId, setAddServiceId] = useState("");
   const [publishing, setPublishing] = useState(false);
 
-  usePageTitle(game?.name ? `Планирование: ${game.name}` : "Планирование игры");
+  usePageTitle(game?.name ? `Planning: ${game.name}` : "Game planning");
 
   const fetchGame = useCallback(async () => {
     const { data, error: err } = await gamesApi.getGame(gameId);
@@ -204,14 +204,14 @@ export default function GamePlanningPage() {
     <div className="page game-planning-page">
       <div className="page-header">
         <div>
-          <div className="planning-eyebrow">Планирование игры</div>
+          <div className="planning-eyebrow">Game planning</div>
           <h1>{game.name ?? `Game #${game.id}`}</h1>
         </div>
         {isPlayer && (
           <div className="action-buttons">
             {game.published ? (
               <Link className="btn" to={`/games/${gameId}`}>
-                Открыть игру
+                Open game
               </Link>
             ) : (
               <button
@@ -219,7 +219,7 @@ export default function GamePlanningPage() {
                 onClick={() => void handlePublish()}
                 disabled={publishing}
               >
-                {publishing ? "Переносим..." : "Перенести в раздел игры"}
+                {publishing ? "Publishing..." : "Publish to games"}
               </button>
             )}
           </div>
@@ -228,7 +228,7 @@ export default function GamePlanningPage() {
 
       {game.published && (
         <p className="planning-published-note">
-          Игра уже опубликована в разделе игр.
+          This game is already published in the games section.
         </p>
       )}
 
@@ -236,10 +236,10 @@ export default function GamePlanningPage() {
 
       <section className="detail-section">
         <div className="section-head">
-          <h3>Тематика и общее ТЗ</h3>
+          <h3>Theme and general requirements</h3>
           {isPlayer && !editing && (
             <button className="btn" onClick={() => setEditing(true)}>
-              Редактировать
+              Edit
             </button>
           )}
         </div>
@@ -247,7 +247,7 @@ export default function GamePlanningPage() {
         {editing ? (
           <div className="planning-edit">
             <div className="form-group">
-              <label>Тематика</label>
+              <label>Theme</label>
               <textarea
                 rows={2}
                 value={theme}
@@ -255,7 +255,7 @@ export default function GamePlanningPage() {
               />
             </div>
             <div className="form-group">
-              <label>Требования (markdown)</label>
+              <label>Requirements (markdown)</label>
               <textarea
                 className="planning-md-editor"
                 rows={20}
@@ -269,7 +269,7 @@ export default function GamePlanningPage() {
                 onClick={() => void handleSaveDoc()}
                 disabled={saving}
               >
-                {saving ? "Сохраняем..." : "Сохранить"}
+                {saving ? "Saving..." : "Save"}
               </button>
               <button
                 className="btn"
@@ -279,7 +279,7 @@ export default function GamePlanningPage() {
                   setRequirements(game.requirements ?? "");
                 }}
               >
-                Отмена
+                Cancel
               </button>
             </div>
           </div>
@@ -287,7 +287,7 @@ export default function GamePlanningPage() {
           <div className="planning-doc">
             {theme && (
               <p className="planning-theme">
-                <strong>Тематика:</strong> {theme}
+                <strong>Theme:</strong> {theme}
               </p>
             )}
             {requirements ? (
@@ -295,7 +295,7 @@ export default function GamePlanningPage() {
                 <ReactMarkdown>{requirements}</ReactMarkdown>
               </div>
             ) : (
-              <p className="section-empty">Требования ещё не заполнены.</p>
+              <p className="section-empty">Requirements not filled in yet.</p>
             )}
           </div>
         )}
@@ -303,19 +303,19 @@ export default function GamePlanningPage() {
 
       <section className="detail-section">
         <div className="section-head">
-          <h3>Список сервисов</h3>
+          <h3>Service list</h3>
         </div>
 
         {links.length > 0 ? (
           <table className="data-table planning-services-table">
             <thead>
               <tr>
-                <th>Сервис</th>
-                <th>Исполнитель</th>
-                <th>Название</th>
-                <th>Порт(ы)</th>
-                <th>Технологии</th>
-                <th>Состояние</th>
+                <th>Service</th>
+                <th>Assignee</th>
+                <th>Name</th>
+                <th>Port(s)</th>
+                <th>Technologies</th>
+                <th>Status</th>
                 {isPlayer && <th></th>}
               </tr>
             </thead>
@@ -325,7 +325,7 @@ export default function GamePlanningPage() {
                 const meta = statusMeta(link.status);
                 return (
                   <tr key={link.service_id}>
-                    <td>Сервис {idx + 1}</td>
+                    <td>Service {idx + 1}</td>
                     <td>{svc ? serviceExecutor(svc) : "—"}</td>
                     <td>
                       {svc ? (
@@ -372,7 +372,7 @@ export default function GamePlanningPage() {
                             void handleRemoveService(link.service_id)
                           }
                         >
-                          Убрать
+                          Remove
                         </button>
                       </td>
                     )}
@@ -382,7 +382,7 @@ export default function GamePlanningPage() {
             </tbody>
           </table>
         ) : (
-          <p className="section-empty">Сервисы ещё не добавлены.</p>
+          <p className="section-empty">No services added yet.</p>
         )}
 
         {isPlayer && (
@@ -391,7 +391,7 @@ export default function GamePlanningPage() {
               value={addServiceId}
               onChange={(e) => setAddServiceId(e.target.value)}
             >
-              <option value="">Добавить сервис…</option>
+              <option value="">Add service…</option>
               {availableServices.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -399,7 +399,7 @@ export default function GamePlanningPage() {
               ))}
             </select>
             <button className="btn" type="submit" disabled={!addServiceId}>
-              Добавить
+              Add
             </button>
           </form>
         )}
@@ -407,10 +407,10 @@ export default function GamePlanningPage() {
 
       <section className="detail-section">
         <div className="section-head">
-          <h3>Детали сервисов</h3>
+          <h3>Service details</h3>
         </div>
         {links.length === 0 && (
-          <p className="section-empty">Нет сервисов для отображения.</p>
+          <p className="section-empty">No services to display.</p>
         )}
         {links.map((link, idx) => {
           const svc = serviceDetails[link.service_id];
@@ -419,24 +419,24 @@ export default function GamePlanningPage() {
           return (
             <div key={link.service_id} className="planning-service-card">
               <h4>
-                Сервис {idx + 1}: {svc.name}
+                Service {idx + 1}: {svc.name}
               </h4>
               <dl className="planning-service-meta">
                 <div>
-                  <dt>Исполнитель</dt>
+                  <dt>Assignee</dt>
                   <dd>{serviceExecutor(svc)}</dd>
                 </div>
                 <div>
-                  <dt>Порт(ы)</dt>
+                  <dt>Port(s)</dt>
                   <dd>{servicePorts(svc)}</dd>
                 </div>
                 <div>
-                  <dt>Технологии</dt>
+                  <dt>Technologies</dt>
                   <dd>{serviceTech(svc)}</dd>
                 </div>
                 {svc.writeup_url && (
                   <div>
-                    <dt>Репозиторий</dt>
+                    <dt>Repository</dt>
                     <dd>
                       <a href={svc.writeup_url} target="_blank" rel="noreferrer">
                         {svc.writeup_url}
@@ -452,7 +452,7 @@ export default function GamePlanningPage() {
               )}
               {t.vulnerabilities && t.vulnerabilities.length > 0 && (
                 <div className="planning-vulns">
-                  <strong>Уязвимости:</strong>
+                  <strong>Vulnerabilities:</strong>
                   <ul>
                     {t.vulnerabilities.map((v, i) => (
                       <li key={i}>

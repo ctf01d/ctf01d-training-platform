@@ -98,7 +98,7 @@ export default function GamesPage() {
   useEffect(() => {
     const names = Array.from(
       new Set(
-        games
+        [...games, ...planningGames]
           .map((g) => g.organizer?.trim())
           .filter((n): n is string => !!n)
           .map((n) => n.toLowerCase()),
@@ -120,7 +120,7 @@ export default function GamesPage() {
         return next;
       });
     });
-  }, [games, organizerTeams]);
+  }, [games, planningGames, organizerTeams]);
 
   // Build the starts_at/ends_at payload from whichever date mode is active.
   // In "year" mode a bare year is stored as midnight on January 1st so it still
@@ -287,7 +287,7 @@ export default function GamesPage() {
               className="btn"
               disabled={creating}
               onClick={() => void handlePlan()}
-              title="Создать черновик с ТЗ и открыть планирование"
+              title="Create a draft with requirements and open planning"
             >
               Plan Game
             </button>
@@ -296,32 +296,37 @@ export default function GamesPage() {
       )}
 
       {isPlayer && planningGames.length > 0 && (
-        <section className="planning-list">
-          <h3>В планировании</h3>
-          <ul className="planning-list-items">
+        <section className="games-section">
+          <h3 className="games-section-title">In planning</h3>
+          <CardGrid isEmpty={false}>
             {planningGames.map((g) => (
-              <li key={g.id}>
-                <Link to={`/games/${g.id}/planning`}>
-                  {g.name ?? `Game #${g.id}`}
-                </Link>
-                <CardBadge variant="pending">planning</CardBadge>
-              </li>
+              <GameCard
+                key={g.id}
+                game={g}
+                organizerTeams={organizerTeams}
+                planning
+              />
             ))}
-          </ul>
+          </CardGrid>
         </section>
       )}
 
       <ErrorDisplay error={error} onRetry={fetchGames} />
 
-      <CardGrid
-        loading={loading}
-        isEmpty={games.length === 0}
-        emptyMessage="No games found"
-      >
-        {games.map((g) => (
-          <GameCard key={g.id} game={g} organizerTeams={organizerTeams} />
-        ))}
-      </CardGrid>
+      <section className="games-section">
+        {isPlayer && planningGames.length > 0 && (
+          <h3 className="games-section-title">Published</h3>
+        )}
+        <CardGrid
+          loading={loading}
+          isEmpty={games.length === 0}
+          emptyMessage="No games found"
+        >
+          {games.map((g) => (
+            <GameCard key={g.id} game={g} organizerTeams={organizerTeams} />
+          ))}
+        </CardGrid>
+      </section>
 
       <Pagination
         page={page}
@@ -336,9 +341,11 @@ export default function GamesPage() {
 function GameCard({
   game,
   organizerTeams,
+  planning = false,
 }: {
   game: Game;
   organizerTeams: OrganizerTeams;
+  planning?: boolean;
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const title = game.name ?? `Game #${game.id}`;
@@ -346,18 +353,24 @@ function GameCard({
   const organizerTeam = game.organizer
     ? organizerTeams[game.organizer.trim().toLowerCase()]
     : null;
+  // Planning drafts open their planning workspace; published games open detail.
+  const to = planning ? `/games/${game.id}/planning` : `/games/${game.id}`;
 
   return (
     <article className="game-card">
       <div className="game-card-content">
         <div className="game-card-heading">
-          <Link to={`/games/${game.id}`} className="game-card-title">
+          <Link to={to} className="game-card-title">
             {title}
           </Link>
           <div className="game-card-badges">
-            <CardBadge variant={game.status ?? "unknown"}>
-              {game.status ?? "unknown"}
-            </CardBadge>
+            {planning ? (
+              <CardBadge variant="pending">planning</CardBadge>
+            ) : (
+              <CardBadge variant={game.status ?? "unknown"}>
+                {game.status ?? "unknown"}
+              </CardBadge>
+            )}
             {game.finalized && (
               <CardBadge variant="approved">finalized</CardBadge>
             )}
@@ -409,7 +422,7 @@ function GameCard({
       </div>
 
       <Link
-        to={`/games/${game.id}`}
+        to={to}
         className="game-card-media"
         tabIndex={-1}
         aria-hidden="true"

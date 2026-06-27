@@ -2476,19 +2476,12 @@ a:focus-visible {
   margin: 6px 0 0;
   padding-left: 20px;
 }
-.planning-list {
-  margin: 0 0 20px;
+.games-section {
+  margin: 0 0 28px;
 }
-.planning-list-items {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.games-section:last-child {
+  margin-bottom: 0;
 }
-.planning-list-items li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.games-section-title {
+  margin: 0 0 12px;
 }
