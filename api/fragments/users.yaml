@@ -9,6 +9,7 @@ components:
             - user_name
             - display_name
             - language
+            - theme
             - role
             - rating
             - is_blocked
@@ -25,6 +26,13 @@ components:
               enum:
                 - en
                 - ru
+            theme:
+              type: string
+              enum:
+                - classic
+                - indigo
+                - dark
+                - midnight
             role:
               type: string
               enum:
@@ -129,6 +137,13 @@ components:
           enum:
             - en
             - ru
+        theme:
+          type: string
+          enum:
+            - classic
+            - indigo
+            - dark
+            - midnight
     PasswordUpdate:
       type: object
       required:

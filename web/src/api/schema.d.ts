@@ -1788,6 +1788,8 @@ export interface components {
             /** @enum {string} */
             language: "en" | "ru";
             /** @enum {string} */
+            theme: "classic" | "indigo" | "dark" | "midnight";
+            /** @enum {string} */
             role: "guest" | "player" | "admin";
             rating: number;
             avatar_url?: string | null;
@@ -1829,6 +1831,8 @@ export interface components {
             email?: string | null;
             /** @enum {string} */
             language?: "en" | "ru";
+            /** @enum {string} */
+            theme?: "classic" | "indigo" | "dark" | "midnight";
         };
         PasswordUpdate: {
             password: string;

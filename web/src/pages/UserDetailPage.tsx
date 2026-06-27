@@ -18,6 +18,7 @@ import {
   UserProfileEditForm,
   UserSessionsTable,
 } from "../components/UserProfileBlocks";
+import ThemeSection from "../components/ThemeSection";
 import {
   emptyUserProfileForm,
   profileUpdateFromForm,
@@ -25,6 +26,7 @@ import {
   type UserPasswordFormState,
   type UserProfileFormState,
 } from "../components/UserProfileModel";
+import { DEFAULT_THEME, type ThemeId } from "../theme";
 import { useI18n } from "../i18n/I18nContext";
 
 export default function UserDetailPage() {
@@ -60,9 +62,13 @@ export default function UserDetailPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  const [theme, setThemeSelection] = useState<ThemeId>(DEFAULT_THEME);
+  const [savingTheme, setSavingTheme] = useState(false);
+
   const applyUser = useCallback((u: User) => {
     setUser(u);
     setForm(userProfileFormFromUser(u));
+    setThemeSelection(u.theme ?? DEFAULT_THEME);
   }, []);
 
   const fetchUser = useCallback(async () => {
@@ -96,6 +102,36 @@ export default function UserDetailPage() {
     setSaving(false);
     if (err) {
       setError(err);
+      return;
+    }
+    if (data) {
+      applyUser(data);
+      setSuccess(t("Profile updated successfully."));
+    }
+  };
+
+  // Persists the viewed user's theme. This is their stored preference, so it is
+  // not applied to the admin's own UI. The full saved profile is resent so the
+  // update endpoint does not clear unrelated optional fields.
+  const handleThemeChange = async (next: ThemeId) => {
+    if (!user || next === theme) return;
+    const previous = theme;
+    setThemeSelection(next);
+    setSavingTheme(true);
+    setError(null);
+    setSuccess(null);
+    const body = {
+      ...profileUpdateFromForm(userProfileFormFromUser(user)),
+      theme: next,
+    };
+    const { data, error: err } = await usersApi.updateUserProfileAdmin(
+      userId,
+      body,
+    );
+    setSavingTheme(false);
+    if (err) {
+      setError(err);
+      setThemeSelection(previous);
       return;
     }
     if (data) {
@@ -278,6 +314,12 @@ export default function UserDetailPage() {
           </InfoGroup>
         </InfoGroups>
       </div>
+
+      <ThemeSection
+        value={theme}
+        onChange={handleThemeChange}
+        disabled={savingTheme}
+      />
 
       <div className="detail-section">
         <div className="section-head">

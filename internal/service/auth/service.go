@@ -204,6 +204,7 @@ func userFromDB(u db.User) usersvc.User {
 		UserName:    u.UserName,
 		DisplayName: u.DisplayName,
 		Language:    userLanguage(u.Language),
+		Theme:       userTheme(u.Theme),
 		Role:        u.Role,
 		Rating:      int(u.Rating),
 		AvatarUrl:   u.AvatarUrl,
@@ -232,5 +233,14 @@ func userLanguage(value string) string {
 		return "ru"
 	default:
 		return "en"
+	}
+}
+
+func userTheme(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "indigo", "dark", "midnight":
+		return strings.ToLower(strings.TrimSpace(value))
+	default:
+		return "classic"
 	}
 }

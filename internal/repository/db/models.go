@@ -169,6 +169,7 @@ type User struct {
 	LastLoginIp    *string            `json:"last_login_ip"`
 	LastLoginAt    pgtype.Timestamptz `json:"last_login_at"`
 	Language       string             `json:"language"`
+	Theme          string             `json:"theme"`
 }
 
 type UserSession struct {

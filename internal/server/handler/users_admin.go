@@ -42,6 +42,7 @@ func (h *Handler) HandleUpdateUserProfileAdmin(c *gin.Context) {
 		Github:      req.Github,
 		Email:       req.Email,
 		Language:    enumStringPtr(req.Language),
+		Theme:       enumStringPtr(req.Theme),
 	})
 	if err != nil {
 		respondError(c, err)

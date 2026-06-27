@@ -18,6 +18,7 @@ import {
   UserProfileEditForm,
   UserSessionsTable,
 } from "../components/UserProfileBlocks";
+import ThemeSection from "../components/ThemeSection";
 import {
   emptyUserProfileForm,
   profileUpdateFromForm,
@@ -25,6 +26,7 @@ import {
   type UserPasswordFormState,
   type UserProfileFormState,
 } from "../components/UserProfileModel";
+import { DEFAULT_THEME, setTheme, type ThemeId } from "../theme";
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -50,9 +52,44 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  const [theme, setThemeSelection] = useState<ThemeId>(
+    user?.theme ?? DEFAULT_THEME,
+  );
+  const [savingTheme, setSavingTheme] = useState(false);
+
   useEffect(() => {
     if (user) setForm(userProfileFormFromUser(user));
   }, [user]);
+
+  useEffect(() => {
+    if (user?.theme) setThemeSelection(user.theme);
+  }, [user?.theme]);
+
+  // Picking a theme applies it to the current UI immediately and persists it to
+  // the profile. The full saved profile is resent so unrelated optional fields
+  // (which the update endpoint clears when omitted) are preserved.
+  const handleThemeChange = async (next: ThemeId) => {
+    if (!user || next === theme) return;
+    const previous = theme;
+    setThemeSelection(next);
+    setTheme(next);
+    setSavingTheme(true);
+    setError(null);
+    setSuccess(null);
+    const body = {
+      ...profileUpdateFromForm(userProfileFormFromUser(user)),
+      theme: next,
+    };
+    const { error: err } = await usersApi.updateProfile(body);
+    setSavingTheme(false);
+    if (err) {
+      setError(err);
+      setThemeSelection(previous);
+      setTheme(previous);
+      return;
+    }
+    await refreshUser();
+  };
 
   const fetchSessions = useCallback(async () => {
     setSessionsLoading(true);
@@ -196,6 +233,12 @@ export default function ProfilePage() {
           </InfoGroup>
         </InfoGroups>
       </div>
+
+      <ThemeSection
+        value={theme}
+        onChange={handleThemeChange}
+        disabled={savingTheme}
+      />
 
       <div className="detail-section">
         <div className="section-head">

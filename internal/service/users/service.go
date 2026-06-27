@@ -17,6 +17,7 @@ type User struct {
 	UserName    string     `json:"user_name"`
 	DisplayName string     `json:"display_name"`
 	Language    string     `json:"language"`
+	Theme       string     `json:"theme"`
 	Role        string     `json:"role"`
 	Rating      int        `json:"rating"`
 	AvatarUrl   *string    `json:"avatar_url,omitempty"`
@@ -63,6 +64,7 @@ type ProfileUpdateParams struct {
 	Github      *string `json:"github,omitempty"`
 	Email       *string `json:"email,omitempty"`
 	Language    *string `json:"language,omitempty"`
+	Theme       *string `json:"theme,omitempty"`
 }
 
 // AdminUpdateParams carries the profile fields an admin may edit from the user
@@ -76,6 +78,7 @@ type AdminUpdateParams struct {
 	Github      *string `json:"github,omitempty"`
 	Email       *string `json:"email,omitempty"`
 	Language    *string `json:"language,omitempty"`
+	Theme       *string `json:"theme,omitempty"`
 }
 
 var userNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
@@ -83,7 +86,17 @@ var userNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 const (
 	defaultRole     = "guest"
 	defaultLanguage = "en"
+	defaultTheme    = "classic"
 )
+
+// validThemes is the set of selectable UI themes, kept in sync with the
+// `theme` enum in the OpenAPI spec and the frontend theme catalog.
+var validThemes = map[string]struct{}{
+	"classic":  {},
+	"indigo":   {},
+	"dark":     {},
+	"midnight": {},
+}
 
 // fieldPassword is the validation-error field key for the password input.
 const fieldPassword = "password"
@@ -285,6 +298,15 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 		language = normalizedLanguage
 	}
 
+	theme := userTheme(existing.Theme)
+	if params.Theme != nil {
+		normalizedTheme, ok := normalizeTheme(*params.Theme)
+		if !ok {
+			return nil, errs.NewValidationError(map[string]string{"theme": "must be one of: classic, indigo, dark, midnight"})
+		}
+		theme = normalizedTheme
+	}
+
 	var passwordDigest *string
 	if params.Password != nil {
 		if len(*params.Password) < minPasswordLength {
@@ -307,6 +329,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, params ProfileUpd
 		Github:         normalizeOptional(params.Github),
 		Email:          normalizeOptional(params.Email),
 		Language:       language,
+		Theme:          theme,
 	})
 	if err != nil {
 		return nil, err
@@ -418,6 +441,7 @@ func fromDB(u db.User) User {
 		UserName:    u.UserName,
 		DisplayName: u.DisplayName,
 		Language:    userLanguage(u.Language),
+		Theme:       userTheme(u.Theme),
 		Role:        u.Role,
 		Rating:      int(u.Rating),
 		AvatarUrl:   u.AvatarUrl,
@@ -457,6 +481,21 @@ func userLanguage(value string) string {
 		return normalized
 	}
 	return defaultLanguage
+}
+
+func normalizeTheme(value string) (string, bool) {
+	theme := strings.ToLower(strings.TrimSpace(value))
+	if _, ok := validThemes[theme]; ok {
+		return theme, true
+	}
+	return "", false
+}
+
+func userTheme(value string) string {
+	if normalized, ok := normalizeTheme(value); ok {
+		return normalized
+	}
+	return defaultTheme
 }
 
 func mapNotFound(err error) error {

@@ -186,6 +186,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		Github:      req.Github,
 		Email:       req.Email,
 		Language:    enumStringPtr(req.Language),
+		Theme:       enumStringPtr(req.Theme),
 	}
 
 	user, err := h.users.UpdateProfile(c.Request.Context(), userID, params)
@@ -437,6 +438,7 @@ func userToHTTPWithPrivate(u usersvc.User, includePrivate bool) httpserver.User 
 		UserName:    u.UserName,
 		DisplayName: u.DisplayName,
 		Language:    httpserver.UserLanguage(u.Language),
+		Theme:       httpserver.UserTheme(u.Theme),
 		Role:        httpserver.UserRole(u.Role),
 		Rating:      u.Rating,
 		AvatarUrl:   u.AvatarUrl,

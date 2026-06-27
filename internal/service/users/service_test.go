@@ -47,6 +47,7 @@ func (m *mockQuerier) CreateUser(_ context.Context, arg db.CreateUserParams) (db
 		UserName:       arg.UserName,
 		DisplayName:    arg.DisplayName,
 		Language:       defaultLanguage,
+		Theme:          defaultTheme,
 		Role:           arg.Role,
 		Rating:         arg.Rating,
 		AvatarUrl:      arg.AvatarUrl,
@@ -124,6 +125,7 @@ func (m *mockQuerier) UpdateUserProfileAdmin(_ context.Context, arg db.UpdateUse
 	u.Github = arg.Github
 	u.Email = arg.Email
 	u.Language = arg.Language
+	u.Theme = arg.Theme
 	u.UpdatedAt = time.Now()
 	m.users[arg.ID] = u
 	return u, nil
@@ -222,6 +224,9 @@ func TestCreate_Success(t *testing.T) {
 	}
 	if u.Language != defaultLanguage {
 		t.Errorf("Language = %q, want %q", u.Language, defaultLanguage)
+	}
+	if u.Theme != defaultTheme {
+		t.Errorf("Theme = %q, want %q", u.Theme, defaultTheme)
 	}
 }
 
@@ -560,6 +565,50 @@ func TestUpdateProfile_InvalidLanguage(t *testing.T) {
 	language := "de"
 	_, err := svc.UpdateProfile(context.Background(), created.ID, ProfileUpdateParams{
 		Language: &language,
+	})
+	if !isValidation(err) {
+		t.Fatalf("expected validation error, got %v", err)
+	}
+}
+
+func TestUpdateProfile_ThemeChange(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created := mustCreateUser(t, svc, CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	theme := "midnight"
+	updated, err := svc.UpdateProfile(context.Background(), created.ID, ProfileUpdateParams{
+		Theme: &theme,
+	})
+	if err != nil {
+		t.Fatalf("UpdateProfile: %v", err)
+	}
+	if updated.Theme != "midnight" {
+		t.Fatalf("Theme = %q, want %q", updated.Theme, "midnight")
+	}
+	if q.users[created.ID].Theme != "midnight" {
+		t.Fatalf("stored theme = %q, want %q", q.users[created.ID].Theme, "midnight")
+	}
+}
+
+func TestUpdateProfile_InvalidTheme(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	created := mustCreateUser(t, svc, CreateParams{
+		UserName:    "testuser",
+		DisplayName: "Test",
+		Password:    "secret123",
+	})
+
+	theme := "neon"
+	_, err := svc.UpdateProfile(context.Background(), created.ID, ProfileUpdateParams{
+		Theme: &theme,
 	})
 	if !isValidation(err) {
 		t.Fatalf("expected validation error, got %v", err)

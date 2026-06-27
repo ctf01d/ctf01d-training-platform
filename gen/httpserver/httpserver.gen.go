@@ -383,6 +383,30 @@ func (e UserRole) Valid() bool {
 	}
 }
 
+// Defines values for UserTheme.
+const (
+	UserThemeClassic  UserTheme = "classic"
+	UserThemeDark     UserTheme = "dark"
+	UserThemeIndigo   UserTheme = "indigo"
+	UserThemeMidnight UserTheme = "midnight"
+)
+
+// Valid indicates whether the value is a known member of the UserTheme enum.
+func (e UserTheme) Valid() bool {
+	switch e {
+	case UserThemeClassic:
+		return true
+	case UserThemeDark:
+		return true
+	case UserThemeIndigo:
+		return true
+	case UserThemeMidnight:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UserCreateRole.
 const (
 	UserCreateRoleAdmin  UserCreateRole = "admin"
@@ -416,6 +440,30 @@ func (e UserProfileUpdateLanguage) Valid() bool {
 	case UserProfileUpdateLanguageEn:
 		return true
 	case UserProfileUpdateLanguageRu:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserProfileUpdateTheme.
+const (
+	UserProfileUpdateThemeClassic  UserProfileUpdateTheme = "classic"
+	UserProfileUpdateThemeDark     UserProfileUpdateTheme = "dark"
+	UserProfileUpdateThemeIndigo   UserProfileUpdateTheme = "indigo"
+	UserProfileUpdateThemeMidnight UserProfileUpdateTheme = "midnight"
+)
+
+// Valid indicates whether the value is a known member of the UserProfileUpdateTheme enum.
+func (e UserProfileUpdateTheme) Valid() bool {
+	switch e {
+	case UserProfileUpdateThemeClassic:
+		return true
+	case UserProfileUpdateThemeDark:
+		return true
+	case UserProfileUpdateThemeIndigo:
+		return true
+	case UserProfileUpdateThemeMidnight:
 		return true
 	default:
 		return false
@@ -1018,6 +1066,7 @@ type User struct {
 	Rating      int          `json:"rating"`
 	Role        UserRole     `json:"role"`
 	Telegram    *string      `json:"telegram,omitempty"`
+	Theme       UserTheme    `json:"theme"`
 	UpdatedAt   *time.Time   `json:"updated_at,omitempty"`
 	UserName    string       `json:"user_name"`
 }
@@ -1027,6 +1076,9 @@ type UserLanguage string
 
 // UserRole defines model for User.Role.
 type UserRole string
+
+// UserTheme defines model for User.Theme.
+type UserTheme string
 
 // UserBlockUpdate defines model for UserBlockUpdate.
 type UserBlockUpdate struct {
@@ -1066,10 +1118,14 @@ type UserProfileUpdate struct {
 	Language    *UserProfileUpdateLanguage `json:"language,omitempty"`
 	Password    *string                    `json:"password,omitempty"`
 	Telegram    *string                    `json:"telegram,omitempty"`
+	Theme       *UserProfileUpdateTheme    `json:"theme,omitempty"`
 }
 
 // UserProfileUpdateLanguage defines model for UserProfileUpdate.Language.
 type UserProfileUpdateLanguage string
+
+// UserProfileUpdateTheme defines model for UserProfileUpdate.Theme.
+type UserProfileUpdateTheme string
 
 // UserRoleUpdate defines model for UserRoleUpdate.
 type UserRoleUpdate struct {
