@@ -1,6 +1,6 @@
-.PHONY: deploy \
+.PHONY: \
 	go-build go-run go-test go-vet go-fmt go-tidy \
-	gen gen-all \
+	gen \
 	openapi-merge openapi-codegen openapi-roles openapi-ts openapi openapi-lint \
 	migrate-up migrate-down migrate-status migrate-new \
 	database-test-run database-test-stop go-test-e2e \
@@ -21,30 +21,6 @@ export DATABASE_URL
 GO_TEST_DB_PORT ?= 5433
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:$(GO_TEST_DB_PORT)/ctf01d_test?sslmode=disable
 export TEST_DATABASE_URL
-
-# -----------------------------------------------------------------------------
-# Remote deploy helper (rsync with excludes)
-
-DEPLOY_HOST ?= own-vds-france
-DEPLOY_TARGET ?= ctf01d-training-platform
-
-RSYNC_EXCLUDES = \
-	--exclude .git \
-	--exclude .github \
-	--exclude .vscode \
-	--exclude .idea \
-	--exclude .aider.tags.cache.v4 \
-	--exclude .cursor-free-vip \
-	--exclude .DS_Store \
-	--exclude '*.swp' \
-	--exclude tmp \
-	--exclude log \
-	--exclude dist \
-	--exclude vendor \
-	--exclude node_modules
-
-deploy:
-	rsync -az $(RSYNC_EXCLUDES) ./ $(DEPLOY_HOST):$(DEPLOY_TARGET)
 
 # -----------------------------------------------------------------------------
 # Go development targets
@@ -81,11 +57,8 @@ go-tidy:
 # -----------------------------------------------------------------------------
 # Code generation
 
-## gen: Regenerate all generated code
-gen: gen-all
-
-## gen-all: Regenerate all generated code
-gen-all: openapi sqlc-gen
+## gen: Regenerate all generated code (OpenAPI + sqlc)
+gen: openapi sqlc-gen
 
 # -----------------------------------------------------------------------------
 # OpenAPI code generation
@@ -113,10 +86,10 @@ OPENAPI_ROLES := go run ./scripts/openapi-required-roles.go
 openapi-merge:
 	yq eval-all '. as $$item ireduce ({}; . * $$item )' $(OPENAPI_FRAGMENTS) > $(OPENAPI_FILE)
 
-## openapi-codegen: Generate Go server code from OpenAPI spec
+## openapi-codegen: Generate Go server code and role metadata from OpenAPI spec
 openapi-codegen:
 	$(OAPI_CODEGEN) -config configs/oapi-codegen.yaml $(OPENAPI_FILE)
-	$(OPENAPI_ROLES) -input $(OPENAPI_FILE) -output gen/httpserver/roles.gen.go -package httpserver
+	$(MAKE) openapi-roles
 
 ## openapi-roles: Generate Go role metadata from OpenAPI spec
 openapi-roles:
@@ -183,9 +156,8 @@ web-install:
 web-build:
 	cd web && npm run build
 
-## web-gen: Regenerate TypeScript API types from OpenAPI spec
-web-gen:
-	cd web && npm run gen:api
+## web-gen: Regenerate TypeScript API types from OpenAPI spec (alias for openapi-ts)
+web-gen: openapi-ts
 
 ## web-dev: Start frontend dev server with HMR
 web-dev:
