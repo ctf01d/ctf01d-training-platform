@@ -115,7 +115,7 @@ func TestRemainingHTTPRoutesFlow(t *testing.T) {
 	requireStatus(t, w, http.StatusCreated, "create service")
 	serviceID := jsonID(t, parseJSON(t, w))
 
-	t.Log("Step: service actions redownload, checker upload/download, github validation")
+	t.Log("Step: service actions redownload, checker upload/download, git import validation")
 	requireStatus(t, makeReq(t, engine, http.MethodPost, fmt.Sprintf("/api/v1/services/%d/redownload", serviceID), nil, ownerToken), http.StatusOK, "redownload service with no URLs")
 	checkerZip := createTestZip(t, map[string]string{"checker.py": "print(101)\n"})
 	requireStatus(t, makeMultipartUpload(t, engine, fmt.Sprintf("/api/v1/services/%d/upload-archives", serviceID), checkerZip, "checker_archive", "checker.zip", ownerToken), http.StatusOK, "upload checker archive")
@@ -124,10 +124,10 @@ func TestRemainingHTTPRoutesFlow(t *testing.T) {
 	if w.Body.Len() == 0 {
 		t.Fatal("download checker archive: empty body")
 	}
-	requireStatus(t, makeReq(t, engine, http.MethodPost, "/api/v1/services/import/github", map[string]interface{}{
+	requireStatus(t, makeReq(t, engine, http.MethodPost, "/api/v1/services/import/git", map[string]interface{}{
 		"repo_url": "https://github.com/example/repo",
-		"subdir":   "service",
-	}, ownerToken), http.StatusUnprocessableEntity, "github import unsupported subdir")
+		"subdir":   "../secret",
+	}, adminToken), http.StatusUnprocessableEntity, "git import traversal subdir")
 
 	t.Log("Step: publish game")
 	requireStatus(t, makeReq(t, engine, http.MethodPost, fmt.Sprintf("/api/v1/games/%d/publish", gameID), nil, ownerToken), http.StatusOK, "publish game")

@@ -197,8 +197,8 @@ func TestServicesFlow(t *testing.T) {
 
 func TestServiceGitImportAndSyncFlow(t *testing.T) {
 	engine, store := setupTest(t)
-	_, adminToken := seedUser(t, store, "admin-git", "Admin Git", "password123", "admin")
-	_, playerToken := seedUser(t, store, "player-git", "Player Git", "password123", "player")
+	_, adminToken := seedUser(t, store, "admin_git", "Admin Git", "password123", "admin")
+	_, playerToken := seedUser(t, store, "player_git", "Player Git", "password123", "player")
 
 	repoDir := createIntegrationGitRepo(t, map[string]string{
 		"README.md":                       "# Bank\n\nInitial description",
