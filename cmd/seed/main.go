@@ -968,15 +968,15 @@ func seedSibir(ctx context.Context, q *db.Queries, log *zap.Logger) error {
 	}
 
 	for _, sd := range servicesData {
-		archive := ""
+		repoURL := ""
 		if sd.repo != "" {
-			archive = fmt.Sprintf("https://github.com/SibirCTF/%s/archive/refs/heads/%s.zip", sd.repo, sd.branch)
+			repoURL = fmt.Sprintf("https://github.com/SibirCTF/%s.git", sd.repo)
 		}
 		training := json.RawMessage("{}")
 		if sd.lang != "" {
 			training = json.RawMessage(fmt.Sprintf(`{"language":%q}`, sd.lang))
 		}
-		svc, created, err := getOrCreateService(ctx, q, sd.name, sd.desc, sd.author, archive, training, svgAvatar(sd.name, color()))
+		svc, created, err := getOrCreateService(ctx, q, sd.name, sd.desc, sd.author, repoURL, sd.branch, training, svgAvatar(sd.name, color()))
 		if err != nil {
 			return fmt.Errorf("service %q: %w", sd.name, err)
 		}
@@ -1113,7 +1113,7 @@ func getOrCreateGame(ctx context.Context, q *db.Queries, name, organizer string,
 	return game, true, nil
 }
 
-func getOrCreateService(ctx context.Context, q *db.Queries, name, desc, author, archiveURL string, training json.RawMessage, avatarURL string) (db.Service, bool, error) {
+func getOrCreateService(ctx context.Context, q *db.Queries, name, desc, author, gitRepoURL, gitRef string, training json.RawMessage, avatarURL string) (db.Service, bool, error) {
 	if existing, err := q.GetServiceByName(ctx, name); err == nil {
 		return existing, false, nil
 	}
@@ -1127,9 +1127,15 @@ func getOrCreateService(ctx context.Context, q *db.Queries, name, desc, author, 
 		Public:             true,
 		CheckStatus:        "unknown",
 		Ctf01dTraining:     training,
+		SourceKind:         "manual",
+		GitSyncStatus:      "unknown",
 	}
-	if archiveURL != "" {
-		params.ServiceArchiveUrl = &archiveURL
+	if gitRepoURL != "" {
+		params.SourceKind = "git"
+		params.GitRepoUrl = &gitRepoURL
+		if gitRef != "" {
+			params.GitRef = &gitRef
+		}
 	}
 	svc, err := q.CreateService(ctx, params)
 	if err != nil {

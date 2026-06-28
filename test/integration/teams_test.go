@@ -203,3 +203,63 @@ func TestTeamsMembershipsFlow(t *testing.T) {
 		t.Errorf("expected 1 team, got %d", len(items))
 	}
 }
+
+func TestUniversitiesOrderedByTeamCount(t *testing.T) {
+	engine, store := setupTest(t)
+
+	_, adminToken := seedUser(t, store, "admin_uni_order", "Admin", "admin12345", "admin")
+	_, ownerToken := seedUser(t, store, "owner_uni_order", "Owner", "password123", "player")
+
+	createUniversity := func(name string) int64 {
+		t.Helper()
+		w := makeReq(t, engine, http.MethodPost, "/api/v1/universities", map[string]interface{}{
+			"name": name,
+		}, adminToken)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("create university %q: %d %s", name, w.Code, w.Body.String())
+		}
+		return jsonID(t, parseJSON(t, w))
+	}
+
+	createTeam := func(name string, universityID int64) {
+		t.Helper()
+		w := makeReq(t, engine, http.MethodPost, "/api/v1/teams", map[string]interface{}{
+			"name":          name,
+			"university_id": universityID,
+		}, ownerToken)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("create team %q: %d %s", name, w.Code, w.Body.String())
+		}
+	}
+
+	uniOneID := createUniversity("University One")
+	uniTwoID := createUniversity("University Two")
+	uniThreeID := createUniversity("University Three")
+
+	createTeam("Team One A", uniOneID)
+	createTeam("Team Two A", uniTwoID)
+	createTeam("Team Two B", uniTwoID)
+
+	w := makeReq(t, engine, http.MethodGet, "/api/v1/universities", nil, adminToken)
+	if w.Code != http.StatusOK {
+		t.Fatalf("list universities: %d %s", w.Code, w.Body.String())
+	}
+
+	items := parseItems(t, w)
+	if len(items) < 3 {
+		t.Fatalf("expected at least 3 universities, got %d", len(items))
+	}
+
+	gotOrder := []int64{
+		jsonID(t, items[0]),
+		jsonID(t, items[1]),
+		jsonID(t, items[2]),
+	}
+	wantOrder := []int64{uniTwoID, uniOneID, uniThreeID}
+
+	for i := range wantOrder {
+		if gotOrder[i] != wantOrder[i] {
+			t.Fatalf("unexpected universities order: got %v, want %v", gotOrder, wantOrder)
+		}
+	}
+}

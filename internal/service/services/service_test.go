@@ -64,6 +64,11 @@ func (m *mockQuerier) CreateService(_ context.Context, arg db.CreateServiceParam
 		ExploitsUrl:        arg.ExploitsUrl,
 		CheckStatus:        arg.CheckStatus,
 		Ctf01dTraining:     arg.Ctf01dTraining,
+		SourceKind:         arg.SourceKind,
+		GitRepoUrl:         arg.GitRepoUrl,
+		GitRef:             arg.GitRef,
+		GitSubdir:          arg.GitSubdir,
+		GitSyncStatus:      arg.GitSyncStatus,
 		CreatedAt:          now,
 		UpdatedAt:          now,
 	}
@@ -180,6 +185,23 @@ func (m *mockQuerier) SetPublic(_ context.Context, arg db.SetPublicParams) (db.S
 	return svc, nil
 }
 
+func (m *mockQuerier) SetGitSource(_ context.Context, arg db.SetGitSourceParams) (db.Service, error) {
+	svc, ok := m.services[arg.ID]
+	if !ok {
+		return db.Service{}, pgx.ErrNoRows
+	}
+	svc.SourceKind = arg.SourceKind
+	svc.GitRepoUrl = arg.GitRepoUrl
+	svc.GitRef = arg.GitRef
+	svc.GitSubdir = arg.GitSubdir
+	svc.GitLastCommit = nil
+	svc.GitSyncStatus = arg.GitSyncStatus
+	svc.GitSyncError = nil
+	svc.UpdatedAt = time.Now()
+	m.services[arg.ID] = svc
+	return svc, nil
+}
+
 func strPtr(s string) *string { return &s }
 func boolPtr(b bool) *bool    { return &b }
 
@@ -288,6 +310,21 @@ func TestCreate_InvalidArchiveURL(t *testing.T) {
 	}, true)
 	if _, ok := err.(*errs.ValidationError); !ok {
 		t.Errorf("expected ValidationError, got %v", err)
+	}
+}
+
+func TestCreate_GitSourceRequiresAdmin(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	_, err := svc.Create(context.Background(), CreateParams{
+		Name: "test-service",
+		GitSource: &GitSourceInput{
+			RepoURL: "ssh://git@example.com/team/repo.git",
+		},
+	}, false)
+	if err != errs.ErrForbidden {
+		t.Fatalf("expected ErrForbidden, got %v", err)
 	}
 }
 
@@ -461,6 +498,22 @@ func TestUpdate_InvalidURL(t *testing.T) {
 	}, true)
 	if _, ok := err.(*errs.ValidationError); !ok {
 		t.Errorf("expected ValidationError, got %v", err)
+	}
+}
+
+func TestUpdate_GitSourceRequiresAdmin(t *testing.T) {
+	q := newMockQuerier()
+	svc := NewService(q)
+
+	mustCreateService(t, svc, CreateParams{Name: "test-service"})
+
+	_, err := svc.Update(context.Background(), 1, UpdateParams{
+		GitSource: &GitSourceInput{
+			RepoURL: "ssh://git@example.com/team/repo.git",
+		},
+	}, false)
+	if err != errs.ErrForbidden {
+		t.Fatalf("expected ErrForbidden, got %v", err)
 	}
 }
 

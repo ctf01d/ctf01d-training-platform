@@ -8,6 +8,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -192,6 +195,71 @@ func TestServicesFlow(t *testing.T) {
 	_ = adminToken
 }
 
+func TestServiceGitImportAndSyncFlow(t *testing.T) {
+	engine, store := setupTest(t)
+	_, adminToken := seedUser(t, store, "admin-git", "Admin Git", "password123", "admin")
+	_, playerToken := seedUser(t, store, "player-git", "Player Git", "password123", "player")
+
+	repoDir := createIntegrationGitRepo(t, map[string]string{
+		"README.md":                       "# Bank\n\nInitial description",
+		".ctf01d-service.yml":             "checker-config-v0.5.2:\n  id: bank\n  service_name: Bank\n  script_path: ./checker.py\n  script_wait_in_sec: 10\n  time_sleep_between_run_scripts_in_sec: 30\n  enabled: true\n",
+		"ctf01d-training.json":            `{"display_name":"Bank","description":"Initial description","author":"Alice"}`,
+		"vuln-service/docker-compose.yml": "services: {}\n",
+		"vuln-service/app.py":             "print('bank')\n",
+		"checker_bank/checker.py":         "exit(101)\n",
+		"writeups/README.md":              "writeup\n",
+		"exploits/poc.py":                 "exploit\n",
+	})
+
+	w := makeReq(t, engine, http.MethodPost, "/api/v1/services/import/git", map[string]interface{}{
+		"repo_url": repoDir,
+		"ref":      "main",
+	}, playerToken)
+	requireStatus(t, w, http.StatusForbidden, "player must not import service from git")
+
+	w = makeReq(t, engine, http.MethodPost, "/api/v1/services/import/git", map[string]interface{}{
+		"repo_url": repoDir,
+		"ref":      "main",
+	}, adminToken)
+	requireStatus(t, w, http.StatusCreated, "import service from git")
+	importResult := parseJSON(t, w)
+	importedSvc := importResult["service"].(map[string]interface{})
+	serviceID := int64(importedSvc["id"].(float64))
+	if importedSvc["name"] != "bank" {
+		t.Fatalf("service name = %v, want bank", importedSvc["name"])
+	}
+
+	rewriteIntegrationGitFile(t, repoDir, "ctf01d-training.json", `{"display_name":"Bank","description":"Updated description","author":"Bob"}`)
+	integrationGitCommitAll(t, repoDir, "update metadata")
+
+	w = makeReq(t, engine, http.MethodPost, fmt.Sprintf("/api/v1/services/%d/sync-from-git", serviceID), nil, playerToken)
+	requireStatus(t, w, http.StatusForbidden, "player must not sync service from git")
+
+	w = makeReq(t, engine, http.MethodPost, fmt.Sprintf("/api/v1/services/%d/sync-from-git", serviceID), nil, adminToken)
+	requireStatus(t, w, http.StatusOK, "sync service from git")
+	svc := parseJSON(t, w)
+	if svc["author"] != "Bob" {
+		t.Fatalf("author = %v, want Bob", svc["author"])
+	}
+	if svc["public_description"] != "Updated description" {
+		t.Fatalf("public_description = %v, want Updated description", svc["public_description"])
+	}
+
+	source, ok := svc["source"].(map[string]interface{})
+	if !ok {
+		t.Fatal("source is missing in sync response")
+	}
+	if source["kind"] != "git" {
+		t.Fatalf("source.kind = %v, want git", source["kind"])
+	}
+	if source["sync_status"] != "ok" {
+		t.Fatalf("source.sync_status = %v, want ok", source["sync_status"])
+	}
+	if source["last_commit"] == nil || source["last_commit"] == "" {
+		t.Fatal("source.last_commit should be present after sync")
+	}
+}
+
 func createTestZip(t *testing.T, files map[string]string) *bytes.Buffer {
 	t.Helper()
 	var buf bytes.Buffer
@@ -215,10 +283,65 @@ func createServiceBundleZip(t *testing.T, name, description string) *bytes.Buffe
 	t.Helper()
 	trainingJSON := fmt.Sprintf(`{"display_name":"%s","description":"%s"}`, name, description)
 	return createTestZip(t, map[string]string{
-		"service/hello.txt":            "hello",
-		"service/ctf01d-training.json": trainingJSON,
-		"checker/checker.sh":           "#!/bin/bash\necho 101",
+		"repo/README.md":                       fmt.Sprintf("# %s\n\n%s", name, description),
+		"repo/.ctf01d-service.yml":             fmt.Sprintf("checker-config-v0.5.2:\n  id: %s\n  service_name: %s\n  script_path: ./checker.sh\n", name, name),
+		"repo/ctf01d-training.json":            trainingJSON,
+		"repo/vuln-service/docker-compose.yml": "services: {}\n",
+		"repo/vuln-service/hello.txt":          "hello",
+		"repo/checker_" + name + "/checker.sh": "#!/bin/bash\necho 101",
+		"repo/writeups/README.md":              "writeup\n",
+		"repo/exploits/poc.py":                 "exploit\n",
 	})
+}
+
+func createIntegrationGitRepo(t *testing.T, files map[string]string) string {
+	t.Helper()
+
+	repoDir := t.TempDir()
+	for name, content := range files {
+		fullPath := filepath.Join(repoDir, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", fullPath, err)
+		}
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
+			t.Fatalf("write %s: %v", fullPath, err)
+		}
+	}
+
+	integrationGitRun(t, repoDir, "init", "-b", "main")
+	integrationGitRun(t, repoDir, "config", "user.name", "Integration Test")
+	integrationGitRun(t, repoDir, "config", "user.email", "integration@example.com")
+	integrationGitRun(t, repoDir, "add", ".")
+	integrationGitRun(t, repoDir, "commit", "-m", "initial")
+
+	return repoDir
+}
+
+func rewriteIntegrationGitFile(t *testing.T, repoDir, relPath, content string) {
+	t.Helper()
+
+	fullPath := filepath.Join(repoDir, filepath.FromSlash(relPath))
+	if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
+		t.Fatalf("rewrite %s: %v", fullPath, err)
+	}
+}
+
+func integrationGitCommitAll(t *testing.T, repoDir, message string) {
+	t.Helper()
+
+	integrationGitRun(t, repoDir, "add", ".")
+	integrationGitRun(t, repoDir, "commit", "-m", message)
+}
+
+func integrationGitRun(t *testing.T, repoDir string, args ...string) {
+	t.Helper()
+
+	cmd := exec.CommandContext(t.Context(), "git", args...)
+	cmd.Dir = repoDir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %v: %v (%s)", args, err, string(out))
+	}
 }
 
 func makeMultipartUpload(t *testing.T, engine *gin.Engine, path string, fileData *bytes.Buffer, fieldName, fileName, token string) *httptest.ResponseRecorder {

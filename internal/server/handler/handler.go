@@ -737,6 +737,7 @@ func (h *Handler) HandleListServices(c *gin.Context) {
 
 	role, hasRole := middleware.CurrentRole(c)
 	isAdmin := hasRole && role == roleAdmin
+	includeSource := hasRole && (role == roleAdmin || role == rolePlayer)
 
 	if !isAdmin {
 		b := true
@@ -751,7 +752,7 @@ func (h *Handler) HandleListServices(c *gin.Context) {
 
 	items := make([]httpserver.Service, len(result.Items))
 	for i, s := range result.Items {
-		items[i] = serviceToHTTP(s)
+		items[i] = serviceToHTTP(s, includeSource)
 	}
 
 	c.JSON(http.StatusOK, httpserver.ServiceList{
@@ -794,6 +795,18 @@ func (h *Handler) HandleCreateService(c *gin.Context) {
 		ExploitsUrl:        req.ExploitsUrl,
 		Ctf01dTraining:     training,
 	}
+	if req.GitSource != nil {
+		params.GitSource = &svcsvc.GitSourceInput{}
+		if req.GitSource.RepoUrl != nil {
+			params.GitSource.RepoURL = *req.GitSource.RepoUrl
+		}
+		if req.GitSource.Ref != nil {
+			params.GitSource.Ref = *req.GitSource.Ref
+		}
+		if req.GitSource.Subdir != nil {
+			params.GitSource.Subdir = *req.GitSource.Subdir
+		}
+	}
 	if req.Ports != nil {
 		params.Ports = *req.Ports
 	}
@@ -805,7 +818,7 @@ func (h *Handler) HandleCreateService(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, serviceToHTTP(*svc))
+	c.JSON(http.StatusCreated, serviceToHTTP(*svc, true))
 }
 
 func (h *Handler) HandleGetService(c *gin.Context) {
@@ -815,6 +828,7 @@ func (h *Handler) HandleGetService(c *gin.Context) {
 	}
 	role, hasRole := middleware.CurrentRole(c)
 	isAdmin := hasRole && role == roleAdmin
+	includeSource := hasRole && (role == roleAdmin || role == rolePlayer)
 	svc, err := h.svcService.GetByID(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		respondError(c, err)
@@ -824,7 +838,7 @@ func (h *Handler) HandleGetService(c *gin.Context) {
 		respondError(c, errs.ErrNotFound)
 		return
 	}
-	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+	c.JSON(http.StatusOK, serviceToHTTP(*svc, includeSource))
 }
 
 func (h *Handler) HandleUpdateService(c *gin.Context) {
@@ -857,6 +871,18 @@ func (h *Handler) HandleUpdateService(c *gin.Context) {
 		ExploitsUrl:        req.ExploitsUrl,
 		Ctf01dTraining:     training,
 	}
+	if req.GitSource != nil {
+		params.GitSource = &svcsvc.GitSourceInput{}
+		if req.GitSource.RepoUrl != nil {
+			params.GitSource.RepoURL = *req.GitSource.RepoUrl
+		}
+		if req.GitSource.Ref != nil {
+			params.GitSource.Ref = *req.GitSource.Ref
+		}
+		if req.GitSource.Subdir != nil {
+			params.GitSource.Subdir = *req.GitSource.Subdir
+		}
+	}
 	if req.Ports != nil {
 		params.Ports = *req.Ports
 	}
@@ -868,7 +894,7 @@ func (h *Handler) HandleUpdateService(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+	c.JSON(http.StatusOK, serviceToHTTP(*svc, true))
 }
 
 func (h *Handler) HandleDeleteService(c *gin.Context) {
@@ -895,7 +921,7 @@ func (h *Handler) HandleToggleServicePublic(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+	c.JSON(http.StatusOK, serviceToHTTP(*svc, true))
 }
 
 func (h *Handler) HandleCheckServiceChecker(c *gin.Context) {
@@ -910,7 +936,7 @@ func (h *Handler) HandleCheckServiceChecker(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+	c.JSON(http.StatusOK, serviceToHTTP(*svc, true))
 }
 
 func (h *Handler) HandleRedownloadServiceArchives(c *gin.Context) {
@@ -925,7 +951,7 @@ func (h *Handler) HandleRedownloadServiceArchives(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+	c.JSON(http.StatusOK, serviceToHTTP(*svc, true))
 }
 
 func (h *Handler) HandleUploadServiceArchives(c *gin.Context) {
@@ -971,7 +997,7 @@ func (h *Handler) HandleUploadServiceArchives(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, serviceToHTTP(*svc))
+	c.JSON(http.StatusOK, serviceToHTTP(*svc, true))
 }
 
 func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
@@ -1011,38 +1037,29 @@ func (h *Handler) HandleDownloadServiceArchive(c *gin.Context) {
 	}
 }
 
-func (h *Handler) HandleImportServiceFromGithub(c *gin.Context) {
-	req, ok := bindJSON[httpserver.GithubImportRequest](c)
+func (h *Handler) HandleSyncServiceFromGit(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
 	if !ok {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
 	isAdmin := role == roleAdmin
-	importReq := svcsvc.GithubImportRequest{
-		RepoURL: req.RepoUrl,
-	}
-	if req.Ref != nil {
-		importReq.Ref = *req.Ref
-	}
-	if req.Subdir != nil {
-		importReq.Subdir = *req.Subdir
-	}
-	result, err := h.svcImport.ImportFromGithub(c.Request.Context(), importReq, isAdmin)
+	svc, err := h.svcImport.SyncFromGit(c.Request.Context(), id, isAdmin)
 	if err != nil {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, importResultToHTTP(result))
+	c.JSON(http.StatusOK, serviceToHTTP(*svc, true))
 }
 
-func (h *Handler) HandlePreviewServiceGithubImport(c *gin.Context) {
-	req, ok := bindJSON[httpserver.GithubImportRequest](c)
+func (h *Handler) HandleImportServiceFromGit(c *gin.Context) {
+	req, ok := bindJSON[httpserver.GitImportRequest](c)
 	if !ok {
 		return
 	}
 	role, _ := middleware.CurrentRole(c)
 	isAdmin := role == roleAdmin
-	importReq := svcsvc.GithubImportRequest{
+	importReq := svcsvc.GitImportRequest{
 		RepoURL: req.RepoUrl,
 	}
 	if req.Ref != nil {
@@ -1051,7 +1068,31 @@ func (h *Handler) HandlePreviewServiceGithubImport(c *gin.Context) {
 	if req.Subdir != nil {
 		importReq.Subdir = *req.Subdir
 	}
-	result, err := h.svcImport.PreviewFromGithub(c.Request.Context(), importReq, isAdmin)
+	result, err := h.svcImport.ImportFromGit(c.Request.Context(), importReq, isAdmin)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, importResultToHTTP(result, true))
+}
+
+func (h *Handler) HandlePreviewServiceGitImport(c *gin.Context) {
+	req, ok := bindJSON[httpserver.GitImportRequest](c)
+	if !ok {
+		return
+	}
+	role, _ := middleware.CurrentRole(c)
+	isAdmin := role == roleAdmin
+	importReq := svcsvc.GitImportRequest{
+		RepoURL: req.RepoUrl,
+	}
+	if req.Ref != nil {
+		importReq.Ref = *req.Ref
+	}
+	if req.Subdir != nil {
+		importReq.Subdir = *req.Subdir
+	}
+	result, err := h.svcImport.PreviewFromGit(c.Request.Context(), importReq, isAdmin)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -1087,7 +1128,7 @@ func (h *Handler) HandleImportServiceFromZip(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, importResultToHTTP(result))
+	c.JSON(http.StatusCreated, importResultToHTTP(result, true))
 }
 
 func (h *Handler) HandlePreviewServiceZipImport(c *gin.Context) {
@@ -1170,12 +1211,17 @@ func (h *Handler) UploadServiceArchives(c *gin.Context, id int64) {
 	h.HandleUploadServiceArchives(c)
 }
 
-func (h *Handler) ImportServiceFromGithub(c *gin.Context) {
-	h.HandleImportServiceFromGithub(c)
+func (h *Handler) SyncServiceFromGit(c *gin.Context, id int64) {
+	c.Set("id", id)
+	h.HandleSyncServiceFromGit(c)
 }
 
-func (h *Handler) PreviewServiceGithubImport(c *gin.Context) {
-	h.HandlePreviewServiceGithubImport(c)
+func (h *Handler) ImportServiceFromGit(c *gin.Context) {
+	h.HandleImportServiceFromGit(c)
+}
+
+func (h *Handler) PreviewServiceGitImport(c *gin.Context) {
+	h.HandlePreviewServiceGitImport(c)
 }
 
 func (h *Handler) ImportServiceFromZip(c *gin.Context) {

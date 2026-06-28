@@ -27,9 +27,17 @@ const (
 	fieldValueMaxChars = 200
 
 	previewRequirementsCapacity = 10
+	// manifestExtraRequirements counts the additional requirement items emitted
+	// when a service manifest is present (manifest_id, checker_script, ...).
+	manifestExtraRequirements = 3
 
-	sourceGithub = "github"
+	sourceGit    = "git"
+	sourceManual = "manual"
 	sourceZip    = "zip"
+
+	syncStatusUnknown = "unknown"
+	syncStatusOK      = "ok"
+	syncStatusFailed  = "failed"
 
 	fieldArchive = "archive"
 	fieldRepoURL = "repo_url"
@@ -43,6 +51,8 @@ type BundleMetadata struct {
 	Copyright         string
 	License           string
 	Ctf01dTraining    json.RawMessage
+	Manifest          *ServiceManifest
+	CheckerScriptOK   bool
 }
 
 func safeRelPath(rel string) string {
@@ -238,6 +248,12 @@ func inspectSourceLayoutFromBytes(zipBytes []byte, source importSourceInfo) (sou
 }
 
 func resolveImportServiceName(meta *BundleMetadata, layout sourceLayout, source importSourceInfo) string {
+	if meta != nil && meta.Manifest != nil {
+		id := strings.TrimSpace(meta.Manifest.ID)
+		if id != "" && serviceNameRe.MatchString(id) {
+			return id
+		}
+	}
 	if layout.ServiceID != "" {
 		return layout.ServiceID
 	}
@@ -270,9 +286,7 @@ const (
 	checkerDirPrefix   = "checker_"
 	readmeMD           = "README.md"
 	statusPresent      = "present"
-	defaultGitRef      = "main"
 
-	expectedGithubOwner       = "SibirCTF"
 	serviceRepoPattern        = "YYYY-cybersibir-service-<service-id>"
 	serviceRepoNameMatchCount = 2
 )
@@ -281,7 +295,6 @@ var (
 	readmeCandidates  = []string{readmeMD, "readme.md", "README", "readme"}
 	licenseCandidates = []string{
 		licenseFileBasename, "LICENSE.txt", "LICENSE.md",
-		licenseFileBasename, "LICENSE.txt",
 		"COPYING", "COPYING.txt",
 	}
 	composeCandidates = []string{"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
@@ -291,6 +304,8 @@ var (
 
 type importSourceInfo struct {
 	Source string
+	Host   string
+	Path   string
 	Owner  string
 	Repo   string
 }
@@ -381,6 +396,15 @@ func readTrainingJSONFromZip(zr *zip.Reader) []byte {
 	return nil
 }
 
+func readServiceManifestFromZip(zr *zip.Reader) []byte {
+	for _, name := range serviceManifestCandidates {
+		if data := readEntryFromZip(zr, "service/"+name); data != nil {
+			return data
+		}
+	}
+	return nil
+}
+
 func readReadmeFromZip(zr *zip.Reader) []byte {
 	for _, name := range readmeCandidates {
 		if data := readEntryFromZip(zr, "service/"+name); data != nil {
@@ -399,6 +423,19 @@ func metaAuthorPtr(meta *BundleMetadata) *string {
 	return &meta.Author
 }
 
+func checkerScriptExists(zr *zip.Reader, scriptPath string) bool {
+	scriptPath = strings.TrimSpace(scriptPath)
+	if scriptPath == "" {
+		return false
+	}
+	scriptPath = strings.TrimPrefix(scriptPath, "./")
+	scriptPath = safeRelPath(scriptPath)
+	if scriptPath == "" {
+		return false
+	}
+	return readEntryFromZip(zr, "checker/"+scriptPath) != nil
+}
+
 func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 	r, err := zip.NewReader(bytes.NewReader(bundleZipBytes), int64(len(bundleZipBytes)))
 	if err != nil {
@@ -408,13 +445,24 @@ func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 	readme := readReadmeFromZip(r)
 	licenseText := readLicenseFromZip(r)
 	trainingJSON := readTrainingJSONFromZip(r)
+	manifestYAML := readServiceManifestFromZip(r)
 
-	var training map[string]interface{}
+	var training map[string]any
 	if trainingJSON != nil {
 		_ = json.Unmarshal(trainingJSON, &training)
 	}
 
 	meta := &BundleMetadata{}
+	if manifestYAML != nil {
+		manifest, err := parseServiceManifest(manifestYAML)
+		if err != nil {
+			return nil, err
+		}
+		meta.Manifest = manifest
+		meta.CheckerScriptOK = checkerScriptExists(r, manifest.ScriptPath)
+	}
+
+	meta.Ctf01dTraining = mergeTrainingMetadata(training, meta.Manifest)
 
 	if training != nil {
 		if dn, ok := training["display_name"].(string); ok && strings.TrimSpace(dn) != "" {
@@ -426,7 +474,14 @@ func ExtractMetadata(bundleZipBytes []byte) (*BundleMetadata, error) {
 		if author, ok := training["author"].(string); ok && strings.TrimSpace(author) != "" {
 			meta.Author = strings.TrimSpace(author)
 		}
-		meta.Ctf01dTraining = trainingJSON
+	}
+
+	if meta.Manifest != nil {
+		if meta.Manifest.ID != "" {
+			meta.Name = meta.Manifest.ID
+		} else if meta.Name == "" && meta.Manifest.ServiceName != "" {
+			meta.Name = strings.TrimSpace(meta.Manifest.ServiceName)
+		}
 	}
 
 	if meta.Name == "" && readme != nil {
@@ -480,10 +535,12 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 	rootReadme := readFirstFromZip(srcReader, rootPrefix, readmeCandidates)
 	rootLicense := readFirstFromZip(srcReader, rootPrefix, licenseCandidates)
 	rootTrainingJSON := readFirstFromZip(srcReader, rootPrefix, []string{"ctf01d-training.json"})
+	rootManifest := readFirstFromZip(srcReader, rootPrefix, serviceManifestCandidates)
 
 	serviceHasReadme := false
 	serviceHasLicense := false
 	serviceHasTrainingJSON := false
+	serviceHasManifest := false
 
 	cb := func(rel string) {
 		if !serviceHasReadme {
@@ -505,6 +562,14 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 		if !serviceHasTrainingJSON {
 			if strings.EqualFold(rel, "ctf01d-training.json") {
 				serviceHasTrainingJSON = true
+			}
+		}
+		if !serviceHasManifest {
+			for _, n := range serviceManifestCandidates {
+				if strings.EqualFold(rel, n) {
+					serviceHasManifest = true
+					break
+				}
 			}
 		}
 	}
@@ -575,6 +640,20 @@ func BuildBundle(zipBytes []byte) ([]byte, error) {
 			return nil, err
 		}
 		limit := rootTrainingJSON
+		if len(limit) > maxMetaBytes {
+			limit = limit[:maxMetaBytes]
+		}
+		if _, err := f.Write(limit); err != nil {
+			return nil, err
+		}
+	}
+
+	if rootManifest != nil && !serviceHasManifest {
+		f, err := w.Create("service/" + serviceManifestYAML)
+		if err != nil {
+			return nil, err
+		}
+		limit := rootManifest
 		if len(limit) > maxMetaBytes {
 			limit = limit[:maxMetaBytes]
 		}
@@ -763,10 +842,7 @@ func summarizeMarkdown(md []byte) string {
 		lines = append(lines, l)
 	}
 	result := strings.TrimSpace(strings.Join(lines, "\n"))
-	if len(result) > summaryMaxLength {
-		result = result[:summaryMaxLength]
-	}
-	return result
+	return truncateRunes(result, summaryMaxLength)
 }
 
 func extractCopyright(text string) string {
@@ -784,12 +860,21 @@ func extractCopyright(text string) string {
 		re3 := regexp.MustCompile(`(?i)^copyright\s+`)
 		v = re3.ReplaceAllString(v, "")
 		v = strings.Join(strings.Fields(v), " ")
-		if len(v) > fieldValueMaxChars {
-			v = v[:fieldValueMaxChars]
-		}
-		return v
+		return truncateRunes(v, fieldValueMaxChars)
 	}
 	return ""
+}
+
+func truncateRunes(value string, maxRunes int) string {
+	if maxRunes <= 0 {
+		return ""
+	}
+
+	runes := []rune(value)
+	if len(runes) <= maxRunes {
+		return value
+	}
+	return string(runes[:maxRunes])
 }
 
 func detectLicense(text string) string {

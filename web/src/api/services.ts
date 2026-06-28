@@ -25,6 +25,7 @@ export type ServiceCreate = components["schemas"]["ServiceCreate"];
 export type ServiceUpdate = components["schemas"]["ServiceUpdate"];
 export type ServiceImportPreview =
   components["schemas"]["ServiceImportPreview"];
+export type GitImportRequest = components["schemas"]["GitImportRequest"];
 
 export async function listServices(query?: {
   page?: number;
@@ -91,6 +92,12 @@ export async function redownloadServiceArchives(id: number) {
   return client.POST("/services/{id}/redownload", { params: { path: { id } } });
 }
 
+export async function syncServiceFromGit(id: number) {
+  return client.POST("/services/{id}/sync-from-git", {
+    params: { path: { id } },
+  });
+}
+
 export async function downloadServiceArchive(
   id: number,
   kind: "service" | "checker",
@@ -101,16 +108,16 @@ export async function downloadServiceArchive(
   });
 }
 
-export async function importServiceFromGithub(
-  body: components["schemas"]["GithubImportRequest"],
+export async function importServiceFromGit(
+  body: components["schemas"]["GitImportRequest"],
 ) {
-  return client.POST("/services/import/github", { body });
+  return client.POST("/services/import/git", { body });
 }
 
-export async function previewServiceGithubImport(
-  body: components["schemas"]["GithubImportRequest"],
+export async function previewServiceGitImport(
+  body: components["schemas"]["GitImportRequest"],
 ) {
-  return client.POST("/services/import/github/preview", { body });
+  return client.POST("/services/import/git/preview", { body });
 }
 
 export async function importServiceFromZip(formData: FormData) {

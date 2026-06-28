@@ -600,6 +600,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/services/{id}/sync-from-git": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Synchronize service metadata and archives from configured git source
+         * @description Synchronize service metadata and archives from configured git source
+         */
+        post: operations["syncServiceFromGit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/services/{id}/upload-archives": {
         parameters: {
             query?: never;
@@ -640,7 +660,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/services/import/github": {
+    "/services/import/git": {
         parameters: {
             query?: never;
             header?: never;
@@ -650,17 +670,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Import a service from GitHub
-         * @description Import a service from GitHub
+         * Import a service from a git repository
+         * @description Import a service from a git repository
          */
-        post: operations["importServiceFromGithub"];
+        post: operations["importServiceFromGit"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/services/import/github/preview": {
+    "/services/import/git/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -670,10 +690,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Preview and validate a GitHub service import
-         * @description Preview and validate a GitHub service import
+         * Preview and validate a git service import
+         * @description Preview and validate a git service import
          */
-        post: operations["previewServiceGithubImport"];
+        post: operations["previewServiceGitImport"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1569,6 +1589,24 @@ export interface components {
             /** Format: date-time */
             downloaded_at?: string | null;
         };
+        ServiceSource: {
+            /** @enum {string} */
+            kind: "manual" | "zip" | "git";
+            repo_url?: string | null;
+            ref?: string | null;
+            subdir?: string | null;
+            last_commit?: string | null;
+            /** Format: date-time */
+            synced_at?: string | null;
+            /** @enum {string} */
+            sync_status: "unknown" | "ok" | "failed";
+            sync_error?: string | null;
+        };
+        GitSourceInput: {
+            repo_url?: string;
+            ref?: string;
+            subdir?: string;
+        };
         Service: components["schemas"]["Timestamped"] & {
             /** Format: int64 */
             id: number;
@@ -1592,6 +1630,7 @@ export interface components {
             ctf01d_training: Record<string, never> | null;
             ports: number[];
             tech_stack: string[];
+            source?: components["schemas"]["ServiceSource"];
         };
         ServiceCreate: {
             name: string;
@@ -1608,6 +1647,7 @@ export interface components {
             ctf01d_training?: Record<string, never>;
             ports?: number[];
             tech_stack?: string[];
+            git_source?: components["schemas"]["GitSourceInput"];
         };
         ServiceUpdate: {
             name?: string;
@@ -1624,12 +1664,13 @@ export interface components {
             ctf01d_training?: Record<string, never>;
             ports?: number[];
             tech_stack?: string[];
+            git_source?: components["schemas"]["GitSourceInput"];
         };
         ServiceList: {
             items: components["schemas"]["Service"][];
             pagination: components["schemas"]["Pagination"];
         };
-        GithubImportRequest: {
+        GitImportRequest: {
             repo_url: string;
             ref?: string;
             subdir?: string;
@@ -1647,7 +1688,7 @@ export interface components {
         };
         ServiceImportPreview: {
             /** @enum {string} */
-            source: "github" | "zip";
+            source: "git" | "zip";
             valid: boolean;
             service_name: string;
             repository_owner?: string;
@@ -2980,6 +3021,31 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
+    syncServiceFromGit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Service synchronized */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Service"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
     uploadServiceArchives: {
         parameters: {
             query?: never;
@@ -3039,7 +3105,7 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
-    importServiceFromGithub: {
+    importServiceFromGit: {
         parameters: {
             query?: never;
             header?: never;
@@ -3048,7 +3114,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GithubImportRequest"];
+                "application/json": components["schemas"]["GitImportRequest"];
             };
         };
         responses: {
@@ -3065,7 +3131,7 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
-    previewServiceGithubImport: {
+    previewServiceGitImport: {
         parameters: {
             query?: never;
             header?: never;
@@ -3074,7 +3140,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GithubImportRequest"];
+                "application/json": components["schemas"]["GitImportRequest"];
             };
         };
         responses: {

@@ -136,16 +136,16 @@ func (e ServiceCheckStatus) Valid() bool {
 
 // Defines values for ServiceImportPreviewSource.
 const (
-	Github ServiceImportPreviewSource = "github"
-	Zip    ServiceImportPreviewSource = "zip"
+	ServiceImportPreviewSourceGit ServiceImportPreviewSource = "git"
+	ServiceImportPreviewSourceZip ServiceImportPreviewSource = "zip"
 )
 
 // Valid indicates whether the value is a known member of the ServiceImportPreviewSource enum.
 func (e ServiceImportPreviewSource) Valid() bool {
 	switch e {
-	case Github:
+	case ServiceImportPreviewSourceGit:
 		return true
-	case Zip:
+	case ServiceImportPreviewSourceZip:
 		return true
 	default:
 		return false
@@ -167,6 +167,48 @@ func (e ServiceImportValidationItemStatus) Valid() bool {
 	case ServiceImportValidationItemStatusOk:
 		return true
 	case ServiceImportValidationItemStatusWarning:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ServiceSourceKind.
+const (
+	ServiceSourceKindGit    ServiceSourceKind = "git"
+	ServiceSourceKindManual ServiceSourceKind = "manual"
+	ServiceSourceKindZip    ServiceSourceKind = "zip"
+)
+
+// Valid indicates whether the value is a known member of the ServiceSourceKind enum.
+func (e ServiceSourceKind) Valid() bool {
+	switch e {
+	case ServiceSourceKindGit:
+		return true
+	case ServiceSourceKindManual:
+		return true
+	case ServiceSourceKindZip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ServiceSourceSyncStatus.
+const (
+	Failed  ServiceSourceSyncStatus = "failed"
+	Ok      ServiceSourceSyncStatus = "ok"
+	Unknown ServiceSourceSyncStatus = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the ServiceSourceSyncStatus enum.
+func (e ServiceSourceSyncStatus) Valid() bool {
+	switch e {
+	case Failed:
+		return true
+	case Ok:
+		return true
+	case Unknown:
 		return true
 	default:
 		return false
@@ -687,10 +729,17 @@ type GameUpdate struct {
 	VpnUrl               *string    `json:"vpn_url,omitempty"`
 }
 
-// GithubImportRequest defines model for GithubImportRequest.
-type GithubImportRequest struct {
+// GitImportRequest defines model for GitImportRequest.
+type GitImportRequest struct {
 	Ref     *string `json:"ref,omitempty"`
 	RepoUrl string  `json:"repo_url"`
+	Subdir  *string `json:"subdir,omitempty"`
+}
+
+// GitSourceInput defines model for GitSourceInput.
+type GitSourceInput struct {
+	Ref     *string `json:"ref,omitempty"`
+	RepoUrl *string `json:"repo_url,omitempty"`
 	Subdir  *string `json:"subdir,omitempty"`
 }
 
@@ -811,6 +860,7 @@ type Service struct {
 	PublicDescription  *string                 `json:"public_description,omitempty"`
 	ServiceArchive     *ServiceArchiveMeta     `json:"service_archive,omitempty"`
 	ServiceArchiveUrl  *string                 `json:"service_archive_url,omitempty"`
+	Source             *ServiceSource          `json:"source,omitempty"`
 	TechStack          []string                `json:"tech_stack"`
 	UpdatedAt          *time.Time              `json:"updated_at,omitempty"`
 	WriteupUrl         *string                 `json:"writeup_url,omitempty"`
@@ -834,6 +884,7 @@ type ServiceCreate struct {
 	Copyright          *string                 `json:"copyright,omitempty"`
 	Ctf01dTraining     *map[string]interface{} `json:"ctf01d_training,omitempty"`
 	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
+	GitSource          *GitSourceInput         `json:"git_source,omitempty"`
 	Name               string                  `json:"name"`
 	Ports              *[]int32                `json:"ports,omitempty"`
 	PrivateDescription *string                 `json:"private_description,omitempty"`
@@ -881,6 +932,24 @@ type ServiceList struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+// ServiceSource defines model for ServiceSource.
+type ServiceSource struct {
+	Kind       ServiceSourceKind       `json:"kind"`
+	LastCommit *string                 `json:"last_commit,omitempty"`
+	Ref        *string                 `json:"ref,omitempty"`
+	RepoUrl    *string                 `json:"repo_url,omitempty"`
+	Subdir     *string                 `json:"subdir,omitempty"`
+	SyncError  *string                 `json:"sync_error,omitempty"`
+	SyncStatus ServiceSourceSyncStatus `json:"sync_status"`
+	SyncedAt   *time.Time              `json:"synced_at,omitempty"`
+}
+
+// ServiceSourceKind defines model for ServiceSource.Kind.
+type ServiceSourceKind string
+
+// ServiceSourceSyncStatus defines model for ServiceSource.SyncStatus.
+type ServiceSourceSyncStatus string
+
 // ServiceUpdate defines model for ServiceUpdate.
 type ServiceUpdate struct {
 	Author             *string                 `json:"author,omitempty"`
@@ -889,6 +958,7 @@ type ServiceUpdate struct {
 	Copyright          *string                 `json:"copyright,omitempty"`
 	Ctf01dTraining     *map[string]interface{} `json:"ctf01d_training,omitempty"`
 	ExploitsUrl        *string                 `json:"exploits_url,omitempty"`
+	GitSource          *GitSourceInput         `json:"git_source,omitempty"`
 	Name               *string                 `json:"name,omitempty"`
 	Ports              *[]int32                `json:"ports,omitempty"`
 	PrivateDescription *string                 `json:"private_description,omitempty"`
@@ -1349,11 +1419,11 @@ type UpdateResultJSONRequestBody = ResultUpdate
 // CreateServiceJSONRequestBody defines body for CreateService for application/json ContentType.
 type CreateServiceJSONRequestBody = ServiceCreate
 
-// ImportServiceFromGithubJSONRequestBody defines body for ImportServiceFromGithub for application/json ContentType.
-type ImportServiceFromGithubJSONRequestBody = GithubImportRequest
+// ImportServiceFromGitJSONRequestBody defines body for ImportServiceFromGit for application/json ContentType.
+type ImportServiceFromGitJSONRequestBody = GitImportRequest
 
-// PreviewServiceGithubImportJSONRequestBody defines body for PreviewServiceGithubImport for application/json ContentType.
-type PreviewServiceGithubImportJSONRequestBody = GithubImportRequest
+// PreviewServiceGitImportJSONRequestBody defines body for PreviewServiceGitImport for application/json ContentType.
+type PreviewServiceGitImportJSONRequestBody = GitImportRequest
 
 // ImportServiceFromZipMultipartRequestBody defines body for ImportServiceFromZip for multipart/form-data ContentType.
 type ImportServiceFromZipMultipartRequestBody ImportServiceFromZipMultipartBody
@@ -1522,12 +1592,12 @@ type ServerInterface interface {
 	// Create a service
 	// (POST /services)
 	CreateService(c *gin.Context)
-	// Import a service from GitHub
-	// (POST /services/import/github)
-	ImportServiceFromGithub(c *gin.Context)
-	// Preview and validate a GitHub service import
-	// (POST /services/import/github/preview)
-	PreviewServiceGithubImport(c *gin.Context)
+	// Import a service from a git repository
+	// (POST /services/import/git)
+	ImportServiceFromGit(c *gin.Context)
+	// Preview and validate a git service import
+	// (POST /services/import/git/preview)
+	PreviewServiceGitImport(c *gin.Context)
 	// Import a service from a ZIP file
 	// (POST /services/import/zip)
 	ImportServiceFromZip(c *gin.Context)
@@ -1552,6 +1622,9 @@ type ServerInterface interface {
 	// Re-download service and checker archives from URLs
 	// (POST /services/{id}/redownload)
 	RedownloadServiceArchives(c *gin.Context, id int64)
+	// Synchronize service metadata and archives from configured git source
+	// (POST /services/{id}/sync-from-git)
+	SyncServiceFromGit(c *gin.Context, id int64)
 	// Toggle service public flag
 	// (POST /services/{id}/toggle-public)
 	ToggleServicePublic(c *gin.Context, id int64)
@@ -2535,8 +2608,8 @@ func (siw *ServerInterfaceWrapper) CreateService(c *gin.Context) {
 	siw.Handler.CreateService(c)
 }
 
-// ImportServiceFromGithub operation middleware
-func (siw *ServerInterfaceWrapper) ImportServiceFromGithub(c *gin.Context) {
+// ImportServiceFromGit operation middleware
+func (siw *ServerInterfaceWrapper) ImportServiceFromGit(c *gin.Context) {
 
 	c.Set(string(BearerAuthScopes), []string{})
 
@@ -2547,11 +2620,11 @@ func (siw *ServerInterfaceWrapper) ImportServiceFromGithub(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.ImportServiceFromGithub(c)
+	siw.Handler.ImportServiceFromGit(c)
 }
 
-// PreviewServiceGithubImport operation middleware
-func (siw *ServerInterfaceWrapper) PreviewServiceGithubImport(c *gin.Context) {
+// PreviewServiceGitImport operation middleware
+func (siw *ServerInterfaceWrapper) PreviewServiceGitImport(c *gin.Context) {
 
 	c.Set(string(BearerAuthScopes), []string{})
 
@@ -2562,7 +2635,7 @@ func (siw *ServerInterfaceWrapper) PreviewServiceGithubImport(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.PreviewServiceGithubImport(c)
+	siw.Handler.PreviewServiceGitImport(c)
 }
 
 // ImportServiceFromZip operation middleware
@@ -2762,6 +2835,33 @@ func (siw *ServerInterfaceWrapper) RedownloadServiceArchives(c *gin.Context) {
 	}
 
 	siw.Handler.RedownloadServiceArchives(c, id)
+}
+
+// SyncServiceFromGit operation middleware
+func (siw *ServerInterfaceWrapper) SyncServiceFromGit(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(string(BearerAuthScopes), []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SyncServiceFromGit(c, id)
 }
 
 // ToggleServicePublic operation middleware
@@ -4047,8 +4147,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/scoreboard", wrapper.GetGlobalScoreboard)
 	router.GET(options.BaseURL+"/services", wrapper.ListServices)
 	router.POST(options.BaseURL+"/services", wrapper.CreateService)
-	router.POST(options.BaseURL+"/services/import/github", wrapper.ImportServiceFromGithub)
-	router.POST(options.BaseURL+"/services/import/github/preview", wrapper.PreviewServiceGithubImport)
+	router.POST(options.BaseURL+"/services/import/git", wrapper.ImportServiceFromGit)
+	router.POST(options.BaseURL+"/services/import/git/preview", wrapper.PreviewServiceGitImport)
 	router.POST(options.BaseURL+"/services/import/zip", wrapper.ImportServiceFromZip)
 	router.POST(options.BaseURL+"/services/import/zip/preview", wrapper.PreviewServiceZipImport)
 	router.DELETE(options.BaseURL+"/services/:id", wrapper.DeleteService)
@@ -4057,6 +4157,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/services/:id/check-checker", wrapper.CheckServiceChecker)
 	router.GET(options.BaseURL+"/services/:id/download/:kind", wrapper.DownloadServiceArchive)
 	router.POST(options.BaseURL+"/services/:id/redownload", wrapper.RedownloadServiceArchives)
+	router.POST(options.BaseURL+"/services/:id/sync-from-git", wrapper.SyncServiceFromGit)
 	router.POST(options.BaseURL+"/services/:id/toggle-public", wrapper.ToggleServicePublic)
 	router.POST(options.BaseURL+"/services/:id/upload-archives", wrapper.UploadServiceArchives)
 	router.DELETE(options.BaseURL+"/session", wrapper.Logout)

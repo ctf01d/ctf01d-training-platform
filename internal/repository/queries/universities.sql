@@ -7,9 +7,25 @@ RETURNING *;
 SELECT * FROM universities WHERE id = $1;
 
 -- name: ListUniversities :many
-SELECT * FROM universities
-WHERE (name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL)
-ORDER BY id LIMIT $1 OFFSET $2;
+SELECT
+    universities.id,
+    universities.name,
+    universities.site_url,
+    universities.avatar_url,
+    universities.created_at,
+    universities.updated_at
+FROM universities
+LEFT JOIN teams ON teams.university_id = universities.id
+WHERE (universities.name ILIKE '%' || sqlc.narg('search_query') || '%' OR sqlc.narg('search_query') IS NULL)
+GROUP BY
+    universities.id,
+    universities.name,
+    universities.site_url,
+    universities.avatar_url,
+    universities.created_at,
+    universities.updated_at
+ORDER BY count(teams.id) DESC, universities.id ASC
+LIMIT $1 OFFSET $2;
 
 -- name: CountUniversities :one
 SELECT count(*) FROM universities

@@ -7,7 +7,7 @@ import (
 	svcsvc "github.com/ctf01d/ctf01d-training-platform/internal/service/services"
 )
 
-func serviceToHTTP(s svcsvc.ServiceModel) httpserver.Service {
+func serviceToHTTP(s svcsvc.ServiceModel, includeSource bool) httpserver.Service {
 	result := httpserver.Service{
 		Id:                s.ID,
 		Name:              s.Name,
@@ -76,16 +76,32 @@ func serviceToHTTP(s svcsvc.ServiceModel) httpserver.Service {
 		result.CheckerArchive = meta
 	}
 
+	if includeSource {
+		source := &httpserver.ServiceSource{
+			Kind:       httpserver.ServiceSourceKind(s.Source.Kind),
+			RepoUrl:    s.Source.RepoURL,
+			Ref:        s.Source.Ref,
+			Subdir:     s.Source.Subdir,
+			LastCommit: s.Source.LastCommit,
+			SyncStatus: httpserver.ServiceSourceSyncStatus(s.Source.SyncStatus),
+			SyncError:  s.Source.SyncError,
+		}
+		if s.Source.SyncedAt != nil {
+			source.SyncedAt = s.Source.SyncedAt
+		}
+		result.Source = source
+	}
+
 	return result
 }
 
-func importResultToHTTP(r *svcsvc.ImportResult) httpserver.ImportResult {
+func importResultToHTTP(r *svcsvc.ImportResult, includeSource bool) httpserver.ImportResult {
 	warnings := r.Warnings
 	if warnings == nil {
 		warnings = []string{}
 	}
 	return httpserver.ImportResult{
-		Service:  serviceToHTTP(*r.Service),
+		Service:  serviceToHTTP(*r.Service, includeSource),
 		Warnings: warnings,
 	}
 }

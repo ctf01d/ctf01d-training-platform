@@ -12,69 +12,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const countServices = `-- name: CountServices :one
-SELECT count(*) FROM services
-WHERE (public = $1 OR $1 IS NULL)
-  AND (name ILIKE '%' || $2 || '%' OR $2 IS NULL)
+const applyServiceImportMetadata = `-- name: ApplyServiceImportMetadata :one
+UPDATE services SET
+    name = $2,
+    public_description = $3,
+    author = $4,
+    copyright = $5,
+    ctf01d_training = $6,
+    updated_at = now()
+WHERE id = $1
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
 `
 
-type CountServicesParams struct {
-	PublicFilter *bool   `json:"public_filter"`
-	SearchQuery  *string `json:"search_query"`
+type ApplyServiceImportMetadataParams struct {
+	ID                int64           `json:"id"`
+	Name              string          `json:"name"`
+	PublicDescription *string         `json:"public_description"`
+	Author            *string         `json:"author"`
+	Copyright         *string         `json:"copyright"`
+	Ctf01dTraining    json.RawMessage `json:"ctf01d_training"`
 }
 
-func (q *Queries) CountServices(ctx context.Context, arg CountServicesParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countServices, arg.PublicFilter, arg.SearchQuery)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const createService = `-- name: CreateService :one
-INSERT INTO services (name, public_description, private_description, author, copyright,
-    avatar_url, public, service_archive_url, checker_archive_url, writeup_url, exploits_url,
-    check_status, ctf01d_training, ports, tech_stack)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-    COALESCE($14::integer[], '{}'),
-    COALESCE($15::text[], '{}'))
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
-`
-
-type CreateServiceParams struct {
-	Name               string          `json:"name"`
-	PublicDescription  *string         `json:"public_description"`
-	PrivateDescription *string         `json:"private_description"`
-	Author             *string         `json:"author"`
-	Copyright          *string         `json:"copyright"`
-	AvatarUrl          *string         `json:"avatar_url"`
-	Public             bool            `json:"public"`
-	ServiceArchiveUrl  *string         `json:"service_archive_url"`
-	CheckerArchiveUrl  *string         `json:"checker_archive_url"`
-	WriteupUrl         *string         `json:"writeup_url"`
-	ExploitsUrl        *string         `json:"exploits_url"`
-	CheckStatus        string          `json:"check_status"`
-	Ctf01dTraining     json.RawMessage `json:"ctf01d_training"`
-	Ports              []int32         `json:"ports"`
-	TechStack          []string        `json:"tech_stack"`
-}
-
-func (q *Queries) CreateService(ctx context.Context, arg CreateServiceParams) (Service, error) {
-	row := q.db.QueryRow(ctx, createService,
+func (q *Queries) ApplyServiceImportMetadata(ctx context.Context, arg ApplyServiceImportMetadataParams) (Service, error) {
+	row := q.db.QueryRow(ctx, applyServiceImportMetadata,
+		arg.ID,
 		arg.Name,
 		arg.PublicDescription,
-		arg.PrivateDescription,
 		arg.Author,
 		arg.Copyright,
-		arg.AvatarUrl,
-		arg.Public,
-		arg.ServiceArchiveUrl,
-		arg.CheckerArchiveUrl,
-		arg.WriteupUrl,
-		arg.ExploitsUrl,
-		arg.CheckStatus,
 		arg.Ctf01dTraining,
-		arg.Ports,
-		arg.TechStack,
 	)
 	var i Service
 	err := row.Scan(
@@ -105,6 +71,149 @@ func (q *Queries) CreateService(ctx context.Context, arg CreateServiceParams) (S
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
+	)
+	return i, err
+}
+
+const countServices = `-- name: CountServices :one
+SELECT count(*) FROM services
+WHERE (public = $1 OR $1 IS NULL)
+  AND (name ILIKE '%' || $2 || '%' OR $2 IS NULL)
+`
+
+type CountServicesParams struct {
+	PublicFilter *bool   `json:"public_filter"`
+	SearchQuery  *string `json:"search_query"`
+}
+
+func (q *Queries) CountServices(ctx context.Context, arg CountServicesParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countServices, arg.PublicFilter, arg.SearchQuery)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const createService = `-- name: CreateService :one
+INSERT INTO services (name, public_description, private_description, author, copyright,
+    avatar_url, public, service_archive_url, checker_archive_url, writeup_url, exploits_url,
+    check_status, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref,
+    git_subdir, git_sync_status)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13,
+    COALESCE($14::integer[], '{}'),
+    COALESCE($15::text[], '{}'),
+    $16,
+    $17,
+    $18,
+    $19,
+    $20
+)
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
+`
+
+type CreateServiceParams struct {
+	Name               string          `json:"name"`
+	PublicDescription  *string         `json:"public_description"`
+	PrivateDescription *string         `json:"private_description"`
+	Author             *string         `json:"author"`
+	Copyright          *string         `json:"copyright"`
+	AvatarUrl          *string         `json:"avatar_url"`
+	Public             bool            `json:"public"`
+	ServiceArchiveUrl  *string         `json:"service_archive_url"`
+	CheckerArchiveUrl  *string         `json:"checker_archive_url"`
+	WriteupUrl         *string         `json:"writeup_url"`
+	ExploitsUrl        *string         `json:"exploits_url"`
+	CheckStatus        string          `json:"check_status"`
+	Ctf01dTraining     json.RawMessage `json:"ctf01d_training"`
+	Ports              []int32         `json:"ports"`
+	TechStack          []string        `json:"tech_stack"`
+	SourceKind         string          `json:"source_kind"`
+	GitRepoUrl         *string         `json:"git_repo_url"`
+	GitRef             *string         `json:"git_ref"`
+	GitSubdir          *string         `json:"git_subdir"`
+	GitSyncStatus      string          `json:"git_sync_status"`
+}
+
+func (q *Queries) CreateService(ctx context.Context, arg CreateServiceParams) (Service, error) {
+	row := q.db.QueryRow(ctx, createService,
+		arg.Name,
+		arg.PublicDescription,
+		arg.PrivateDescription,
+		arg.Author,
+		arg.Copyright,
+		arg.AvatarUrl,
+		arg.Public,
+		arg.ServiceArchiveUrl,
+		arg.CheckerArchiveUrl,
+		arg.WriteupUrl,
+		arg.ExploitsUrl,
+		arg.CheckStatus,
+		arg.Ctf01dTraining,
+		arg.Ports,
+		arg.TechStack,
+		arg.SourceKind,
+		arg.GitRepoUrl,
+		arg.GitRef,
+		arg.GitSubdir,
+		arg.GitSyncStatus,
+	)
+	var i Service
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.PublicDescription,
+		&i.PrivateDescription,
+		&i.Author,
+		&i.Copyright,
+		&i.AvatarUrl,
+		&i.Public,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ServiceArchiveUrl,
+		&i.CheckerArchiveUrl,
+		&i.WriteupUrl,
+		&i.ExploitsUrl,
+		&i.CheckStatus,
+		&i.CheckedAt,
+		&i.ServiceLocalPath,
+		&i.ServiceLocalSize,
+		&i.ServiceLocalSha256,
+		&i.ServiceDownloadedAt,
+		&i.CheckerLocalPath,
+		&i.CheckerLocalSize,
+		&i.CheckerLocalSha256,
+		&i.CheckerDownloadedAt,
+		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
@@ -119,7 +228,7 @@ func (q *Queries) DeleteService(ctx context.Context, id int64) error {
 }
 
 const getServiceByID = `-- name: GetServiceByID :one
-SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack FROM services WHERE id = $1
+SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error FROM services WHERE id = $1
 `
 
 func (q *Queries) GetServiceByID(ctx context.Context, id int64) (Service, error) {
@@ -153,12 +262,20 @@ func (q *Queries) GetServiceByID(ctx context.Context, id int64) (Service, error)
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
 
 const getServiceByName = `-- name: GetServiceByName :one
-SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack FROM services WHERE name = $1
+SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error FROM services WHERE name = $1
 `
 
 func (q *Queries) GetServiceByName(ctx context.Context, name string) (Service, error) {
@@ -192,12 +309,20 @@ func (q *Queries) GetServiceByName(ctx context.Context, name string) (Service, e
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
 
 const listServices = `-- name: ListServices :many
-SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack FROM services
+SELECT id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error FROM services
 WHERE (public = $3 OR $3 IS NULL)
   AND (name ILIKE '%' || $4 || '%' OR $4 IS NULL)
 ORDER BY created_at DESC, id DESC
@@ -253,6 +378,14 @@ func (q *Queries) ListServices(ctx context.Context, arg ListServicesParams) ([]S
 			&i.Ctf01dTraining,
 			&i.Ports,
 			&i.TechStack,
+			&i.SourceKind,
+			&i.GitRepoUrl,
+			&i.GitRef,
+			&i.GitSubdir,
+			&i.GitLastCommit,
+			&i.GitSyncedAt,
+			&i.GitSyncStatus,
+			&i.GitSyncError,
 		); err != nil {
 			return nil, err
 		}
@@ -270,7 +403,7 @@ UPDATE services SET
     checker_archive_url = COALESCE($3, checker_archive_url),
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
 `
 
 type SetArchiveURLsParams struct {
@@ -310,6 +443,14 @@ func (q *Queries) SetArchiveURLs(ctx context.Context, arg SetArchiveURLsParams) 
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
@@ -317,7 +458,7 @@ func (q *Queries) SetArchiveURLs(ctx context.Context, arg SetArchiveURLsParams) 
 const setCheckStatus = `-- name: SetCheckStatus :one
 UPDATE services SET check_status = $2, checked_at = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
 `
 
 type SetCheckStatusParams struct {
@@ -357,6 +498,14 @@ func (q *Queries) SetCheckStatus(ctx context.Context, arg SetCheckStatusParams) 
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
@@ -369,7 +518,7 @@ UPDATE services SET
     checker_downloaded_at = $5,
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
 `
 
 type SetCheckerLocalParams struct {
@@ -417,6 +566,156 @@ func (q *Queries) SetCheckerLocal(ctx context.Context, arg SetCheckerLocalParams
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
+	)
+	return i, err
+}
+
+const setGitSource = `-- name: SetGitSource :one
+UPDATE services SET
+    source_kind = $2,
+    git_repo_url = $3,
+    git_ref = $4,
+    git_subdir = $5,
+    git_last_commit = NULL,
+    git_synced_at = NULL,
+    git_sync_status = $6,
+    git_sync_error = NULL,
+    updated_at = now()
+WHERE id = $1
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
+`
+
+type SetGitSourceParams struct {
+	ID            int64   `json:"id"`
+	SourceKind    string  `json:"source_kind"`
+	GitRepoUrl    *string `json:"git_repo_url"`
+	GitRef        *string `json:"git_ref"`
+	GitSubdir     *string `json:"git_subdir"`
+	GitSyncStatus string  `json:"git_sync_status"`
+}
+
+func (q *Queries) SetGitSource(ctx context.Context, arg SetGitSourceParams) (Service, error) {
+	row := q.db.QueryRow(ctx, setGitSource,
+		arg.ID,
+		arg.SourceKind,
+		arg.GitRepoUrl,
+		arg.GitRef,
+		arg.GitSubdir,
+		arg.GitSyncStatus,
+	)
+	var i Service
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.PublicDescription,
+		&i.PrivateDescription,
+		&i.Author,
+		&i.Copyright,
+		&i.AvatarUrl,
+		&i.Public,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ServiceArchiveUrl,
+		&i.CheckerArchiveUrl,
+		&i.WriteupUrl,
+		&i.ExploitsUrl,
+		&i.CheckStatus,
+		&i.CheckedAt,
+		&i.ServiceLocalPath,
+		&i.ServiceLocalSize,
+		&i.ServiceLocalSha256,
+		&i.ServiceDownloadedAt,
+		&i.CheckerLocalPath,
+		&i.CheckerLocalSize,
+		&i.CheckerLocalSha256,
+		&i.CheckerDownloadedAt,
+		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
+	)
+	return i, err
+}
+
+const setGitSyncState = `-- name: SetGitSyncState :one
+UPDATE services SET
+    git_last_commit = $2,
+    git_synced_at = $3,
+    git_sync_status = $4,
+    git_sync_error = $5,
+    updated_at = now()
+WHERE id = $1
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
+`
+
+type SetGitSyncStateParams struct {
+	ID            int64              `json:"id"`
+	GitLastCommit *string            `json:"git_last_commit"`
+	GitSyncedAt   pgtype.Timestamptz `json:"git_synced_at"`
+	GitSyncStatus string             `json:"git_sync_status"`
+	GitSyncError  *string            `json:"git_sync_error"`
+}
+
+func (q *Queries) SetGitSyncState(ctx context.Context, arg SetGitSyncStateParams) (Service, error) {
+	row := q.db.QueryRow(ctx, setGitSyncState,
+		arg.ID,
+		arg.GitLastCommit,
+		arg.GitSyncedAt,
+		arg.GitSyncStatus,
+		arg.GitSyncError,
+	)
+	var i Service
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.PublicDescription,
+		&i.PrivateDescription,
+		&i.Author,
+		&i.Copyright,
+		&i.AvatarUrl,
+		&i.Public,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ServiceArchiveUrl,
+		&i.CheckerArchiveUrl,
+		&i.WriteupUrl,
+		&i.ExploitsUrl,
+		&i.CheckStatus,
+		&i.CheckedAt,
+		&i.ServiceLocalPath,
+		&i.ServiceLocalSize,
+		&i.ServiceLocalSha256,
+		&i.ServiceDownloadedAt,
+		&i.CheckerLocalPath,
+		&i.CheckerLocalSize,
+		&i.CheckerLocalSha256,
+		&i.CheckerDownloadedAt,
+		&i.Ctf01dTraining,
+		&i.Ports,
+		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
@@ -424,7 +723,7 @@ func (q *Queries) SetCheckerLocal(ctx context.Context, arg SetCheckerLocalParams
 const setPublic = `-- name: SetPublic :one
 UPDATE services SET public = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
 `
 
 type SetPublicParams struct {
@@ -463,6 +762,14 @@ func (q *Queries) SetPublic(ctx context.Context, arg SetPublicParams) (Service, 
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
@@ -475,7 +782,7 @@ UPDATE services SET
     service_downloaded_at = $5,
     updated_at = now()
 WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
 `
 
 type SetServiceLocalParams struct {
@@ -523,33 +830,40 @@ func (q *Queries) SetServiceLocal(ctx context.Context, arg SetServiceLocalParams
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }
 
 const updateService = `-- name: UpdateService :one
 UPDATE services SET
-    name = COALESCE($2, name),
-    public_description = COALESCE($3, public_description),
-    private_description = COALESCE($4, private_description),
-    author = COALESCE($5, author),
-    copyright = COALESCE($6, copyright),
-    avatar_url = COALESCE($7, avatar_url),
-    public = COALESCE($8, public),
-    service_archive_url = COALESCE($9, service_archive_url),
-    checker_archive_url = COALESCE($10, checker_archive_url),
-    writeup_url = COALESCE($11, writeup_url),
-    exploits_url = COALESCE($12, exploits_url),
-    ctf01d_training = COALESCE($13, ctf01d_training),
-    ports = COALESCE($14::integer[], ports),
-    tech_stack = COALESCE($15::text[], tech_stack),
+    name = COALESCE($1, name),
+    public_description = COALESCE($2, public_description),
+    private_description = COALESCE($3, private_description),
+    author = COALESCE($4, author),
+    copyright = COALESCE($5, copyright),
+    avatar_url = COALESCE($6, avatar_url),
+    public = COALESCE($7, public),
+    service_archive_url = COALESCE($8, service_archive_url),
+    checker_archive_url = COALESCE($9, checker_archive_url),
+    writeup_url = COALESCE($10, writeup_url),
+    exploits_url = COALESCE($11, exploits_url),
+    ctf01d_training = COALESCE($12, ctf01d_training),
+    ports = COALESCE($13::integer[], ports),
+    tech_stack = COALESCE($14::text[], tech_stack),
     updated_at = now()
-WHERE id = $1
-RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack
+WHERE id = $15
+RETURNING id, name, public_description, private_description, author, copyright, avatar_url, public, created_at, updated_at, service_archive_url, checker_archive_url, writeup_url, exploits_url, check_status, checked_at, service_local_path, service_local_size, service_local_sha256, service_downloaded_at, checker_local_path, checker_local_size, checker_local_sha256, checker_downloaded_at, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref, git_subdir, git_last_commit, git_synced_at, git_sync_status, git_sync_error
 `
 
 type UpdateServiceParams struct {
-	ID                 int64           `json:"id"`
 	Name               string          `json:"name"`
 	PublicDescription  *string         `json:"public_description"`
 	PrivateDescription *string         `json:"private_description"`
@@ -564,11 +878,11 @@ type UpdateServiceParams struct {
 	Ctf01dTraining     json.RawMessage `json:"ctf01d_training"`
 	Ports              []int32         `json:"ports"`
 	TechStack          []string        `json:"tech_stack"`
+	ID                 int64           `json:"id"`
 }
 
 func (q *Queries) UpdateService(ctx context.Context, arg UpdateServiceParams) (Service, error) {
 	row := q.db.QueryRow(ctx, updateService,
-		arg.ID,
 		arg.Name,
 		arg.PublicDescription,
 		arg.PrivateDescription,
@@ -583,6 +897,7 @@ func (q *Queries) UpdateService(ctx context.Context, arg UpdateServiceParams) (S
 		arg.Ctf01dTraining,
 		arg.Ports,
 		arg.TechStack,
+		arg.ID,
 	)
 	var i Service
 	err := row.Scan(
@@ -613,6 +928,14 @@ func (q *Queries) UpdateService(ctx context.Context, arg UpdateServiceParams) (S
 		&i.Ctf01dTraining,
 		&i.Ports,
 		&i.TechStack,
+		&i.SourceKind,
+		&i.GitRepoUrl,
+		&i.GitRef,
+		&i.GitSubdir,
+		&i.GitLastCommit,
+		&i.GitSyncedAt,
+		&i.GitSyncStatus,
+		&i.GitSyncError,
 	)
 	return i, err
 }

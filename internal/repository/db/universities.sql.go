@@ -75,9 +75,25 @@ func (q *Queries) GetUniversityByID(ctx context.Context, id int64) (University, 
 }
 
 const listUniversities = `-- name: ListUniversities :many
-SELECT id, name, site_url, avatar_url, created_at, updated_at FROM universities
-WHERE (name ILIKE '%' || $3 || '%' OR $3 IS NULL)
-ORDER BY id LIMIT $1 OFFSET $2
+SELECT
+    universities.id,
+    universities.name,
+    universities.site_url,
+    universities.avatar_url,
+    universities.created_at,
+    universities.updated_at
+FROM universities
+LEFT JOIN teams ON teams.university_id = universities.id
+WHERE (universities.name ILIKE '%' || $3 || '%' OR $3 IS NULL)
+GROUP BY
+    universities.id,
+    universities.name,
+    universities.site_url,
+    universities.avatar_url,
+    universities.created_at,
+    universities.updated_at
+ORDER BY count(teams.id) DESC, universities.id ASC
+LIMIT $1 OFFSET $2
 `
 
 type ListUniversitiesParams struct {

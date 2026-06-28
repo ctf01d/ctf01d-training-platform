@@ -15,6 +15,16 @@ import (
 	"github.com/ctf01d/ctf01d-training-platform/internal/service/avatarnorm"
 )
 
+func strPtrEqual(a, b *string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
 type ServiceModel struct {
 	ID                  int64
 	Name                string
@@ -41,8 +51,20 @@ type ServiceModel struct {
 	Ctf01dTraining      json.RawMessage
 	Ports               []int32
 	TechStack           []string
+	Source              ServiceSourceModel
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+}
+
+type ServiceSourceModel struct {
+	Kind       string
+	RepoURL    *string
+	Ref        *string
+	Subdir     *string
+	LastCommit *string
+	SyncedAt   *time.Time
+	SyncStatus string
+	SyncError  *string
 }
 
 type ServiceListResult struct {
@@ -67,6 +89,7 @@ type CreateParams struct {
 	Ctf01dTraining     json.RawMessage
 	Ports              []int32
 	TechStack          []string
+	GitSource          *GitSourceInput
 }
 
 type UpdateParams struct {
@@ -84,6 +107,7 @@ type UpdateParams struct {
 	Ctf01dTraining     json.RawMessage
 	Ports              []int32
 	TechStack          []string
+	GitSource          *GitSourceInput
 }
 
 type Querier interface {
@@ -94,6 +118,7 @@ type Querier interface {
 	UpdateService(ctx context.Context, arg db.UpdateServiceParams) (db.Service, error)
 	DeleteService(ctx context.Context, id int64) error
 	SetPublic(ctx context.Context, arg db.SetPublicParams) (db.Service, error)
+	SetGitSource(ctx context.Context, arg db.SetGitSourceParams) (db.Service, error)
 }
 
 type Service struct {
@@ -108,6 +133,9 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 	if err := validateServiceURLs(params.AvatarUrl, params.ServiceArchiveUrl, params.CheckerArchiveUrl, params.WriteupUrl, params.ExploitsUrl); err != nil {
 		return nil, err
 	}
+	if params.GitSource != nil && !isAdmin {
+		return nil, errs.ErrForbidden
+	}
 
 	avatarURL, err := avatarnorm.Normalize(params.AvatarUrl, "avatar_url")
 	if err != nil {
@@ -117,6 +145,11 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 	training := params.Ctf01dTraining
 	if training == nil {
 		training = json.RawMessage("{}")
+	}
+
+	sourceKind, gitRepoURL, gitRef, gitSubdir, err := normalizeGitSourceInput(params.GitSource)
+	if err != nil {
+		return nil, errs.NewValidationError(map[string]string{fieldRepoURL: err.Error()})
 	}
 
 	dbSvc, err := s.q.CreateService(ctx, db.CreateServiceParams{
@@ -135,6 +168,11 @@ func (s *Service) Create(ctx context.Context, params CreateParams, isAdmin bool)
 		Ctf01dTraining:     training,
 		Ports:              params.Ports,
 		TechStack:          params.TechStack,
+		SourceKind:         sourceKind,
+		GitRepoUrl:         gitRepoURL,
+		GitRef:             gitRef,
+		GitSubdir:          gitSubdir,
+		GitSyncStatus:      syncStatusUnknown,
 	})
 	if err != nil {
 		return nil, mapDBError(err)
@@ -204,6 +242,9 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isA
 	current, err := s.q.GetServiceByID(ctx, id)
 	if err != nil {
 		return nil, mapNotFound(err)
+	}
+	if params.GitSource != nil && !isAdmin {
+		return nil, errs.ErrForbidden
 	}
 
 	avatarUrl := current.AvatarUrl
@@ -278,6 +319,31 @@ func (s *Service) Update(ctx context.Context, id int64, params UpdateParams, isA
 		return nil, mapDBError(err)
 	}
 
+	if params.GitSource != nil {
+		sourceKind, gitRepoURL, gitRef, gitSubdir, err := normalizeGitSourceInput(params.GitSource)
+		if err != nil {
+			return nil, errs.NewValidationError(map[string]string{fieldRepoURL: err.Error()})
+		}
+		// Only update git source if it actually changed. Don't reset sync state
+		// on no-op updates, and don't downgrade zip -> manual on empty input.
+		if sourceKind != current.SourceKind ||
+			!strPtrEqual(gitRepoURL, current.GitRepoUrl) ||
+			!strPtrEqual(gitRef, current.GitRef) ||
+			!strPtrEqual(gitSubdir, current.GitSubdir) {
+			dbSvc, err = s.q.SetGitSource(ctx, db.SetGitSourceParams{
+				ID:            id,
+				SourceKind:    sourceKind,
+				GitRepoUrl:    gitRepoURL,
+				GitRef:        gitRef,
+				GitSubdir:     gitSubdir,
+				GitSyncStatus: syncStatusUnknown,
+			})
+			if err != nil {
+				return nil, mapDBError(err)
+			}
+		}
+	}
+
 	svc := fromDB(dbSvc, isAdmin)
 	return &svc, nil
 }
@@ -321,8 +387,17 @@ func fromDB(s db.Service, isAdmin bool) ServiceModel {
 		Ctf01dTraining:    s.Ctf01dTraining,
 		Ports:             s.Ports,
 		TechStack:         s.TechStack,
-		CreatedAt:         s.CreatedAt,
-		UpdatedAt:         s.UpdatedAt,
+		Source: ServiceSourceModel{
+			Kind:       s.SourceKind,
+			RepoURL:    s.GitRepoUrl,
+			Ref:        s.GitRef,
+			Subdir:     s.GitSubdir,
+			LastCommit: s.GitLastCommit,
+			SyncStatus: s.GitSyncStatus,
+			SyncError:  s.GitSyncError,
+		},
+		CreatedAt: s.CreatedAt,
+		UpdatedAt: s.UpdatedAt,
 	}
 
 	if s.PrivateDescription != nil {
@@ -354,6 +429,9 @@ func fromDB(s db.Service, isAdmin bool) ServiceModel {
 	}
 	if s.CheckerDownloadedAt.Valid {
 		m.CheckerDownloadedAt = &s.CheckerDownloadedAt.Time
+	}
+	if s.GitSyncedAt.Valid {
+		m.Source.SyncedAt = &s.GitSyncedAt.Time
 	}
 
 	if !isAdmin {

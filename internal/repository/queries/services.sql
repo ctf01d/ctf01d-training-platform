@@ -1,10 +1,30 @@
 -- name: CreateService :one
 INSERT INTO services (name, public_description, private_description, author, copyright,
     avatar_url, public, service_archive_url, checker_archive_url, writeup_url, exploits_url,
-    check_status, ctf01d_training, ports, tech_stack)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-    COALESCE(sqlc.narg('ports')::integer[], '{}'),
-    COALESCE(sqlc.narg('tech_stack')::text[], '{}'))
+    check_status, ctf01d_training, ports, tech_stack, source_kind, git_repo_url, git_ref,
+    git_subdir, git_sync_status)
+VALUES (
+    sqlc.arg('name'),
+    sqlc.narg('public_description'),
+    sqlc.narg('private_description'),
+    sqlc.narg('author'),
+    sqlc.narg('copyright'),
+    sqlc.narg('avatar_url'),
+    sqlc.arg('public'),
+    sqlc.narg('service_archive_url'),
+    sqlc.narg('checker_archive_url'),
+    sqlc.narg('writeup_url'),
+    sqlc.narg('exploits_url'),
+    sqlc.arg('check_status'),
+    sqlc.arg('ctf01d_training'),
+    COALESCE(sqlc.arg('ports')::integer[], '{}'),
+    COALESCE(sqlc.arg('tech_stack')::text[], '{}'),
+    sqlc.arg('source_kind'),
+    sqlc.narg('git_repo_url'),
+    sqlc.narg('git_ref'),
+    sqlc.narg('git_subdir'),
+    sqlc.arg('git_sync_status')
+)
 RETURNING *;
 
 -- name: GetServiceByID :one
@@ -27,20 +47,45 @@ WHERE (public = sqlc.narg('public_filter') OR sqlc.narg('public_filter') IS NULL
 
 -- name: UpdateService :one
 UPDATE services SET
-    name = COALESCE($2, name),
-    public_description = COALESCE($3, public_description),
-    private_description = COALESCE($4, private_description),
-    author = COALESCE($5, author),
-    copyright = COALESCE($6, copyright),
-    avatar_url = COALESCE($7, avatar_url),
-    public = COALESCE($8, public),
-    service_archive_url = COALESCE($9, service_archive_url),
-    checker_archive_url = COALESCE($10, checker_archive_url),
-    writeup_url = COALESCE($11, writeup_url),
-    exploits_url = COALESCE($12, exploits_url),
-    ctf01d_training = COALESCE($13, ctf01d_training),
-    ports = COALESCE(sqlc.narg('ports')::integer[], ports),
-    tech_stack = COALESCE(sqlc.narg('tech_stack')::text[], tech_stack),
+    name = COALESCE(sqlc.arg('name'), name),
+    public_description = COALESCE(sqlc.narg('public_description'), public_description),
+    private_description = COALESCE(sqlc.narg('private_description'), private_description),
+    author = COALESCE(sqlc.narg('author'), author),
+    copyright = COALESCE(sqlc.narg('copyright'), copyright),
+    avatar_url = COALESCE(sqlc.narg('avatar_url'), avatar_url),
+    public = COALESCE(sqlc.arg('public'), public),
+    service_archive_url = COALESCE(sqlc.narg('service_archive_url'), service_archive_url),
+    checker_archive_url = COALESCE(sqlc.narg('checker_archive_url'), checker_archive_url),
+    writeup_url = COALESCE(sqlc.narg('writeup_url'), writeup_url),
+    exploits_url = COALESCE(sqlc.narg('exploits_url'), exploits_url),
+    ctf01d_training = COALESCE(sqlc.arg('ctf01d_training'), ctf01d_training),
+    ports = COALESCE(sqlc.arg('ports')::integer[], ports),
+    tech_stack = COALESCE(sqlc.arg('tech_stack')::text[], tech_stack),
+    updated_at = now()
+WHERE id = sqlc.arg('id')
+RETURNING *;
+
+-- name: SetGitSource :one
+UPDATE services SET
+    source_kind = $2,
+    git_repo_url = $3,
+    git_ref = $4,
+    git_subdir = $5,
+    git_last_commit = NULL,
+    git_synced_at = NULL,
+    git_sync_status = $6,
+    git_sync_error = NULL,
+    updated_at = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: ApplyServiceImportMetadata :one
+UPDATE services SET
+    name = $2,
+    public_description = $3,
+    author = $4,
+    copyright = $5,
+    ctf01d_training = $6,
     updated_at = now()
 WHERE id = $1
 RETURNING *;
@@ -82,6 +127,16 @@ RETURNING *;
 UPDATE services SET
     service_archive_url = COALESCE($2, service_archive_url),
     checker_archive_url = COALESCE($3, checker_archive_url),
+    updated_at = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: SetGitSyncState :one
+UPDATE services SET
+    git_last_commit = $2,
+    git_synced_at = $3,
+    git_sync_status = $4,
+    git_sync_error = $5,
     updated_at = now()
 WHERE id = $1
 RETURNING *;

@@ -1127,12 +1127,12 @@ a:focus-visible {
 .badge-past,
 .badge-unknown,
 .badge-unscheduled,
-.badge-private,
 .badge-guest {
   background: #f1f5f9;
   color: #475569;
 }
 
+.badge-private,
 .badge-closed,
 .badge-rejected,
 .badge-failed,
@@ -1144,9 +1144,16 @@ a:focus-visible {
 }
 
 .badge-pending,
-.badge-queued {
+.badge-queued,
+.badge-warning,
+.badge-warn {
   background: var(--warning-soft);
   color: #92400e;
+}
+
+.badge-error {
+  background: var(--danger-soft);
+  color: #991b1b;
 }
 
 .badge-captain,
@@ -1268,6 +1275,213 @@ a:focus-visible {
 
 .detail-section li {
   margin-bottom: 8px;
+}
+
+.sync-result-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, .46);
+  backdrop-filter: blur(4px);
+}
+
+.sync-result-modal {
+  position: relative;
+  overflow: hidden;
+  width: min(560px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.sync-result-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #8b5cf6, #c084fc);
+}
+
+.sync-result-modal--success::before {
+  background: linear-gradient(90deg, #22c55e, #86efac);
+}
+
+.sync-result-modal--warning::before {
+  background: linear-gradient(90deg, #f59e0b, #fcd34d);
+}
+
+.sync-result-modal--error::before {
+  background: linear-gradient(90deg, #ef4444, #fca5a5);
+}
+
+.sync-result-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sync-result-modal-kicker {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sync-result-modal h3 {
+  margin: 0;
+  color: var(--heading);
+  font-size: 1.18rem;
+}
+
+.sync-result-modal-text {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.sync-result-summary {
+  padding: 14px 16px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.sync-result-summary--success {
+  background: rgba(187, 247, 208, .35);
+  border-color: rgba(34, 197, 94, .25);
+}
+
+.sync-result-summary--warning {
+  background: rgba(254, 243, 199, .55);
+  border-color: rgba(245, 158, 11, .26);
+}
+
+.sync-result-summary--error {
+  background: rgba(254, 226, 226, .55);
+  border-color: rgba(239, 68, 68, .24);
+}
+
+.sync-result-modal-meta {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.sync-result-modal-meta div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.sync-result-modal-meta dt {
+  color: var(--muted);
+  font-size: .84rem;
+  font-weight: 800;
+}
+
+.sync-result-modal-meta dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.sync-result-modal-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text);
+}
+
+.sync-result-modal-list li {
+  margin-bottom: 8px;
+  line-height: 1.42;
+}
+
+.sync-result-modal-list li:last-child {
+  margin-bottom: 0;
+}
+
+.sync-result-groups {
+  display: grid;
+  gap: 14px;
+}
+
+.sync-result-group {
+  display: grid;
+  gap: 10px;
+}
+
+.sync-result-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sync-result-group-head h4 {
+  margin: 0;
+  color: var(--heading);
+  font-size: .92rem;
+}
+
+.sync-result-issues {
+  display: grid;
+  gap: 10px;
+}
+
+.sync-result-issue {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 13px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.sync-result-issue--warning {
+  background: rgba(255, 251, 235, .92);
+  border-color: rgba(245, 158, 11, .22);
+}
+
+.sync-result-issue--error {
+  background: rgba(254, 242, 242, .9);
+  border-color: rgba(239, 68, 68, .2);
+}
+
+.sync-result-issue strong {
+  display: block;
+  color: var(--heading);
+  font-size: .95rem;
+  line-height: 1.3;
+}
+
+.sync-result-issue-subject {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .06);
+  color: var(--text);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.sync-result-issue p {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+  line-height: 1.45;
 }
 
 .detail-table {
@@ -1532,6 +1746,83 @@ a:focus-visible {
 
 .team-info-about .info-row {
   grid-template-columns: 112px minmax(0, 1fr);
+}
+
+.archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 14px;
+}
+
+.archive-card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.archive-card.is-empty {
+  border-style: dashed;
+  background: var(--surface);
+}
+
+.archive-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.archive-card-title {
+  color: var(--heading);
+  font-size: .96rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.archive-card-meta {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.archive-card-meta div {
+  display: grid;
+  grid-template-columns: minmax(72px, max-content) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.archive-card-meta dt {
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.archive-card-meta dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--text);
+  font-size: .9rem;
+  overflow-wrap: anywhere;
+}
+
+.archive-card-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.archive-card .btn {
+  justify-self: start;
+}
+
+.service-upload-form {
+  margin-top: 16px;
+  border: 1px dashed var(--line-soft);
+  background: var(--surface-muted);
 }
 
 .team-games-list {
@@ -2417,6 +2708,11 @@ a:focus-visible {
   .filters input,
   .filters select {
     max-width: none;
+  }
+
+  .archive-card-meta div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
 

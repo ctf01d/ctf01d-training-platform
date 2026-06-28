@@ -14,6 +14,52 @@ components:
           type: string
           format: date-time
           nullable: true
+    ServiceSource:
+      type: object
+      required:
+        - kind
+        - sync_status
+      properties:
+        kind:
+          type: string
+          enum:
+            - manual
+            - zip
+            - git
+        repo_url:
+          type: string
+          nullable: true
+        ref:
+          type: string
+          nullable: true
+        subdir:
+          type: string
+          nullable: true
+        last_commit:
+          type: string
+          nullable: true
+        synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        sync_status:
+          type: string
+          enum:
+            - unknown
+            - ok
+            - failed
+        sync_error:
+          type: string
+          nullable: true
+    GitSourceInput:
+      type: object
+      properties:
+        repo_url:
+          type: string
+        ref:
+          type: string
+        subdir:
+          type: string
     Service:
       allOf:
         - $ref: '#/components/schemas/Timestamped'
@@ -87,6 +133,8 @@ components:
               type: array
               items:
                 type: string
+            source:
+              $ref: '#/components/schemas/ServiceSource'
     ServiceCreate:
       type: object
       required:
@@ -125,6 +173,8 @@ components:
           type: array
           items:
             type: string
+        git_source:
+          $ref: '#/components/schemas/GitSourceInput'
     ServiceUpdate:
       type: object
       properties:
@@ -161,6 +211,8 @@ components:
           type: array
           items:
             type: string
+        git_source:
+          $ref: '#/components/schemas/GitSourceInput'
     ServiceList:
       type: object
       required:
@@ -173,7 +225,7 @@ components:
             $ref: '#/components/schemas/Service'
         pagination:
           $ref: '#/components/schemas/Pagination'
-    GithubImportRequest:
+    GitImportRequest:
       type: object
       required:
         - repo_url
@@ -230,7 +282,7 @@ components:
         source:
           type: string
           enum:
-            - github
+            - git
             - zip
         valid:
           type: boolean
@@ -493,6 +545,36 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Re-download service and checker archives from URLs
+  /services/{id}/sync-from-git:
+    post:
+      operationId: syncServiceFromGit
+      tags:
+        - services
+      summary: Synchronize service metadata and archives from configured git source
+      x-required-role: admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Service synchronized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      description: Synchronize service metadata and archives from configured git source
   /services/{id}/upload-archives:
     post:
       operationId: uploadServiceArchives
@@ -572,13 +654,13 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
       description: Download service or checker archive
-  /services/import/github:
+  /services/import/git:
     post:
-      operationId: importServiceFromGithub
+      operationId: importServiceFromGit
       tags:
         - services
-      summary: Import a service from GitHub
-      x-required-role: player
+      summary: Import a service from a git repository
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -586,7 +668,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GithubImportRequest'
+              $ref: '#/components/schemas/GitImportRequest'
       responses:
         '201':
           description: Service imported
@@ -598,14 +680,14 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
-      description: Import a service from GitHub
-  /services/import/github/preview:
+      description: Import a service from a git repository
+  /services/import/git/preview:
     post:
-      operationId: previewServiceGithubImport
+      operationId: previewServiceGitImport
       tags:
         - services
-      summary: Preview and validate a GitHub service import
-      x-required-role: player
+      summary: Preview and validate a git service import
+      x-required-role: admin
       security:
         - BearerAuth: []
       requestBody:
@@ -613,7 +695,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GithubImportRequest'
+              $ref: '#/components/schemas/GitImportRequest'
       responses:
         '200':
           description: Import preview
@@ -625,7 +707,7 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
-      description: Preview and validate a GitHub service import
+      description: Preview and validate a git service import
   /services/import/zip:
     post:
       operationId: importServiceFromZip

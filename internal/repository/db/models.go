@@ -103,6 +103,14 @@ type Service struct {
 	Ctf01dTraining      json.RawMessage    `json:"ctf01d_training"`
 	Ports               []int32            `json:"ports"`
 	TechStack           []string           `json:"tech_stack"`
+	SourceKind          string             `json:"source_kind"`
+	GitRepoUrl          *string            `json:"git_repo_url"`
+	GitRef              *string            `json:"git_ref"`
+	GitSubdir           *string            `json:"git_subdir"`
+	GitLastCommit       *string            `json:"git_last_commit"`
+	GitSyncedAt         pgtype.Timestamptz `json:"git_synced_at"`
+	GitSyncStatus       string             `json:"git_sync_status"`
+	GitSyncError        *string            `json:"git_sync_error"`
 }
 
 type Team struct {

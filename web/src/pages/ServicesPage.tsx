@@ -26,7 +26,7 @@ const checkBadgeVariant: Record<string, string> = {
   queued: "upcoming",
 };
 
-type ImportSource = "github" | "zip";
+type ImportSource = "git" | "zip";
 
 type ImportResultResponse = {
   service?: Service;
@@ -42,7 +42,7 @@ const importStatusLabel: Record<string, string> = {
 export default function ServicesPage() {
   const { t } = useI18n();
   usePageTitle(t("Services"));
-  const { isPlayer } = useAuth();
+  const { isPlayer, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,10 +62,10 @@ export default function ServicesPage() {
   const [creating, setCreating] = useState(false);
 
   const [showImportWizard, setShowImportWizard] = useState(false);
-  const [importSource, setImportSource] = useState<ImportSource>("github");
-  const [githubUrl, setGithubUrl] = useState("");
-  const [githubRef, setGithubRef] = useState("");
-  const [githubSubdir, setGithubSubdir] = useState("");
+  const [importSource, setImportSource] = useState<ImportSource>("zip");
+  const [gitUrl, setGitUrl] = useState("");
+  const [gitRef, setGitRef] = useState("");
+  const [gitSubdir, setGitSubdir] = useState("");
   const [preview, setPreview] = useState<ServiceImportPreview | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -91,6 +91,12 @@ export default function ServicesPage() {
   useEffect(() => {
     void fetchServices();
   }, [fetchServices]);
+
+  useEffect(() => {
+    if (!isAdmin && importSource === "git") {
+      setImportSource("zip");
+    }
+  }, [importSource, isAdmin]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,12 +125,11 @@ export default function ServicesPage() {
     setError(null);
     setPreview(null);
     try {
-      if (importSource === "github") {
-        const { data, error: err } =
-          await servicesApi.previewServiceGithubImport({
-            repo_url: githubUrl,
-            ref: githubRef || undefined,
-            subdir: githubSubdir || undefined,
+      if (importSource === "git") {
+        const { data, error: err } = await servicesApi.previewServiceGitImport({
+          repo_url: gitUrl,
+          ref: gitRef || undefined,
+          subdir: gitSubdir || undefined,
           });
         if (err) {
           setError(handleApiError(err));
@@ -156,11 +161,11 @@ export default function ServicesPage() {
     setImporting(true);
     setError(null);
     try {
-      if (importSource === "github") {
-        const { data, error: err } = await servicesApi.importServiceFromGithub({
-          repo_url: githubUrl,
-          ref: githubRef || undefined,
-          subdir: githubSubdir || undefined,
+      if (importSource === "git") {
+        const { data, error: err } = await servicesApi.importServiceFromGit({
+          repo_url: gitUrl,
+          ref: gitRef || undefined,
+          subdir: gitSubdir || undefined,
         });
         if (err) {
           setError(handleApiError(err));
@@ -231,6 +236,9 @@ export default function ServicesPage() {
               onClick={() => {
                 setShowImportWizard(!showImportWizard);
                 setShowCreate(false);
+                if (!isAdmin) {
+                  setImportSource("zip");
+                }
               }}
             >
               {showImportWizard ? t("Close Import") : t("Import Service")}
@@ -387,28 +395,30 @@ export default function ServicesPage() {
           className="import-wizard"
         >
           <div className="import-wizard-top">
-            <div className="import-source-tabs">
-              <button
-                type="button"
-                className={`tab ${importSource === "github" ? "active" : ""}`}
-                onClick={() => {
-                  setImportSource("github");
-                  resetImportPreview();
-                }}
-              >
-                {t("GitHub")}
-              </button>
-              <button
-                type="button"
-                className={`tab ${importSource === "zip" ? "active" : ""}`}
-                onClick={() => {
-                  setImportSource("zip");
-                  resetImportPreview();
-                }}
-              >
-                {t("ZIP")}
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="import-source-tabs">
+                <button
+                  type="button"
+                  className={`tab ${importSource === "git" ? "active" : ""}`}
+                  onClick={() => {
+                    setImportSource("git");
+                    resetImportPreview();
+                  }}
+                >
+                  {t("Git")}
+                </button>
+                <button
+                  type="button"
+                  className={`tab ${importSource === "zip" ? "active" : ""}`}
+                  onClick={() => {
+                    setImportSource("zip");
+                    resetImportPreview();
+                  }}
+                >
+                  {t("ZIP")}
+                </button>
+              </div>
+            )}
 
             <div className="import-steps" aria-label={t("Import steps")}>
               <span
@@ -433,27 +443,27 @@ export default function ServicesPage() {
             </div>
           </div>
 
-          {importSource === "github" ? (
+          {importSource === "git" ? (
             <div className="import-fields">
               <div className="form-group">
                 <label>{t("Repo URL *")}</label>
                 <input
-                  value={githubUrl}
+                  value={gitUrl}
                   onChange={(e) => {
-                    setGithubUrl(e.target.value);
+                    setGitUrl(e.target.value);
                     resetImportPreview();
                   }}
                   required
-                  placeholder="https://github.com/SibirCTF/2026-cybersibir-service-name"
+                  placeholder="git@github.com:team/service.git"
                 />
               </div>
               <div className="form-row">
                 <div className="form-group">
                   <label>{t("Ref")}</label>
                   <input
-                    value={githubRef}
+                    value={gitRef}
                     onChange={(e) => {
-                      setGithubRef(e.target.value);
+                      setGitRef(e.target.value);
                       resetImportPreview();
                     }}
                     placeholder="main"
@@ -462,9 +472,9 @@ export default function ServicesPage() {
                 <div className="form-group">
                   <label>{t("Subdirectory")}</label>
                   <input
-                    value={githubSubdir}
+                    value={gitSubdir}
                     onChange={(e) => {
-                      setGithubSubdir(e.target.value);
+                      setGitSubdir(e.target.value);
                       resetImportPreview();
                     }}
                   />
@@ -491,7 +501,7 @@ export default function ServicesPage() {
               type="submit"
               className="btn"
               disabled={
-                previewing || (importSource === "zip" ? !zipFile : !githubUrl)
+                previewing || (importSource === "zip" ? !zipFile : !gitUrl)
               }
             >
               {previewing ? t("Validating...") : t("Validate")}

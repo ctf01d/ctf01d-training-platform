@@ -5,18 +5,22 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"net/http"
-	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 )
 
@@ -86,6 +90,79 @@ func createFlatRepoZip(files map[string]string) []byte {
 	return createZip(prefixed)
 }
 
+func createSourceImportZip(rootDir, serviceID, displayName, description string, training map[string]any) []byte {
+	if rootDir == "" {
+		rootDir = "repo"
+	}
+	if displayName == "" {
+		displayName = serviceID
+	}
+
+	trainingData := make(map[string]any, len(training)+2)
+	for key, value := range training {
+		trainingData[key] = value
+	}
+	if _, ok := trainingData["display_name"]; !ok && displayName != "" {
+		trainingData["display_name"] = displayName
+	}
+	if _, ok := trainingData["description"]; !ok && description != "" {
+		trainingData["description"] = description
+	}
+
+	files := map[string]string{
+		rootDir + "/README.md":                            fmt.Sprintf("# %s\n\n%s", displayName, description),
+		rootDir + "/.ctf01d-service.yml":                  fmt.Sprintf("checker-config-v0.5.2:\n  id: %s\n  service_name: %s\n  script_path: ./checker.py\n", serviceID, displayName),
+		rootDir + "/vuln-service/docker-compose.yml":      "services: {}\n",
+		rootDir + "/vuln-service/app.py":                  "print('service')\n",
+		rootDir + "/checker_" + serviceID + "/checker.py": "exit(101)\nexit(102)\nexit(103)\nexit(104)\n",
+		rootDir + "/writeups/README.md":                   "writeup\n",
+		rootDir + "/exploits/poc.py":                      "exploit\n",
+	}
+	if len(trainingData) > 0 {
+		trainingJSON, _ := json.Marshal(trainingData)
+		files[rootDir+"/ctf01d-training.json"] = string(trainingJSON)
+	}
+
+	return createZip(files)
+}
+
+func importStrPtr(s string) *string {
+	return &s
+}
+
+func createTestGitRepo(t *testing.T, files map[string]string) string {
+	t.Helper()
+
+	repoDir := t.TempDir()
+	for name, content := range files {
+		fullPath := filepath.Join(repoDir, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", fullPath, err)
+		}
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
+			t.Fatalf("write %s: %v", fullPath, err)
+		}
+	}
+
+	run := func(args ...string) {
+		t.Helper()
+		cmd := exec.CommandContext(t.Context(), "git", args...)
+		cmd.Dir = repoDir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v (%s)", args, err, strings.TrimSpace(string(out)))
+		}
+	}
+
+	run("init", "-b", "main")
+	run("config", "user.name", "Test User")
+	run("config", "user.email", "test@example.com")
+	run("add", ".")
+	run("commit", "-m", "initial")
+
+	return repoDir
+}
+
 type mockImportQuerier struct {
 	services    map[int64]*db.Service
 	byName      map[string]int64
@@ -133,6 +210,11 @@ func (m *mockImportQuerier) CreateService(_ context.Context, arg db.CreateServic
 		ServiceArchiveUrl: arg.ServiceArchiveUrl,
 		Ctf01dTraining:    arg.Ctf01dTraining,
 		CheckStatus:       arg.CheckStatus,
+		SourceKind:        arg.SourceKind,
+		GitRepoUrl:        arg.GitRepoUrl,
+		GitRef:            arg.GitRef,
+		GitSubdir:         arg.GitSubdir,
+		GitSyncStatus:     arg.GitSyncStatus,
 		CreatedAt:         now,
 		UpdatedAt:         now,
 	}
@@ -161,6 +243,24 @@ func (m *mockImportQuerier) UpdateService(_ context.Context, arg db.UpdateServic
 		svc.Ctf01dTraining = arg.Ctf01dTraining
 	}
 	svc.Public = arg.Public
+	svc.UpdatedAt = time.Now()
+	m.byName[arg.Name] = arg.ID
+	return *svc, nil
+}
+
+func (m *mockImportQuerier) ApplyServiceImportMetadata(_ context.Context, arg db.ApplyServiceImportMetadataParams) (db.Service, error) {
+	svc, ok := m.services[arg.ID]
+	if !ok {
+		return db.Service{}, pgx.ErrNoRows
+	}
+	if currentID, exists := m.byName[svc.Name]; exists && currentID == arg.ID {
+		delete(m.byName, svc.Name)
+	}
+	svc.Name = arg.Name
+	svc.PublicDescription = arg.PublicDescription
+	svc.Author = arg.Author
+	svc.Copyright = arg.Copyright
+	svc.Ctf01dTraining = arg.Ctf01dTraining
 	svc.UpdatedAt = time.Now()
 	m.byName[arg.Name] = arg.ID
 	return *svc, nil
@@ -220,6 +320,46 @@ func (m *mockImportQuerier) SetCheckStatus(_ context.Context, arg db.SetCheckSta
 	svc.CheckStatus = arg.CheckStatus
 	svc.CheckedAt = arg.CheckedAt
 	return *svc, nil
+}
+
+func (m *mockImportQuerier) SetGitSource(_ context.Context, arg db.SetGitSourceParams) (db.Service, error) {
+	svc, ok := m.services[arg.ID]
+	if !ok {
+		return db.Service{}, pgx.ErrNoRows
+	}
+	svc.SourceKind = arg.SourceKind
+	svc.GitRepoUrl = arg.GitRepoUrl
+	svc.GitRef = arg.GitRef
+	svc.GitSubdir = arg.GitSubdir
+	svc.GitLastCommit = nil
+	svc.GitSyncStatus = arg.GitSyncStatus
+	svc.GitSyncError = nil
+	svc.GitSyncedAt = pgtype.Timestamptz{}
+	return *svc, nil
+}
+
+func (m *mockImportQuerier) SetGitSyncState(_ context.Context, arg db.SetGitSyncStateParams) (db.Service, error) {
+	svc, ok := m.services[arg.ID]
+	if !ok {
+		return db.Service{}, pgx.ErrNoRows
+	}
+	svc.GitLastCommit = arg.GitLastCommit
+	svc.GitSyncedAt = arg.GitSyncedAt
+	svc.GitSyncStatus = arg.GitSyncStatus
+	svc.GitSyncError = arg.GitSyncError
+	return *svc, nil
+}
+
+type fakeGitFetcher struct {
+	fetched *fetchedGitRepo
+	err     error
+}
+
+func (f fakeGitFetcher) Fetch(context.Context, GitImportRequest) (*fetchedGitRepo, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.fetched, nil
 }
 
 func TestBuildBundle_WithServiceDir(t *testing.T) {
@@ -568,36 +708,66 @@ func TestSafeRelPath(t *testing.T) {
 	}
 }
 
-func TestParseGitHubURL(t *testing.T) {
+func TestParseGitRepoURL(t *testing.T) {
 	tests := []struct {
 		url      string
+		host     string
 		owner    string
 		repo     string
 		ref      string
 		hasError bool
 	}{
-		{"https://github.com/owner/repo", "owner", "repo", "", false},
-		{"https://github.com/owner/repo/tree/main", "owner", "repo", "main", false},
-		{"https://github.com/owner/repo.git", "owner", "repo", "", false},
-		{"https://example.com/owner/repo", "", "", "", true},
-		{"not-a-url", "", "", "", true},
-		{"https://github.com/owner", "", "", "", true},
+		{"https://github.com/owner/repo", "github.com", "owner", "repo", "", false},
+		{"https://github.com/owner/repo#main", "github.com", "owner", "repo", "main", false},
+		{"git@github.com:owner/repo.git", "github.com", "owner", "repo", "", false},
+		{"ssh://git@gitlab.example.com/group/sub/repo.git", "gitlab.example.com", "group/sub", "repo", "", false},
+		{"not-a-url", "", "", "", "", true},
+		{"https://github.com/owner", "", "", "", "", true},
 	}
 	for _, tt := range tests {
-		owner, repo, ref, err := parseGitHubURL(tt.url)
+		ref, err := parseGitRepoURL(tt.url)
 		if tt.hasError {
 			if err == nil {
-				t.Errorf("parseGitHubURL(%q) expected error", tt.url)
+				t.Errorf("parseGitRepoURL(%q) expected error", tt.url)
 			}
 			continue
 		}
 		if err != nil {
-			t.Errorf("parseGitHubURL(%q) unexpected error: %v", tt.url, err)
+			t.Errorf("parseGitRepoURL(%q) unexpected error: %v", tt.url, err)
 			continue
 		}
-		if owner != tt.owner || repo != tt.repo || ref != tt.ref {
-			t.Errorf("parseGitHubURL(%q) = (%q,%q,%q), want (%q,%q,%q)", tt.url, owner, repo, ref, tt.owner, tt.repo, tt.ref)
+		if ref.Host != tt.host || ref.Owner != tt.owner || ref.Repo != tt.repo || ref.Ref != tt.ref {
+			t.Errorf("parseGitRepoURL(%q) = (%q,%q,%q,%q), want (%q,%q,%q,%q)", tt.url, ref.Host, ref.Owner, ref.Repo, ref.Ref, tt.host, tt.owner, tt.repo, tt.ref)
 		}
+	}
+}
+
+func TestParseGitRepoURL_LocalRelativeDir(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd: %v", err)
+	}
+
+	workdir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(workdir, "myrepo"), 0o755); err != nil {
+		t.Fatalf("Mkdir: %v", err)
+	}
+	if err := os.Chdir(workdir); err != nil {
+		t.Fatalf("Chdir(%q): %v", workdir, err)
+	}
+	defer func() {
+		_ = os.Chdir(cwd)
+	}()
+
+	ref, err := parseGitRepoURL("myrepo")
+	if err != nil {
+		t.Fatalf("parseGitRepoURL(local dir): %v", err)
+	}
+	if ref.Host != "local" {
+		t.Fatalf("Host = %q, want local", ref.Host)
+	}
+	if ref.Repo != "myrepo" {
+		t.Fatalf("Repo = %q, want myrepo", ref.Repo)
 	}
 }
 
@@ -703,44 +873,47 @@ func TestCheckerService_CheckChecker_NotFound(t *testing.T) {
 	}
 }
 
-func TestImportFromGithub_BasicFlow(t *testing.T) {
-	repoZip := createBundleZipWithSubdir("myrepo", map[string]string{
-		"README.md": "# TestService\n\nA test service description",
-		"main.py":   "print('hello')",
-	}, map[string]string{
-		"checker.py": "exit(101)\nexit(102)\nexit(103)\nexit(104)",
+func TestImportFromGit_BasicFlow(t *testing.T) {
+	repoZip := createZip(map[string]string{
+		"2026-cybersibir-service-bank/README.md":                       "# Bank\n\nA test service description",
+		"2026-cybersibir-service-bank/.ctf01d-service.yml":             "checker-config-v0.5.2:\n  id: bank\n  service_name: Bank\n  script_path: ./checker.py\n  script_wait_in_sec: 10\n  time_sleep_between_run_scripts_in_sec: 30\n  enabled: true\n",
+		"2026-cybersibir-service-bank/vuln-service/docker-compose.yml": "services: {}\n",
+		"2026-cybersibir-service-bank/vuln-service/app.py":             "print('hello')",
+		"2026-cybersibir-service-bank/checker_bank/checker.py":         "exit(101)\nexit(102)\nexit(103)\nexit(104)",
+		"2026-cybersibir-service-bank/writeups/README.md":              "writeup",
+		"2026-cybersibir-service-bank/exploits/poc.py":                 "exploit",
 	})
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/zip")
-		if _, err := w.Write(repoZip); err != nil {
-			t.Fatalf("write response: %v", err)
-		}
-	}))
-	defer server.Close()
-
-	origCodeloadURL := codeloadURL
-	defer func() { codeloadURL = origCodeloadURL }()
-	codeloadURL = func(_, _, _ string) string {
-		return server.URL
-	}
-
 	q := newMockImportQuerier()
 	store := newMemStorage()
 	svc := NewImportService(q, store, 50*1024*1024)
+	svc.gitFetcher = fakeGitFetcher{
+		fetched: &fetchedGitRepo{
+			ZipBytes: repoZip,
+			Commit:   strings.Repeat("a", 40),
+			Ref:      "main",
+			RepoURL:  "git@github.com:test/2026-cybersibir-service-bank.git",
+			Source: importSourceInfo{
+				Source: sourceGit,
+				Host:   "github.com",
+				Owner:  "test",
+				Repo:   "2026-cybersibir-service-bank",
+				Path:   "test/2026-cybersibir-service-bank",
+			},
+		},
+	}
 
-	result, err := svc.ImportFromGithub(context.Background(), GithubImportRequest{
-		RepoURL: "https://github.com/testorg/testrepo",
+	result, err := svc.ImportFromGit(context.Background(), GitImportRequest{
+		RepoURL: "git@github.com:test/2026-cybersibir-service-bank.git",
 		Ref:     "main",
 	}, true)
 	if err != nil {
-		t.Fatalf("ImportFromGithub: %v", err)
+		t.Fatalf("ImportFromGit: %v", err)
 	}
 	if result.Service == nil {
 		t.Fatal("Service should not be nil")
 	}
-	if result.Service.Name != "TestService" {
-		t.Errorf("Name = %q, want %q", result.Service.Name, "TestService")
+	if result.Service.Name != "bank" {
+		t.Errorf("Name = %q, want %q", result.Service.Name, "bank")
 	}
 	if result.Service.ServiceLocalPath == nil {
 		t.Error("ServiceLocalPath should not be nil")
@@ -748,14 +921,17 @@ func TestImportFromGithub_BasicFlow(t *testing.T) {
 	if result.Service.CheckerLocalPath == nil {
 		t.Error("CheckerLocalPath should not be nil (bundle has checker)")
 	}
+	if result.Service.Source.Kind != sourceGit {
+		t.Errorf("Source.Kind = %q, want %q", result.Service.Source.Kind, sourceGit)
+	}
 }
 
-func TestImportFromGithub_InvalidURL(t *testing.T) {
+func TestImportFromGit_InvalidURL(t *testing.T) {
 	q := newMockImportQuerier()
 	store := newMemStorage()
 	svc := NewImportService(q, store, 50*1024*1024)
 
-	_, err := svc.ImportFromGithub(context.Background(), GithubImportRequest{
+	_, err := svc.ImportFromGit(context.Background(), GitImportRequest{
 		RepoURL: "not-a-url",
 	}, true)
 	if err == nil {
@@ -763,48 +939,62 @@ func TestImportFromGithub_InvalidURL(t *testing.T) {
 	}
 }
 
-func TestImportFromGithub_NameFallback(t *testing.T) {
-	repoZip := createFlatRepoZip(map[string]string{
-		"README.md": "# RepoName\n\nSome description",
-		"main.py":   "code",
-	})
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		if _, err := w.Write(repoZip); err != nil {
-			t.Fatalf("write response: %v", err)
-		}
-	}))
-	defer server.Close()
-
-	origCodeloadURL := codeloadURL
-	defer func() { codeloadURL = origCodeloadURL }()
-	codeloadURL = func(_, _, _ string) string {
-		return server.URL
-	}
-
+func TestImportFromGit_RequiresAdmin(t *testing.T) {
 	q := newMockImportQuerier()
 	store := newMemStorage()
 	svc := NewImportService(q, store, 50*1024*1024)
 
-	result, err := svc.ImportFromGithub(context.Background(), GithubImportRequest{
-		RepoURL: "https://github.com/testorg/myrepo",
+	_, err := svc.ImportFromGit(context.Background(), GitImportRequest{
+		RepoURL: "ssh://git@example.com/team/repo.git",
+	}, false)
+	if !errors.Is(err, errs.ErrForbidden) {
+		t.Fatalf("expected ErrForbidden, got %v", err)
+	}
+}
+
+func TestImportFromGit_UsesManifestID(t *testing.T) {
+	repoZip := createZip(map[string]string{
+		"repo/README.md":                       "# Fancy Repo\n\nSome description",
+		"repo/.ctf01d-service.yml":             "checker-config-v0.5.2:\n  id: easyas\n  service_name: EasyAs\n  script_path: ./checker.py\n",
+		"repo/vuln-service/docker-compose.yml": "services: {}\n",
+		"repo/vuln-service/app.py":             "code",
+		"repo/checker_easyas/checker.py":       "exit(101)",
+		"repo/writeups/README.md":              "writeup",
+		"repo/exploits/poc.py":                 "exploit",
+	})
+	q := newMockImportQuerier()
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+	svc.gitFetcher = fakeGitFetcher{
+		fetched: &fetchedGitRepo{
+			ZipBytes: repoZip,
+			Commit:   strings.Repeat("b", 40),
+			Ref:      "main",
+			RepoURL:  "ssh://git@example.com/team/repo.git",
+			Source: importSourceInfo{
+				Source: sourceGit,
+				Host:   "example.com",
+				Owner:  "team",
+				Repo:   "repo",
+				Path:   "team/repo",
+			},
+		},
+	}
+
+	result, err := svc.ImportFromGit(context.Background(), GitImportRequest{
+		RepoURL: "ssh://git@example.com/team/repo.git",
 		Ref:     "main",
 	}, true)
 	if err != nil {
-		t.Fatalf("ImportFromGithub: %v", err)
+		t.Fatalf("ImportFromGit: %v", err)
 	}
-	if result.Service.Name != "RepoName" {
-		t.Errorf("Name = %q, want %q", result.Service.Name, "RepoName")
+	if result.Service.Name != "easyas" {
+		t.Errorf("Name = %q, want %q", result.Service.Name, "easyas")
 	}
 }
 
 func TestImportFromZip_BasicFlow(t *testing.T) {
-	zipData := createBundleZip(map[string]string{
-		"README.md": "# ZipService\n\nImported from zip",
-		"main.py":   "print('zip')",
-	}, map[string]string{
-		"checker.py": "exit(101)\nexit(102)",
-	})
+	zipData := createSourceImportZip("repo", "ZipService", "ZipService", "Imported from zip", nil)
 
 	q := newMockImportQuerier()
 	store := newMemStorage()
@@ -826,18 +1016,13 @@ func TestImportFromZip_BasicFlow(t *testing.T) {
 }
 
 func TestImportFromZip_SetsAuthorFromTraining(t *testing.T) {
-	training := map[string]interface{}{
+	training := map[string]any{
 		"display_name": "AuthSvc",
 		"description":  "A service with an author",
 		"author":       "Jane Doe",
 		"year":         2026,
 	}
-	tj, _ := json.Marshal(training)
-	zipData := createZipWithBytes(map[string][]byte{
-		"service/README.md":            []byte("# AuthSvc\nDesc"),
-		"service/ctf01d-training.json": tj,
-		"service/main.py":              []byte("code"),
-	})
+	zipData := createSourceImportZip("repo", "AuthSvc", "AuthSvc", "Desc", training)
 
 	q := newMockImportQuerier()
 	store := newMemStorage()
@@ -866,11 +1051,26 @@ func TestImportFromZip_Empty(t *testing.T) {
 	}
 }
 
-func TestImportFromZipUpload_BasicFlow(t *testing.T) {
+func TestImportFromZip_ValidatesPreview(t *testing.T) {
 	zipData := createBundleZip(map[string]string{
-		"README.md": "# UploadService\n\nUploaded",
-		"main.py":   "code",
-	}, nil)
+		"README.md": "# ZipService\n\nImported from zip",
+		"main.py":   "print('zip')",
+	}, map[string]string{
+		"checker.py": "exit(101)\nexit(102)",
+	})
+
+	q := newMockImportQuerier()
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+
+	_, err := svc.ImportFromZip(context.Background(), zipData, true)
+	if err == nil {
+		t.Fatal("expected validation error for legacy bundle zip")
+	}
+}
+
+func TestImportFromZipUpload_BasicFlow(t *testing.T) {
+	zipData := createSourceImportZip("repo", "UploadService", "UploadService", "Uploaded", nil)
 
 	q := newMockImportQuerier()
 	store := newMemStorage()
@@ -918,9 +1118,10 @@ func TestPreviewFromZipUpload_CybersibirLayout(t *testing.T) {
 	}
 }
 
-func TestPreviewFromGithub_AcceptsAnyYearAndOwnerCase(t *testing.T) {
+func TestPreviewFromGit_AcceptsGenericHost(t *testing.T) {
 	repoZip := createZip(map[string]string{
 		"2026-cybersibir-service-vault-notes/README.md":                       "# Vault Notes\nDesc",
+		"2026-cybersibir-service-vault-notes/.ctf01d-service.yml":             "checker-config-v0.5.2:\n  id: vaultnotes\n  service_name: Vault Notes\n  script_path: ./checker.py\n",
 		"2026-cybersibir-service-vault-notes/vuln-service/docker-compose.yml": "services: {}",
 		"2026-cybersibir-service-vault-notes/vuln-service/app.py":             "print('service')",
 		"2026-cybersibir-service-vault-notes/checker_vaultnotes/checker.py":   "exit(101)",
@@ -928,30 +1129,31 @@ func TestPreviewFromGithub_AcceptsAnyYearAndOwnerCase(t *testing.T) {
 		"2026-cybersibir-service-vault-notes/exploits/poc.py":                 "exploit",
 	})
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/zip")
-		if _, err := w.Write(repoZip); err != nil {
-			t.Fatalf("write response: %v", err)
-		}
-	}))
-	defer server.Close()
-
-	origCodeloadURL := codeloadURL
-	defer func() { codeloadURL = origCodeloadURL }()
-	codeloadURL = func(_, _, _ string) string {
-		return server.URL
-	}
-
 	q := newMockImportQuerier()
 	store := newMemStorage()
 	svc := NewImportService(q, store, 50*1024*1024)
+	svc.gitFetcher = fakeGitFetcher{
+		fetched: &fetchedGitRepo{
+			ZipBytes: repoZip,
+			Commit:   strings.Repeat("c", 40),
+			Ref:      "main",
+			RepoURL:  "ssh://git@gitlab.example.com/group/2026-cybersibir-service-vault-notes.git",
+			Source: importSourceInfo{
+				Source: sourceGit,
+				Host:   "gitlab.example.com",
+				Owner:  "group",
+				Repo:   "2026-cybersibir-service-vault-notes",
+				Path:   "group/2026-cybersibir-service-vault-notes",
+			},
+		},
+	}
 
-	preview, err := svc.PreviewFromGithub(context.Background(), GithubImportRequest{
-		RepoURL: "https://github.com/SibirCTF/2026-cybersibir-service-vault-notes.git",
+	preview, err := svc.PreviewFromGit(context.Background(), GitImportRequest{
+		RepoURL: "ssh://git@gitlab.example.com/group/2026-cybersibir-service-vault-notes.git",
 		Ref:     "main",
 	}, true)
 	if err != nil {
-		t.Fatalf("PreviewFromGithub: %v", err)
+		t.Fatalf("PreviewFromGit: %v", err)
 	}
 	if !preview.Valid {
 		t.Fatalf("preview should be valid, got requirements: %#v", preview.Requirements)
@@ -961,6 +1163,19 @@ func TestPreviewFromGithub_AcceptsAnyYearAndOwnerCase(t *testing.T) {
 	}
 	if preview.ExpectedRepositoryName != "YYYY-cybersibir-service-<service-id>" {
 		t.Errorf("ExpectedRepositoryName = %q", preview.ExpectedRepositoryName)
+	}
+}
+
+func TestPreviewFromGit_RequiresAdmin(t *testing.T) {
+	q := newMockImportQuerier()
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+
+	_, err := svc.PreviewFromGit(context.Background(), GitImportRequest{
+		RepoURL: "ssh://git@example.com/team/repo.git",
+	}, false)
+	if !errors.Is(err, errs.ErrForbidden) {
+		t.Fatalf("expected ErrForbidden, got %v", err)
 	}
 }
 
@@ -1074,6 +1289,14 @@ func TestSummarizeMarkdown(t *testing.T) {
 	}
 }
 
+func TestSummarizeMarkdown_UTF8(t *testing.T) {
+	md := []byte("# Заголовок\n\n" + strings.Repeat("ёж", summaryMaxLength))
+	result := summarizeMarkdown(md)
+	if !utf8.ValidString(result) {
+		t.Fatalf("summary should remain valid UTF-8, got %q", result)
+	}
+}
+
 func TestExtractTitle(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -1116,6 +1339,14 @@ func TestExtractCopyright(t *testing.T) {
 	}
 }
 
+func TestExtractCopyright_UTF8(t *testing.T) {
+	input := "Copyright © " + strings.Repeat("ёж", fieldValueMaxChars)
+	result := extractCopyright(input)
+	if !utf8.ValidString(result) {
+		t.Fatalf("copyright should remain valid UTF-8, got %q", result)
+	}
+}
+
 func TestValidateZipBytes(t *testing.T) {
 	if err := validateZipBytes(nil); err == nil {
 		t.Error("expected error for nil")
@@ -1128,19 +1359,182 @@ func TestValidateZipBytes(t *testing.T) {
 	}
 }
 
-func TestGithubArchiveURL(t *testing.T) {
-	url := githubArchiveURL("owner", "repo", "main")
-	expected := "https://github.com/owner/repo/archive/refs/heads/main.zip"
-	if url != expected {
-		t.Errorf("githubArchiveURL = %q, want %q", url, expected)
+func TestExecGitArchiveFetcher_FetchWithSubdir(t *testing.T) {
+	repoDir := createTestGitRepo(t, map[string]string{
+		"nested/README.md":                       "# Repo\n",
+		"nested/.ctf01d-service.yml":             "checker-config-v0.5.2:\n  id: nestedsvc\n  service_name: Nested Service\n  script_path: ./checker.py\n",
+		"nested/vuln-service/docker-compose.yml": "services: {}\n",
+		"nested/vuln-service/app.py":             "print('svc')\n",
+		"nested/checker_nestedsvc/checker.py":    "exit(101)\n",
+		"nested/writeups/README.md":              "writeup\n",
+		"nested/exploits/poc.py":                 "exploit\n",
+	})
+
+	fetcher := newExecGitArchiveFetcher(50 * 1024 * 1024)
+	result, err := fetcher.Fetch(context.Background(), GitImportRequest{
+		RepoURL: repoDir,
+		Ref:     "main",
+		Subdir:  "nested",
+	})
+	if err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+	if result.Ref != "main" {
+		t.Errorf("Ref = %q, want %q", result.Ref, "main")
+	}
+	if result.Commit == "" {
+		t.Fatal("Commit should not be empty")
+	}
+	if result.Source.Repo != filepath.Base(repoDir) {
+		t.Errorf("Repo = %q, want %q", result.Source.Repo, filepath.Base(repoDir))
+	}
+	if err := validateZipBytes(result.ZipBytes); err != nil {
+		t.Fatalf("validateZipBytes: %v", err)
 	}
 }
 
-func TestCodeloadURL(t *testing.T) {
-	url := codeloadURL("owner", "repo", "refs/heads/main")
-	expected := "https://codeload.github.com/owner/repo/zip/refs/heads/main"
-	if url != expected {
-		t.Errorf("codeloadURL = %q, want %q", url, expected)
+func TestSyncFromGit_RequiresAdmin(t *testing.T) {
+	q := newMockImportQuerier()
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+
+	_, err := svc.SyncFromGit(context.Background(), 1, false)
+	if !errors.Is(err, errs.ErrForbidden) {
+		t.Fatalf("expected ErrForbidden, got %v", err)
+	}
+}
+
+func TestSyncFromGit_PreservesUnsetRef(t *testing.T) {
+	repoZip := createSourceImportZip("2026-cybersibir-service-bank", "bank", "Bank", "Updated description", map[string]any{
+		"display_name": "Bank",
+		"description":  "Updated description",
+		"author":       "Bob",
+	})
+
+	q := newMockImportQuerier()
+	q.services[1] = &db.Service{
+		ID:            1,
+		Name:          "bank",
+		CheckStatus:   checkStatusUnknown,
+		SourceKind:    sourceGit,
+		GitRepoUrl:    importStrPtr("ssh://git@example.com/team/repo.git"),
+		GitSyncStatus: syncStatusUnknown,
+	}
+	q.byName["bank"] = 1
+
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+	svc.gitFetcher = fakeGitFetcher{
+		fetched: &fetchedGitRepo{
+			ZipBytes: repoZip,
+			Commit:   strings.Repeat("d", 40),
+			Ref:      "main",
+			RepoURL:  "ssh://git@example.com/team/repo.git",
+			Source: importSourceInfo{
+				Source: sourceGit,
+				Host:   "example.com",
+				Owner:  "team",
+				Repo:   "repo",
+				Path:   "team/repo",
+			},
+		},
+	}
+
+	result, err := svc.SyncFromGit(context.Background(), 1, true)
+	if err != nil {
+		t.Fatalf("SyncFromGit: %v", err)
+	}
+	if result.Source.Ref != nil {
+		t.Fatalf("Source.Ref = %v, want nil", result.Source.Ref)
+	}
+
+	current, err := q.GetServiceByID(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("GetServiceByID: %v", err)
+	}
+	if current.GitRef != nil {
+		t.Fatalf("stored GitRef = %v, want nil", current.GitRef)
+	}
+}
+
+func TestSyncFromGit_RejectsLegacyRepositoryLayout(t *testing.T) {
+	repoZip := createZip(map[string]string{
+		"repo/README.md":            "# EasyAs\n\nLegacy service description",
+		"repo/ctf01d-training.json": `{"display_name":"EasyAs","description":"Legacy service description","author":"SibirCTF"}`,
+		"repo/easyas.py":            "print('legacy')\n",
+	})
+
+	q := newMockImportQuerier()
+	q.services[1] = &db.Service{
+		ID:            1,
+		Name:          "EasyAs",
+		CheckStatus:   checkStatusUnknown,
+		SourceKind:    sourceGit,
+		GitRepoUrl:    importStrPtr("https://github.com/SibirCTF/2015-easyas.git"),
+		GitRef:        importStrPtr("master"),
+		GitSyncStatus: syncStatusUnknown,
+	}
+	q.byName["EasyAs"] = 1
+
+	store := newMemStorage()
+	svc := NewImportService(q, store, 50*1024*1024)
+	svc.gitFetcher = fakeGitFetcher{
+		fetched: &fetchedGitRepo{
+			ZipBytes: repoZip,
+			Commit:   strings.Repeat("e", 40),
+			Ref:      "master",
+			RepoURL:  "https://github.com/SibirCTF/2015-easyas.git",
+			Source: importSourceInfo{
+				Source: sourceGit,
+				Host:   "github.com",
+				Owner:  "SibirCTF",
+				Repo:   "2015-easyas",
+				Path:   "SibirCTF/2015-easyas",
+			},
+		},
+	}
+
+	_, err := svc.SyncFromGit(context.Background(), 1, true)
+	if err == nil {
+		t.Fatal("expected validation error for legacy repository layout")
+	}
+
+	current, getErr := q.GetServiceByID(context.Background(), 1)
+	if getErr != nil {
+		t.Fatalf("GetServiceByID: %v", getErr)
+	}
+	if current.GitSyncStatus != syncStatusFailed {
+		t.Fatalf("GitSyncStatus = %q, want %q", current.GitSyncStatus, syncStatusFailed)
+	}
+	if current.GitSyncError == nil {
+		t.Fatal("GitSyncError = nil, want layout validation details")
+	}
+	if !strings.Contains(*current.GitSyncError, "vuln-service/ directory is required") {
+		t.Fatalf("GitSyncError = %q, want layout validation details", *current.GitSyncError)
+	}
+}
+
+func TestParseServiceManifest_DuplicateCheckerSections(t *testing.T) {
+	_, err := parseServiceManifest([]byte(`
+checker-config-a:
+  id: first
+checker-config-b:
+  id: second
+`))
+	if err == nil {
+		t.Fatal("expected duplicate checker-config error")
+	}
+}
+
+func TestZipDirectory_RespectsMaxArchiveBytesDuringWalk(t *testing.T) {
+	rootDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(rootDir, "data.txt"), []byte(strings.Repeat("a", 1024)), 0o644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	_, err := zipDirectory(rootDir, "repo", 512)
+	if err == nil {
+		t.Fatal("expected repository size error")
 	}
 }
 
@@ -1256,10 +1650,7 @@ func TestCheckerService_WithLocalArchive(t *testing.T) {
 }
 
 func TestImportFromZip_DuplicateName(t *testing.T) {
-	zipData := createBundleZip(map[string]string{
-		"README.md": "# DupService\nDesc",
-		"main.py":   "code",
-	}, nil)
+	zipData := createSourceImportZip("repo", "DupService", "DupService", "Desc", nil)
 
 	q := newMockImportQuerier()
 	store := newMemStorage()
