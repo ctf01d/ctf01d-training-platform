@@ -9,6 +9,7 @@ __debug*
 /log/
 /tmp/
 /.ralphex/
+/.claude/
 web/node_modules/
 web/dist/
 /storage/
