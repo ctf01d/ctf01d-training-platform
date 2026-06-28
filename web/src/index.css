@@ -59,6 +59,8 @@
   --success-bg: #f0fdf4;
   --success-border: #bbf7d0;
   --success-text: #166534;
+  --warning-bg: #fff8e8;
+  --warning-border: #f7d7a4;
   --app-bg:
     linear-gradient(180deg, rgba(255, 255, 255, .78), rgba(238, 241, 245, .9) 260px),
     #eef1f5;
@@ -132,6 +134,8 @@
   --success-bg: #14271b;
   --success-border: #2c5536;
   --success-text: #86e0a3;
+  --warning-bg: #2b2415;
+  --warning-border: #5e4920;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, .45);
   --shadow-md: 0 14px 34px rgba(0, 0, 0, .55);
   --app-bg:
@@ -173,6 +177,8 @@
   --success-bg: #16271e;
   --success-border: #2f5540;
   --success-text: #8ee0ac;
+  --warning-bg: #2a2115;
+  --warning-border: #5c4520;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
   --shadow-md: 0 14px 34px rgba(0, 0, 0, .6);
   --app-bg:
@@ -1351,24 +1357,24 @@ a:focus-visible {
 
 .sync-result-summary {
   padding: 14px 16px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm);
   background: var(--surface-muted);
 }
 
 .sync-result-summary--success {
-  background: rgba(187, 247, 208, .35);
-  border-color: rgba(34, 197, 94, .25);
+  background: var(--success-bg);
+  border-color: var(--success-border);
 }
 
 .sync-result-summary--warning {
-  background: rgba(254, 243, 199, .55);
-  border-color: rgba(245, 158, 11, .26);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
 }
 
 .sync-result-summary--error {
-  background: rgba(254, 226, 226, .55);
-  border-color: rgba(239, 68, 68, .24);
+  background: var(--error-bg);
+  border-color: var(--error-border);
 }
 
 .sync-result-modal-meta {
@@ -1445,19 +1451,19 @@ a:focus-visible {
   gap: 12px;
   align-items: start;
   padding: 13px 14px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm);
   background: var(--surface-muted);
 }
 
 .sync-result-issue--warning {
-  background: rgba(255, 251, 235, .92);
-  border-color: rgba(245, 158, 11, .22);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
 }
 
 .sync-result-issue--error {
-  background: rgba(254, 242, 242, .9);
-  border-color: rgba(239, 68, 68, .2);
+  background: var(--error-bg);
+  border-color: var(--error-border);
 }
 
 .sync-result-issue strong {
@@ -1472,7 +1478,7 @@ a:focus-visible {
   margin-top: 6px;
   padding: 4px 7px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, .06);
+  background: var(--surface-strong);
   color: var(--text);
   font-size: .8rem;
   font-weight: 600;
@@ -1482,6 +1488,29 @@ a:focus-visible {
   margin: 8px 0 0;
   color: var(--text-soft);
   line-height: 1.45;
+}
+
+.sync-result-modal .badge {
+  border: 1px solid transparent;
+}
+
+.sync-result-modal .badge-ok {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+.sync-result-modal .badge-warning,
+.sync-result-modal .badge-warn {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning);
+}
+
+.sync-result-modal .badge-error {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
 }
 
 .detail-table {
@@ -2514,18 +2543,19 @@ a:focus-visible {
   place-items: center;
   padding: 28px;
   background:
-    linear-gradient(135deg, rgba(15,23,42,.96), rgba(17,24,39,.92)),
-    #111827;
+    linear-gradient(135deg, var(--nav), var(--nav-soft)),
+    var(--nav);
 }
 
 .login-form {
   position: relative;
   width: 100%;
   max-width: 430px;
-  background: rgba(255,255,255,.98);
+  background: var(--surface);
+  color: var(--text);
   padding: 30px;
   border-radius: var(--radius);
-  border: 1px solid rgba(255,255,255,.28);
+  border: 1px solid var(--border-strong);
   box-shadow: 0 24px 70px rgba(0,0,0,.28);
 }
 
@@ -2537,7 +2567,7 @@ a:focus-visible {
   height: 44px;
   margin-bottom: 18px;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, #2563eb, #14b8a6);
+  background: linear-gradient(135deg, var(--primary), var(--teal));
   color: #fff;
   font-size: .9rem;
   font-weight: 900;
@@ -2545,6 +2575,7 @@ a:focus-visible {
 
 .login-form h1 {
   margin: 0 0 4px;
+  color: var(--heading);
   font-size: 1.45rem;
   line-height: 1.2;
 }
