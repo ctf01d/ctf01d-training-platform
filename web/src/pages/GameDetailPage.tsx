@@ -40,6 +40,20 @@ import {
 } from "../api/datetime";
 import { useI18n } from "../i18n/I18nContext";
 
+// A game team's address goes into config.yml as ip-or-host, which the jury uses
+// to reach the vulnbox. Accept an empty value (clears it), an IPv4 address, an
+// IPv6 address, or a DNS hostname — but reject anything else (spaces, non-ASCII).
+function isValidIpOrHost(value: string): boolean {
+  if (value === "") return true;
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const m = ipv4.exec(value);
+  if (m) return m.slice(1).every((o) => Number(o) <= 255);
+  if (/^\[?[0-9a-fA-F:]+\]?$/.test(value) && value.includes(":")) return true; // IPv6
+  const hostname =
+    /^(?=.{1,253}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  return hostname.test(value);
+}
+
 export default function GameDetailPage() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
@@ -57,6 +71,9 @@ export default function GameDetailPage() {
   const [saving, setSaving] = useState(false);
 
   const [gameTeams, setGameTeams] = useState<GameTeam[]>([]);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [orderDirty, setOrderDirty] = useState(false);
+  const [ipEdits, setIpEdits] = useState<Record<number, string>>({});
   const [teamNames, setTeamNames] = useState<Record<number, string>>({});
   const [manageableTeamIds, setManageableTeamIds] = useState<number[]>([]);
   const [serviceIds, setServiceIds] = useState<number[]>([]);
@@ -98,6 +115,8 @@ export default function GameDetailPage() {
     const { data } = await gamesApi.listGameTeams(gameId);
     if (data) {
       setGameTeams(data.items);
+      setOrderDirty(false);
+      setIpEdits({});
       const ids = data.items.map((gt) => gt.team_id);
       const nameMap: Record<number, string> = {};
       const manageable: number[] = [];
@@ -325,11 +344,40 @@ export default function GameDetailPage() {
     await fetchGameTeams();
   };
 
-  const handleReorder = async () => {
-    const items = gameTeams
+  // Reorder the roster locally via drag-and-drop; persisted only on "Save order".
+  const handleDrop = (targetIndex: number) => {
+    setDragIndex(null);
+    if (dragIndex === null || dragIndex === targetIndex) return;
+    const sorted = [...gameTeams].sort((a, b) => a.order - b.order);
+    const [moved] = sorted.splice(dragIndex, 1);
+    sorted.splice(targetIndex, 0, moved);
+    setGameTeams(sorted.map((gt, i) => ({ ...gt, order: i + 1 })));
+    setOrderDirty(true);
+  };
+
+  const handleSaveOrder = async () => {
+    const items = [...gameTeams]
       .sort((a, b) => a.order - b.order)
       .map((gt, i) => ({ id: gt.id, order: i + 1 }));
     const { error: err } = await gameTeamsApi.reorderGameTeams(gameId, items);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setOrderDirty(false);
+    await fetchGameTeams();
+  };
+
+  const handleIpSave = async (gt: GameTeam) => {
+    const next = (ipEdits[gt.id] ?? gt.ip_address ?? "").trim();
+    if (next === (gt.ip_address ?? "")) return; // unchanged
+    if (!isValidIpOrHost(next)) {
+      setError(t("Invalid IP address or hostname"));
+      return;
+    }
+    const { error: err } = await gameTeamsApi.updateGameTeam(gt.id, {
+      ip_address: next,
+    });
     if (err) {
       setError(err);
       return;
@@ -448,7 +496,6 @@ export default function GameDetailPage() {
     ...(user
       ? [{ href: "#writeups", label: t("Writeups"), count: writeups.length }]
       : []),
-    ...(canEdit ? [{ href: "#actions", label: t("Actions") }] : []),
   ];
   const textFields: Array<{ field: keyof GameUpdate; label: string }> = [
     { field: "name", label: t("Name") },
@@ -527,12 +574,6 @@ export default function GameDetailPage() {
             ]}
             actions={
               <>
-                <button
-                  className="btn btn-sm"
-                  onClick={() => navigate("/games")}
-                >
-                  {t("Back")}
-                </button>
                 {game.site_url && (
                   <a
                     className="btn btn-sm"
@@ -564,12 +605,29 @@ export default function GameDetailPage() {
                   </a>
                 )}
                 {canEdit && (
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={startEdit}
-                  >
-                    {t("Edit")}
-                  </button>
+                  <>
+                    {game.finalized ? (
+                      <ActionButton onClick={handleUnfinalize}>
+                        {t("Unfinalize")}
+                      </ActionButton>
+                    ) : (
+                      <ActionButton
+                        onClick={handleFinalize}
+                        confirm={t("Finalize this game?")}
+                      >
+                        {t("Finalize")}
+                      </ActionButton>
+                    )}
+                    <ActionButton onClick={handleExportCtf01d}>
+                      {t("Export ctf01d")}
+                    </ActionButton>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={startEdit}
+                    >
+                      {t("Edit")}
+                    </button>
+                  </>
                 )}
               </>
             }
@@ -728,40 +786,6 @@ export default function GameDetailPage() {
         </form>
       )}
 
-      {canEdit && (
-        <div className="detail-section" id="actions">
-          <div className="section-head">
-            <h3>{t("Actions")}</h3>
-          </div>
-          <div className="action-buttons">
-            {game.finalized ? (
-              <ActionButton onClick={handleUnfinalize}>
-                {t("Unfinalize")}
-              </ActionButton>
-            ) : (
-              <ActionButton
-                onClick={handleFinalize}
-                confirm={t("Finalize this game?")}
-              >
-                {t("Finalize")}
-              </ActionButton>
-            )}
-            <ActionButton onClick={handleExportCtf01d}>
-              {t("Export ctf01d")}
-            </ActionButton>
-            <ActionButton
-              onClick={() => {
-                void gamesApi.deleteGame(gameId).then(() => navigate("/games"));
-              }}
-              variant="danger"
-              confirm={t("Delete this game?")}
-            >
-              {t("Delete")}
-            </ActionButton>
-          </div>
-        </div>
-      )}
-
       <div className="detail-section" id="services">
         <div className="section-head">
           <h3>
@@ -819,7 +843,7 @@ export default function GameDetailPage() {
       <div className="detail-section" id="teams">
         <div className="section-head">
           <h3>
-            {t("Roster")} <SectionCount n={gameTeams.length} />
+            {t("Teams")} <SectionCount n={gameTeams.length} />
           </h3>
         </div>
         {gameTeams.length > 0 ? (
@@ -833,16 +857,67 @@ export default function GameDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {gameTeams
+              {[...gameTeams]
                 .sort((a, b) => a.order - b.order)
-                .map((gt) => (
-                  <tr key={gt.id}>
-                    <td className="rank-cell">{gt.order}</td>
+                .map((gt, index) => (
+                  <tr
+                    key={gt.id}
+                    draggable={canEdit}
+                    onDragStart={() => setDragIndex(index)}
+                    onDragOver={(e) => canEdit && e.preventDefault()}
+                    onDrop={() => handleDrop(index)}
+                    className={
+                      canEdit
+                        ? `draggable-row${dragIndex === index ? " dragging" : ""}`
+                        : undefined
+                    }
+                  >
+                    <td className="rank-cell">
+                      {canEdit && <span className="drag-handle">⠿</span>}
+                      {gt.order}
+                    </td>
                     <td>
                       <TeamLink id={gt.team_id} name={nameOf(gt.team_id)} />
                     </td>
                     <td>
-                      {gt.ip_address ? (
+                      {canEdit ? (
+                        <span className="ip-edit">
+                          <input
+                            className={
+                              isValidIpOrHost(
+                                (ipEdits[gt.id] ?? gt.ip_address ?? "").trim(),
+                              )
+                                ? "ip-input"
+                                : "ip-input invalid"
+                            }
+                            placeholder="—"
+                            value={ipEdits[gt.id] ?? gt.ip_address ?? ""}
+                            onChange={(e) =>
+                              setIpEdits((m) => ({
+                                ...m,
+                                [gt.id]: e.target.value,
+                              }))
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") void handleIpSave(gt);
+                            }}
+                          />
+                          {(ipEdits[gt.id] ?? gt.ip_address ?? "").trim() !==
+                            (gt.ip_address ?? "") &&
+                            isValidIpOrHost(
+                              (ipEdits[gt.id] ?? gt.ip_address ?? "").trim(),
+                            ) && (
+                              <button
+                                type="button"
+                                className="btn btn-sm ip-save"
+                                title={t("Save")}
+                                onClick={() => void handleIpSave(gt)}
+                              >
+                                ✓
+                              </button>
+                            )}
+                        </span>
+                      ) : gt.ip_address ? (
                         <code>{gt.ip_address}</code>
                       ) : (
                         <span className="muted-dash">—</span>
@@ -897,9 +972,10 @@ export default function GameDetailPage() {
             <button
               type="button"
               className="btn btn-sm"
-              onClick={() => void handleReorder()}
+              onClick={() => void handleSaveOrder()}
+              disabled={!orderDirty}
             >
-              {t("Reorder")}
+              {t("Save order")}
             </button>
           </form>
         )}
@@ -1101,6 +1177,23 @@ export default function GameDetailPage() {
             )}
           </div>
         </>
+      )}
+
+      {canEdit && (
+        <div className="detail-section">
+          <div className="section-head">
+            <h3>{t("Danger Zone")}</h3>
+          </div>
+          <ActionButton
+            onClick={() =>
+              void gamesApi.deleteGame(gameId).then(() => navigate("/games"))
+            }
+            variant="danger"
+            confirm={t("Delete this game?")}
+          >
+            {t("Delete")}
+          </ActionButton>
+        </div>
       )}
     </div>
   );

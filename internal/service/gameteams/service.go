@@ -3,12 +3,50 @@ package gameteams
 import (
 	"context"
 	"encoding/json"
+	"net"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/ctf01d/ctf01d-training-platform/internal/domain/errs"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository"
 	"github.com/ctf01d/ctf01d-training-platform/internal/repository/db"
 )
+
+const maxHostnameLen = 253
+
+// hostnameRe matches a DNS hostname (ASCII labels). Go's regexp has no
+// lookahead, so the overall length is checked separately.
+var hostnameRe = regexp.MustCompile(
+	`^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$`,
+)
+
+// ipv4ShapeRe matches a dotted-decimal IPv4 shape so values like "10.10.1.999"
+// are rejected as bad IPs instead of slipping through as a numeric hostname.
+var ipv4ShapeRe = regexp.MustCompile(`^\d{1,3}(\.\d{1,3}){3}$`)
+
+// normalizeIPAddress trims and validates a game team's address. It goes into
+// config.yml as ip-or-host, so it must be empty (clears it), a valid IPv4/IPv6
+// address, or a DNS hostname. Returns the trimmed value on success.
+func normalizeIPAddress(ip *string) (*string, error) {
+	if ip == nil {
+		return nil, nil
+	}
+	v := strings.TrimSpace(*ip)
+	if v == "" {
+		return &v, nil
+	}
+	if net.ParseIP(v) != nil {
+		return &v, nil // valid IPv4 or IPv6
+	}
+	// Not a valid IP: reject anything IPv4-shaped (bad octets), else allow hostname.
+	if !ipv4ShapeRe.MatchString(v) && len(v) <= maxHostnameLen && hostnameRe.MatchString(v) {
+		return &v, nil
+	}
+	return nil, errs.NewValidationError(map[string]string{
+		"ip_address": "must be a valid IP address or hostname",
+	})
+}
 
 type GameTeam struct {
 	ID              int64           `json:"id"`
@@ -76,6 +114,11 @@ func (s *Service) txQ(q *db.Queries) Querier {
 }
 
 func (s *Service) Create(ctx context.Context, params CreateParams) (*GameTeam, error) {
+	normIP, err := normalizeIPAddress(params.IpAddress)
+	if err != nil {
+		return nil, err
+	}
+	params.IpAddress = normIP
 	if params.Ctf01dOverrides == nil {
 		params.Ctf01dOverrides = json.RawMessage("{}")
 	}
@@ -117,6 +160,11 @@ func (s *Service) ListByGame(ctx context.Context, gameID int64) ([]GameTeam, err
 }
 
 func (s *Service) Update(ctx context.Context, id int64, params UpdateParams) (*GameTeam, error) {
+	normIP, err := normalizeIPAddress(params.IpAddress)
+	if err != nil {
+		return nil, err
+	}
+	params.IpAddress = normIP
 	var overrides []byte
 	if params.Ctf01dOverrides != nil {
 		overrides = []byte(*params.Ctf01dOverrides)

@@ -1595,6 +1595,60 @@ a:focus-visible {
   background: var(--table-row-hover);
 }
 
+.data-table tr.draggable-row {
+  cursor: grab;
+}
+
+.data-table tr.draggable-row.dragging {
+  opacity: 0.5;
+}
+
+.drag-handle {
+  color: var(--text-muted, #888);
+  margin-right: 0.4em;
+  cursor: grab;
+  user-select: none;
+}
+
+.ip-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.ip-input {
+  width: 12ch;
+  font-family: var(--font-mono, monospace);
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.ip-input:hover {
+  border-color: var(--border-strong);
+  background: var(--input-bg);
+}
+
+.ip-input:focus {
+  border-color: var(--border-hover);
+  background: var(--input-bg);
+}
+
+.ip-input.invalid {
+  border-color: var(--danger, #d64545);
+  background: var(--input-bg);
+}
+
+.ip-save {
+  padding: 0.15rem 0.5rem;
+  line-height: 1;
+}
+
 .data-table .numeric,
 .numeric {
   text-align: right;

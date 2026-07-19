@@ -422,6 +422,8 @@ const ruCatalog: Record<string, TranslationValue> = {
   "IP address (optional)": "IP-адрес (необязательно)",
   "Add team": "Добавить команду",
   Reorder: "Переупорядочить",
+  "Save order": "Сохранить порядок",
+  "Invalid IP address or hostname": "Некорректный IP-адрес или хост",
   "No results yet.": "Результатов пока нет.",
   "Add result": "Добавить результат",
   "No writeups yet.": "Райтапов пока нет.",

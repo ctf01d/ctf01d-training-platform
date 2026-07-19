@@ -103,7 +103,10 @@ export async function exportCtf01d(
 ) {
   return client.POST("/games/{id}/export/ctf01d", {
     params: { path: { id } },
-    body,
+    // Always send a JSON body: the request validator rejects an empty body even
+    // though the schema fields are all optional. {} uses server-side defaults.
+    body: body ?? {},
+    parseAs: "blob",
   });
 }
 
