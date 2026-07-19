@@ -97,6 +97,18 @@ export async function getCtf01dExportOptions(id: number) {
   });
 }
 
+const defaultCtf01dExportRequest: components["schemas"]["Ctf01dExportRequest"] =
+  {
+    include_html: true,
+    include_compose: true,
+    port: 8080,
+    htmlfolder: "./html",
+    random: false,
+    flag_ttl_min: 1,
+    basic_attack_cost: 1,
+    defence_cost: 1,
+  };
+
 export async function exportCtf01d(
   id: number,
   body?: components["schemas"]["Ctf01dExportRequest"],
@@ -104,8 +116,8 @@ export async function exportCtf01d(
   return client.POST("/games/{id}/export/ctf01d", {
     params: { path: { id } },
     // Always send a JSON body: the request validator rejects an empty body even
-    // though the schema fields are all optional. {} uses server-side defaults.
-    body: body ?? {},
+    // though the OpenAPI requestBody is optional.
+    body: body ?? defaultCtf01dExportRequest,
     parseAs: "blob",
   });
 }

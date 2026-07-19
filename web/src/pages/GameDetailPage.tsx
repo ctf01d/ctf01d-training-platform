@@ -372,7 +372,7 @@ export default function GameDetailPage() {
     const next = (ipEdits[gt.id] ?? gt.ip_address ?? "").trim();
     if (next === (gt.ip_address ?? "")) return; // unchanged
     if (!isValidIpOrHost(next)) {
-      setError(t("Invalid IP address or hostname"));
+      setError({ message: t("Invalid IP address or hostname") });
       return;
     }
     const { error: err } = await gameTeamsApi.updateGameTeam(gt.id, {
